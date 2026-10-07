@@ -1,0 +1,87 @@
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { fxSettings } from '../lib/fx';
+import { pick } from '../lib/random';
+import { usePersistentState } from '../lib/storage';
+
+export interface Player {
+  id: string;
+  name: string;
+  avatar: string;
+  color: string;
+}
+
+export interface Settings {
+  sound: boolean;
+  haptics: boolean;
+  /** Everything gets even bigger. For later in the night. */
+  bigMode: boolean;
+}
+
+export const AVATARS = ['🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '👽', '🤖', '👻', '🤠', '🥸', '😎', '🤡', '🍕', '🌮'];
+export const PLAYER_COLORS = ['#ff3d9a', '#ffd23f', '#3de8ff', '#a6ff3d', '#ff8a3d', '#b43dff', '#ff5d5d', '#3dffb4'];
+export const MAX_PLAYERS = 20;
+
+interface AppState {
+  players: Player[];
+  addPlayer: (name: string) => void;
+  removePlayer: (id: string) => void;
+  rerollAvatar: (id: string) => void;
+  clearPlayers: () => void;
+  settings: Settings;
+  updateSettings: (patch: Partial<Settings>) => void;
+  ageConfirmed: boolean;
+  confirmAge: () => void;
+}
+
+const Ctx = createContext<AppState | null>(null);
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [players, setPlayers] = usePersistentState<Player[]>('players', []);
+  const [settings, setSettings] = usePersistentState<Settings>('settings', { sound: true, haptics: true, bigMode: false });
+  const [ageConfirmed, setAgeConfirmed] = usePersistentState('age-ok', false);
+
+  useEffect(() => {
+    fxSettings.sound = settings.sound;
+    fxSettings.haptics = settings.haptics;
+    document.documentElement.classList.toggle('big-mode', settings.bigMode);
+  }, [settings]);
+
+  const value = useMemo<AppState>(
+    () => ({
+      players,
+      addPlayer: (name) =>
+        setPlayers((list) => {
+          const clean = name.trim().slice(0, 18);
+          if (!clean || list.length >= MAX_PLAYERS) return list;
+          const usedAvatars = new Set(list.map((p) => p.avatar));
+          const freeAvatars = AVATARS.filter((a) => !usedAvatars.has(a));
+          return [
+            ...list,
+            {
+              id: crypto.randomUUID?.() ?? String(Date.now() + Math.random()),
+              name: clean,
+              avatar: pick(freeAvatars.length ? freeAvatars : AVATARS),
+              color: PLAYER_COLORS[list.length % PLAYER_COLORS.length],
+            },
+          ];
+        }),
+      removePlayer: (id) => setPlayers((list) => list.filter((p) => p.id !== id)),
+      rerollAvatar: (id) =>
+        setPlayers((list) => list.map((p) => (p.id === id ? { ...p, avatar: pick(AVATARS.filter((a) => a !== p.avatar)) } : p))),
+      clearPlayers: () => setPlayers([]),
+      settings,
+      updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
+      ageConfirmed,
+      confirmAge: () => setAgeConfirmed(true),
+    }),
+    [players, settings, ageConfirmed, setPlayers, setSettings, setAgeConfirmed],
+  );
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function useApp() {
+  const state = useContext(Ctx);
+  if (!state) throw new Error('useApp must be used inside <AppProvider>');
+  return state;
+}
