@@ -14,7 +14,7 @@ export const CARD_RULES: Record<number, CardRule> = {
   4: { emoji: '👇', title: 'Floor', text: 'Everyone touches the floor. Last one drinks.' },
   5: { emoji: '🧔', title: 'Guys', text: 'All guys drink.' },
   6: { emoji: '💃', title: 'Girls', text: 'All girls drink.' },
-  7: { emoji: '☝️', title: 'Heaven', text: 'Everyone points to the sky. Last one drinks.' },
+  7: { emoji: '🙌', title: 'Heaven', text: 'Everyone puts both hands up to the sky. Last one drinks.' },
   8: { emoji: '🤝', title: 'Mate', text: 'Pick a mate. Every time you drink, they drink too. For the rest of the game.' },
   9: { emoji: '🎤', title: 'Rhyme', text: 'Say a word. Go around rhyming on it. First one who can’t drinks.' },
   10: { emoji: '📋', title: 'Categories', text: 'Pick a category (car brands, beers…). Go around naming things. First one who can’t drinks.' },
