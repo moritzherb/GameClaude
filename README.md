@@ -29,7 +29,7 @@ src/
   games/
     types.ts           GameDefinition + categories
     registry.ts        list of all games
-    bus-driver/        Bus Driver (part 1: collect your cards)
+    bus-driver/        Bus Driver (part 1: collect cards, part 2: pyramid + tiebreaker)
     kings-cup/         Kings Cup (rules per card live in rules.ts)
     who-drinks/        example game
 ```

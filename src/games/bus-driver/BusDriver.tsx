@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
+import Tap from '../../components/Tap';
 import { cardName, newDeck, SUIT_NAME, SUIT_SYMBOL, SUITS, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
 import type { Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { judge, questionsFor, type Guess, type Result } from './logic';
+import Pyramid from './Pyramid';
+import Tiebreak from './Tiebreak';
 
 interface Seat {
   player: Player;
@@ -16,7 +19,7 @@ interface Seat {
 }
 
 interface State {
-  stage: 'setup' | 'intro' | 'turn' | 'done';
+  stage: 'setup' | 'intro' | 'turn' | 'done' | 'pyramid' | 'tiebreak' | 'driver';
   risky: boolean;
   dealerId: string;
   /** Turn order: starts left of the dealer, dealer goes last. */
@@ -27,6 +30,9 @@ interface State {
   reveal: { card: Card; result: Result } | null;
   /** True right after the deck ran out and a fresh one was opened. */
   newDeckOpened: boolean;
+  /** Players tied for most cards after the pyramid. */
+  tied: Player[];
+  driver: Player | null;
 }
 
 const REVEAL_MS = 550;
@@ -36,22 +42,6 @@ function seatOrder(players: Player[], dealerId: string): Seat[] {
   return [...players.slice(i + 1), ...players.slice(0, i + 1)].map((player) => ({ player, hand: [], drank: 0, gave: 0 }));
 }
 
-function Tap({ className, style, onClick, children }: { className: string; style?: CSSProperties; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      className={className}
-      style={style}
-      onClick={() => {
-        sfx.pop();
-        buzz();
-        onClick();
-      }}
-    >
-      {children}
-    </button>
-  );
-}
 
 export default function BusDriver({ players, exit }: GameProps) {
   const [s, setS] = useState<State>(() => ({
@@ -64,11 +54,16 @@ export default function BusDriver({ players, exit }: GameProps) {
     turn: 0,
     reveal: null,
     newDeckOpened: false,
+    tied: [],
+    driver: null,
   }));
   const timer = useRef<number>(undefined);
   // Blocks a double tap from answering twice before React re-renders.
   const answered = useRef(false);
   useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => {
+    if (s.stage === 'driver') celebrate();
+  }, [s.stage]);
 
   const questions = questionsFor(s.risky);
   const question = questions[s.round];
@@ -205,13 +200,50 @@ export default function BusDriver({ players, exit }: GameProps) {
           ))}
         </div>
 
-        <div className="panel">
-          <h3 className="section-title">Part 2: Who drives the bus? 🚌</h3>
-          <p className="lead">Coming soon. Keep your cards in mind!</p>
+        <div className="sticky-action">
+          <BigButton size="xl" onClick={() => setS({ ...s, stage: 'pyramid' })}>
+            Part 2: The pyramid 🔺
+          </BigButton>
         </div>
+      </div>
+    );
+  }
 
+  const restart = () => setS({ ...s, stage: 'setup', seats: [], round: 0, turn: 0, reveal: null, tied: [], driver: null });
+
+  /* ---------- Part 2: pyramid, tiebreaker, the bus driver ---------- */
+  if (s.stage === 'pyramid') {
+    return (
+      <Pyramid
+        seats={s.seats}
+        deck={s.deck}
+        onDone={(losers) =>
+          setS(losers.length === 1 ? { ...s, stage: 'driver', driver: losers[0] } : { ...s, stage: 'tiebreak', tied: losers })
+        }
+      />
+    );
+  }
+
+  if (s.stage === 'tiebreak') {
+    return <Tiebreak tied={s.tied} onDone={(driver) => setS({ ...s, stage: 'driver', driver })} />;
+  }
+
+  if (s.stage === 'driver' && s.driver) {
+    return (
+      <div className="bd driver">
+        <div className="driver-hero pop-in">
+          <span className="driver-bus">🚌</span>
+          <span className="bd-avatar xl" style={{ background: s.driver.color }}>
+            {s.driver.avatar}
+          </span>
+        </div>
+        <div className="bd-head center">
+          <span className="kicker">The bus driver is</span>
+          <h2 className="bd-title big">{s.driver.name}</h2>
+          <p className="lead">Buckle up. The ride starts soon.</p>
+        </div>
         <div className="sticky-action stack">
-          <BigButton onClick={() => setS({ ...s, stage: 'setup', seats: [], round: 0, turn: 0, reveal: null })}>Play again</BigButton>
+          <BigButton onClick={restart}>Play again</BigButton>
           <BigButton variant="glass" onClick={exit}>
             Back to games
           </BigButton>

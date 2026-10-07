@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import GameCard from '../components/GameCard';
 import { ChevronIcon, PlusIcon, SettingsIcon } from '../components/Icons';
 import Logo from '../components/Logo';
+import Tap from '../components/Tap';
 import { RoundButton } from '../components/TopBar';
 import { GAMES, playableGames } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
@@ -10,22 +11,6 @@ import { pick } from '../lib/random';
 import { navigate, paths } from '../lib/router';
 import { useApp } from '../state/AppState';
 
-function Tap({ className, style, onClick, children }: { className: string; style?: CSSProperties; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      className={className}
-      style={style}
-      onClick={() => {
-        sfx.pop();
-        buzz();
-        onClick();
-      }}
-    >
-      {children}
-    </button>
-  );
-}
 
 export default function Home() {
   const { players } = useApp();
