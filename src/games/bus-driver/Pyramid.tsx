@@ -44,6 +44,21 @@ interface Game {
   gave: number[];
 }
 
+/** Tiny card backs laid out like the real pyramid, for the size picker. */
+function MiniPyramid({ rows }: { rows: number }) {
+  return (
+    <span className="mini-pyramid" aria-hidden>
+      {[...pyramidRows(rows)].reverse().map((size, r) => (
+        <span key={r} className="mini-pyramid-row">
+          {Array.from({ length: size }, (_, k) => (
+            <i key={k} />
+          ))}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function Pyramid({ seats, deck, onDone }: Props) {
   const [rows, setRows] = useState(DEFAULT_PYRAMID_SIZE);
   const [sipMode, setSipMode] = useState<SipMode>('normal');
@@ -73,8 +88,8 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           <h3 className="section-title">Pyramid size</h3>
           <div className="seg">
             {PYRAMID_SIZES.map((n) => (
-              <Tap key={n} className={`seg-btn${n === rows ? ' active' : ''}`} onClick={() => setRows(n)}>
-                <span className="seg-main">{n} rows</span>
+              <Tap key={n} className={`seg-btn size-btn${n === rows ? ' active' : ''}`} onClick={() => setRows(n)} ariaLabel={`${n} rows, ${pyramidCardCount(n)} cards`}>
+                <MiniPyramid rows={n} />
                 <span className="seg-sub">{pyramidCardCount(n)} cards</span>
               </Tap>
             ))}
