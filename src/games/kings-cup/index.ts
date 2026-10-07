@@ -10,7 +10,7 @@ const kingsCup: GameDefinition = {
   name: 'Kings Cup',
   emoji: '👑',
   tagline: 'Every card is a rule. Don’t draw the last King.',
-  color: 'var(--g-violet)',
+  color: 'var(--c-lilac)',
   categories: ['cards', 'party', 'pregame'],
   minPlayers: 2,
   intensity: 2,

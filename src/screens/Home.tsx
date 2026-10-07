@@ -55,9 +55,7 @@ export default function Home() {
       </header>
 
       <h1 className="headline fade-up">
-        Let’s get this
-        <br />
-        <span className="gradient-text">party started.</span>
+        Let’s get this <span className="mark">party</span> started.
       </h1>
 
       <Tap className="players-card fade-up" onClick={() => navigate(paths.players())}>

@@ -18,7 +18,7 @@ export interface Settings {
 }
 
 export const AVATARS = ['🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '👽', '🤖', '👻', '🤠', '🥸', '😎', '🤡', '🍕', '🌮'];
-export const PLAYER_COLORS = ['#ff2e63', '#ff9f1c', '#7b5cff', '#00c2a8', '#2e9bff', '#ff5ec4', '#ffd23f', '#9cf04a'];
+export const PLAYER_COLORS = ['#ff8a3d', '#ffc83d', '#6b95ff', '#3ddc97', '#ff7ac6', '#b49cff', '#ff5a4e', '#5fd3f3'];
 export const MAX_PLAYERS = 20;
 
 interface AppState {

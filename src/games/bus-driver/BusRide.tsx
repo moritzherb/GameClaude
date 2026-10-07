@@ -1,12 +1,11 @@
 import { useRef, useState } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
-import Tap from '../../components/Tap';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
 import Answers, { Verdict } from './Answers';
-import { questionsFor, type Guess, type Result } from './logic';
+import { QUESTIONS, type Guess, type Result } from './logic';
 import { answerRide, startRide, type RideState } from './ride';
 
 interface Props {
@@ -26,13 +25,13 @@ interface Reveal {
 }
 
 export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
-  const [withSuit, setWithSuit] = useState(true);
   const [ride, setRide] = useState<RideState | null>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [finished, setFinished] = useState(false);
   const answered = useRef(false);
 
-  const questions = questionsFor(withSuit);
+  // The ride always uses all five questions, including "Which suit?".
+  const questions = QUESTIONS;
 
   /* ---------- Intro ---------- */
   if (!ride) {
@@ -48,22 +47,9 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
           <span className="kicker">Part 3 · The bus ride</span>
           <h2 className="bd-title big">{driver.name} drives the bus</h2>
           <p className="lead">
-            Fresh deck, same questions as part 1, all in a row. Get one wrong: drink the question number in sips and start again from question 1. The ride
+            Fresh deck, all five questions from part 1 in a row. Get one wrong: drink the question number in sips and start again from question 1. The ride
             ends when every question is right in one go.
           </p>
-        </div>
-
-        <div className="settings-list">
-          <Tap className={`setting-row${withSuit ? ' on' : ''}`} onClick={() => setWithSuit(!withSuit)} ariaLabel="Include the suit question">
-            <span className="setting-emoji">🃏</span>
-            <span className="setting-text">
-              <span className="setting-label">Question 5: Which suit?</span>
-              <span className="setting-hint">{withSuit ? '5 questions in a row. Hard mode.' : 'Only 4 questions.'}</span>
-            </span>
-            <span className="switch">
-              <span className="switch-knob" />
-            </span>
-          </Tap>
         </div>
 
         <div className="sticky-action">

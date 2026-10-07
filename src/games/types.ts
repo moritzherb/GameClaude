@@ -11,12 +11,12 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'pregame', label: 'Pregame', emoji: '🔥', color: 'var(--g-sunset)' },
-  { id: 'party', label: 'Party', emoji: '🪩', color: 'var(--g-berry)' },
-  { id: 'quick', label: 'Quick', emoji: '⚡', color: 'var(--g-gold)' },
-  { id: 'cards', label: 'Cards', emoji: '🃏', color: 'var(--g-ocean)' },
-  { id: 'dice', label: 'Dice', emoji: '🎲', color: 'var(--g-mint)' },
-  { id: 'teams', label: 'Teams', emoji: '🤝', color: 'var(--g-violet)' },
+  { id: 'pregame', label: 'Pregame', emoji: '🔥', color: 'var(--c-orange)' },
+  { id: 'party', label: 'Party', emoji: '🪩', color: 'var(--c-pink)' },
+  { id: 'quick', label: 'Quick', emoji: '⚡', color: 'var(--c-yellow)' },
+  { id: 'cards', label: 'Cards', emoji: '🃏', color: 'var(--c-blue)' },
+  { id: 'dice', label: 'Dice', emoji: '🎲', color: 'var(--c-mint)' },
+  { id: 'teams', label: 'Teams', emoji: '🤝', color: 'var(--c-lilac)' },
 ];
 
 /** Props every game screen receives from the game shell. */
@@ -36,7 +36,7 @@ export interface GameDefinition {
   emoji: string;
   /** One punchy line shown on the card. */
   tagline: string;
-  /** Card background: one of the gradient tokens, e.g. 'var(--g-sunset)'. */
+  /** Card colour: one of the flat colour tokens, e.g. 'var(--c-yellow)'. Text on it is always dark. */
   color: string;
   categories: CategoryId[];
   minPlayers: number;
