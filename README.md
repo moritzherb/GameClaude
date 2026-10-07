@@ -30,6 +30,7 @@ src/
     types.ts           GameDefinition + categories
     registry.ts        list of all games
     bus-driver/        Bus Driver (part 1: collect your cards)
+    kings-cup/         Kings Cup (rules per card live in rules.ts)
     who-drinks/        example game
 ```
 

@@ -1550,6 +1550,10 @@ p {
   --cw: 96px;
 }
 
+.pcard-xl {
+  --cw: clamp(120px, 36vw, 150px);
+}
+
 .pcard-inner {
   position: relative;
   width: 100%;
@@ -1669,6 +1673,7 @@ p {
 
 /* Never squash content to fit the screen – let the page scroll instead. */
 .bd > *,
+.kc > *,
 .who-drinks > * {
   flex-shrink: 0;
 }
@@ -2045,4 +2050,169 @@ p {
   display: flex;
   gap: 6px;
   padding-left: 50px;
+}
+
+/* ---------- Kings Cup ---------- */
+
+.kc {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 0 auto;
+}
+
+.kc-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kc-status .bd-player {
+  min-width: 0;
+}
+
+.kc-counters {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.kc-kings {
+  display: flex;
+  gap: 2px;
+  font-size: 1.3rem;
+}
+
+.kc-kings i {
+  font-style: normal;
+  opacity: 0.22;
+  filter: grayscale(1);
+  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s var(--ease-spring);
+}
+
+.kc-kings i.on {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.1);
+}
+
+.kc-left {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.kc-table {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 270px;
+  padding: 24px 16px;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 0%, rgba(178, 139, 255, 0.18), transparent 70%), var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.kc-table:not(:disabled):active .pcard {
+  transform: scale(0.95);
+}
+
+.kc-table .pcard {
+  transition: transform 0.15s var(--ease-spring);
+}
+
+.kc-table:disabled {
+  cursor: default;
+}
+
+.kc-hint {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  animation: float 2.4s ease-in-out infinite;
+}
+
+.kc-rule {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: var(--g-violet);
+  animation: pop-in 0.4s var(--ease-spring) 0.4s both;
+}
+
+.kc-rule.finale {
+  background: var(--g-gold);
+}
+
+.kc-rule-emoji {
+  flex: none;
+  font-size: 3.2rem;
+  line-height: 1;
+}
+
+.kc-rule-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kc-rule-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.kc-rule-body {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.kc-rule-note {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.kc-action {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kc-action-label {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.kc-effects {
+  gap: 10px;
+}
+
+.kc-effect {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 1.02rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.kc-effect-icon {
+  flex: none;
+  width: 28px;
+  text-align: center;
 }

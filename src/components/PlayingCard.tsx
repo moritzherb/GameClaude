@@ -5,7 +5,7 @@ interface Props {
   /** Leave empty for a face-down card with nothing behind it yet. */
   card?: Card | null;
   faceUp?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Pulsing glow for the card that's about to be revealed. */
   waiting?: boolean;
   style?: CSSProperties;
