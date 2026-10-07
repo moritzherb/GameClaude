@@ -15,9 +15,10 @@ describe('pyramid shape', () => {
     expect([0, 4, 5, 8, 9, 11, 12, 13, 14].map((i) => rowOfFlip(i, 5))).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4]);
   });
 
-  it('sips per row: normal 1-2-3-4-5, tipsy doubles', () => {
-    expect([0, 1, 2, 3, 4].map((r) => rowSips(r, false))).toEqual([1, 2, 3, 4, 5]);
-    expect([0, 1, 2, 3, 4].map((r) => rowSips(r, true))).toEqual([1, 2, 4, 8, 16]);
+  it('sips per row: normal 1-2-3-4-5, tipsy ×2 doubles, tipsy +2 steps by two', () => {
+    expect([0, 1, 2, 3, 4].map((r) => rowSips(r, 'normal'))).toEqual([1, 2, 3, 4, 5]);
+    expect([0, 1, 2, 3, 4].map((r) => rowSips(r, 'double'))).toEqual([1, 2, 4, 8, 16]);
+    expect([0, 1, 2, 3, 4].map((r) => rowSips(r, 'plus2'))).toEqual([2, 4, 6, 8, 10]);
   });
 });
 
@@ -29,11 +30,15 @@ describe('buildPyramid', () => {
     expect(toppedUp).toBe(false);
   });
 
-  it('adds a fresh deck when too few cards are left', () => {
-    const { cards, toppedUp } = buildPyramid([c(2), c(3)], 5, () => Array.from({ length: 52 }, () => c(9)));
-    expect(cards).toHaveLength(15);
-    expect(cards.slice(0, 2)).toEqual([c(2), c(3)]);
+  it('adds a second deck when too few cards are left, without repeating pyramid cards', () => {
+    const fullDeck = (['spades', 'hearts', 'diamonds', 'clubs'] as const).flatMap((suit) => Array.from({ length: 13 }, (_, i) => c(i + 2, suit)));
+    const leftover = [c(2), c(3), c(14, 'hearts')];
+    const { cards, toppedUp } = buildPyramid(leftover, 6, () => fullDeck);
     expect(toppedUp).toBe(true);
+    expect(cards).toHaveLength(21);
+    expect(cards.slice(0, 3)).toEqual(leftover);
+    const keys = cards.map((x) => `${x.value}${x.suit}`);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });
 

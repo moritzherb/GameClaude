@@ -20,7 +20,7 @@ const busDriver: GameDefinition = {
     'Risky mode adds Round 5 · Guess the exact suit.',
     'Right: give out as many sips as the round number. Wrong: drink them yourself.',
     'Part 2 · The rest of the deck becomes a pyramid (5-4-3-2-1 by default), flipped from the bottom row up.',
-    'Hold the same value as the flipped card? Lay it down and give out that row’s sips (1-2-3-4-5, or doubling in Tipsy mode).',
+    'Hold the same value as the flipped card? Lay it down and give out that row’s sips: 1-2-3-4-5, Tipsy ×2 (1-2-4-8-16) or Tipsy +2 (2-4-6-8-10). Two matching cards = give out twice.',
     'Most cards left at the end drives the bus. A tie goes to a tiebreaker: everyone gets a new card, the deck is flipped, and whoever’s value shows up last drives.',
   ],
   component: BusDriver,

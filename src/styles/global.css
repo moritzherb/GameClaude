@@ -2229,6 +2229,10 @@ p {
   grid-template-columns: 1fr 1fr;
 }
 
+.seg.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .seg-btn {
   display: flex;
   flex-direction: column;

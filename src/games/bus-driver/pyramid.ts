@@ -14,12 +14,22 @@ export function pyramidRows(rows: number) {
   return Array.from({ length: rows }, (_, i) => rows - i);
 }
 
+export type SipMode = 'normal' | 'double' | 'plus2';
+
+export const SIP_MODES: { id: SipMode; label: string }[] = [
+  { id: 'normal', label: 'Normal' },
+  { id: 'double', label: 'Tipsy ×2' },
+  { id: 'plus2', label: 'Tipsy +2' },
+];
+
 /**
  * Sips a card in this row is worth (row 0 = bottom).
- * Normal: 1-2-3-4-5. Tipsy doubles every row: 1-2-4-8-16.
+ * Normal: 1-2-3-4-5. Tipsy ×2 doubles every row: 1-2-4-8-16. Tipsy +2: 2-4-6-8-10.
  */
-export function rowSips(row: number, tipsy: boolean) {
-  return tipsy ? 2 ** row : row + 1;
+export function rowSips(row: number, mode: SipMode) {
+  if (mode === 'double') return 2 ** row;
+  if (mode === 'plus2') return 2 * (row + 1);
+  return row + 1;
 }
 
 /** Which row (0 = bottom) the n-th flipped card belongs to. */
@@ -34,13 +44,19 @@ export function rowOfFlip(flipIndex: number, rows: number) {
 
 /**
  * Takes the pyramid cards off the top of the leftover deck. The rest is put aside.
- * If the leftover deck is too small (lots of players) a fresh deck is added underneath.
+ * If the leftover deck is too small (lots of players) a second deck fills the gap,
+ * skipping cards already in the pyramid so no card lies there twice.
  */
 export function buildPyramid(deck: Card[], rows: number, extraDeck: () => Card[] = () => shuffle(newDeck())) {
   const needed = pyramidCardCount(rows);
-  const toppedUp = deck.length < needed;
-  const source = toppedUp ? [...deck, ...extraDeck()] : deck;
-  return { cards: source.slice(0, needed), toppedUp };
+  if (deck.length >= needed) return { cards: deck.slice(0, needed), toppedUp: false };
+  const taken = new Set(deck.map(cardKey));
+  const extra = extraDeck().filter((c) => !taken.has(cardKey(c)));
+  return { cards: [...deck, ...extra].slice(0, needed), toppedUp: true };
+}
+
+function cardKey(c: Card) {
+  return `${c.value}${c.suit}`;
 }
 
 /** Every card in every hand that matches the flipped value is laid down. */

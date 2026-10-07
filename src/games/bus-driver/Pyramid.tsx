@@ -15,6 +15,8 @@ import {
   pyramidRows,
   rowOfFlip,
   rowSips,
+  SIP_MODES,
+  type SipMode,
 } from './pyramid';
 
 export interface PyramidSeat {
@@ -32,7 +34,7 @@ interface Props {
 
 interface Game {
   rows: number;
-  tipsy: boolean;
+  sipMode: SipMode;
   cards: Card[];
   toppedUp: boolean;
   flips: number;
@@ -44,7 +46,7 @@ interface Game {
 
 export default function Pyramid({ seats, deck, onDone }: Props) {
   const [rows, setRows] = useState(DEFAULT_PYRAMID_SIZE);
-  const [tipsy, setTipsy] = useState(false);
+  const [sipMode, setSipMode] = useState<SipMode>('normal');
   const [game, setGame] = useState<Game | null>(null);
   const [showResult, setShowResult] = useState(false);
   // Flip index already handled, so a double tap can't flip two cards before React re-renders.
@@ -54,7 +56,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   if (!game) {
     const needsTopUp = deck.length < pyramidCardCount(rows);
     const sipsLine = pyramidRows(rows)
-      .map((_, r) => rowSips(r, tipsy))
+      .map((_, r) => rowSips(r, sipMode))
       .join(' – ');
     return (
       <div className="bd">
@@ -81,19 +83,17 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
 
         <section className="section">
           <h3 className="section-title">Sips per row</h3>
-          <div className="seg two">
-            <Tap className={`seg-btn${!tipsy ? ' active' : ''}`} onClick={() => setTipsy(false)}>
-              <span className="seg-main">Normal</span>
-              <span className="seg-sub">{pyramidRows(rows).map((_, r) => rowSips(r, false)).join('-')}</span>
-            </Tap>
-            <Tap className={`seg-btn${tipsy ? ' active' : ''}`} onClick={() => setTipsy(true)}>
-              <span className="seg-main">Tipsy 🔥</span>
-              <span className="seg-sub">{pyramidRows(rows).map((_, r) => rowSips(r, true)).join('-')}</span>
-            </Tap>
+          <div className="seg three">
+            {SIP_MODES.map((m) => (
+              <Tap key={m.id} className={`seg-btn${m.id === sipMode ? ' active' : ''}`} onClick={() => setSipMode(m.id)}>
+                <span className="seg-main">{m.label}</span>
+                <span className="seg-sub">{pyramidRows(rows).map((_, r) => rowSips(r, m.id)).join('-')}</span>
+              </Tap>
+            ))}
           </div>
           <p className="fine-print">
             Bottom to top: {sipsLine} sips per card.
-            {needsTopUp ? ' Not enough cards left, so a fresh deck gets added.' : ` The other ${deck.length - pyramidCardCount(rows)} cards are put aside.`}
+            {needsTopUp ? ' Not enough cards left, so a second deck fills the gap (no card twice in the pyramid).' : ` The other ${deck.length - pyramidCardCount(rows)} cards are put aside.`}
           </p>
         </section>
 
@@ -102,7 +102,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
             size="xl"
             onClick={() => {
               const { cards, toppedUp } = buildPyramid(deck, rows);
-              setGame({ rows, tipsy, cards, toppedUp, flips: 0, hands: seats.map((x) => x.hand), laid: [], gave: seats.map(() => 0) });
+              setGame({ rows, sipMode, cards, toppedUp, flips: 0, hands: seats.map((x) => x.hand), laid: [], gave: seats.map(() => 0) });
             }}
           >
             Lay out the pyramid 🔺
@@ -119,7 +119,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
     if (done || handled.current === game.flips) return;
     handled.current = game.flips;
     const card = game.cards[game.flips];
-    const sips = rowSips(rowOfFlip(game.flips, game.rows), game.tipsy);
+    const sips = rowSips(rowOfFlip(game.flips, game.rows), game.sipMode);
     const { laid, left } = layMatches(game.hands, card);
     setGame({
       ...game,
@@ -193,7 +193,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   const last = lastIndex >= 0 ? game.cards[lastIndex] : null;
   const lastLaid = lastIndex >= 0 ? game.laid[lastIndex] : null;
   const lastRow = lastIndex >= 0 ? rowOfFlip(lastIndex, game.rows) : 0;
-  const lastSips = rowSips(lastRow, game.tipsy);
+  const lastSips = rowSips(lastRow, game.sipMode);
   const nextRow = rowOfFlip(Math.min(game.flips, total - 1), game.rows);
   // Screen minus gutters, pyramid padding and the two side columns, shared by the bottom row.
   const cardWidth = `clamp(28px, calc((min(100vw, 560px) - 136px - ${(game.rows - 1) * 6}px) / ${game.rows}), 62px)`;
@@ -203,7 +203,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
       <div className="pyramid" style={{ '--cw': cardWidth } as CSSProperties}>
         {[...sizes.keys()].reverse().map((r) => (
           <div key={r} className={`pyramid-row${r === nextRow && !done ? ' current' : ''}`}>
-            <span className="pyramid-sips">×{rowSips(r, game.tipsy)}</span>
+            <span className="pyramid-sips">×{rowSips(r, game.sipMode)}</span>
             <div className="pyramid-cards">
               {Array.from({ length: sizes[r] }, (_, k) => {
                 const idx = starts[r] + k;
