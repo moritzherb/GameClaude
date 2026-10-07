@@ -12,6 +12,7 @@ npm install
 npm run dev       # dev server – open the "Network" URL on your phone (same Wi-Fi)
 npm run build     # production build into dist/
 npm run preview   # serve the production build
+npm test          # game logic tests (vitest)
 ```
 
 `dist/` is fully static (relative paths + hash routing), so it can be hosted anywhere: GitHub Pages, Netlify, Vercel…
@@ -22,12 +23,13 @@ npm run preview   # serve the production build
 src/
   App.tsx              routes (#/, #/games, #/games/:id, #/play/:id, #/players, #/settings)
   state/AppState.tsx   players + settings, saved in localStorage
-  lib/                 fx (sound, vibration, confetti), router, wake lock, random helpers
+  lib/                 fx (sound, vibration, confetti), router, wake lock, random + card deck helpers
   components/          BigButton, TopBar, Sheet, GameCard, Logo, … (the drunk-proof UI kit)
   screens/             Home, Library, GameDetail, Play (game shell), Players, Settings, AgeGate
   games/
     types.ts           GameDefinition + categories
     registry.ts        list of all games
+    bus-driver/        Bus Driver (part 1: collect your cards)
     who-drinks/        example game
 ```
 
