@@ -9,8 +9,8 @@ interface Props {
   closeLabel?: string;
 }
 
-/** Bottom sheet with one giant close button. Tapping outside also closes it. */
-export default function Sheet({ open, onClose, title, children, closeLabel = 'GOT IT 👍' }: Props) {
+/** Bottom sheet with one big close button. Tapping outside also closes it. */
+export default function Sheet({ open, onClose, title, children, closeLabel = 'Got it' }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -22,9 +22,10 @@ export default function Sheet({ open, onClose, title, children, closeLabel = 'GO
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet slide-up" role="dialog" aria-modal onClick={(e) => e.stopPropagation()}>
+        <span className="sheet-grabber" />
         <h2 className="sheet-title">{title}</h2>
         <div className="sheet-body">{children}</div>
-        <BigButton color="var(--lime)" onClick={onClose}>
+        <BigButton variant="light" onClick={onClose}>
           {closeLabel}
         </BigButton>
       </div>

@@ -1,26 +1,25 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { buzz, sfx } from '../lib/fx';
+
+export type ButtonVariant = 'primary' | 'light' | 'glass' | 'danger';
 
 interface Props {
   children: ReactNode;
   onClick?: () => void;
-  color?: string;
-  textColor?: string;
+  variant?: ButtonVariant;
   size?: 'md' | 'lg' | 'xl';
-  tilt?: 'left' | 'right';
   disabled?: boolean;
   className?: string;
   ariaLabel?: string;
 }
 
-/** Chunky, squishy, impossible-to-miss button. The backbone of the drunk-proof UI. */
-export default function BigButton({ children, onClick, color = 'var(--pink)', textColor, size = 'lg', tilt, disabled, className = '', ariaLabel }: Props) {
+/** Big pill button. Easy to hit even with a drink in the other hand. */
+export default function BigButton({ children, onClick, variant = 'primary', size = 'lg', disabled, className = '', ariaLabel }: Props) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
-      className={`big-btn big-btn-${size}${tilt ? ` tilt-${tilt}` : ''} ${className}`}
-      style={{ '--btn-bg': color, ...(textColor ? { '--btn-fg': textColor } : {}) } as CSSProperties}
+      className={`big-btn big-btn-${size} big-btn-${variant} ${className}`}
       disabled={disabled}
       onClick={() => {
         sfx.pop();

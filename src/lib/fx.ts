@@ -48,7 +48,7 @@ export const sfx = {
   },
 };
 
-const CONFETTI_COLORS = ['#ff3d9a', '#ffd23f', '#3de8ff', '#a6ff3d', '#ff8a3d', '#b43dff', '#fff9ef'];
+const CONFETTI_COLORS = ['#ff2e63', '#ff9f1c', '#7b5cff', '#00c2a8', '#ffd23f', '#ffffff'];
 
 export function confetti(amount = 90) {
   const layer = document.createElement('div');

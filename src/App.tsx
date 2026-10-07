@@ -1,4 +1,4 @@
-import Bubbles from './components/Bubbles';
+import Backdrop from './components/Backdrop';
 import { findGame } from './games/registry';
 import { CATEGORIES, type CategoryId } from './games/types';
 import { useRoute } from './lib/router';
@@ -39,7 +39,7 @@ export default function App() {
   const { ageConfirmed, confirmAge } = useApp();
   return (
     <>
-      <Bubbles />
+      <Backdrop />
       {ageConfirmed ? <Screen /> : <AgeGate onConfirm={confirmAge} />}
     </>
   );

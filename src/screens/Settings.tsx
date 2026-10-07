@@ -14,7 +14,8 @@ export default function Settings() {
 
   return (
     <main className="screen">
-      <TopBar title="⚙️ Settings" onBack={() => navigate(paths.home)} />
+      <TopBar onBack={() => navigate(paths.home)} />
+      <h1 className="large-title">Settings</h1>
 
       <div className="settings-list">
         {OPTIONS.map((o) => {
@@ -40,7 +41,7 @@ export default function Settings() {
                 <span className="setting-hint">{o.hint}</span>
               </span>
               <span className="switch">
-                <span className="switch-knob">{on ? 'ON' : 'OFF'}</span>
+                <span className="switch-knob" />
               </span>
             </button>
           );
@@ -48,7 +49,7 @@ export default function Settings() {
       </div>
 
       <section className="panel">
-        <h2 className="panel-title">💛 Play nice</h2>
+        <h2 className="section-title">Play nice 💛</h2>
         <ul className="plain-list">
           <li>Every sip can be water or a soft drink. No pressure, ever.</li>
           <li>Eat something before you start.</li>

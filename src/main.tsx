@@ -1,6 +1,5 @@
-import '@fontsource/luckiest-guy';
-import '@fontsource/nunito/800.css';
-import '@fontsource/nunito/900.css';
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/inter';
 import './styles/global.css';
 
 import { StrictMode } from 'react';

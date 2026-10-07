@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import BigButton from '../components/BigButton';
 import Intensity from '../components/Intensity';
 import RulesList from '../components/RulesList';
@@ -16,46 +17,52 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
     <main className="screen">
       <TopBar onBack={() => navigate(paths.games())} />
 
-      <section className="detail-hero">
-        <div className="detail-emoji wobble" style={{ background: game.color }}>
-          {game.emoji}
-        </div>
+      <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
+        <span className="detail-emoji">{game.emoji}</span>
         <h1 className="detail-name">{game.name}</h1>
         <p className="detail-tagline">{game.tagline}</p>
-        <div className="pills">
-          <span className="pill">👥 {playerRange} players</span>
-          <span className="pill">
-            <Intensity level={game.intensity} showLabel />
-          </span>
-          {game.needs?.map((n) => (
-            <span key={n} className="pill">
-              🧰 {n}
-            </span>
-          ))}
-        </div>
       </section>
 
+      <div className="stats">
+        <div className="stat">
+          <span className="stat-label">Players</span>
+          <span className="stat-value">{playerRange}</span>
+        </div>
+        <div className="stat">
+          <span className="stat-label">Intensity</span>
+          <span className="stat-value">
+            <Intensity level={game.intensity} showLabel />
+          </span>
+        </div>
+        {game.needs?.length ? (
+          <div className="stat wide">
+            <span className="stat-label">You’ll need</span>
+            <span className="stat-value">{game.needs.join(' · ')}</span>
+          </div>
+        ) : null}
+      </div>
+
       <section className="panel">
-        <h2 className="panel-title">How to play</h2>
+        <h2 className="section-title">How to play</h2>
         <RulesList rules={game.rules} />
       </section>
 
       <div className="sticky-action">
         {!game.component ? (
-          <BigButton color="var(--white)" disabled>
-            COMING SOON 🔜
+          <BigButton variant="glass" disabled>
+            Coming soon
           </BigButton>
         ) : missing > 0 ? (
-          <BigButton color="var(--cyan)" size="xl" onClick={() => navigate(paths.players(paths.game(game.id)))}>
-            👥 ADD {missing} MORE PLAYER{missing > 1 ? 'S' : ''}
+          <BigButton variant="light" size="xl" onClick={() => navigate(paths.players(paths.game(game.id)))}>
+            Add {missing} more player{missing > 1 ? 's' : ''}
           </BigButton>
         ) : tooMany ? (
-          <BigButton color="var(--orange)" onClick={() => navigate(paths.players(paths.game(game.id)))}>
-            👥 MAX {game.maxPlayers} PLAYERS
+          <BigButton variant="light" onClick={() => navigate(paths.players(paths.game(game.id)))}>
+            Max {game.maxPlayers} players
           </BigButton>
         ) : (
-          <BigButton color="var(--lime)" size="xl" onClick={() => navigate(paths.play(game.id))}>
-            LET’S GO! 🚀
+          <BigButton size="xl" onClick={() => navigate(paths.play(game.id))}>
+            Start game
           </BigButton>
         )}
       </div>

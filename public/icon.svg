@@ -1,12 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#1a0533"/>
-  <circle cx="256" cy="256" r="200" fill="#ff3d9a"/>
-  <g transform="rotate(-12 256 256)">
-    <rect x="150" y="170" width="170" height="220" rx="22" fill="#ffd23f" stroke="#1a0533" stroke-width="18"/>
-    <path d="M320 215h34a36 36 0 0 1 36 36v54a36 36 0 0 1-36 36h-34" fill="none" stroke="#1a0533" stroke-width="18"/>
-    <path d="M140 175c0-38 30-58 58-48 12-30 58-38 80-10 30-8 56 12 52 50z" fill="#fff9ef" stroke="#1a0533" stroke-width="16" stroke-linejoin="round"/>
-    <circle cx="200" cy="270" r="12" fill="#fff9ef"/>
-    <circle cx="250" cy="320" r="9" fill="#fff9ef"/>
-    <circle cx="225" cy="350" r="7" fill="#fff9ef"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff2e63"/>
+      <stop offset="1" stop-color="#ff7a3d"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.8" cy="0.15" r="0.6">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#g)"/>
+  <rect width="512" height="512" rx="116" fill="url(#shine)"/>
+  <!-- two glasses clinking -->
+  <g fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(-14 200 290)">
+      <path d="M140 170h120l-14 150a46 46 0 0 1-92 0z"/>
+      <path d="M200 366v40M162 406h76"/>
+    </g>
+    <g transform="rotate(14 312 290)">
+      <path d="M252 170h120l-14 150a46 46 0 0 1-92 0z"/>
+      <path d="M312 366v40M274 406h76"/>
+    </g>
+    <path d="M256 92v34M200 106l14 26M312 106l-14 26"/>
   </g>
 </svg>

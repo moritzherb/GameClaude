@@ -6,30 +6,34 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const [tooYoung, setTooYoung] = useState(false);
 
   return (
-    <main className="screen center-screen">
-      <Logo />
+    <main className="screen gate">
+      <div className="gate-top">
+        <Logo size="lg" />
+      </div>
       {tooYoung ? (
-        <>
-          <div className="mega-emoji wobble">🧃</div>
-          <p className="big-text">No worries! Come back when you’re old enough.</p>
-          <BigButton color="var(--cyan)" onClick={() => setTooYoung(false)}>
-            ← OOPS, GO BACK
+        <div className="gate-body fade-up">
+          <div className="gate-emoji">🧃</div>
+          <h1 className="headline">No worries.</h1>
+          <p className="lead">Come back when you’re old enough. Juice is great too.</p>
+          <BigButton variant="glass" onClick={() => setTooYoung(false)}>
+            Go back
           </BigButton>
-        </>
+        </div>
       ) : (
-        <>
-          <div className="mega-emoji wobble">🍻</div>
-          <p className="big-text">Are you old enough to drink where you are?</p>
+        <div className="gate-body fade-up">
+          <div className="gate-emoji">🥂</div>
+          <h1 className="headline">Are you of legal drinking age?</h1>
+          <p className="lead">Party games for pregames, house parties and everything after.</p>
           <div className="stack">
-            <BigButton color="var(--lime)" size="xl" tilt="left" onClick={onConfirm}>
-              YES, LET’S GO!
+            <BigButton size="xl" onClick={onConfirm}>
+              Yes, let’s go
             </BigButton>
-            <BigButton color="var(--white)" tilt="right" onClick={() => setTooYoung(true)}>
-              NOPE 🧃
+            <BigButton variant="glass" onClick={() => setTooYoung(true)}>
+              Not yet
             </BigButton>
           </div>
-          <p className="fine-print">Drink responsibly. Water counts as a sip. Never drink and drive.</p>
-        </>
+          <p className="fine-print">Drink responsibly. Every sip can be water. Never drink and drive.</p>
+        </div>
       )}
     </main>
   );

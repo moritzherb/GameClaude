@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import BigButton from '../components/BigButton';
+import { HelpIcon } from '../components/Icons';
 import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
 import TopBar, { RoundButton } from '../components/TopBar';
@@ -32,21 +33,21 @@ export default function Play({ game }: { game: GameDefinition }) {
         onBack={() => setConfirmExit(true)}
         icon="close"
         right={
-          <RoundButton label="Rules" color="var(--yellow)" onClick={() => setShowRules(true)}>
-            ?
+          <RoundButton label="Rules" onClick={() => setShowRules(true)}>
+            <HelpIcon />
           </RoundButton>
         }
       />
 
       <Game players={players} exit={exit} />
 
-      <Sheet open={showRules} onClose={() => setShowRules(false)} title={`${game.emoji} How to play`}>
+      <Sheet open={showRules} onClose={() => setShowRules(false)} title="How to play">
         <RulesList rules={game.rules} />
       </Sheet>
 
-      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title="Leave the game? 🥺" closeLabel="NO, KEEP PLAYING 🍻">
-        <BigButton color="var(--pink)" onClick={exit}>
-          YES, QUIT
+      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title="Leave the game?" closeLabel="Keep playing">
+        <BigButton variant="danger" onClick={exit}>
+          Quit game
         </BigButton>
       </Sheet>
     </main>

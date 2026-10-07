@@ -56,13 +56,16 @@ export default function WhoDrinks({ players }: GameProps) {
   return (
     <div className="who-drinks">
       {winner && result ? (
-        <div className="result-card pop-in" style={{ background: winner.color }}>
+        <div className="result-card pop-in" style={{ '--chip': winner.color } as CSSProperties}>
           <div className="result-avatar wobble">{winner.avatar}</div>
           <div className="result-name">{winner.name}</div>
           <div className="result-fate">{result.fate}</div>
         </div>
       ) : (
-        <div className="who-drinks-hint">{spinning ? 'Rolling… 🥁' : 'Who’s gonna drink? 👀'}</div>
+        <div className="who-drinks-hint">
+          <span className="who-drinks-hint-emoji">{spinning ? '🥁' : '👀'}</span>
+          {spinning ? 'Rolling…' : 'Who’s gonna drink?'}
+        </div>
       )}
 
       <div className="spin-grid">
@@ -79,8 +82,8 @@ export default function WhoDrinks({ players }: GameProps) {
       </div>
 
       <div className="sticky-action">
-        <BigButton color="var(--yellow)" size="xl" onClick={spin} disabled={spinning}>
-          {result ? 'AGAIN! 🔁' : 'SPIN! 🎰'}
+        <BigButton size="xl" onClick={spin} disabled={spinning}>
+          {result ? 'Spin again' : 'Spin'}
         </BigButton>
       </div>
     </div>

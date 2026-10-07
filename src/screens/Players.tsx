@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import BigButton from '../components/BigButton';
+import { CloseIcon, PlusIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { buzz, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
@@ -37,7 +38,8 @@ export default function Players({ next }: { next: string | null }) {
 
   return (
     <main className="screen">
-      <TopBar title="👥 Players" onBack={done} />
+      <TopBar onBack={done} />
+      <h1 className="large-title">Players</h1>
 
       <form className="add-player" onSubmit={submit}>
         <input
@@ -45,7 +47,7 @@ export default function Players({ next }: { next: string | null }) {
           className="add-player-input"
           value={name}
           maxLength={18}
-          placeholder={full ? 'Party’s full! 🎉' : 'Type a name…'}
+          placeholder={full ? 'Party’s full 🎉' : 'Add a name'}
           disabled={full}
           enterKeyHint="done"
           autoComplete="off"
@@ -53,15 +55,15 @@ export default function Players({ next }: { next: string | null }) {
           onChange={(e) => setName(e.target.value)}
         />
         <button type="submit" className="add-player-btn" aria-label="Add player" disabled={full}>
-          +
+          <PlusIcon />
         </button>
       </form>
-      {duplicate && name.trim() && <p className="warn">Already playing! Pick a nickname 😜</p>}
+      {duplicate && name.trim() && <p className="warn">Already playing. Try a nickname 😉</p>}
 
       {players.length === 0 ? (
         <div className="empty">
-          <div className="mega-emoji wobble">🦗</div>
-          <p className="big-text">It’s quiet in here… add the squad!</p>
+          <div className="empty-emoji">🦗</div>
+          <p className="lead">It’s quiet in here. Add the squad.</p>
         </div>
       ) : (
         <ul className="player-list">
@@ -90,7 +92,7 @@ export default function Players({ next }: { next: string | null }) {
                   removePlayer(p.id);
                 }}
               >
-                ✕
+                <CloseIcon />
               </button>
             </li>
           ))}
@@ -109,13 +111,13 @@ export default function Players({ next }: { next: string | null }) {
             } else setArmClear(true);
           }}
         >
-          {armClear ? 'Tap again to kick everyone 💥' : '🗑️ Remove everyone'}
+          {armClear ? 'Tap again to remove everyone' : 'Remove everyone'}
         </button>
       )}
 
       <div className="sticky-action">
-        <BigButton color="var(--lime)" size="xl" onClick={done}>
-          {next ? 'READY! →' : 'DONE ✓'}
+        <BigButton size="xl" onClick={done}>
+          {next ? 'Ready' : 'Done'}
         </BigButton>
       </div>
     </main>

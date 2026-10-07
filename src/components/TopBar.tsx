@@ -1,21 +1,21 @@
 import type { ReactNode } from 'react';
 import { buzz, sfx } from '../lib/fx';
+import { BackIcon, CloseIcon } from './Icons';
 
 interface Props {
   title?: ReactNode;
-  /** Where the left button goes. Shows ← (or 🏠 when icon="home"). */
+  /** Where the left button goes. */
   onBack?: () => void;
-  icon?: 'back' | 'home' | 'close';
+  icon?: 'back' | 'close';
   right?: ReactNode;
 }
 
-export function RoundButton({ onClick, label, children, color = 'var(--white)' }: { onClick: () => void; label: string; children: ReactNode; color?: string }) {
+export function RoundButton({ onClick, label, children, accent }: { onClick: () => void; label: string; children: ReactNode; accent?: boolean }) {
   return (
     <button
       type="button"
-      className="round-btn"
+      className={`round-btn${accent ? ' accent' : ''}`}
       aria-label={label}
-      style={{ background: color }}
       onClick={() => {
         sfx.pop();
         buzz();
@@ -27,16 +27,14 @@ export function RoundButton({ onClick, label, children, color = 'var(--white)' }
   );
 }
 
-const ICONS = { back: '←', home: '🏠', close: '✕' };
-
 /** Same layout on every screen: escape hatch top-left, title in the middle, extras on the right. */
 export default function TopBar({ title, onBack, icon = 'back', right }: Props) {
   return (
     <header className="top-bar">
       <div className="top-bar-side">
         {onBack && (
-          <RoundButton onClick={onBack} label={icon === 'back' ? 'Back' : icon === 'home' ? 'Home' : 'Close'}>
-            {ICONS[icon]}
+          <RoundButton onClick={onBack} label={icon === 'back' ? 'Back' : 'Close'}>
+            {icon === 'back' ? <BackIcon /> : <CloseIcon />}
           </RoundButton>
         )}
       </div>

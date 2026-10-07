@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import GameCard from '../components/GameCard';
 import TopBar from '../components/TopBar';
 import { GAMES } from '../games/registry';
@@ -13,12 +12,11 @@ export default function Library({ category }: { category: CategoryId | null }) {
   );
   const current = CATEGORIES.find((c) => c.id === category);
 
-  const chip = (id: CategoryId | null, label: string, color: string) => (
+  const chip = (id: CategoryId | null, label: string) => (
     <button
       key={id ?? 'all'}
       type="button"
       className={`chip${category === id ? ' active' : ''}`}
-      style={{ '--chip': color } as CSSProperties}
       onClick={() => {
         sfx.pop();
         buzz();
@@ -31,21 +29,24 @@ export default function Library({ category }: { category: CategoryId | null }) {
 
   return (
     <main className="screen">
-      <TopBar title={current ? `${current.emoji} ${current.label}` : '📚 All Games'} onBack={() => navigate(paths.home)} icon="home" />
+      <TopBar onBack={() => navigate(paths.home)} />
+      <h1 className="large-title">{current ? `${current.label} ${current.emoji}` : 'All games'}</h1>
 
       <div className="chips">
-        {chip(null, '✨ All', 'var(--white)')}
-        {CATEGORIES.map((c) => chip(c.id, `${c.emoji} ${c.label}`, c.color))}
+        {chip(null, 'All')}
+        {CATEGORIES.map((c) => chip(c.id, `${c.emoji} ${c.label}`))}
       </div>
 
       <div className="game-grid">
-        {games.map((g, i) => (
-          <GameCard key={g.id} game={g} index={i} onOpen={() => navigate(paths.game(g.id))} />
+        {games.map((g) => (
+          <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
         ))}
         <div className="game-card placeholder">
-          <span className="game-card-emoji">🔜</span>
-          <span className="game-card-name">More games incoming</span>
-          <span className="game-card-tagline">Hydrate while you wait 💧</span>
+          <span className="game-card-emoji">✨</span>
+          <span className="game-card-body">
+            <span className="game-card-name">More soon</span>
+            <span className="game-card-tagline">New games are on the way.</span>
+          </span>
         </div>
       </div>
     </main>
