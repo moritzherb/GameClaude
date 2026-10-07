@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
-import { cardName, newDeck, SUIT_NAME, SUIT_SYMBOL, SUITS, type Card } from '../../lib/cards';
+import { cardName, newDeck, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
 import type { Player } from '../../state/AppState';
 import type { GameProps } from '../types';
+import Answers, { Verdict } from './Answers';
+import BusRide from './BusRide';
 import { judge, questionsFor, type Guess, type Result } from './logic';
 import Pyramid from './Pyramid';
 import Tiebreak from './Tiebreak';
@@ -211,7 +213,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
   const restart = () => setS({ ...s, stage: 'setup', seats: [], round: 0, turn: 0, reveal: null, tied: [], driver: null });
 
-  /* ---------- Part 2: pyramid, tiebreaker, the bus driver ---------- */
+  /* ---------- Part 2: pyramid and tiebreaker, part 3: the bus ride ---------- */
   if (s.stage === 'pyramid') {
     return (
       <Pyramid
@@ -229,27 +231,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   }
 
   if (s.stage === 'driver' && s.driver) {
-    return (
-      <div className="bd driver">
-        <div className="driver-hero pop-in">
-          <span className="driver-bus">🚌</span>
-          <span className="bd-avatar xl" style={{ background: s.driver.color }}>
-            {s.driver.avatar}
-          </span>
-        </div>
-        <div className="bd-head center">
-          <span className="kicker">The bus driver is</span>
-          <h2 className="bd-title big">{s.driver.name}</h2>
-          <p className="lead">Buckle up. The ride starts soon.</p>
-        </div>
-        <div className="sticky-action stack">
-          <BigButton onClick={restart}>Play again</BigButton>
-          <BigButton variant="glass" onClick={exit}>
-            Back to games
-          </BigButton>
-        </div>
-      </div>
-    );
+    return <BusRide driver={s.driver} onPlayAgain={restart} onExit={exit} />;
   }
 
   const progress = (
@@ -352,75 +334,12 @@ export default function BusDriver({ players, exit }: GameProps) {
   );
 }
 
-function Answers({ questionId, onAnswer }: { questionId: string; onAnswer: (g: Guess) => void }) {
-  const btn = (key: string, symbol: ReactNode, label: string, tone: string, guess: Guess) => (
-    <Tap key={key} className={`answer-btn ${tone}`} onClick={() => onAnswer(guess)}>
-      <span className="answer-symbol">{symbol}</span>
-      <span className="answer-label">{label}</span>
-    </Tap>
-  );
-
-  switch (questionId) {
-    case 'color':
-      return (
-        <div className="answer-grid">
-          {btn('red', '♥♦', 'Red', 'tone-red', { q: 'color', color: 'red' })}
-          {btn('black', '♠♣', 'Black', 'tone-black', { q: 'color', color: 'black' })}
-        </div>
-      );
-    case 'higher-lower':
-      return (
-        <div className="answer-grid">
-          {btn('higher', '⬆', 'Higher', 'tone-mint', { q: 'higher-lower', dir: 'higher' })}
-          {btn('lower', '⬇', 'Lower', 'tone-ocean', { q: 'higher-lower', dir: 'lower' })}
-        </div>
-      );
-    case 'inside-outside':
-      return (
-        <div className="answer-grid">
-          {btn('inside', '→ ←', 'Inside', 'tone-violet', { q: 'inside-outside', where: 'inside' })}
-          {btn('outside', '← →', 'Outside', 'tone-berry', { q: 'inside-outside', where: 'outside' })}
-        </div>
-      );
-    case 'have-it':
-      return (
-        <div className="answer-grid">
-          {btn('yes', '👍', 'Yes, got it', 'tone-mint', { q: 'have-it', has: true })}
-          {btn('no', '👎', 'Nope', 'tone-black', { q: 'have-it', has: false })}
-        </div>
-      );
-    default:
-      return (
-        <div className="answer-grid">
-          {SUITS.map((suit) =>
-            btn(suit, SUIT_SYMBOL[suit], SUIT_NAME[suit], suit === 'hearts' || suit === 'diamonds' ? 'tone-suit-red' : 'tone-suit-black', {
-              q: 'suit',
-              suit,
-            }),
-          )}
-        </div>
-      );
-  }
-}
-
 function ResultBanner({ result, card, newDeck }: { result: Result; card: Card; newDeck: boolean }) {
+  const s = result.sips > 1 ? 's' : '';
   const copy = {
-    correct: { emoji: '🎉', title: 'Correct!', sub: `Give out ${result.sips} sip${result.sips > 1 ? 's' : ''}` },
-    wrong: { emoji: '🍺', title: 'Wrong!', sub: `Drink ${result.sips} sip${result.sips > 1 ? 's' : ''}` },
+    correct: { emoji: '🎉', title: 'Correct!', sub: `Give out ${result.sips} sip${s}` },
+    wrong: { emoji: '🍺', title: 'Wrong!', sub: `Drink ${result.sips} sip${s}` },
     same: { emoji: '😱', title: 'Same value!', sub: `Double trouble: drink ${result.sips} sips` },
   }[result.outcome];
-
-  return (
-    <div className={`bd-result ${result.outcome}`}>
-      <span className="bd-result-emoji">{copy.emoji}</span>
-      <span className="bd-result-text">
-        <span className="bd-result-title">{copy.title}</span>
-        <span className="bd-result-sub">{copy.sub}</span>
-        <span className="bd-result-card">
-          It was {cardName(card)}
-          {newDeck ? ' · fresh deck opened' : ''}
-        </span>
-      </span>
-    </div>
-  );
+  return <Verdict tone={result.outcome} {...copy} detail={`It was ${cardName(card)}${newDeck ? ' · fresh deck opened' : ''}`} />;
 }

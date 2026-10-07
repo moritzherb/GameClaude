@@ -1773,6 +1773,21 @@ p {
   background: var(--g-accent);
 }
 
+.bd-progress span.fail {
+  background: #ff3b3b;
+}
+
+.bd-question-num {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .bd-rules {
   display: flex;
   flex-direction: column;
