@@ -4,7 +4,7 @@ import { buzz, sfx } from '../lib/fx';
 import Intensity from './Intensity';
 
 export default function GameCard({ game, onOpen, wide }: { game: GameDefinition; onOpen: () => void; wide?: boolean }) {
-  const soon = !game.component;
+  const soon = !game.component && !game.online;
   const players = game.maxPlayers ? `${game.minPlayers}–${game.maxPlayers}` : `${game.minPlayers}+`;
   return (
     <button
@@ -18,6 +18,7 @@ export default function GameCard({ game, onOpen, wide }: { game: GameDefinition;
       }}
     >
       {soon && <span className="tag">Soon</span>}
+      {game.online && <span className="tag">📱 Every phone</span>}
       <span className="game-card-emoji">{game.emoji}</span>
       <span className="game-card-body">
         <span className="game-card-name">{game.name}</span>

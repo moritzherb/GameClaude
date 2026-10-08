@@ -4,6 +4,7 @@ import { CloseIcon } from '../components/Icons';
 import QrCode from '../components/QrCode';
 import Tap from '../components/Tap';
 import TopBar from '../components/TopBar';
+import { findGame, onlineGames } from '../games/registry';
 import { buzz, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 import { useProfile } from '../net/profile';
@@ -188,6 +189,7 @@ function Lobby() {
   };
 
   const online = room.members.filter((m) => m.online).length;
+  const running = room.game ? findGame(room.game) : undefined;
 
   return (
     <main className="screen">
@@ -246,10 +248,34 @@ function Lobby() {
         <span className="cheers-sub">Shows up on every phone</span>
       </Tap>
 
-      {isHost ? (
-        <section className="panel">
+      {running ? (
+        <BigButton size="xl" onClick={() => navigate(paths.online(running.id))}>
+          {running.emoji} Back to {running.name}
+        </BigButton>
+      ) : isHost ? (
+        <section className="section">
           <h2 className="section-title">Games for every phone</h2>
-          <p className="lead">Coming soon. For now you can use everyone in the room as the player list for the normal games.</p>
+          <div className="online-games">
+            {onlineGames().map((g) => (
+              <Tap
+                key={g.id}
+                className="online-game"
+                style={{ '--card-bg': g.color } as CSSProperties}
+                onClick={() => {
+                  room.startGame(g.id);
+                  navigate(paths.online(g.id));
+                }}
+              >
+                <span className="online-game-emoji">{g.emoji}</span>
+                <span className="online-game-text">
+                  <span className="online-game-name">{g.name}</span>
+                  <span className="online-game-tagline">{g.tagline}</span>
+                </span>
+                <span className="online-game-go">Start</span>
+              </Tap>
+            ))}
+          </div>
+          <p className="fine-print">Or use everyone in the room as the player list for the one-phone games:</p>
           <BigButton
             variant="glass"
             disabled={room.members.length < 2}

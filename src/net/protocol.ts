@@ -25,7 +25,8 @@ export type ToHost =
 
 /** Host → guest */
 export type ToGuest =
-  | { t: 'lobby'; code: string; members: Member[] }
+  /** `game`: id of the game the host has running in this room, or null in the lobby. */
+  | { t: 'lobby'; code: string; members: Member[]; game: string | null }
   | { t: 'cheers'; from: string }
   /** Anything a game wants to tell one or all guests (state, a private hand). */
   | { t: 'game'; data: unknown }
