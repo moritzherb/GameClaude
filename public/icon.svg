@@ -1,15 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="116" fill="#2d5bff"/>
-  <!-- two glasses clinking -->
-  <g stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
-    <g transform="rotate(-14 200 290)">
-      <path d="M140 170h120l-14 150a46 46 0 0 1-92 0z" fill="#ffc83d"/>
-      <path d="M200 366v40M162 406h76" fill="none"/>
-    </g>
-    <g transform="rotate(14 312 290)">
-      <path d="M252 170h120l-14 150a46 46 0 0 1-92 0z" fill="#ffc83d"/>
-      <path d="M312 366v40M274 406h76" fill="none"/>
-    </g>
-    <path d="M256 92v34M200 106l14 26M312 106l-14 26" fill="none"/>
+  <rect width="512" height="512" fill="#10110e"/>
+  <!-- the lime bang from the wordmark, on a yellow ticket stub -->
+  <g transform="rotate(-8 256 256)">
+    <rect x="136" y="136" width="240" height="240" rx="28" fill="#ffd23f"/>
+    <circle cx="136" cy="256" r="22" fill="#10110e"/>
+    <circle cx="376" cy="256" r="22" fill="#10110e"/>
+  </g>
+  <g transform="rotate(10 256 256)" fill="#10110e">
+    <rect x="226" y="150" width="60" height="150" rx="14"/>
+    <circle cx="256" cy="344" r="32"/>
   </g>
 </svg>

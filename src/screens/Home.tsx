@@ -12,6 +12,7 @@ import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
+const TICKER = ['Pregame', 'House party', 'Afters', 'Water counts as a sip', 'Never drink and drive', 'Last call'];
 
 export default function Home() {
   const { players } = useApp();
@@ -48,72 +49,70 @@ export default function Home() {
 
   const featured = [...GAMES].sort((a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online)).slice(0, 8);
 
+  const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace(',', '').replace('/', '.');
+
   return (
     <main className="screen home">
       <header className="home-header">
         <Logo />
+        <span className="home-date">{date}</span>
         <RoundButton label="Settings" onClick={() => navigate(paths.settings)}>
           <SettingsIcon />
         </RoundButton>
       </header>
 
-      <div className="home-title fade-up">
-        <span className="home-date">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-        <h1 className="large-title">Tonight</h1>
-      </div>
+      <h1 className="poster-title fade-up">
+        Tonight’s <span className="hl">line-up</span>
+      </h1>
 
-      <Tap className="players-card fade-up" onClick={() => navigate(paths.players())}>
-        {players.length ? (
+      <Tap className="crew fade-up" onClick={() => navigate(paths.players())}>
+        <span className="crew-count">{players.length || <PlusIcon />}</span>
+        <span className="crew-text">
+          <span className="crew-label">The crew</span>
+          <span className="crew-sub">{players.length ? 'Tap to edit who’s in' : 'Add who’s playing tonight'}</span>
+        </span>
+        {players.length > 0 && (
           <span className="avatar-stack">
-            {players.slice(0, 5).map((p) => (
+            {players.slice(0, 4).map((p) => (
               <span key={p.id} style={{ background: p.color }}>
                 {p.avatar}
               </span>
             ))}
-            {players.length > 5 && <span className="more">+{players.length - 5}</span>}
-          </span>
-        ) : (
-          <span className="players-card-icon">
-            <PlusIcon />
+            {players.length > 4 && <span className="more">+{players.length - 4}</span>}
           </span>
         )}
-        <span className="players-card-text">
-          <span className="players-card-title">{players.length ? `${players.length} players` : 'Add players'}</span>
-          <span className="players-card-sub">{players.length ? 'Tap to edit the squad' : 'Who’s playing tonight?'}</span>
-        </span>
-        <span className="players-card-chevron">
+        <span className="crew-chevron">
           <ChevronIcon />
         </span>
       </Tap>
 
-      <Tap className={`players-card together-card fade-up${inRoom ? ' live' : ''}`} onClick={() => navigate(paths.room)}>
-        <span className="players-card-icon together-icon">📱</span>
-        <span className="players-card-text">
-          <span className="players-card-title">{inRoom ? `In room ${room.code}` : 'Play together'}</span>
-          <span className="players-card-sub">
-            {inRoom ? `${room.members.filter((m) => m.online).length} phones connected` : 'Connect everyone’s phones with a QR code'}
+      <div className="quick-row fade-up">
+        <Tap className="quick quick-shuffle" onClick={randomGame}>
+          <span className="quick-icon" aria-hidden>
+            🎲
           </span>
-        </span>
-        <span className="players-card-chevron">
-          <ChevronIcon />
-        </span>
-      </Tap>
-
-      <Tap className="hero-card fade-up" onClick={randomGame}>
-        <span className="hero-card-emoji">🎲</span>
-        <span className="hero-card-kicker">Can’t decide?</span>
-        <span className="hero-card-title">Random game</span>
-        <span className="hero-card-cta">Spin it</span>
-      </Tap>
+          <span className="quick-title">Shuffle</span>
+          <span className="quick-sub">We pick, you play</span>
+        </Tap>
+        <Tap className={`quick quick-room${inRoom ? ' live' : ''}`} onClick={() => navigate(paths.room)}>
+          <span className="quick-icon" aria-hidden>
+            📱
+          </span>
+          <span className="quick-title">{inRoom ? room.code : 'Together'}</span>
+          <span className="quick-sub">
+            {inRoom ? `${room.members.filter((m) => m.online).length} phones live` : 'Every phone joins'}
+          </span>
+        </Tap>
+      </div>
 
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">Games</h2>
+          <h2 className="section-title">The line-up</h2>
           <button type="button" className="link-btn" onClick={() => navigate(paths.games())}>
-            See all
+            All games
           </button>
         </div>
-        <div className="carousel">
+        <div className="ticket-list">
           {featured.map((g) => (
             <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
           ))}
@@ -121,16 +120,30 @@ export default function Home() {
       </section>
 
       <section className="section">
-        <h2 className="section-title">Moods</h2>
-        <div className="mood-grid">
+        <h2 className="section-title">In the mood for</h2>
+        <div className="chips wrap">
           {CATEGORIES.map((c) => (
-            <Tap key={c.id} className="mood-tile" style={{ '--card-bg': c.color } as CSSProperties} onClick={() => navigate(paths.games(c.id))}>
-              <span className="mood-emoji">{c.emoji}</span>
-              <span className="mood-label">{c.label}</span>
+            <Tap key={c.id} className="chip" onClick={() => navigate(paths.games(c.id))}>
+              {c.emoji} {c.label}
             </Tap>
           ))}
         </div>
       </section>
+
+      <div className="ticker" aria-hidden>
+        <div className="ticker-track">
+          {[0, 1].map((k) => (
+            <span key={k}>
+              {TICKER.map((t) => (
+                <span key={t}>
+                  {t}
+                  <i>✦</i>
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <p className="fine-print center">Drink responsibly. Water counts as a sip.</p>
 

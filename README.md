@@ -1,6 +1,6 @@
 # 🍻 PROST! – Drinking Games
 
-A party & pregame drinking games app. Sleek dark look with gradient cards, but still **drunk-proof**: huge buttons, one obvious action per screen,
+A party & pregame drinking games app. Gig-poster look (condensed caps, games as numbered tickets, lime and yellow on warm black or paper), but still **drunk-proof**: huge buttons, one obvious action per screen,
 the escape button is always top-left, and the screen stays on while you play.
 
 Runs in any phone browser and can be installed to the home screen (PWA). It also works offline once loaded.
