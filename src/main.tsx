@@ -1,4 +1,4 @@
-import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/inter';
 import './styles/global.css';
 

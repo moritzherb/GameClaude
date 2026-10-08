@@ -6,7 +6,7 @@ const whoDrinks: GameDefinition = {
   name: 'Who Drinks?',
   emoji: '🎰',
   tagline: 'Spin it. Someone’s getting wrecked.',
-  color: 'var(--g-sunset)',
+  color: 'var(--c-orange)',
   categories: ['quick', 'pregame', 'party'],
   minPlayers: 2,
   intensity: 2,
