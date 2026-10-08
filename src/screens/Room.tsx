@@ -1,0 +1,281 @@
+import { useEffect, useState, type CSSProperties } from 'react';
+import BigButton from '../components/BigButton';
+import { CloseIcon } from '../components/Icons';
+import QrCode from '../components/QrCode';
+import Tap from '../components/Tap';
+import TopBar from '../components/TopBar';
+import { buzz, sfx } from '../lib/fx';
+import { navigate, paths } from '../lib/router';
+import { useProfile } from '../net/profile';
+import { normalizeCode } from '../net/protocol';
+import { useRoom } from '../net/RoomProvider';
+import { useApp } from '../state/AppState';
+
+/** Link that opens the app straight on the join screen for this room. */
+function joinLink(code: string) {
+  return `${window.location.origin}${window.location.pathname}#${paths.join(code)}`;
+}
+
+export default function Room({ joinCode }: { joinCode: string | null }) {
+  const room = useRoom();
+  const inRoom = room.status === 'open' || room.status === 'reconnecting';
+  if (inRoom || room.status === 'connecting') return <Lobby />;
+  return <Start joinCode={joinCode} />;
+}
+
+/* ---------- Not in a room yet: host or join ---------- */
+
+function Start({ joinCode }: { joinCode: string | null }) {
+  const room = useRoom();
+  const { profile, setName, rerollAvatar } = useProfile();
+  const [code, setCode] = useState(joinCode ? normalizeCode(joinCode) : '');
+  const [nameMissing, setNameMissing] = useState(false);
+  const fromLink = !!joinCode;
+  // Inside another page (like a preview frame) direct phone connections are usually blocked.
+  const embedded = window.self !== window.top;
+
+  const ready = () => {
+    if (profile.name.trim()) return true;
+    setNameMissing(true);
+    sfx.boo();
+    buzz([30, 40, 30]);
+    document.getElementById('room-name')?.focus();
+    return false;
+  };
+
+  const doJoin = () => {
+    if (!ready()) return;
+    if (code.length < 4) {
+      sfx.boo();
+      document.getElementById('room-code')?.focus();
+      return;
+    }
+    room.join(code, { ...profile, name: profile.name.trim() });
+  };
+
+  return (
+    <main className="screen">
+      <TopBar onBack={() => navigate(paths.home)} />
+      <h1 className="large-title">Play together</h1>
+      <p className="lead">Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.</p>
+
+      {embedded && (
+        <p className="notice">This preview can’t connect phones. Open the PROST! website (moritzherb.github.io/GameClaude) to play together.</p>
+      )}
+      {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}
+
+      <section className="me-card">
+        <Tap className="player-avatar me-avatar" style={{ '--chip': profile.color } as CSSProperties} onClick={rerollAvatar} ariaLabel="New avatar">
+          {profile.avatar}
+        </Tap>
+        <label className="me-field" htmlFor="room-name">
+          <span className="me-label">Your name</span>
+          <input
+            id="room-name"
+            className={`me-input${nameMissing && !profile.name.trim() ? ' missing' : ''}`}
+            value={profile.name}
+            maxLength={18}
+            placeholder="Type your name"
+            autoComplete="off"
+            autoCapitalize="words"
+            enterKeyHint="done"
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+      </section>
+
+      {fromLink ? (
+        <div className="stack">
+          <BigButton size="xl" onClick={doJoin}>
+            Join room {code}
+          </BigButton>
+          <button type="button" className="text-btn" onClick={() => navigate(paths.room)}>
+            Host my own room instead
+          </button>
+        </div>
+      ) : (
+        <>
+          <BigButton size="xl" onClick={() => ready() && room.host({ ...profile, name: profile.name.trim() })}>
+            Host a room 📱
+          </BigButton>
+
+          <div className="divider">
+            <span>or join one</span>
+          </div>
+
+          <form
+            className="join-row"
+            onSubmit={(e) => {
+              e.preventDefault();
+              doJoin();
+            }}
+          >
+            <input
+              id="room-code"
+              className="code-input"
+              value={code}
+              placeholder="CODE"
+              maxLength={6}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              enterKeyHint="go"
+              aria-label="Room code"
+              onChange={(e) => setCode(normalizeCode(e.target.value))}
+            />
+            <button type="submit" className="join-btn" disabled={code.length < 4}>
+              Join
+            </button>
+          </form>
+        </>
+      )}
+
+      <p className="fine-print">
+        Phones connect directly to each other. Works on the same Wi-Fi or on mobile data. Keep the app open on the host phone.
+      </p>
+    </main>
+  );
+}
+
+/* ---------- In a room: the lobby ---------- */
+
+function Lobby() {
+  const room = useRoom();
+  const { profile } = useProfile();
+  const { replacePlayers } = useApp();
+  const [armLeave, setArmLeave] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const isHost = room.role === 'host';
+  const code = room.code ?? '';
+
+  useEffect(() => {
+    if (!armLeave) return;
+    const t = setTimeout(() => setArmLeave(false), 3000);
+    return () => clearTimeout(t);
+  }, [armLeave]);
+
+  if (room.status === 'connecting') {
+    return (
+      <main className="screen">
+        <TopBar onBack={() => room.leave()} icon="close" />
+        <div className="connecting">
+          <div className="connecting-emoji">📡</div>
+          <h1 className="bd-title">{isHost ? 'Opening the room…' : `Joining ${code}…`}</h1>
+          <p className="lead">This takes a few seconds.</p>
+        </div>
+        <div className="sticky-action">
+          <BigButton variant="glass" onClick={() => room.leave()}>
+            Cancel
+          </BigButton>
+        </div>
+      </main>
+    );
+  }
+
+  const share = async () => {
+    const url = joinLink(code);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'PROST! room', text: `Join my PROST! room: ${code}`, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* cancelled */
+    }
+  };
+
+  const online = room.members.filter((m) => m.online).length;
+
+  return (
+    <main className="screen">
+      <TopBar onBack={() => navigate(paths.home)} title={isHost ? 'Your room' : 'Room'} />
+
+      {room.status === 'reconnecting' && <p className="notice">Connection lost. Reconnecting to the host…</p>}
+
+      <section className="room-code-card">
+        <span className="kicker">Room code</span>
+        <span className="room-code" aria-label={`Room code ${code.split('').join(' ')}`}>
+          {code}
+        </span>
+        <QrCode text={joinLink(code)} label={`QR code to join room ${code}`} />
+        <span className="fine-print">Scan with the camera to join</span>
+        <button type="button" className="link-btn" onClick={share}>
+          {copied ? 'Link copied ✓' : 'Share link'}
+        </button>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2 className="section-title">Players</h2>
+          <span className="fine-print">
+            {online} phone{online === 1 ? '' : 's'} connected
+          </span>
+        </div>
+        <ul className="member-list">
+          {room.members.map((m) => (
+            <li key={m.id} className={`member-row pop-in${m.online ? '' : ' offline'}`}>
+              <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
+                {m.avatar}
+              </span>
+              <span className="member-text">
+                <span className="member-name">{m.name}</span>
+                <span className="member-tags">
+                  {m.host && <span className="tag-pill">Host</span>}
+                  {m.id === profile.clientId && <span className="tag-pill you">You</span>}
+                  {!m.online && <span className="tag-pill off">Offline</span>}
+                </span>
+              </span>
+              <span className={`online-dot${m.online ? ' on' : ''}`} aria-label={m.online ? 'Online' : 'Offline'} />
+              {isHost && !m.host && (
+                <Tap className="player-remove" onClick={() => room.removeMember(m.id)} ariaLabel={`Remove ${m.name}`}>
+                  <CloseIcon />
+                </Tap>
+              )}
+            </li>
+          ))}
+        </ul>
+        {room.members.length <= 1 && isHost && <p className="lead">Waiting for the others to join…</p>}
+      </section>
+
+      <Tap className="cheers-btn" onClick={room.sendCheers}>
+        <span className="cheers-emoji">🍻</span>
+        <span>Cheers!</span>
+        <span className="cheers-sub">Shows up on every phone</span>
+      </Tap>
+
+      {isHost ? (
+        <section className="panel">
+          <h2 className="section-title">Games for every phone</h2>
+          <p className="lead">Coming soon. For now you can use everyone in the room as the player list for the normal games.</p>
+          <BigButton
+            variant="glass"
+            disabled={room.members.length < 2}
+            onClick={() => {
+              replacePlayers(room.members.map((m) => ({ name: m.name, avatar: m.avatar, color: m.color })));
+              navigate(paths.players());
+            }}
+          >
+            Use as player list 👥
+          </BigButton>
+        </section>
+      ) : (
+        <p className="lead center">Waiting for the host to start a game…</p>
+      )}
+
+      <button
+        type="button"
+        className={`text-btn${armLeave ? ' danger' : ''}`}
+        onClick={() => {
+          buzz();
+          if (armLeave) room.leave();
+          else setArmLeave(true);
+        }}
+      >
+        {armLeave ? (isHost ? 'Tap again to close the room for everyone' : 'Tap again to leave') : isHost ? 'Close room' : 'Leave room'}
+      </button>
+    </main>
+  );
+}

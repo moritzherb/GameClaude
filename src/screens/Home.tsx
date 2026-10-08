@@ -9,11 +9,14 @@ import { CATEGORIES, type GameDefinition } from '../games/types';
 import { buzz, sfx } from '../lib/fx';
 import { pick } from '../lib/random';
 import { navigate, paths } from '../lib/router';
+import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
 
 export default function Home() {
   const { players } = useApp();
+  const room = useRoom();
+  const inRoom = room.status === 'open' || room.status === 'reconnecting';
   const [rolling, setRolling] = useState<GameDefinition | null>(null);
   const timer = useRef<number>(undefined);
 
@@ -76,6 +79,19 @@ export default function Home() {
         <span className="players-card-text">
           <span className="players-card-title">{players.length ? `${players.length} players` : 'Add players'}</span>
           <span className="players-card-sub">{players.length ? 'Tap to edit the squad' : 'Who’s playing tonight?'}</span>
+        </span>
+        <span className="players-card-chevron">
+          <ChevronIcon />
+        </span>
+      </Tap>
+
+      <Tap className={`players-card together-card fade-up${inRoom ? ' live' : ''}`} onClick={() => navigate(paths.room)}>
+        <span className="players-card-icon together-icon">📱</span>
+        <span className="players-card-text">
+          <span className="players-card-title">{inRoom ? `In room ${room.code}` : 'Play together'}</span>
+          <span className="players-card-sub">
+            {inRoom ? `${room.members.filter((m) => m.online).length} phones connected` : 'Connect everyone’s phones with a QR code'}
+          </span>
         </span>
         <span className="players-card-chevron">
           <ChevronIcon />

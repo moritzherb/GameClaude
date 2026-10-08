@@ -27,6 +27,8 @@ interface AppState {
   removePlayer: (id: string) => void;
   rerollAvatar: (id: string) => void;
   clearPlayers: () => void;
+  /** Replace the whole list, e.g. with everyone in a room. */
+  replacePlayers: (list: Omit<Player, 'id'>[]) => void;
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => void;
   ageConfirmed: boolean;
@@ -69,6 +71,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rerollAvatar: (id) =>
         setPlayers((list) => list.map((p) => (p.id === id ? { ...p, avatar: pick(AVATARS.filter((a) => a !== p.avatar)) } : p))),
       clearPlayers: () => setPlayers([]),
+      replacePlayers: (list) =>
+        setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: crypto.randomUUID?.() ?? String(Date.now() + Math.random()) }))),
       settings,
       updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
       ageConfirmed,

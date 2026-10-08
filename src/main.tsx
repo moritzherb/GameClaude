@@ -5,12 +5,15 @@ import './styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProvider>
-      <App />
+      <RoomProvider>
+        <App />
+      </RoomProvider>
     </AppProvider>
   </StrictMode>,
 );
