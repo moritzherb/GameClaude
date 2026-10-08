@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import BigButton from '../components/BigButton';
+import { gameNumber } from '../components/GameCard';
 import Intensity from '../components/Intensity';
 import RulesList from '../components/RulesList';
 import TopBar from '../components/TopBar';
@@ -19,8 +20,9 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
       <TopBar onBack={() => navigate(paths.games())} />
 
       <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
-        <span className="detail-icon">
-          <span className="detail-emoji">{game.emoji}</span>
+        <span className="detail-no">No. {gameNumber(game)}</span>
+        <span className="detail-emoji" aria-hidden>
+          {game.emoji}
         </span>
         <h1 className="detail-name">{game.name}</h1>
         <p className="detail-tagline">{game.tagline}</p>

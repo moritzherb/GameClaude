@@ -21,7 +21,9 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
         </div>
       ) : (
         <div className="gate-body fade-up">
-          <div className="gate-emoji">🥂</div>
+          <div className="gate-big" aria-hidden>
+            18<span>+</span>
+          </div>
           <h1 className="headline">Are you of legal drinking age?</h1>
           <p className="lead">Party games for pregames, house parties and everything after.</p>
           <div className="stack">

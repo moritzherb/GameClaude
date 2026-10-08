@@ -30,24 +30,18 @@ export default function Library({ category }: { category: CategoryId | null }) {
   return (
     <main className="screen">
       <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="large-title">{current ? `${current.label} ${current.emoji}` : 'All games'}</h1>
+      <h1 className="large-title">{current ? current.label : 'All games'}</h1>
 
       <div className="chips">
         {chip(null, 'All')}
         {CATEGORIES.map((c) => chip(c.id, `${c.emoji} ${c.label}`))}
       </div>
 
-      <div className="game-grid">
+      <div className="ticket-list">
         {games.map((g) => (
           <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
         ))}
-        <div className="game-card placeholder">
-          <span className="game-card-emoji">＋</span>
-          <span className="game-card-body">
-            <span className="game-card-name">More soon</span>
-            <span className="game-card-tagline">New games are on the way.</span>
-          </span>
-        </div>
+        <div className="ticket-more">More games on the way</div>
       </div>
     </main>
   );
