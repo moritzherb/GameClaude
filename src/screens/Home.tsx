@@ -46,7 +46,7 @@ export default function Home() {
     }, 90);
   };
 
-  const featured = [...GAMES].sort((a, b) => Number(!a.component) - Number(!b.component)).slice(0, 8);
+  const featured = [...GAMES].sort((a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online)).slice(0, 8);
 
   return (
     <main className="screen home">

@@ -22,13 +22,22 @@ interface RoomState {
   message: string | null;
   /** The latest cheers, for the toast. */
   cheers: Cheers | null;
+  /** Game the host is running for the whole room (null = lobby). */
+  game: string | null;
+  /** Host: start a game for everyone in the room (their phones open it too). */
+  startGame: (id: string) => void;
+  /** Host: back to the lobby for everyone. */
+  endGame: () => void;
+  /** This phone's member id. */
+  myId: string | null;
   host: (profile: Profile, preferredCode?: string) => void;
   join: (code: string, profile: Profile) => void;
   leave: () => void;
   removeMember: (id: string) => void;
   sendCheers: () => void;
   /** For games: guest → host. */
-  sendToHost: (data: unknown) => void;
+  /** Returns false if there is no open connection to the host right now. */
+  sendToHost: (data: unknown) => boolean;
   /** For games: host → every guest. */
   broadcast: (data: unknown) => void;
   /** For games: host → one guest (e.g. a private hand). */
@@ -45,7 +54,7 @@ const HOST_SAME_CODE_TRIES = 8;
 
 // The room this tab is in, so a reload (phones do that in the background) rejoins it.
 const SESSION_KEY = 'prost:room';
-type SavedRoom = { role: 'host' | 'guest'; code: string };
+type SavedRoom = { role: 'host' | 'guest'; code: string; game?: string | null };
 function saveRoom(room: SavedRoom | null) {
   try {
     if (room) sessionStorage.setItem(SESSION_KEY, JSON.stringify(room));
@@ -103,6 +112,8 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [cheers, setCheers] = useState<Cheers | null>(null);
+  const [game, setGame] = useState<string | null>(null);
+  const gameRef = useRef<string | null>(null);
 
   // Live connection objects live in refs: they change without needing a re-render.
   const peer = useRef<Peer | null>(null);
@@ -143,7 +154,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   /* ---------------- Host ---------------- */
 
   const broadcastLobby = useCallback(() => {
-    const msg: ToGuest = { t: 'lobby', code: codeRef.current ?? '', members: membersRef.current };
+    const msg: ToGuest = { t: 'lobby', code: codeRef.current ?? '', members: membersRef.current, game: gameRef.current };
     guests.current.forEach((c) => c.open && c.send(msg));
   }, []);
 
@@ -160,6 +171,10 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setStatus('connecting');
       setMessage(null);
       const roomCode = preferredCode ?? newRoomCode();
+      if (!preferredCode) {
+        gameRef.current = null;
+        setGame(null);
+      }
       codeRef.current = roomCode;
       setCode(roomCode);
       const p = new Peer(peerIdFor(roomCode), peerOptions());
@@ -167,7 +182,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
 
       p.on('open', () => {
         setStatus('open');
-        saveRoom({ role: 'host', code: roomCode });
+        saveRoom({ role: 'host', code: roomCode, game: gameRef.current });
         setAllMembers([{ id: profile.clientId, name: profile.name, avatar: profile.avatar, color: profile.color, host: true, online: true }]);
       });
 
@@ -256,7 +271,11 @@ export function RoomProvider({ children }: { children: ReactNode }) {
 
     conn.on('data', (raw) => {
       const msg = raw as ToGuest;
-      if (msg.t === 'lobby') setAllMembers(msg.members);
+      if (msg.t === 'lobby') {
+        setAllMembers(msg.members);
+        gameRef.current = msg.game;
+        setGame(msg.game);
+      }
       else if (msg.t === 'cheers') showCheers(msg.from);
       else if (msg.t === 'game') emitGame(msg.data, null);
       else if (msg.t === 'bye') {
@@ -343,7 +362,12 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     const saved = savedRoom();
     const profile = load<Profile | null>('me', null);
     if (!saved || !profile?.name) return;
-    if (saved.role === 'host') host(profile, saved.code);
+    if (saved.role === 'host') {
+      // Reopen the room with the game that was running, so it can pick up where it was.
+      gameRef.current = saved.game ?? null;
+      setGame(saved.game ?? null);
+      host(profile, saved.code);
+    }
     else join(saved.code, profile);
   }, []);
 
@@ -369,6 +393,24 @@ export function RoomProvider({ children }: { children: ReactNode }) {
         setCode(null);
         setAllMembers([]);
         setMessage(null);
+        gameRef.current = null;
+        setGame(null);
+      },
+      game,
+      myId: profileRef.current?.clientId ?? null,
+      startGame: (id) => {
+        if (role !== 'host') return;
+        gameRef.current = id;
+        setGame(id);
+        saveRoom({ role: 'host', code: codeRef.current ?? '', game: id });
+        broadcastLobby();
+      },
+      endGame: () => {
+        if (role !== 'host') return;
+        gameRef.current = null;
+        setGame(null);
+        saveRoom({ role: 'host', code: codeRef.current ?? '' });
+        broadcastLobby();
       },
       removeMember: (id) => {
         if (role !== 'host') return;
@@ -389,7 +431,9 @@ export function RoomProvider({ children }: { children: ReactNode }) {
         }
       },
       sendToHost: (data) => {
-        if (toHost.current?.open) toHost.current.send({ t: 'game', data } satisfies ToHost);
+        if (!toHost.current?.open) return false;
+        toHost.current.send({ t: 'game', data } satisfies ToHost);
+        return true;
       },
       broadcast: (data) => guests.current.forEach((c) => c.open && c.send({ t: 'game', data } satisfies ToGuest)),
       sendTo: (memberId, data) => hostSend(memberId, { t: 'game', data }),
@@ -398,7 +442,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
         return () => listeners.current.delete(listener);
       },
     }),
-    [status, role, code, members, message, cheers, host, join, teardown, broadcastLobby, showCheers],
+    [status, role, code, members, message, cheers, game, host, join, teardown, broadcastLobby, showCheers],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

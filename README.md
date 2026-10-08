@@ -33,6 +33,9 @@ one or all guests (`src/net/RoomProvider.tsx`, `useRoom()`).
 - Guests that drop out (phone locked, Wi-Fi switch) reconnect automatically; a reloaded tab rejoins its room.
 - Games can use `sendToHost`, `broadcast`, `sendTo(memberId)` and `onGame` to send moves and private data
   (like each player's own cards).
+- A game for every phone sets `online` instead of `component` in its `GameDefinition`. The host starts it
+  from the room (`room.startGame(id)`) and every phone opens it. See `hose-runter/` for the pattern: the host
+  keeps the real state and sends each phone only its own view.
 
 To test locally without internet, run your own PeerJS server and build against it:
 
@@ -55,6 +58,7 @@ src/
     registry.ts        list of all games
     bus-driver/        Bus Driver (part 1: collect cards, part 2: pyramid + tiebreaker, part 3: the bus ride)
     kings-cup/         Kings Cup (rules per card live in rules.ts)
+    hose-runter/       Hose runter (every phone plays: logic.ts = rules, HoseRunter.tsx = host + player screens)
     who-drinks/        example game
 ```
 

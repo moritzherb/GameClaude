@@ -8,7 +8,7 @@ import { navigate, paths } from '../lib/router';
 export default function Library({ category }: { category: CategoryId | null }) {
   // Playable games first, "coming soon" ones after.
   const games = GAMES.filter((g) => !category || g.categories.includes(category)).sort(
-    (a, b) => Number(!a.component) - Number(!b.component),
+    (a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online),
   );
   const current = CATEGORIES.find((c) => c.id === category);
 

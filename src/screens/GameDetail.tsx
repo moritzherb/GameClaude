@@ -5,6 +5,7 @@ import RulesList from '../components/RulesList';
 import TopBar from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
 import { navigate, paths } from '../lib/router';
+import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
 export default function GameDetail({ game }: { game: GameDefinition }) {
@@ -48,7 +49,9 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
       </section>
 
       <div className="sticky-action">
-        {!game.component ? (
+        {game.online ? (
+          <OnlineStart game={game} />
+        ) : !game.component ? (
           <BigButton variant="glass" disabled>
             Coming soon
           </BigButton>
@@ -67,5 +70,43 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
         )}
       </div>
     </main>
+  );
+}
+
+/** Games for every phone start from a room: the host starts them for everyone. */
+function OnlineStart({ game }: { game: GameDefinition }) {
+  const room = useRoom();
+  const inRoom = room.status === 'open' || room.status === 'reconnecting';
+  if (!inRoom) {
+    return (
+      <BigButton size="xl" onClick={() => navigate(paths.room)}>
+        Play together 📱
+      </BigButton>
+    );
+  }
+  if (room.game === game.id) {
+    return (
+      <BigButton size="xl" onClick={() => navigate(paths.online(game.id))}>
+        Back to the game
+      </BigButton>
+    );
+  }
+  if (room.role !== 'host') {
+    return (
+      <BigButton variant="glass" disabled>
+        Only the host can start it
+      </BigButton>
+    );
+  }
+  return (
+    <BigButton
+      size="xl"
+      onClick={() => {
+        room.startGame(game.id);
+        navigate(paths.online(game.id));
+      }}
+    >
+      Start for everyone in the room 📱
+    </BigButton>
   );
 }

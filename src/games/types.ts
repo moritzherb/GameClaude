@@ -49,4 +49,9 @@ export interface GameDefinition {
   rules: string[];
   /** The playable screen. Omit to show the game as "coming soon". */
   component?: ComponentType<GameProps>;
+  /**
+   * Games where every player uses their own phone (needs a room, see src/net).
+   * Rendered on every phone in the room; the host's copy runs the game.
+   */
+  online?: ComponentType;
 }
