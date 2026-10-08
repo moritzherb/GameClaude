@@ -98,7 +98,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       <div className="kc">
         <div className="bd-head">
           <span className="kicker">Game over</span>
-          <h2 className="bd-title big">{s.kings === 4 ? `${player.name} drank the King’s Cup 🏆` : 'Deck’s empty!'}</h2>
+          <h2 className="bd-title big">{s.kings === 4 ? `${player.name} drank the King’s Cup` : 'Deck’s empty!'}</h2>
           <p className="lead">{52 - s.deck.length} cards drawn.</p>
         </div>
         {effects}

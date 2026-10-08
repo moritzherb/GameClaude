@@ -57,9 +57,10 @@ export default function Home() {
         </RoundButton>
       </header>
 
-      <h1 className="headline fade-up">
-        Let’s get this <span className="mark">party</span> started.
-      </h1>
+      <div className="home-title fade-up">
+        <span className="home-date">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        <h1 className="large-title">Tonight</h1>
+      </div>
 
       <Tap className="players-card fade-up" onClick={() => navigate(paths.players())}>
         {players.length ? (
@@ -131,7 +132,7 @@ export default function Home() {
         </div>
       </section>
 
-      <p className="fine-print center">Drink responsibly · Water counts as a sip 💧</p>
+      <p className="fine-print center">Drink responsibly. Water counts as a sip.</p>
 
       {rolling && (
         <div className="roulette-overlay">

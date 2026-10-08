@@ -86,7 +86,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
           detail={detail}
         />
       );
-      nextLabel = 'Start over 🔁';
+      nextLabel = 'Start over';
     }
   }
 
@@ -105,7 +105,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
         <span className="bd-player-text">
           <span className="bd-player-name">{driver.name}</span>
           <span className="bd-player-sub">
-            🚌 Attempt {board.attempt - (failed ? 1 : 0)} · 🍺 {board.drunk} sips
+            Attempt {board.attempt - (failed ? 1 : 0)} · {board.drunk} sips
           </span>
         </span>
       </div>

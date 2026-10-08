@@ -47,7 +47,7 @@ export default function Players({ next }: { next: string | null }) {
           className="add-player-input"
           value={name}
           maxLength={18}
-          placeholder={full ? 'Party’s full 🎉' : 'Add a name'}
+          placeholder={full ? 'Party’s full' : 'Add a name'}
           disabled={full}
           enterKeyHint="done"
           autoComplete="off"
@@ -58,7 +58,7 @@ export default function Players({ next }: { next: string | null }) {
           <PlusIcon />
         </button>
       </form>
-      {duplicate && name.trim() && <p className="warn">Already playing. Try a nickname 😉</p>}
+      {duplicate && name.trim() && <p className="warn">Already playing. Try a nickname.</p>}
 
       {players.length === 0 ? (
         <div className="empty">

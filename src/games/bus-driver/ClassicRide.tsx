@@ -79,7 +79,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
           detail={detail}
         />
       );
-      nextLabel = 'Start over 🔁';
+      nextLabel = 'Start over';
     }
   }
 
@@ -98,7 +98,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         <span className="bd-player-text">
           <span className="bd-player-name">{driver.name}</span>
           <span className="bd-player-sub">
-            🚌 Attempt {ride.attempt - (failed ? 1 : 0)} · 🍺 {ride.drunk} sips
+            Attempt {ride.attempt - (failed ? 1 : 0)} · {ride.drunk} sips
           </span>
         </span>
       </div>

@@ -137,7 +137,7 @@ export default function BusDriver({ players, exit }: GameProps) {
           ))}
         </div>
         <button type="button" className="text-btn" onClick={() => setS({ ...s, dealerId: pick(players).id })}>
-          🎲 Pick a random dealer
+          Pick a random dealer
         </button>
 
         <div className="settings-list">
@@ -165,7 +165,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
         <div className="sticky-action">
           <BigButton size="xl" onClick={start}>
-            Deal the cards 🃏
+            Deal the cards
           </BigButton>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function BusDriver({ players, exit }: GameProps) {
                 </span>
                 <span className="bd-summary-name">{x.player.name}</span>
                 <span className="bd-summary-stats">
-                  🍺 {x.drank} · 🎁 {x.gave}
+                  drank {x.drank} · gave {x.gave}
                 </span>
               </div>
               <div className="bd-summary-hand">
@@ -204,7 +204,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => setS({ ...s, stage: 'pyramid' })}>
-            Part 2: The pyramid 🔺
+            Part 2: The pyramid
           </BigButton>
         </div>
       </div>
@@ -257,9 +257,9 @@ export default function BusDriver({ players, exit }: GameProps) {
           <h2 className="bd-title big">{question.title}</h2>
           <p className="lead">{question.explain}</p>
           <div className="bd-rules">
-            <span className="bd-rule good">✅ Right → give out {sips}</span>
-            <span className="bd-rule bad">❌ Wrong → drink {sips}</span>
-            {hasSame && <span className="bd-rule bad">🟰 Same value → drink {sips * 2}</span>}
+            <span className="bd-rule good">Right → give out {sips}</span>
+            <span className="bd-rule bad">Wrong → drink {sips}</span>
+            {hasSame && <span className="bd-rule bad">Same value → drink {sips * 2}</span>}
           </div>
         </div>
         <div className="bd-first">
