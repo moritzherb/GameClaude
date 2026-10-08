@@ -18,8 +18,10 @@ export default function GameCard({ game, onOpen, wide }: { game: GameDefinition;
       }}
     >
       {soon && <span className="tag">Soon</span>}
-      {game.online && <span className="tag">📱 Every phone</span>}
-      <span className="game-card-emoji">{game.emoji}</span>
+      {game.online && <span className="tag">Every phone</span>}
+      <span className="game-card-icon">
+        <span className="game-card-emoji">{game.emoji}</span>
+      </span>
       <span className="game-card-body">
         <span className="game-card-name">{game.name}</span>
         <span className="game-card-tagline">{game.tagline}</span>

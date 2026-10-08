@@ -19,7 +19,9 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
       <TopBar onBack={() => navigate(paths.games())} />
 
       <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
-        <span className="detail-emoji">{game.emoji}</span>
+        <span className="detail-icon">
+          <span className="detail-emoji">{game.emoji}</span>
+        </span>
         <h1 className="detail-name">{game.name}</h1>
         <p className="detail-tagline">{game.tagline}</p>
       </section>
@@ -80,7 +82,7 @@ function OnlineStart({ game }: { game: GameDefinition }) {
   if (!inRoom) {
     return (
       <BigButton size="xl" onClick={() => navigate(paths.room)}>
-        Play together 📱
+        Play together
       </BigButton>
     );
   }
@@ -106,7 +108,7 @@ function OnlineStart({ game }: { game: GameDefinition }) {
         navigate(paths.online(game.id));
       }}
     >
-      Start for everyone in the room 📱
+      Start for everyone in the room
     </BigButton>
   );
 }

@@ -42,7 +42,7 @@ export default function Library({ category }: { category: CategoryId | null }) {
           <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
         ))}
         <div className="game-card placeholder">
-          <span className="game-card-emoji">✨</span>
+          <span className="game-card-emoji">＋</span>
           <span className="game-card-body">
             <span className="game-card-name">More soon</span>
             <span className="game-card-tagline">New games are on the way.</span>

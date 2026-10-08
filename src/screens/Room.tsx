@@ -97,7 +97,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
       ) : (
         <>
           <BigButton size="xl" onClick={() => ready() && room.host({ ...profile, name: profile.name.trim() })}>
-            Host a room 📱
+            Host a room
           </BigButton>
 
           <div className="divider">
@@ -284,7 +284,7 @@ function Lobby() {
               navigate(paths.players());
             }}
           >
-            Use as player list 👥
+            Use as player list
           </BigButton>
         </section>
       ) : (

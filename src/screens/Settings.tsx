@@ -49,7 +49,7 @@ export default function Settings() {
       </div>
 
       <section className="panel">
-        <h2 className="section-title">Play nice 💛</h2>
+        <h2 className="section-title">Play nice</h2>
         <ul className="plain-list">
           <li>Every sip can be water or a soft drink. No pressure, ever.</li>
           <li>Eat something before you start.</li>

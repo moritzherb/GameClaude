@@ -120,7 +120,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
               setGame({ rows, sipMode, cards, toppedUp, flips: 0, hands: seats.map((x) => x.hand), laid: [], gave: seats.map(() => 0) });
             }}
           >
-            Lay out the pyramid 🔺
+            Lay out the pyramid
           </BigButton>
         </div>
       </div>
@@ -161,7 +161,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
       <div className="bd">
         <div className="bd-head">
           <span className="kicker">Pyramid done</span>
-          <h2 className="bd-title big">{tie ? 'It’s a tie!' : `${loserNames[0]} drives the bus 🚌`}</h2>
+          <h2 className="bd-title big">{tie ? 'It’s a tie!' : `${loserNames[0]} drives the bus`}</h2>
           <p className="lead">
             {tie
               ? `${loserNames.join(' & ')} have ${game.hands[losers[0]].length} card${game.hands[losers[0]].length === 1 ? '' : 's'} left each. Tiebreaker!`
@@ -178,7 +178,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
                 </span>
                 <span className="bd-summary-name">{seats[i].player.name}</span>
                 <span className="bd-summary-stats">
-                  {game.hands[i].length} left · 🎁 {game.gave[i]}
+                  {game.hands[i].length} left · gave {game.gave[i]}
                 </span>
               </div>
               {game.hands[i].length > 0 && (
@@ -267,7 +267,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
             </ul>
           ) : (
             <p className="flip-result-none">
-              Nobody has {last.value === 8 || last.value === 14 ? 'an' : 'a'} {rankLabel(last.value)}. 🤷
+              Nobody has {last.value === 8 || last.value === 14 ? 'an' : 'a'} {rankLabel(last.value)}.
             </p>
           )}
         </div>
@@ -294,7 +294,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
       <div className="sticky-action">
         {done ? (
           <BigButton size="xl" onClick={() => setShowResult(true)}>
-            Who drives the bus? 🚌
+            Who drives the bus?
           </BigButton>
         ) : (
           <BigButton size="xl" variant="light" onClick={flip}>

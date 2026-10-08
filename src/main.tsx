@@ -1,5 +1,3 @@
-import '@fontsource-variable/archivo/wdth.css';
-import '@fontsource-variable/inter';
 import './styles/global.css';
 
 import { StrictMode } from 'react';

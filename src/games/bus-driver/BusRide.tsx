@@ -84,7 +84,7 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
 
       <div className="sticky-action">
         <BigButton size="xl" onClick={() => setStarted(true)}>
-          Start the ride 🚌
+          Start the ride
         </BigButton>
       </div>
     </div>

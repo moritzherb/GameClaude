@@ -202,7 +202,7 @@ export default function HoseRunter() {
               setState(newGame(ready.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color })), undefined, { allowPass }))
             }
           >
-            {ready.length < MIN_PLAYERS ? 'Waiting for players…' : 'Deal the cards 🃏'}
+            {ready.length < MIN_PLAYERS ? 'Waiting for players…' : 'Deal the cards'}
           </BigButton>
         </div>
       </div>
@@ -296,7 +296,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           </div>
         </section>
       ) : (
-        <p className="notice">{me ? 'You’re out. Watch the others finish 👀' : 'You’re watching this game.'}</p>
+        <p className="notice">{me ? 'You’re out. Watch the others finish.' : 'You’re watching this game.'}</p>
       )}
 
       <LastMove log={view.log} seats={view.seats} myId={myId} />
@@ -304,7 +304,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
       {myTurn && playing && !connected && (
         <div className="sticky-action hr-actions">
           <BigButton variant="glass" disabled>
-            Reconnecting… 📡
+            Reconnecting…
           </BigButton>
         </div>
       )}
@@ -314,7 +314,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           {dealerPhase ? (
             <>
               <BigButton size="xl" onClick={() => send({ type: 'keep' })}>
-                Keep these 👍
+                Keep these
               </BigButton>
               <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
                 Put them in the middle
@@ -330,7 +330,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
               <p className="hr-hint">Tap one of your cards and one in the middle to swap.</p>
               {view.allowPass && (
                 <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
-                  Pass 👉
+                  Pass
                 </BigButton>
               )}
               <div className="hr-action-row">
@@ -338,7 +338,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
                   Swap all 3
                 </BigButton>
                 <BigButton variant="danger" disabled={!view.canStop} onClick={() => send({ type: 'stop' })}>
-                  {view.firstLap ? 'Stop after round 1' : view.stopperId ? 'Stop called' : 'STOP ✋'}
+                  {view.firstLap ? 'Stop after round 1' : view.stopperId ? 'Stop called' : 'Stop'}
                 </BigButton>
               </div>
             </>
@@ -422,8 +422,8 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
 
   const title = over
     ? winner
-      ? `${winner.id === myId ? 'You win' : `${winner.name} wins`}! 🏆`
-      : 'Nobody survived! 💀'
+      ? `${winner.id === myId ? 'You win' : `${winner.name} wins`}!`
+      : 'Nobody survived!'
     : r.endedBy === 'feuer'
       ? `🔥 Feuer from ${name(r.by)}!`
       : r.endedBy === 'hose'
