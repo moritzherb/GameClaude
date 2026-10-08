@@ -1,12 +1,14 @@
 import { findGame } from './games/registry';
 import { CATEGORIES, type CategoryId } from './games/types';
 import { useRoute } from './lib/router';
+import CheersToast from './components/CheersToast';
 import AgeGate from './screens/AgeGate';
 import GameDetail from './screens/GameDetail';
 import Home from './screens/Home';
 import Library from './screens/Library';
 import Play from './screens/Play';
 import Players from './screens/Players';
+import Room from './screens/Room';
 import Settings from './screens/Settings';
 import { useApp } from './state/AppState';
 
@@ -29,6 +31,10 @@ function Screen() {
       return <Players next={query.get('next')} />;
     case 'settings':
       return <Settings />;
+    case 'room':
+      return <Room joinCode={null} />;
+    case 'join':
+      return <Room key={second} joinCode={second ?? null} />;
     default:
       return <Home />;
   }
@@ -39,6 +45,7 @@ export default function App() {
   return (
     <>
       {ageConfirmed ? <Screen /> : <AgeGate onConfirm={confirmAge} />}
+      <CheersToast />
     </>
   );
 }

@@ -37,4 +37,6 @@ export const paths = {
   play: (id: string) => `/play/${id}`,
   players: (next?: string) => (next ? `/players?next=${encodeURIComponent(next)}` : '/players'),
   settings: '/settings',
+  room: '/room',
+  join: (code: string) => `/join/${code}`,
 };
