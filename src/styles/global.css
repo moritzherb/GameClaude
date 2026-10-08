@@ -3307,3 +3307,82 @@ h3 {
 .hr-result.winner .hr-result-note {
   color: var(--on-color);
 }
+
+/* ---------- Bus ride boards (Diamond, 1-2-1-2-1) ---------- */
+
+.board {
+  /* The widest row and the screen height decide the card size, so the board, the question and
+     the answer buttons fit on one phone screen. */
+  --cw: clamp(
+    42px,
+    min(calc((min(100vw, 560px) - 148px - (var(--cols) - 1) * 10px) / var(--cols)), calc((100dvh - 500px) / 7)),
+    84px
+  );
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+}
+
+.board-row-num,
+.board-row-sips {
+  font-family: var(--font-display);
+  font-weight: 850;
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-row.current .board-row-num,
+.board-row.current .board-row-sips {
+  color: var(--accent);
+}
+
+.board-cards {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.board-slot {
+  position: relative;
+  display: block;
+  border-radius: 10px;
+  transition: transform 0.2s var(--spring), opacity 0.2s ease;
+}
+
+.board-slot:disabled {
+  cursor: default;
+}
+
+.board-slot.can-pick:not(:disabled) .pcard-inner {
+  /* Wiggle the card, not the button, so the tap target stays put. */
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+.board-slot.picked {
+  transform: translateY(-8px) scale(1.06);
+}
+
+.board-slot.picked .pcard-back,
+.board-slot.picked .pcard-front {
+  box-shadow: 0 0 0 4px var(--c-yellow);
+}
+
+.board-slot.on-path .pcard-front {
+  box-shadow: 0 0 0 3px var(--good);
+}
+
+.board-slot.blocked {
+  opacity: 0.35;
+}
