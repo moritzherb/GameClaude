@@ -22,7 +22,7 @@ const MODES: { id: RideMode; name: string; layout: number[]; explain: string }[]
     name: 'Diamond',
     layout: BOARD_ROWS.diamond,
     explain:
-      'A 1-2-3-2-1 diamond. Bottom card: red or black? Then higher or lower, row by row. Pick left or right in the first pair; after that only the cards above your path count. Wrong: drink the row number, the turned cards get covered, start again at the bottom.',
+      'A 1-2-3-2-1 diamond. Bottom card: red or black? Then higher or lower, row by row, following the road: you can only pick a card that touches the one below. Wrong: drink the row number, the turned cards get covered, start again at the bottom.',
   },
   {
     id: 'zigzag',

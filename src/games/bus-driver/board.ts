@@ -6,8 +6,9 @@ import type { Outcome } from './logic';
  * Bus ride on a board of face-down cards, driven from the bottom row to the top.
  *
  * Diamond (1-2-3-2-1): bottom card = Red or black?, every row after that = Higher or lower than
- *   the card just turned. In the first 2-row the driver picks left or right; in the 3-row only the
- *   two cards above that one; the second 2-row is the same side as the first pick; then the top.
+ *   the card just turned. The driver follows the road: each pick must touch the card picked in
+ *   the row below (left pair card → left or middle; left card in the 3-row → left only; middle →
+ *   either), then the top.
  * Zigzag (1-2-1-2-1): single cards = Red or black?, 2-rows = Higher or lower (pick either card).
  *
  * A wrong answer costs the row number in sips (same value: double), every turned card gets
@@ -59,10 +60,10 @@ export function allowedSlots(s: BoardState): number[] {
   const size = BOARD_ROWS[s.mode][row];
   if (size === 1) return [0];
   if (s.mode === 'zigzag') return [0, 1];
-  // Diamond
+  // Diamond: follow the road, only the cards touching the one picked below.
   if (row === 1) return [0, 1];
-  if (row === 2) return [s.path[1], s.path[1] + 1];
-  if (row === 3) return [s.path[1]]; // same side as the first pick
+  if (row === 2) return [s.path[1], s.path[1] + 1]; // 3-row: the two above the pick
+  if (row === 3) return [s.path[2] - 1, s.path[2]].filter((i) => i === 0 || i === 1); // 2-row above the 3-row
   return [0];
 }
 

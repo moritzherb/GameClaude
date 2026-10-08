@@ -21,14 +21,25 @@ describe('diamond 1-2-3-2-1', () => {
     expect(allowedSlots(s)).toEqual([0, 1]);
     s = answerBoard(s, 1, { q: 'higher-lower', dir: 'lower' })!.state; // right: 3 < 5
     expect(allowedSlots(s)).toEqual([1, 2]);
-    s = answerBoard(s, 2, { q: 'higher-lower', dir: 'lower' })!.state; // 2 < 3
-    expect(allowedSlots(s)).toEqual([1]); // same side as the first pick
+    s = answerBoard(s, 2, { q: 'higher-lower', dir: 'lower' })!.state; // 2 < 3, right card of the 3-row
+    expect(allowedSlots(s)).toEqual([1]); // right card in the 3-row → only the right card above
     s = answerBoard(s, 1, { q: 'higher-lower', dir: 'higher' })!.state; // 7 > 2
     expect(allowedSlots(s)).toEqual([0]);
     const last = answerBoard(s, 0, { q: 'higher-lower', dir: 'higher' })!; // 10 > 7
     expect(last.outcome).toBe('correct');
     expect(last.state.done).toBe(true);
     expect(last.state.drunk).toBe(0);
+  });
+
+  it('follows the road: middle of the 3-row may go either way, the edges only one way', () => {
+    let s = startBoard('diamond', deck);
+    s = answerBoard(s, 0, { q: 'color', color: 'red' })!.state;
+    s = answerBoard(s, 0, { q: 'higher-lower', dir: 'higher' })!.state; // left: 9 > 5
+    expect(allowedSlots(s)).toEqual([0, 1]);
+    const left = answerBoard(s, 0, { q: 'higher-lower', dir: 'higher' })!.state; // Q > 9, left card
+    expect(allowedSlots(left)).toEqual([0]);
+    const middle = answerBoard(s, 1, { q: 'higher-lower', dir: 'lower' })!.state; // 8 < 9, middle card
+    expect(allowedSlots(middle)).toEqual([0, 1]);
   });
 
   it('rejects a card off the path or the wrong question', () => {
