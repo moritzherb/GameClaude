@@ -11,8 +11,11 @@ import { pick, shuffle } from '../../lib/random';
  *   or puts them in the middle and must play the next three.
  * - Turns start left of the dealer: swap one card with the middle, swap all three, or (not in the
  *   first round of turns) say Stop. After a Stop everyone else gets one more turn.
+ *   Optional house rule for big groups: pass ("schieben") instead of swapping.
  * - Lowest score loses a life (all tied lowest do). 5 lives. The first player to hit 0 gets one
- *   extra life; anyone after that is out. Last one standing wins.
+ *   extra life (all of them if several hit 0 together); anyone after that is out. If everyone left
+ *   would go out at once (a tie at the end), nobody goes out and a decider round is played.
+ *   Last one standing wins.
  */
 
 export const START_LIVES = 5;
@@ -41,10 +44,11 @@ export type Action =
   | { type: 'swap1'; hand: number; middle: number }
   | { type: 'swapAll' }
   | { type: 'stop' }
+  | { type: 'pass' }
   | { type: 'next' };
 
 export type LogEntry =
-  | { by: string; kind: 'keep' | 'toss' | 'swapAll' | 'stop' }
+  | { by: string; kind: 'keep' | 'toss' | 'swapAll' | 'stop' | 'pass' }
   | { by: string; kind: 'swap1'; gave: Card; took: Card };
 
 export interface RoundResult {
@@ -58,6 +62,8 @@ export interface RoundResult {
   extraLife: string[];
   /** Knocked out this round. */
   out: string[];
+  /** Everyone left would have gone out at once: they stay in on one life and play a decider. */
+  decider: boolean;
 }
 
 export interface GameState {
@@ -65,6 +71,8 @@ export interface GameState {
   round: number;
   dealerId: string;
   extraLifeGiven: boolean;
+  /** House rule: a player may pass ("schieben") instead of swapping. */
+  allowPass: boolean;
   phase: 'dealer' | 'turns' | 'reveal' | 'over';
   deck: Card[];
   hands: Record<string, Card[]>;
@@ -123,13 +131,18 @@ export function canStop(s: GameState, id: string) {
 
 /* ---------------- Game flow ---------------- */
 
-export function newGame(players: Omit<Seat, 'lives' | 'out'>[], deck: Card[] = shuffle(hoseDeck())): GameState {
+export function newGame(
+  players: Omit<Seat, 'lives' | 'out'>[],
+  deck: Card[] = shuffle(hoseDeck()),
+  options: { allowPass?: boolean } = {},
+): GameState {
   const seats = players.map((p) => ({ ...p, lives: START_LIVES, out: false }));
   const base: GameState = {
     seats,
     round: 1,
     dealerId: pick(seats).id,
     extraLifeGiven: false,
+    allowPass: !!options.allowPass,
     phase: 'dealer',
     deck: [],
     hands: {},
@@ -215,6 +228,11 @@ export function applyAction(s: GameState, playerId: string, a: Action): GameStat
       return advance({ ...s, stopperId: playerId, log: [...s.log, { by: playerId, kind: 'stop' as const }].slice(-8) });
     }
 
+    case 'pass': {
+      if (!s.allowPass || s.phase !== 'turns' || playerId !== s.turnId) return s;
+      return advance({ ...s, log: [...s.log, { by: playerId, kind: 'pass' as const }].slice(-8) });
+    }
+
     case 'next': {
       if (s.phase !== 'reveal') return s;
       return nextRound(s);
@@ -239,8 +257,8 @@ export function endRound(s: GameState, instantBy: string | null): GameState {
   const losers = players.filter((p) => scores[p.id].points === low).map((p) => p.id);
 
   const extraLife: string[] = [];
-  const out: string[] = [];
-  const seats = s.seats.map((seat) => {
+  let out: string[] = [];
+  let seats = s.seats.map((seat) => {
     if (!losers.includes(seat.id)) return seat;
     const lives = seat.lives - 1;
     if (lives > 0) return { ...seat, lives };
@@ -252,6 +270,14 @@ export function endRound(s: GameState, instantBy: string | null): GameState {
     return { ...seat, lives: 0, out: true };
   });
 
+  // Nobody left standing? Then it was a tie at the very end: they all stay in on one life
+  // and play a decider round.
+  const decider = out.length > 0 && seats.every((x) => x.out);
+  if (decider) {
+    seats = seats.map((x) => (out.includes(x.id) ? { ...x, lives: 1, out: false } : x));
+    out = [];
+  }
+
   const left = seats.filter((x) => !x.out);
   const endedBy = instantBy ? (scores[instantBy].kind === 'feuer' ? 'feuer' : 'hose') : 'stop';
   return {
@@ -260,7 +286,7 @@ export function endRound(s: GameState, instantBy: string | null): GameState {
     extraLifeGiven: s.extraLifeGiven || extraLife.length > 0,
     phase: left.length <= 1 ? 'over' : 'reveal',
     winnerId: left.length === 1 ? left[0].id : null,
-    result: { endedBy, by: instantBy, hands: Object.fromEntries(players.map((p) => [p.id, s.hands[p.id]])), scores, losers, extraLife, out },
+    result: { endedBy, by: instantBy, hands: Object.fromEntries(players.map((p) => [p.id, s.hands[p.id]])), scores, losers, extraLife, out, decider },
   };
 }
 
@@ -283,6 +309,7 @@ export interface PlayerView {
   log: LogEntry[];
   result: RoundResult | null;
   winnerId: string | null;
+  allowPass: boolean;
   /** This phone's own cards (empty for spectators and players who are out). */
   hand: Card[];
   canStop: boolean;
@@ -302,6 +329,7 @@ export function viewFor(s: GameState, viewerId: string): PlayerView {
     log: s.log,
     result: s.result,
     winnerId: s.winnerId,
+    allowPass: s.allowPass,
     hand: s.hands[viewerId] ?? [],
     canStop: canStop(s, viewerId),
     firstLap: s.turns < active(s).length,

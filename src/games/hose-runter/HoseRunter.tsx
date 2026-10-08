@@ -141,6 +141,7 @@ function useHoseRunter() {
 
 export default function HoseRunter() {
   const { room, isHost, myId, view, act, setState, connected } = useHoseRunter();
+  const [allowPass, setAllowPass] = useState(false);
   useFeedback(view, myId);
 
   if (!view) {
@@ -181,11 +182,25 @@ export default function HoseRunter() {
         </ul>
         {room.members.filter((m) => m.online).length > MAX_PLAYERS && <p className="notice">Max {MAX_PLAYERS} players. The first {MAX_PLAYERS} play.</p>}
         <p className="fine-print">Turn order is the order above. A random player deals first.</p>
+        <div className="settings-list">
+          <Tap className={`setting-row${allowPass ? ' on' : ''}`} onClick={() => setAllowPass(!allowPass)} ariaLabel="Allow passing">
+            <span className="setting-emoji">👉</span>
+            <span className="setting-text">
+              <span className="setting-label">Allow passing</span>
+              <span className="setting-hint">House rule for big groups: skip your turn instead of swapping (“schieben”).</span>
+            </span>
+            <span className="switch">
+              <span className="switch-knob" />
+            </span>
+          </Tap>
+        </div>
         <div className="sticky-action">
           <BigButton
             size="xl"
             disabled={ready.length < MIN_PLAYERS}
-            onClick={() => setState(newGame(ready.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }))))}
+            onClick={() =>
+              setState(newGame(ready.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color })), undefined, { allowPass }))
+            }
           >
             {ready.length < MIN_PLAYERS ? 'Waiting for players…' : 'Deal the cards 🃏'}
           </BigButton>
@@ -281,7 +296,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           </div>
         </section>
       ) : (
-        <p className="notice">{me ? 'You’re out. Cheer the others on! 🍻' : 'You’re watching this game.'}</p>
+        <p className="notice">{me ? 'You’re out. Watch the others finish 👀' : 'You’re watching this game.'}</p>
       )}
 
       <LastMove log={view.log} seats={view.seats} myId={myId} />
@@ -313,6 +328,11 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           ) : (
             <>
               <p className="hr-hint">Tap one of your cards and one in the middle to swap.</p>
+              {view.allowPass && (
+                <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
+                  Pass 👉
+                </BigButton>
+              )}
               <div className="hr-action-row">
                 <BigButton variant="light" onClick={() => send({ type: 'swapAll' })}>
                   Swap all 3
@@ -383,6 +403,7 @@ function LastMove({ log, seats, myId }: { log: LogEntry[]; seats: Seat[]; myId: 
     keep: `${who} kept the first cards.`,
     toss: `${who} put the first cards in the middle.`,
     swapAll: `${who} swapped all three.`,
+    pass: `${who} passed.`,
     stop: `${who} said STOP. Everyone else gets one more turn.`,
     swap1: last.kind === 'swap1' ? `${who} swapped ${cardName(last.gave)} for ${cardName(last.took)}.` : '',
   }[last.kind];
@@ -416,7 +437,9 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
         <span className="kicker">{over ? 'Game over' : `Round ${view.round}`}</span>
         <h2 className="bd-title big">{title}</h2>
         <p className="lead">
-          {r.losers.map(name).join(' & ')} {r.losers.length === 1 && r.losers[0] !== myId ? 'loses' : 'lose'} a life 🍺
+          {r.decider
+            ? `Tie at the end! ${r.losers.map(name).join(' & ')} stay in on one life and play a decider round.`
+            : `${r.losers.map(name).join(' & ')} ${r.losers.length === 1 && r.losers[0] !== myId ? 'loses' : 'lose'} a life.`}
         </p>
       </div>
 

@@ -157,6 +157,29 @@ describe('turns', () => {
   });
 });
 
+describe('passing (house rule)', () => {
+  const deck = stacked(
+    c(7, 'hearts'), c(8, 'hearts'), c(9, 'clubs'), // b
+    c(7, 'clubs'), c(8, 'clubs'), c(9, 'diamonds'), // c
+    c(7, 'spades'), c(8, 'spades'), c(9, 'spades'), // a (dealer)
+  );
+
+  it('is off by default', () => {
+    const g = applyAction(gameWithDealer('a', deck), 'a', { type: 'keep' });
+    expect(applyAction(g, 'b', { type: 'pass' })).toBe(g);
+  });
+
+  it('when on, passing keeps your cards and moves on', () => {
+    const base = newGame(players, deck, { allowPass: true });
+    let g = applyAction(deal({ ...base, dealerId: 'a' }, deck), 'a', { type: 'keep' });
+    const hand = g.hands.b;
+    g = applyAction(g, 'b', { type: 'pass' });
+    expect(g.hands.b).toEqual(hand);
+    expect(g.turnId).toBe('c');
+    expect(g.log.at(-1)).toEqual({ by: 'b', kind: 'pass' });
+  });
+});
+
 describe('lives', () => {
   const at = (lives: Record<string, number>, extraLifeGiven = false): GameState => {
     const g = newGame(players, stacked());
@@ -185,6 +208,18 @@ describe('lives', () => {
     expect(r.result?.out.sort()).toEqual(['a', 'b']);
     expect(r.phase).toBe('over');
     expect(r.winnerId).toBe('c');
+  });
+
+  it('a tie at the very end is played out in a decider round', () => {
+    // b is already out; a and c both on their last life and both lowest.
+    const g = at({ a: 1, b: 0, c: 1 }, true);
+    const s = { ...g, seats: g.seats.map((x) => (x.id === 'b' ? { ...x, out: true } : x)), hands: { a: [c(7, 'hearts'), c(8, 'clubs'), c(9, 'spades')], c: [c(7, 'clubs'), c(8, 'hearts'), c(9, 'diamonds')] } };
+    const r = endRound(s, null);
+    expect(r.result?.decider).toBe(true);
+    expect(r.result?.out).toEqual([]);
+    expect(r.phase).toBe('reveal');
+    expect(r.seats.filter((x) => !x.out).map((x) => [x.id, x.lives])).toEqual([['a', 1], ['c', 1]]);
+    expect(r.winnerId).toBe(null);
   });
 
   it('players who are out are skipped for dealing and turns', () => {
