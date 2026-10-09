@@ -115,6 +115,19 @@ body {
   overflow-x: hidden;
 }
 
+/* Opened from the iPhone home screen, 100vh/100dvh come up short by the status
+   bar's height and iOS paints the leftover strip at the bottom black. Stretch
+   the page (and every screen) down to the real bottom edge. */
+@media (display-mode: standalone) {
+  html {
+    min-height: calc(100% + env(safe-area-inset-top));
+  }
+
+  .screen {
+    min-height: calc(100dvh + env(safe-area-inset-top));
+  }
+}
+
 /* Film grain over everything; never catches taps. */
 body::after {
   content: '';
