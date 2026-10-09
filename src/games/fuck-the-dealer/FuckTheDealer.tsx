@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
-import NextName from '../../components/NextName';
 import DeckCount from '../../components/DeckCount';
+import NextName from '../../components/NextName';
 import PlayingCard from '../../components/PlayingCard';
 import Suit from '../../components/Suit';
 import Tap from '../../components/Tap';
@@ -9,185 +9,286 @@ import { t } from '../../i18n';
 import { cardColor, cardName, rankLabel, SUITS, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
+import { navigate, paths } from '../../lib/router';
+import { load, save } from '../../lib/storage';
+import { useRoom } from '../../net/RoomProvider';
 import { useApp } from '../../state/AppState';
-import type { GameProps } from '../types';
 import { direction, guess, MISSES_TO_PASS, newGame, next, nextGuesser, possible, takeOver, VALUES, type Game } from './logic';
 
-/** The flipped card stays on the deck this long before it flies into the middle. */
-const LAND_MS = 1100;
+/*
+ * Played with two phones in a room: the host's phone lies in the middle as the table and
+ * shows the piles, big. The second phone is the deck: it goes round to whoever deals, who
+ * peeks at the card on it, types in the guesses and moves the game on.
+ */
 
-export default function FuckTheDealer({ players, exit }: GameProps) {
+/** The flipped card stays on show this long before it flies onto its pile. */
+const LAND_MS = 1100;
+const STORE_KEY = 'ftd:session';
+
+interface Seat {
+  id: string;
+  name: string;
+  avatar: string;
+  color: string;
+}
+
+interface Session {
+  seats: Seat[];
+  game: Game;
+}
+
+type Act = { t: 'guess'; value: number } | { t: 'next' } | { t: 'take' };
+type Msg = { g: 'ftd'; type: 'state'; session: Session | null } | { g: 'ftd'; type: 'act'; act: Act } | { g: 'ftd'; type: 'sync' };
+const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (d as Msg).g === 'ftd';
+
+function apply(s: Session, act: Act): Session {
+  const g = act.t === 'guess' ? guess(s.game, act.value) : act.t === 'next' ? next(s.game, s.seats.length) : takeOver(s.game);
+  return g === s.game ? s : { ...s, game: g };
+}
+
+/** Host: owns the session and sends it to the deck phone. Deck phone: shows it and sends its moves. */
+function useFtd() {
+  const room = useRoom();
+  const isHost = room.role === 'host';
+  const myId = room.myId ?? '';
+  const { onGame, sendTo, sendToHost, members, code } = room;
+  const [hostSession, setHostSession] = useState<Session | null>(null);
+  const [guestSession, setGuestSession] = useState<Session | null>(null);
+  const restored = useRef(false);
+
+  useEffect(() => {
+    if (!isHost || !code || restored.current) return;
+    restored.current = true;
+    const saved = load<{ code: string; session: Session } | null>(STORE_KEY, null);
+    if (saved?.code === code) setHostSession(saved.session);
+  }, [isHost, code]);
+
+  useEffect(() => {
+    if (isHost && code && restored.current) save(STORE_KEY, hostSession ? { code, session: hostSession } : null);
+  }, [isHost, code, hostSession]);
+
+  const act = useCallback(
+    (a: Act) => {
+      if (isHost) setHostSession((s) => (s ? apply(s, a) : s));
+      else sendToHost({ g: 'ftd', type: 'act', act: a } satisfies Msg);
+    },
+    [isHost, sendToHost],
+  );
+
+  useEffect(() => {
+    if (!isHost) return;
+    return onGame((data, fromId) => {
+      if (!isMsg(data) || !fromId) return;
+      if (data.type === 'act') setHostSession((s) => (s ? apply(s, data.act) : s));
+    });
+  }, [isHost, onGame]);
+
+  useEffect(() => {
+    if (!isHost) return;
+    return onGame((data, fromId) => {
+      if (isMsg(data) && data.type === 'sync' && fromId) sendTo(fromId, { g: 'ftd', type: 'state', session: hostSession } satisfies Msg);
+    });
+  }, [isHost, onGame, sendTo, hostSession]);
+
+  useEffect(() => {
+    if (!isHost) return;
+    for (const m of members) if (m.id !== myId && m.online) sendTo(m.id, { g: 'ftd', type: 'state', session: hostSession } satisfies Msg);
+  }, [isHost, hostSession, members, myId, sendTo]);
+
+  useEffect(() => {
+    if (isHost) return;
+    const off = onGame((data) => {
+      if (isMsg(data) && data.type === 'state') setGuestSession(data.session);
+    });
+    sendToHost({ g: 'ftd', type: 'sync' } satisfies Msg);
+    return off;
+  }, [isHost, onGame, sendToHost]);
+
+  return { room, isHost, myId, session: isHost ? hostSession : guestSession, act, setHostSession };
+}
+
+export default function FuckTheDealer() {
+  const { room, isHost, session, act, setHostSession } = useFtd();
+  if (!session) return isHost ? <Lobby room={room} onStart={setHostSession} /> : <WaitForTable host={room.members.find((m) => m.host)?.name} />;
+  return isHost ? <TableView session={session} onAgain={() => setHostSession(null)} /> : <DeckView session={session} act={act} />;
+}
+
+/* ---------------- Host: pick the first dealer ---------------- */
+
+function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (s: Session) => void }) {
+  const { players } = useApp();
   const known = useApp().knows('fuck-the-dealer');
-  const [dealerId, setDealerId] = useState(() => pick(players).id);
-  const [g, setG] = useState<Game | null>(null);
-  // The resolved card sits face up on the deck until it lands on its pile.
+  const [dealerId, setDealerId] = useState(() => (players.length ? pick(players).id : ''));
+  const decks = room.members.filter((m) => !m.host && m.online);
+  const enough = players.length >= 2;
+  return (
+    <div className="bd">
+      <div className="bd-head">
+        <span className="kicker">{t('Two phones')}</span>
+        <h2 className="bd-title">{t('Who’s the dealer?')}</h2>
+        {!known && (
+          <p className="lead">{t('This phone lies in the middle as the table. The second phone is the deck: it always goes to the dealer, who peeks at the card on it.')}</p>
+        )}
+      </div>
+
+      <div className={`ftd-deck-status${decks.length ? ' on' : ''}`}>
+        <span className="ftd-deck-status-icon">{decks.length ? '🃏' : '📱'}</span>
+        <span>{decks.length ? t('Deck phone: {name}', { name: decks[0].name }) : t('Connect a second phone to this room. It becomes the deck.')}</span>
+      </div>
+
+      {enough ? (
+        <>
+          <div className="pick-grid">
+            {players.map((p) => (
+              <Tap
+                key={p.id}
+                className={`pick-chip${p.id === dealerId ? ' selected' : ''}`}
+                style={{ '--chip': p.color } as CSSProperties}
+                onClick={() => setDealerId(p.id)}
+              >
+                <span className="pick-chip-avatar">{p.avatar}</span>
+                <span className="pick-chip-name">{p.name}</span>
+                {/* The same word in German for this game. */}
+                {p.id === dealerId && <span className="pick-chip-badge">Dealer</span>}
+              </Tap>
+            ))}
+          </div>
+          <button type="button" className="text-btn" onClick={() => setDealerId(pick(players).id)}>
+            {t('Random dealer')}
+          </button>
+        </>
+      ) : (
+        <div className="notice-block">
+          <p className="notice">{t('Add at least 2 players on this phone first.')}</p>
+          <BigButton variant="light" onClick={() => navigate(paths.players(paths.online('fuck-the-dealer')))}>
+            {t('Add players')}
+          </BigButton>
+        </div>
+      )}
+
+      <div className="sticky-action">
+        <BigButton
+          size="xl"
+          disabled={!enough || !decks.length}
+          onClick={() =>
+            onStart({
+              seats: players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color })),
+              game: newGame(players.length, Math.max(0, players.findIndex((p) => p.id === dealerId))),
+            })
+          }
+        >
+          {!decks.length ? t('Waiting for the deck phone…') : t('Let’s go')}
+        </BigButton>
+      </div>
+    </div>
+  );
+}
+
+function WaitForTable({ host }: { host?: string }) {
+  return (
+    <div className="bd">
+      <div className="connecting">
+        <div className="connecting-emoji">🃏</div>
+        <h2 className="bd-title">{t('You’re the deck')}</h2>
+        <p className="lead">{host ? t('Waiting for {name} to start the game…', { name: host }) : t('Waiting for the table…')}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Host: the table in the middle ---------------- */
+
+function Handover({ session, children }: { session: Session; children?: React.ReactNode }) {
+  const g = session.game;
+  const from = session.seats[g.handover!.dealer];
+  const sips = g.handover!.sips;
+  return (
+    <div className="bd ftd-handover">
+      <div className="bd-head center">
+        <span className="kicker">{g.over ? t('Deck’s empty!') : t('Dealer change')}</span>
+        <span className="bd-avatar xl" style={{ background: from.color }}>
+          {from.avatar}
+        </span>
+        <h2 className="bd-title big">{sips ? t('{name} drinks up', { name: from.name }) : t('{name} gets away', { name: from.name })}</h2>
+        <div className={`ftd-sips${sips ? '' : ' none'}`}>
+          <span className="ftd-sips-num">{sips}</span>
+          <span className="ftd-sips-label">{sips === 1 ? t('sip') : t('sips')}</span>
+        </div>
+        <p className="lead">{sips ? t('All the sips from this round as dealer, at once.') : t('Not a single sip this round. Lucky.')}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TableView({ session, onAgain }: { session: Session; onAgain: () => void }) {
+  const known = useApp().knows('fuck-the-dealer');
+  const g = session.game;
+  const seats = session.seats;
+  // The resolved card stays face up next to the table until it lands on its pile.
   const [landed, setLanded] = useState(true);
   const [flight, setFlight] = useState<{ value: number; from: DOMRect; key: number } | null>(null);
-  const [peek, setPeek] = useState(false);
-  const deckCard = useRef<HTMLDivElement>(null);
+  const slot = useRef<HTMLDivElement>(null);
   const timer = useRef<number>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  /* ---------- Setup: who deals first ---------- */
-  if (!g) {
-    return (
-      <div className="bd">
-        <div className="bd-head">
-          <h2 className="bd-title">{t('Who’s the dealer?')}</h2>
-          {!known && (
-            <p className="lead">{t('The dealer holds the deck and peeks at the top card. Everyone else guesses, starting on the dealer’s left.')}</p>
-          )}
-        </div>
-        <div className="pick-grid">
-          {players.map((p) => (
-            <Tap
-              key={p.id}
-              className={`pick-chip${p.id === dealerId ? ' selected' : ''}`}
-              style={{ '--chip': p.color } as CSSProperties}
-              onClick={() => setDealerId(p.id)}
-            >
-              <span className="pick-chip-avatar">{p.avatar}</span>
-              <span className="pick-chip-name">{p.name}</span>
-              {/* The same word in German for this game. */}
-              {p.id === dealerId && <span className="pick-chip-badge">Dealer</span>}
-            </Tap>
-          ))}
-        </div>
-        <button type="button" className="text-btn" onClick={() => setDealerId(pick(players).id)}>
-          {t('Random dealer')}
-        </button>
-        <div className="sticky-action">
-          <BigButton
-            size="xl"
-            onClick={() => {
-              setLanded(true);
-              setG(newGame(players.length, Math.max(0, players.findIndex((p) => p.id === dealerId))));
-            }}
-          >
-            {t('Let’s go')}
-          </BigButton>
-        </div>
-      </div>
-    );
-  }
-
-  const dealer = players[g.dealer];
-
-  /* ---------- The deck moves on, or it's empty: the dealer drinks what they saved ---------- */
-  if (g.handover) {
-    const from = players[g.handover.dealer];
-    const sips = g.handover.sips;
-    return (
-      <div className="bd ftd-handover">
-        <div className="bd-head center">
-          <span className="kicker">{g.over ? t('Deck’s empty!') : t('Dealer change')}</span>
-          <span className="bd-avatar xl" style={{ background: from.color }}>
-            {from.avatar}
-          </span>
-          <h2 className="bd-title big">{sips ? t('{name} drinks up', { name: from.name }) : t('{name} gets away', { name: from.name })}</h2>
-          <div className={`ftd-sips${sips ? '' : ' none'}`}>
-            <span className="ftd-sips-num">{sips}</span>
-            <span className="ftd-sips-label">{sips === 1 ? t('sip') : t('sips')}</span>
-          </div>
-          <p className="lead">{sips ? t('Everything saved up as dealer, all at once.') : t('Not a single sip saved up. Lucky.')}</p>
-        </div>
-
-        {g.over ? (
-          <>
-            <section className="panel">
-              <h3 className="section-title">{t('Drunk as dealer')}</h3>
-              <div className="ftd-tally">
-                {players
-                  .map((p, i) => ({ p, n: g.drank[i] }))
-                  .sort((a, b) => b.n - a.n)
-                  .map(({ p, n }) => (
-                    <div key={p.id} className="ftd-tally-row">
-                      <span className="bd-avatar xs" style={{ background: p.color }}>
-                        {p.avatar}
-                      </span>
-                      <span className="ftd-tally-name">{p.name}</span>
-                      <span className="ftd-tally-num">{n === 1 ? t('1 sip') : t('{n} sips', { n })}</span>
-                    </div>
-                  ))}
-              </div>
-            </section>
-            <div className="sticky-action stack">
-              <BigButton onClick={() => setG(null)}>{t('Play again')}</BigButton>
-              <BigButton variant="glass" onClick={exit}>
-                {t('Back to games')}
-              </BigButton>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="ftd-next-dealer">
-              <span className="kicker">{t('New dealer')}</span>
-              <span className="bd-player">
-                <span className="bd-avatar sm" style={{ background: dealer.color }}>
-                  {dealer.avatar}
-                </span>
-                <span className="bd-player-name">{dealer.name}</span>
-              </span>
-            </div>
-            <div className="sticky-action">
-              <BigButton size="xl" onClick={() => setG(takeOver(g))}>
-                {t('{name} takes the deck', { name: dealer.name })}
-              </BigButton>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  const guesser = players[g.guesser];
   const r = g.result;
-  const dir = g.firstGuess != null && g.deck.length ? direction(g.firstGuess, g.deck[0].value) : null;
   const out = 52 - g.deck.length;
-  // The card on the deck: the resolved one until it has flown into the middle, then the next one face down.
-  const shown: Card | undefined = r && !landed ? r.card : g.deck[0];
-
-  const onGuess = (value: number) => {
-    if (r) return;
-    const after = guess(g, value);
-    setG(after);
-    setPeek(false);
-    if (!after.result) {
-      sfx.tick();
-      buzz(20);
-      return;
-    }
+  // A new result came in from the deck phone: show it, then fly it onto its pile.
+  const resultKey = r ? `${out}-${r.card.value}${r.card.suit}` : null;
+  useEffect(() => {
+    window.clearTimeout(timer.current);
+    if (!r) return setLanded(true);
     setLanded(false);
-    const res = after.result;
     timer.current = window.setTimeout(() => {
-      if (res.outcome === 'first') celebrate();
-      else if (res.outcome === 'second') {
+      if (r.outcome === 'first') celebrate();
+      else if (r.outcome === 'second') {
         sfx.pop();
         buzz([30, 40, 30]);
-      } else {
-        sfx.boo();
-        buzz([60, 40, 120]);
-      }
+      } else sfx.boo();
       timer.current = window.setTimeout(() => {
-        const from = deckCard.current?.getBoundingClientRect();
-        if (from) setFlight({ value: res.card.value, from, key: out });
+        const from = slot.current?.getBoundingClientRect();
+        if (from) setFlight({ value: r.card.value, from, key: out });
         setLanded(true);
       }, LAND_MS - 450);
     }, 450);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultKey]);
 
-  const onNext = () => {
-    window.clearTimeout(timer.current);
-    setLanded(true);
-    sfx.pop();
-    buzz();
-    setG(next(g, players.length));
-  };
+  if (g.handover) {
+    const dealer = seats[g.dealer];
+    return (
+      <Handover session={session}>
+        {g.over ? (
+          <>
+            <Tally session={session} />
+            <div className="sticky-action">
+              <BigButton onClick={onAgain}>{t('Play again')}</BigButton>
+            </div>
+          </>
+        ) : (
+          <div className="ftd-next-dealer">
+            <span className="kicker">{t('New dealer')}</span>
+            <span className="bd-player">
+              <span className="bd-avatar sm" style={{ background: dealer.color }}>
+                {dealer.avatar}
+              </span>
+              <span className="bd-player-name">{dealer.name}</span>
+            </span>
+            <p className="lead center">{t('Pass the deck phone to {name}.', { name: dealer.name })}</p>
+          </div>
+        )}
+      </Handover>
+    );
+  }
 
-  const lastOfThree = r?.outcome === 'miss' && g.misses >= MISSES_TO_PASS;
+  const dealer = seats[g.dealer];
+  const guesser = seats[g.guesser];
+  const dir = g.firstGuess != null && g.deck.length ? direction(g.firstGuess, g.deck[0].value) : null;
+  const shown: Card | undefined = r && !landed ? r.card : g.deck[0];
 
   return (
-    <div className="ftd">
+    <div className="ftd ftd-tablephone">
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: dealer.color }}>
@@ -195,9 +296,7 @@ export default function FuckTheDealer({ players, exit }: GameProps) {
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{dealer.name}</span>
-            <span className="bd-player-sub">
-              {g.saved === 1 ? t('Dealer · 1 sip saved') : t('Dealer · {n} sips saved', { n: g.saved })}
-            </span>
+            <span className="bd-player-sub">{g.saved === 1 ? t('Dealer · 1 sip so far') : t('Dealer · {n} sips so far', { n: g.saved })}</span>
           </span>
         </div>
         <DeckCount left={g.deck.length + (r && !landed ? 1 : 0)} />
@@ -206,73 +305,168 @@ export default function FuckTheDealer({ players, exit }: GameProps) {
       <Table g={g} hide={r && !landed ? r.card : null} flight={flight} />
 
       <div className="ftd-turn">
-        <div
-          ref={deckCard}
-          className={`ftd-deck${g.deck.length > 1 || (r && !landed) ? ' stacked' : ''}`}
-          onPointerDown={() => !r && setPeek(true)}
-          onPointerUp={() => setPeek(false)}
-          onPointerLeave={() => setPeek(false)}
-          onPointerCancel={() => setPeek(false)}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          {shown ? (
-            <PlayingCard key={r && !landed ? out - 1 : out} card={shown} faceUp={peek || (!!r && !landed)} size="lg" />
-          ) : (
-            <span className="ftd-deck-empty" />
-          )}
-          {/* Kept in place (just hidden) once the card is out, so nothing jumps. */}
-          {!known && <span className={`ftd-peek-hint${r ? ' off' : ''}`}>{t('Dealer: hold to peek')}</span>}
+        <div ref={slot} className={`ftd-deck${g.deck.length > 1 || (r && !landed) ? ' stacked' : ''}`}>
+          {shown ? <PlayingCard key={r && !landed ? out - 1 : out} card={shown} faceUp={!!r && !landed} size="lg" /> : <span className="ftd-deck-empty" />}
         </div>
-
-        <div className="ftd-ask">
-          <span className="ftd-guesser">
-            <span className="bd-avatar xs" style={{ background: guesser.color }}>
-              {guesser.avatar}
+        {/* The result takes the question's place, so the table never has to scroll. */}
+        {r ? (
+          <Verdict result={r} dealer={dealer.name} lastOfThree={r.outcome === 'miss' && g.misses >= MISSES_TO_PASS} />
+        ) : (
+          <div className="ftd-ask">
+            <span className="ftd-guesser">
+              <span className="bd-avatar xs" style={{ background: guesser.color }}>
+                {guesser.avatar}
+              </span>
+              <span className="ftd-guesser-name">{guesser.name}</span>
             </span>
-            <span className="ftd-guesser-name">{guesser.name}</span>
-          </span>
-          <h2 className={`ftd-question${dir ? ' hint' : ''}`}>
-            {dir === 'higher' ? t('It’s higher ⬆') : dir === 'lower' ? t('It’s lower ⬇') : t('Which card?')}
-          </h2>
-          <p className="ftd-ask-sub">
-            {g.firstGuess != null && !r
-              ? t('Your guess: {rank}. Last try!', { rank: rankLabel(g.firstGuess) })
-              : !known && !r
-                ? t('Guess the value, the suit doesn’t matter.')
-                : null}
-          </p>
-          <Misses n={g.misses} />
-        </div>
+            <h2 className={`ftd-question${dir ? ' hint' : ''}`}>
+              {dir === 'higher' ? t('It’s higher ⬆') : dir === 'lower' ? t('It’s lower ⬇') : t('Which card?')}
+            </h2>
+            <p className="ftd-ask-sub">
+              {g.firstGuess != null
+                ? t('First guess: {rank}. Last try!', { rank: rankLabel(g.firstGuess) })
+                : !known
+                  ? t('{name} has the deck and types in the guess.', { name: dealer.name })
+                  : null}
+            </p>
+            <Misses n={g.misses} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Tally({ session }: { session: Session }) {
+  return (
+    <section className="panel">
+      <h3 className="section-title">{t('Drunk as dealer')}</h3>
+      <div className="ftd-tally">
+        {session.seats
+          .map((p, i) => ({ p, n: session.game.drank[i] }))
+          .sort((a, b) => b.n - a.n)
+          .map(({ p, n }) => (
+            <div key={p.id} className="ftd-tally-row">
+              <span className="bd-avatar xs" style={{ background: p.color }}>
+                {p.avatar}
+              </span>
+              <span className="ftd-tally-name">{p.name}</span>
+              <span className="ftd-tally-num">{n === 1 ? t('1 sip') : t('{n} sips', { n })}</span>
+            </div>
+          ))}
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Second phone: the deck, in the dealer's hand ---------------- */
+
+function DeckView({ session, act }: { session: Session; act: (a: Act) => void }) {
+  const known = useApp().knows('fuck-the-dealer');
+  const [peek, setPeek] = useState(false);
+  const g = session.game;
+  const seats = session.seats;
+  const dealer = seats[g.dealer];
+  const r = g.result;
+  const out = 52 - g.deck.length;
+
+  // Feel it in the hand when a guess is settled.
+  const outcome = r?.outcome;
+  useEffect(() => {
+    if (outcome === 'first') buzz([40, 30, 40, 30, 80]);
+    else if (outcome) buzz(30);
+  }, [outcome, out]);
+
+  if (g.handover) {
+    return (
+      <Handover session={session}>
+        {g.over ? (
+          <p className="lead center">{t('Game over. The table shows who drank what.')}</p>
+        ) : (
+          <div className="sticky-action">
+            <p className="ftd-pass">{t('Pass this phone to {name}.', { name: dealer.name })}</p>
+            <BigButton size="xl" onClick={() => act({ t: 'take' })}>
+              {t('{name} takes the deck', { name: dealer.name })}
+            </BigButton>
+          </div>
+        )}
+      </Handover>
+    );
+  }
+
+  const guesser = seats[g.guesser];
+  const dir = g.firstGuess != null && g.deck.length ? direction(g.firstGuess, g.deck[0].value) : null;
+  const card = r ? r.card : g.deck[0];
+  const lastOfThree = r?.outcome === 'miss' && g.misses >= MISSES_TO_PASS;
+
+  return (
+    <div className="ftd ftd-deckphone">
+      <div className="ftd-deckphone-head">
+        <span className="kicker">{t('Deck · {name} deals', { name: dealer.name })}</span>
+        <span className="ftd-deckphone-ask">
+          {r ? null : dir ? (
+            <span className="ftd-question hint">{dir === 'higher' ? t('It’s higher ⬆') : t('It’s lower ⬇')}</span>
+          ) : (
+            <NextName text={t('Ask {name}: Which card?')} name={guesser.name} />
+          )}
+        </span>
+      </div>
+
+      <div
+        className={`ftd-deck big${g.deck.length > 1 ? ' stacked' : ''}`}
+        onPointerDown={() => !r && setPeek(true)}
+        onPointerUp={() => setPeek(false)}
+        onPointerLeave={() => setPeek(false)}
+        onPointerCancel={() => setPeek(false)}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {card ? <PlayingCard key={r ? out - 1 : out} card={card} faceUp={peek || !!r} size="xl" /> : <span className="ftd-deck-empty" />}
+        {!known && <span className={`ftd-peek-hint${r ? ' off' : ''}`}>{t('Hold to peek, don’t let anyone see')}</span>}
       </div>
 
       {!r ? (
-        <div className="ftd-pad">
-          {VALUES.map((v) => (
-            <button
-              key={v}
-              type="button"
-              className={`ftd-rank${v === g.firstGuess ? ' crossed' : ''}`}
-              disabled={!possible(g, v)}
-              onClick={() => onGuess(v)}
-            >
-              {rankLabel(v)}
-            </button>
-          ))}
-        </div>
+        <>
+          <p className="ftd-ask-sub center">
+            {g.firstGuess != null
+              ? t('First guess: {rank}. Last try!', { rank: rankLabel(g.firstGuess) })
+              : !known
+                ? t('Tap the value {name} says.', { name: guesser.name })
+                : null}
+          </p>
+          <div className="ftd-pad">
+            {VALUES.map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`ftd-rank${v === g.firstGuess ? ' crossed' : ''}`}
+                disabled={!possible(g, v)}
+                onClick={() => {
+                  sfx.tick();
+                  buzz(15);
+                  setPeek(false);
+                  act({ t: 'guess', value: v });
+                }}
+              >
+                {rankLabel(v)}
+              </button>
+            ))}
+          </div>
+        </>
       ) : (
-        <Verdict result={r} dealer={dealer.name} lastOfThree={lastOfThree} />
-      )}
-
-      {r && (
-        <div className="sticky-action">
-          <BigButton size="xl" variant={lastOfThree || !g.deck.length ? 'primary' : 'light'} onClick={onNext}>
-            {!g.deck.length
-              ? t('Finish game')
-              : lastOfThree
-                ? t('Pass the deck →')
-                : <NextName text={t('Next: {name} →')} name={players[nextGuesser(g.guesser, g.dealer, players.length)].name} />}
-          </BigButton>
-        </div>
+        <>
+          <Verdict result={r} dealer={dealer.name} lastOfThree={lastOfThree} />
+          <div className="sticky-action">
+            <BigButton size="xl" variant={lastOfThree || !g.deck.length ? 'primary' : 'light'} onClick={() => act({ t: 'next' })}>
+              {!g.deck.length ? (
+                t('Finish game')
+              ) : lastOfThree ? (
+                t('Pass the deck →')
+              ) : (
+                <NextName text={t('Next: {name} →')} name={seats[nextGuesser(g.guesser, g.dealer, seats.length)].name} />
+              )}
+            </BigButton>
+          </div>
+        </>
       )}
     </div>
   );
@@ -282,9 +476,9 @@ function Verdict({ result, dealer, lastOfThree }: { result: NonNullable<Game['re
   const card = cardName(result.card);
   const [tone, emoji, title, sub] =
     result.outcome === 'first'
-      ? ['correct', '🎯', t('Bullseye!'), t('{name} saves 6 sips.', { name: dealer })]
+      ? ['correct', '🎯', t('Bullseye!'), t('{name} gets 6 sips.', { name: dealer })]
       : result.outcome === 'second'
-        ? ['same', '👌', t('Got it!'), t('{name} saves 3 sips.', { name: dealer })]
+        ? ['same', '👌', t('Got it!'), t('{name} gets 3 sips.', { name: dealer })]
         : ['wrong', '🙅', t('Missed!'), lastOfThree ? t('Third miss in a row: the deck moves on.') : t('Nobody drinks.')];
   return (
     <div className={`bd-result ${tone}`}>
@@ -336,10 +530,14 @@ function Table({ g, hide, flight }: { g: Game; hide: Card | null; flight: { valu
     });
   }, [flight]);
 
+  // Three rows (2–6, 7–10, J–A) so the cards can be big.
+  const rows = [VALUES.slice(0, 5), VALUES.slice(5, 9), VALUES.slice(9)];
   return (
     <div className="ftd-table">
-      {VALUES.map((v, i) => {
-        const pile = g.piles[i].filter((c) => c !== hide);
+      {rows.map((row, r) => (
+        <div key={r} className="ftd-row">
+          {row.map((v) => {
+        const pile = g.piles[v - 2].filter((c) => c !== hide);
         const full = pile.length === 4;
         return (
           <div key={v} className="ftd-pile" ref={(el) => void (piles.current[v] = el)}>
@@ -373,7 +571,9 @@ function Table({ g, hide, flight }: { g: Game; hide: Card | null; flight: { valu
             </span>
           </div>
         );
-      })}
+          })}
+        </div>
+      ))}
     </div>
   );
 }

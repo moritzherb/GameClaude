@@ -19,7 +19,7 @@ const speed: GameDefinition = {
     tx('You may hold at most 5 cards. Draw from your pile whenever you like. Draw too many and you have to put the extras back (last one first) before you can play on.'),
     tx('On 3-2-1 one card from each side stack is turned over into the middle: two piles to play on.'),
     tx('Both play at the same time: a card goes on a middle pile if it’s one higher or lower. Ace goes on King or 2, 2 on Ace or 3.'),
-    tx('If neither of you can play, two new cards are turned over on 3-2-1. Once the side stacks run out, the middle piles are shuffled into new ones.'),
+    tx('If neither of you can play, two new cards are turned over on 3-2-1. Once the side stacks run out, every card in the middle is shuffled into two new stacks and you play on.'),
     tx('The first to get rid of all their cards wins.'),
   ],
   online: Speed,

@@ -14,8 +14,8 @@ const speed: Record<string, string> = {
     'Auf 3-2-1 wird von jedem Seitenstapel eine Karte in die Mitte umgedreht: zwei Stapel zum Ablegen.',
   'Both play at the same time: a card goes on a middle pile if it’s one higher or lower. Ace goes on King or 2, 2 on Ace or 3.':
     'Beide spielen gleichzeitig: Eine Karte darf auf einen Stapel in der Mitte, wenn sie eins höher oder tiefer ist. Ass auf König oder 2, 2 auf Ass oder 3.',
-  'If neither of you can play, two new cards are turned over on 3-2-1. Once the side stacks run out, the middle piles are shuffled into new ones.':
-    'Kann keiner von euch legen, werden auf 3-2-1 zwei neue Karten umgedreht. Sind die Seitenstapel leer, werden die Stapel in der Mitte zu neuen gemischt.',
+  'If neither of you can play, two new cards are turned over on 3-2-1. Once the side stacks run out, every card in the middle is shuffled into two new stacks and you play on.':
+    'Kann keiner von euch legen, werden auf 3-2-1 zwei neue Karten umgedreht. Sind die Seitenstapel leer, werden alle Karten aus der Mitte zu zwei neuen Stapeln gemischt und es geht weiter.',
   'The first to get rid of all their cards wins.': 'Wer zuerst alle Karten los ist, gewinnt.',
 
   // Lobby
@@ -40,6 +40,10 @@ const speed: Record<string, string> = {
   'Tap a card to put it on a middle pile that’s one higher or lower. Ace goes on King or 2.':
     'Tipp eine Karte an, um sie auf einen Stapel in der Mitte zu legen, der eins höher oder tiefer ist. Ass passt auf König oder 2.',
   'Waiting for {name}…': 'Warte auf {name}…',
+
+  'Nobody can play!': 'Keiner kann legen!',
+  'Two new cards are coming…': 'Gleich kommen zwei neue Karten…',
+  'New cards in': 'Neue Karten in',
 
   // Game over
   'You win! 🏆': 'Du gewinnst! 🏆',
