@@ -15,38 +15,52 @@ const SINGLE: Partial<Record<Face, number>> = { 13: 50, 14: 100 };
 /** Three of a kind in one roll. */
 export const TRIPLE: Record<Face, number> = { 9: 100, 10: 200, 11: 300, 12: 400, 13: 500, 14: 1000 };
 
+const count = (roll: Face[], f: Face) => roll.filter((x) => x === f).length;
+
 /**
- * Points for dice set aside together from one roll, or null if one of them doesn't score.
- * Three of a kind counts as a triple, Kings and Aces beyond that count on their own.
+ * A triple is exactly three of a face in one roll ("a pure triple"): four or five of a kind are no
+ * triple. Faces that make one in this roll:
  */
-export function score(faces: Face[]): number | null {
+export const triples = (roll: Face[]) => FACES.filter((f) => count(roll, f) === 3);
+
+/**
+ * Points for dice set aside together from `roll`, or null if that isn't allowed: every die has to
+ * score, and a triple only goes as a whole (it can't be split into single Kings or Aces).
+ * Kings and Aces that aren't part of a triple count on their own, four or five of them too.
+ */
+export function score(faces: Face[], roll: Face[] = faces): number | null {
   let total = 0;
   for (const f of FACES) {
-    let n = faces.filter((x) => x === f).length;
-    if (n >= 3) {
+    const n = count(faces, f);
+    if (!n) continue;
+    if (count(roll, f) === 3) {
+      if (n !== 3) return null;
       total += TRIPLE[f];
-      n -= 3;
+      continue;
     }
-    if (n > 0) {
-      const single = SINGLE[f];
-      if (!single) return null;
-      total += n * single;
-    }
+    const single = SINGLE[f];
+    if (!single) return null;
+    total += n * single;
   }
   return total;
 }
 
-/** Faces in a roll that make up a triple. */
-export const triples = (roll: Face[]) => FACES.filter((f) => roll.filter((x) => x === f).length >= 3);
-
-/** Does anything in this roll score (a King, an Ace or three of a kind)? */
-export const scores = (roll: Face[]) => roll.some((f) => SINGLE[f]) || triples(roll).length > 0;
-
-/** The least you could set aside from this roll (a single King, Ace or a triple). */
-export function minGain(roll: Face[]) {
-  const options = [...roll.filter((f) => SINGLE[f]).map((f) => SINGLE[f]!), ...triples(roll).map((f) => TRIPLE[f])];
-  return options.length ? Math.min(...options) : 0;
+/** Everything in a roll that scores, together. */
+export function rollValue(roll: Face[]) {
+  let total = 0;
+  for (const f of FACES) {
+    const n = count(roll, f);
+    if (n === 3) total += TRIPLE[f];
+    else total += n * (SINGLE[f] ?? 0);
+  }
+  return total;
 }
+
+/** Does anything in this roll score (a King, an Ace or a triple)? */
+export const scores = (roll: Face[]) => rollValue(roll) > 0;
+
+/** Indexes of the dice in a roll that score. */
+export const scoringDice = (roll: Face[]) => roll.map((f, i) => (count(roll, f) === 3 || SINGLE[f] ? i : -1)).filter((i) => i >= 0);
 
 export interface Turn {
   /** Dice in the cup, ready for the next roll. */
@@ -64,7 +78,7 @@ export type Phase = 'roll' | 'choose' | 'over';
 
 export type TurnEnd =
   | { kind: 'nothing'; lost: number; penalty: number }
-  | { kind: 'too-much'; lost: number }
+  | { kind: 'too-much'; lost: number; /** What the roll was worth, and what was still needed. */ value: number; need: number }
   | { kind: 'banked'; gained: number }
   | { kind: 'won' };
 
@@ -111,9 +125,20 @@ export function roll(g: Game, rand: () => number = Math.random): Game {
       end: { kind: 'nothing', lost: g.turn.points, penalty },
     };
   }
-  // Even the smallest thing to set aside would go past 5000.
-  if (g.scores[me] + g.turn.points + minGain(faces) > TARGET) {
-    return { ...g, turn, phase: 'over', end: { kind: 'too-much', lost: g.turn.points } };
+  // Close to 5000 the roll has to fit: if what it brings is more than you still need, the turn is
+  // over without points (you can't pick just part of it). If it's exactly enough, you've won.
+  const need = TARGET - g.scores[me] - g.turn.points;
+  const value = rollValue(faces);
+  if (value > need) return { ...g, turn, phase: 'over', end: { kind: 'too-much', lost: g.turn.points, value, need } };
+  if (value === need) {
+    const aside = [...turn.aside, ...scoringDice(faces).map((i) => faces[i])];
+    return {
+      ...g,
+      turn: { ...turn, points: turn.points + value, aside },
+      phase: 'over',
+      scores: g.scores.map((s, i) => (i === me ? TARGET : s)),
+      end: { kind: 'won' },
+    };
   }
   return { ...g, turn, phase: 'choose' };
 }
@@ -121,7 +146,7 @@ export function roll(g: Game, rand: () => number = Math.random): Game {
 /** Points for setting aside these dice (indexes into the roll), or null if that isn't allowed. */
 export function gainFor(g: Game, picked: number[]): number | null {
   if (g.phase !== 'choose' || !picked.length) return null;
-  const gain = score(picked.map((i) => g.turn.roll[i]));
+  const gain = score(picked.map((i) => g.turn.roll[i]), g.turn.roll);
   return gain ? gain : null;
 }
 
