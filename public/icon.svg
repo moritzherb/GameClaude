@@ -1,13 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" fill="#10110e"/>
-  <!-- the lime bang from the wordmark, on a yellow ticket stub -->
-  <g transform="rotate(-8 256 256)">
-    <rect x="136" y="136" width="240" height="240" rx="28" fill="#ffd23f"/>
-    <circle cx="136" cy="256" r="22" fill="#10110e"/>
-    <circle cx="376" cy="256" r="22" fill="#10110e"/>
-  </g>
-  <g transform="rotate(10 256 256)" fill="#10110e">
-    <rect x="226" y="150" width="60" height="150" rx="14"/>
-    <circle cx="256" cy="344" r="32"/>
+  <!-- a lime die showing five, tilted like it was just thrown -->
+  <g transform="rotate(-12 256 256)">
+    <rect x="116" y="116" width="280" height="280" rx="56" fill="#c5f235"/>
+    <g fill="#10110e">
+      <circle cx="180" cy="180" r="28"/>
+      <circle cx="332" cy="180" r="28"/>
+      <circle cx="256" cy="256" r="28"/>
+      <circle cx="180" cy="332" r="28"/>
+      <circle cx="332" cy="332" r="28"/>
+    </g>
   </g>
 </svg>
