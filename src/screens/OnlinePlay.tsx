@@ -5,6 +5,7 @@ import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
 import TopBar, { RoundButton } from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
+import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useRoom } from '../net/RoomProvider';
@@ -28,12 +29,12 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
         <TopBar onBack={() => navigate(paths.game(game.id))} />
         <div className="connecting">
           <div className="connecting-emoji">📱</div>
-          <h1 className="bd-title">{game.name} needs a room</h1>
-          <p className="lead">Every player uses their own phone. Open a room, let everyone join, then start the game from there.</p>
+          <h1 className="bd-title">{t('{game} needs a room', { game: t(game.name) })}</h1>
+          <p className="lead">{t('Every player uses their own phone. Open a room, let everyone join, then start the game from there.')}</p>
         </div>
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => navigate(paths.room)}>
-            Open Play together
+            {t('Open Play together')}
           </BigButton>
         </div>
       </main>
@@ -43,25 +44,25 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   return (
     <main className="screen play-screen">
       <TopBar
-        title={`${game.emoji} ${game.name}`}
+        title={`${game.emoji} ${t(game.name)}`}
         onBack={() => (isHost ? setConfirmExit(true) : navigate(paths.home))}
         icon="close"
         right={
-          <RoundButton label="Rules" onClick={() => setShowRules(true)}>
+          <RoundButton label={t('Rules')} onClick={() => setShowRules(true)}>
             <HelpIcon />
           </RoundButton>
         }
       />
 
-      {room.status === 'reconnecting' && <p className="notice">Connection lost. Reconnecting…</p>}
+      {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}
 
       <Game />
 
-      <Sheet open={showRules} onClose={() => setShowRules(false)} title="How to play">
+      <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>
         <RulesList rules={game.rules} />
       </Sheet>
 
-      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title="End the game for everyone?" closeLabel="Keep playing">
+      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title={t('End the game for everyone?')} closeLabel={t('Keep playing')}>
         <BigButton
           variant="danger"
           onClick={() => {
@@ -69,7 +70,7 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
             navigate(paths.room);
           }}
         >
-          End game
+          {t('End game')}
         </BigButton>
       </Sheet>
     </main>

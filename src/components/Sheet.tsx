@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { t } from '../i18n';
 import BigButton from './BigButton';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 }
 
 /** Bottom sheet with one big close button. Tapping outside also closes it. */
-export default function Sheet({ open, onClose, title, children, closeLabel = 'Got it' }: Props) {
+export default function Sheet({ open, onClose, title, children, closeLabel = t('Got it') }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();

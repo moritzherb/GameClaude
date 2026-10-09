@@ -5,6 +5,7 @@ import Intensity from '../components/Intensity';
 import RulesList from '../components/RulesList';
 import TopBar from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
+import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -20,35 +21,35 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
       <TopBar onBack={() => navigate(paths.games())} />
 
       <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
-        <span className="detail-no">No. {gameNumber(game)}</span>
+        <span className="detail-no">{t('No. {n}', { n: gameNumber(game) })}</span>
         <span className="detail-emoji" aria-hidden>
           {game.emoji}
         </span>
-        <h1 className="detail-name">{game.name}</h1>
-        <p className="detail-tagline">{game.tagline}</p>
+        <h1 className="detail-name">{t(game.name)}</h1>
+        <p className="detail-tagline">{t(game.tagline)}</p>
       </section>
 
       <div className="stats">
         <div className="stat">
-          <span className="stat-label">Players</span>
+          <span className="stat-label">{t('Players')}</span>
           <span className="stat-value">{playerRange}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">Intensity</span>
+          <span className="stat-label">{t('Intensity')}</span>
           <span className="stat-value">
             <Intensity level={game.intensity} showLabel />
           </span>
         </div>
         {game.needs?.length ? (
           <div className="stat wide">
-            <span className="stat-label">You’ll need</span>
-            <span className="stat-value">{game.needs.join(' · ')}</span>
+            <span className="stat-label">{t('You’ll need')}</span>
+            <span className="stat-value">{game.needs.map((n) => t(n)).join(' · ')}</span>
           </div>
         ) : null}
       </div>
 
       <section className="panel">
-        <h2 className="section-title">How to play</h2>
+        <h2 className="section-title">{t('How to play')}</h2>
         <RulesList rules={game.rules} />
       </section>
 
@@ -57,19 +58,19 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
           <OnlineStart game={game} />
         ) : !game.component ? (
           <BigButton variant="glass" disabled>
-            Coming soon
+            {t('Coming soon')}
           </BigButton>
         ) : missing > 0 ? (
           <BigButton variant="light" size="xl" onClick={() => navigate(paths.players(paths.game(game.id)))}>
-            Add {missing} more player{missing > 1 ? 's' : ''}
+            {missing > 1 ? t('Add {n} more players', { n: missing }) : t('Add {n} more player', { n: missing })}
           </BigButton>
         ) : tooMany ? (
           <BigButton variant="light" onClick={() => navigate(paths.players(paths.game(game.id)))}>
-            Max {game.maxPlayers} players
+            {t('Max {n} players', { n: game.maxPlayers ?? 0 })}
           </BigButton>
         ) : (
           <BigButton size="xl" onClick={() => navigate(paths.play(game.id))}>
-            Start game
+            {t('Start game')}
           </BigButton>
         )}
       </div>
@@ -84,21 +85,21 @@ function OnlineStart({ game }: { game: GameDefinition }) {
   if (!inRoom) {
     return (
       <BigButton size="xl" onClick={() => navigate(paths.room)}>
-        Play together
+        {t('Play together')}
       </BigButton>
     );
   }
   if (room.game === game.id) {
     return (
       <BigButton size="xl" onClick={() => navigate(paths.online(game.id))}>
-        Back to the game
+        {t('Back to the game')}
       </BigButton>
     );
   }
   if (room.role !== 'host') {
     return (
       <BigButton variant="glass" disabled>
-        Only the host can start it
+        {t('Only the host can start it')}
       </BigButton>
     );
   }
@@ -110,7 +111,7 @@ function OnlineStart({ game }: { game: GameDefinition }) {
         navigate(paths.online(game.id));
       }}
     >
-      Start for everyone in the room
+      {t('Start for everyone in the room')}
     </BigButton>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import BigButton from '../components/BigButton';
 import Logo from '../components/Logo';
+import { t } from '../i18n';
 
 export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const [tooYoung, setTooYoung] = useState(false);
@@ -13,10 +14,10 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
       {tooYoung ? (
         <div className="gate-body fade-up">
           <div className="gate-emoji">🧃</div>
-          <h1 className="headline">No worries.</h1>
-          <p className="lead">Come back when you’re old enough. Juice is great too.</p>
+          <h1 className="headline">{t('No worries.')}</h1>
+          <p className="lead">{t('Come back when you’re old enough. Juice is great too.')}</p>
           <BigButton variant="glass" onClick={() => setTooYoung(false)}>
-            Go back
+            {t('Go back')}
           </BigButton>
         </div>
       ) : (
@@ -24,14 +25,14 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
           <div className="gate-big" aria-hidden>
             18<span>+</span>
           </div>
-          <h1 className="headline">Are you of legal drinking age?</h1>
-          <p className="lead">Party games for pregames, house parties and everything after.</p>
+          <h1 className="headline">{t('Are you of legal drinking age?')}</h1>
+          <p className="lead">{t('Party games for pregames, house parties and everything after.')}</p>
           <div className="stack">
             <BigButton size="xl" onClick={onConfirm}>
-              Yes, let’s go
+              {t('Yes, let’s go')}
             </BigButton>
             <BigButton variant="glass" onClick={() => setTooYoung(true)}>
-              Not yet
+              {t('Not yet')}
             </BigButton>
           </div>
         </div>

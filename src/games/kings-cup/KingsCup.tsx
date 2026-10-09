@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import { CardFace } from '../../components/PlayingCard';
-import { newDeck, rankLabel, type Card } from '../../lib/cards';
+import { newDeck, rankLabel, type Card, type Suit } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
+import { t, tx } from '../../i18n';
 import { shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
@@ -23,6 +24,14 @@ interface State {
   mates: [string, string][];
   houseRules: string[];
   over: boolean;
+}
+
+/** Suit names for the big card's label (lowercase, as the English label always read). */
+const SUIT_LABEL: Record<Suit, string> = { hearts: tx('hearts'), diamonds: tx('diamonds'), spades: tx('spades'), clubs: tx('clubs') };
+
+/** Fills {placeholders} in an already translated text with elements, e.g. a bold name. */
+function rich(text: string, parts: Record<string, ReactNode>) {
+  return text.split(/\{(\w+)\}/).map((piece, i) => <Fragment key={i}>{i % 2 ? parts[piece] : piece}</Fragment>);
 }
 
 const fresh = (): State => ({
@@ -110,15 +119,15 @@ export default function KingsCup({ players, exit }: GameProps) {
     return (
       <div className="kc">
         <div className="bd-head">
-          <span className="kicker">Game over</span>
-          <h2 className="bd-title big">{s.kings === 4 ? `${player.name} drank the King’s Cup` : 'Deck’s empty!'}</h2>
-          <p className="lead">{52 - left} cards drawn.</p>
+          <span className="kicker">{t('Game over')}</span>
+          <h2 className="bd-title big">{s.kings === 4 ? t('{name} drank the King’s Cup', { name: player.name }) : t('Deck’s empty!')}</h2>
+          <p className="lead">{t('{n} cards drawn.', { n: 52 - left })}</p>
         </div>
         {effects}
         <div className="sticky-action stack">
-          <BigButton onClick={() => setS(fresh())}>Play again</BigButton>
+          <BigButton onClick={() => setS(fresh())}>{t('Play again')}</BigButton>
           <BigButton variant="glass" onClick={exit}>
-            Back to games
+            {t('Back to games')}
           </BigButton>
         </div>
       </div>
@@ -134,7 +143,7 @@ export default function KingsCup({ players, exit }: GameProps) {
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{player.name}</span>
-            <span className="bd-player-sub">{s.current ? 'drew a card' : 'your turn'}</span>
+            <span className="bd-player-sub">{s.current ? t('drew a card') : t('your turn')}</span>
           </span>
         </div>
         <DeckCount left={left} />
@@ -151,7 +160,7 @@ export default function KingsCup({ players, exit }: GameProps) {
                   className="kc-slot"
                   style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
                   disabled={!!s.current}
-                  aria-label="Face-down card"
+                  aria-label={t('Face-down card')}
                   onClick={() => {
                     sfx.pop();
                     buzz(12);
@@ -162,14 +171,14 @@ export default function KingsCup({ players, exit }: GameProps) {
             )}
           </div>
           <KingCrown kings={s.kings} />
-          {!s.current && !known && <span className="kc-ring-hint">Pick any card</span>}
+          {!s.current && !known && <span className="kc-ring-hint">{t('Pick any card')}</span>}
           {s.current && rule && <Reveal key={52 - left} card={s.current} rule={rule} finale={!!lastKing} from={from.current} />}
         </div>
       </div>
 
       {s.current?.value === 8 && (
         <div className="kc-action">
-          <span className="kc-action-label">Who’s your mate?</span>
+          <span className="kc-action-label">{t('Who’s your mate?')}</span>
           <div className="pick-grid">
             {players
               .filter((p) => p.id !== player.id)
@@ -202,7 +211,7 @@ export default function KingsCup({ players, exit }: GameProps) {
           }}
         >
           <label className="kc-action-label" htmlFor="kc-rule">
-            Write down your rule (optional)
+            {t('Write down your rule (optional)')}
           </label>
           <div className="add-player">
             <input
@@ -210,12 +219,12 @@ export default function KingsCup({ players, exit }: GameProps) {
               className="add-player-input"
               value={ruleDraft}
               maxLength={80}
-              placeholder="e.g. No first names"
+              placeholder={t('e.g. No first names')}
               autoComplete="off"
               enterKeyHint="done"
               onChange={(e) => setRuleDraft(e.target.value)}
             />
-            <button type="submit" className="add-player-btn" aria-label="Save rule" disabled={!ruleDraft.trim()}>
+            <button type="submit" className="add-player-btn" aria-label={t('Save rule')} disabled={!ruleDraft.trim()}>
               ✓
             </button>
           </div>
@@ -227,7 +236,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       {/* Always there (hidden while picking) so the circle doesn't jump when a card is drawn. */}
       <div className={`sticky-action${s.current ? '' : ' kc-idle'}`}>
         <BigButton size="xl" variant={lastKing ? 'primary' : 'light'} onClick={next} disabled={!s.current}>
-          {lastKing || left === 0 ? 'Finish game' : `Next: ${players[(s.turn + 1) % players.length].name} →`}
+          {lastKing || left === 0 ? t('Finish game') : t('Next: {name} →', { name: players[(s.turn + 1) % players.length].name })}
         </BigButton>
       </div>
     </div>
@@ -277,12 +286,18 @@ function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; fina
   }, [from]);
 
   const showsRule = turns % 2 === 0;
+  const title = t(rule.title);
+  const text = t(rule.text);
   return (
     <div ref={ref} className="kc-reveal">
       <button
         type="button"
         className="kc-big"
-        aria-label={showsRule ? `${rule.title}: ${rule.text} Tap to see the card.` : `${rankLabel(card.value)} of ${card.suit}. Tap for the rule.`}
+        aria-label={
+          showsRule
+            ? t('{title}: {text} Tap to see the card.', { title, text })
+            : t('{rank} of {suit}. Tap for the rule.', { rank: rankLabel(card.value), suit: t(SUIT_LABEL[card.suit]) })
+        }
         disabled={!landed}
         onClick={() => {
           sfx.tick();
@@ -295,15 +310,15 @@ function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; fina
           {landed ? (
             <span className={`pcard-face kc-rule-face${finale ? ' finale' : ''}`}>
               <span className="kc-rule-face-emoji">{rule.emoji}</span>
-              <span className="kc-rule-face-title">{rule.title}</span>
-              <span className="kc-rule-face-text">{rule.text}</span>
+              <span className="kc-rule-face-title">{title}</span>
+              <span className="kc-rule-face-text">{text}</span>
             </span>
           ) : (
             <span className="pcard-face pcard-back" />
           )}
         </span>
       </button>
-      {!known && landed && <span className="kc-big-hint">{showsRule ? 'Tap for the card' : 'Tap for the rule'}</span>}
+      {!known && landed && <span className="kc-big-hint">{showsRule ? t('Tap for the card') : t('Tap for the rule')}</span>}
     </div>
   );
 }
@@ -317,7 +332,7 @@ function KingCrown({ kings }: { kings: number }) {
     [87, 30],
   ];
   return (
-    <span className="kc-crown-wrap" role="img" aria-label={`${kings} of 4 Kings drawn`}>
+    <span className="kc-crown-wrap" role="img" aria-label={t('{n} of 4 Kings drawn', { n: kings })}>
       <span className="kc-crown-glow" />
       <svg className="kc-crown" viewBox="0 0 100 100">
         <path className="kc-crown-body" d="M18 70 13 32 27 49 37 22 50 47 63 22 73 49 87 32 82 70z" />
@@ -345,22 +360,18 @@ function ActiveEffects({
   if (!questionMaster && !mates.length && !houseRules.length) return null;
   return (
     <section className="panel kc-effects">
-      <h3 className="section-title">In play</h3>
+      <h3 className="section-title">{t('In play')}</h3>
       {questionMaster && (
         <div className="kc-effect">
           <span className="kc-effect-icon">❓</span>
-          <span>
-            <strong>{questionMaster.name}</strong> is Question Master
-          </span>
+          <span>{rich(t('{name} is Question Master'), { name: <strong>{questionMaster.name}</strong> })}</span>
         </div>
       )}
       {mates.map(([a, b], i) =>
         a && b ? (
           <div key={i} className="kc-effect">
             <span className="kc-effect-icon">🤝</span>
-            <span>
-              <strong>{a.name}</strong> drinks → <strong>{b.name}</strong> drinks
-            </span>
+            <span>{rich(t('{a} drinks → {b} drinks'), { a: <strong>{a.name}</strong>, b: <strong>{b.name}</strong> })}</span>
           </div>
         ) : null,
       )}

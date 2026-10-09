@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { GAMES } from '../games/registry';
 import type { GameDefinition } from '../games/types';
+import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import Intensity from './Intensity';
 
@@ -29,15 +30,15 @@ export default function GameCard({ game, onOpen }: { game: GameDefinition; onOpe
         <span className="ticket-emoji">{game.emoji}</span>
       </span>
       <span className="ticket-body">
-        <span className="ticket-name">{game.name}</span>
-        <span className="ticket-tagline">{game.tagline}</span>
+        <span className="ticket-name">{t(game.name)}</span>
+        <span className="ticket-tagline">{t(game.tagline)}</span>
         <span className="ticket-meta">
-          <span>{players} players</span>
+          <span>{t('{n} players', { n: players })}</span>
           <Intensity level={game.intensity} showLabel />
-          {game.online && <span className="ticket-flag">Every phone</span>}
+          {game.online && <span className="ticket-flag">{t('Every phone')}</span>}
         </span>
       </span>
-      {soon && <span className="stamp">Soon</span>}
+      {soon && <span className="stamp">{t('Soon')}</span>}
     </button>
   );
 }

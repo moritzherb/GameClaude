@@ -5,6 +5,7 @@ import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
 import TopBar, { RoundButton } from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
+import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useApp } from '../state/AppState';
@@ -29,11 +30,11 @@ export default function Play({ game }: { game: GameDefinition }) {
   return (
     <main className="screen play-screen">
       <TopBar
-        title={`${game.emoji} ${game.name}`}
+        title={`${game.emoji} ${t(game.name)}`}
         onBack={() => setConfirmExit(true)}
         icon="close"
         right={
-          <RoundButton label="Rules" onClick={() => setShowRules(true)}>
+          <RoundButton label={t('Rules')} onClick={() => setShowRules(true)}>
             <HelpIcon />
           </RoundButton>
         }
@@ -41,13 +42,13 @@ export default function Play({ game }: { game: GameDefinition }) {
 
       <Game players={players} exit={exit} />
 
-      <Sheet open={showRules} onClose={() => setShowRules(false)} title="How to play">
+      <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>
         <RulesList rules={game.rules} />
       </Sheet>
 
-      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title="Leave the game?" closeLabel="Keep playing">
+      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title={t('Leave the game?')} closeLabel={t('Keep playing')}>
         <BigButton variant="danger" onClick={exit}>
-          Quit game
+          {t('Quit game')}
         </BigButton>
       </Sheet>
     </main>

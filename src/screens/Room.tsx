@@ -151,8 +151,8 @@ function Lobby() {
 
   useEffect(() => {
     if (!armLeave) return;
-    const t = setTimeout(() => setArmLeave(false), 3000);
-    return () => clearTimeout(t);
+    const timeout = setTimeout(() => setArmLeave(false), 3000);
+    return () => clearTimeout(timeout);
   }, [armLeave]);
 
   if (room.status === 'connecting') {

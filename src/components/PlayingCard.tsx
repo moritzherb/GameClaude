@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { t } from '../i18n';
 import { cardColor, rankLabel, type Card } from '../lib/cards';
 import Suit from './Suit';
 
@@ -20,7 +21,7 @@ export default function PlayingCard({ card, faceUp = true, size = 'md', waiting,
       className={`pcard pcard-${size}${up ? ' up' : ''}${waiting ? ' waiting' : ''}`}
       style={style}
       role="img"
-      aria-label={up && card ? `${rankLabel(card.value)} of ${card.suit}` : 'Face-down card'}
+      aria-label={up && card ? cardLabel(card) : t('Face-down card')}
     >
       <div className="pcard-inner">
         <CardFace card={card} />
@@ -28,6 +29,21 @@ export default function PlayingCard({ card, faceUp = true, size = 'md', waiting,
       </div>
     </div>
   );
+}
+
+/** Screen-reader name of a card, e.g. "7 of hearts". */
+function cardLabel(card: Card) {
+  const rank = rankLabel(card.value);
+  switch (card.suit) {
+    case 'hearts':
+      return t('{rank} of hearts', { rank });
+    case 'diamonds':
+      return t('{rank} of diamonds', { rank });
+    case 'spades':
+      return t('{rank} of spades', { rank });
+    case 'clubs':
+      return t('{rank} of clubs', { rank });
+  }
 }
 
 /** The printed side of a card. Sized by the --cw of whatever it sits in. */

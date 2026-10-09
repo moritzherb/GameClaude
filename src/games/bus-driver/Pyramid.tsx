@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
+import { t } from '../../i18n';
 import { cardName, rankLabel, type Card } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
@@ -77,41 +78,44 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
     return (
       <div className="bd">
         <div className="bd-head">
-          <span className="kicker">Part 2 · The pyramid</span>
-          <h2 className="bd-title">Get rid of your cards.</h2>
+          <span className="kicker">{t('Part 2 · The pyramid')}</span>
+          <h2 className="bd-title">{t('Get rid of your cards.')}</h2>
           {!known && (
             <p className="lead">
-              We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end
-              drives the bus.
+              {t(
+                'We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end drives the bus.',
+              )}
             </p>
           )}
         </div>
 
         <section className="section">
-          <h3 className="section-title">Pyramid size</h3>
+          <h3 className="section-title">{t('Pyramid size')}</h3>
           <div className="seg">
             {PYRAMID_SIZES.map((n) => (
-              <Tap key={n} className={`seg-btn size-btn${n === rows ? ' active' : ''}`} onClick={() => setRows(n)} ariaLabel={`${n} rows, ${pyramidCardCount(n)} cards`}>
+              <Tap key={n} className={`seg-btn size-btn${n === rows ? ' active' : ''}`} onClick={() => setRows(n)} ariaLabel={t('{rows} rows, {cards} cards', { rows: n, cards: pyramidCardCount(n) })}>
                 <MiniPyramid rows={n} />
-                <span className="seg-sub">{pyramidCardCount(n)} cards</span>
+                <span className="seg-sub">{t('{n} cards', { n: pyramidCardCount(n) })}</span>
               </Tap>
             ))}
           </div>
         </section>
 
         <section className="section">
-          <h3 className="section-title">Sips per row</h3>
+          <h3 className="section-title">{t('Sips per row')}</h3>
           <div className="seg three">
             {SIP_MODES.map((m) => (
               <Tap key={m.id} className={`seg-btn${m.id === sipMode ? ' active' : ''}`} onClick={() => setSipMode(m.id)}>
-                <span className="seg-main">{m.label}</span>
+                <span className="seg-main">{t(m.label)}</span>
                 <span className="seg-sub">{pyramidRows(rows).map((_, r) => rowSips(r, m.id)).join('-')}</span>
               </Tap>
             ))}
           </div>
           <p className="fine-print">
-            Bottom to top: {sipsLine} sips per card.
-            {needsTopUp ? ' Not enough cards left, so a second deck fills the gap (no card twice in the pyramid).' : ` The other ${deck.length - pyramidCardCount(rows)} cards are put aside.`}
+            {t('Bottom to top: {sips} sips per card.', { sips: sipsLine })}{' '}
+            {needsTopUp
+              ? t('Not enough cards left, so a second deck fills the gap (no card twice in the pyramid).')
+              : t('The other {n} cards are put aside.', { n: deck.length - pyramidCardCount(rows) })}
           </p>
         </section>
 
@@ -123,7 +127,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
               setGame({ rows, sipMode, cards, toppedUp, flips: 0, hands: seats.map((x) => x.hand), laid: [], gave: seats.map(() => 0) });
             }}
           >
-            Lay out the pyramid
+            {t('Lay out the pyramid')}
           </BigButton>
         </div>
       </div>
@@ -163,12 +167,14 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
     return (
       <div className="bd">
         <div className="bd-head">
-          <span className="kicker">Pyramid done</span>
-          <h2 className="bd-title big">{tie ? 'It’s a tie!' : `${loserNames[0]} drives the bus`}</h2>
+          <span className="kicker">{t('Pyramid done')}</span>
+          <h2 className="bd-title big">{tie ? t('It’s a tie!') : t('{name} drives the bus', { name: loserNames[0] })}</h2>
           <p className="lead">
             {tie
-              ? `${loserNames.join(' & ')} have ${game.hands[losers[0]].length} card${game.hands[losers[0]].length === 1 ? '' : 's'} left each. Tiebreaker!`
-              : `Most cards left: ${game.hands[losers[0]].length}.`}
+              ? game.hands[losers[0]].length === 1
+                ? t('{names} have {n} card left each. Tiebreaker!', { names: loserNames.join(' & '), n: 1 })
+                : t('{names} have {n} cards left each. Tiebreaker!', { names: loserNames.join(' & '), n: game.hands[losers[0]].length })
+              : t('Most cards left: {n}.', { n: game.hands[losers[0]].length })}
           </p>
         </div>
 
@@ -181,7 +187,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
                 </span>
                 <span className="bd-summary-name">{seats[i].player.name}</span>
                 <span className="bd-summary-stats">
-                  {game.hands[i].length} left · gave {game.gave[i]}
+                  {t('{n} left · gave {gave}', { n: game.hands[i].length, gave: game.gave[i] })}
                 </span>
               </div>
               {game.hands[i].length > 0 && (
@@ -197,7 +203,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
 
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => onDone(losers.map((i) => seats[i].player))}>
-            {tie ? 'Start the tiebreaker' : 'Continue'}
+            {tie ? t('Start the tiebreaker') : t('Continue')}
           </BigButton>
         </div>
       </div>
@@ -233,7 +239,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
                     className="pyramid-slot"
                     disabled={idx !== game.flips}
                     onClick={flip}
-                    aria-label={idx === game.flips ? 'Flip this card' : undefined}
+                    aria-label={idx === game.flips ? t('Flip this card') : undefined}
                   >
                     <PlayingCard card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={{ '--cw': 'inherit' } as CSSProperties} />
                     {laidCount > 0 && <span className="pyramid-badge">+{laidCount}</span>}
@@ -250,7 +256,9 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           <div className="flip-result-head">
             <span className="flip-result-card">{cardName(last)}</span>
             <span className="flip-result-row">
-              Row {lastRow + 1} · {lastSips} sip{lastSips > 1 ? 's' : ''} per card
+              {lastSips === 1
+                ? t('Row {row} · {n} sip per card', { row: lastRow + 1, n: lastSips })
+                : t('Row {row} · {n} sips per card', { row: lastRow + 1, n: lastSips })}
             </span>
           </div>
           {lastLaid.some((l) => l.length) ? (
@@ -262,7 +270,8 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
                       {seats[i].player.avatar}
                     </span>
                     <span>
-                      <strong>{seats[i].player.name}</strong> lays {l.map(cardName).join(' + ')} · gives out <strong>{l.length * lastSips}</strong>
+                      <strong>{seats[i].player.name}</strong> {t('lays {cards}', { cards: l.map(cardName).join(' + ') })} · {t('gives out')}{' '}
+                      <strong>{l.length * lastSips}</strong>
                     </span>
                   </li>
                 ) : null,
@@ -270,16 +279,18 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
             </ul>
           ) : (
             <p className="flip-result-none">
-              Nobody has {last.value === 8 || last.value === 14 ? 'an' : 'a'} {rankLabel(last.value)}.
+              {last.value === 8 || last.value === 14
+                ? t('Nobody has an {rank}.', { rank: rankLabel(last.value) })
+                : t('Nobody has a {rank}.', { rank: rankLabel(last.value) })}
             </p>
           )}
         </div>
       ) : (
-        !known && <p className="lead center">Flip the first card. Bottom row, left to right.</p>
+        !known && <p className="lead center">{t('Flip the first card. Bottom row, left to right.')}</p>
       )}
 
       <section className="panel hands">
-        <h3 className="section-title">Hands</h3>
+        <h3 className="section-title">{t('Hands')}</h3>
         {seats.map((x, i) => (
           <div key={x.player.id} className={`hand-row${lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
             <span className="bd-avatar xs" style={{ background: x.player.color }}>
@@ -287,21 +298,21 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
             </span>
             <span className="hand-name">{x.player.name}</span>
             <span className="hand-cards">
-              {game.hands[i].length ? game.hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">All gone 🎉</span>}
+              {game.hands[i].length ? game.hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
             </span>
           </div>
         ))}
-        {game.toppedUp && <p className="fine-print">A fresh deck was added to build the pyramid.</p>}
+        {game.toppedUp && <p className="fine-print">{t('A fresh deck was added to build the pyramid.')}</p>}
       </section>
 
       <div className="sticky-action">
         {done ? (
           <BigButton size="xl" onClick={() => setShowResult(true)}>
-            Who drives the bus?
+            {t('Who drives the bus?')}
           </BigButton>
         ) : (
           <BigButton size="xl" variant="light" onClick={flip}>
-            Flip card {game.flips + 1} of {total}
+            {t('Flip card {n} of {total}', { n: game.flips + 1, total })}
           </BigButton>
         )}
       </div>
