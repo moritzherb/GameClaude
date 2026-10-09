@@ -242,7 +242,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
                     aria-label={idx === game.flips ? t('Flip this card') : undefined}
                   >
                     <PlayingCard card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={{ '--cw': 'inherit' } as CSSProperties} />
-                    {laidCount > 0 && <span className="pyramid-badge">+{laidCount}</span>}
+                    {laidCount > 0 && <span className="pyramid-badge">{laidCount}</span>}
                   </button>
                 );
               })}

@@ -161,11 +161,12 @@ export default function HoseRunter() {
         </div>
       );
     }
-    const ready = room.members.filter((m) => m.online).slice(0, MAX_PLAYERS);
+    // The host's phone is the table: everyone else plays.
+    const ready = room.members.filter((m) => m.online && !m.host).slice(0, MAX_PLAYERS);
     return (
       <div className="hr">
         <div className="bd-head">
-          <span className="kicker">{t('Every phone plays')}</span>
+          <span className="kicker">{t('This phone is the table')}</span>
           <h2 className="bd-title big">{t('Pants down')}</h2>
           {!known && (
             <p className="lead">
@@ -186,7 +187,8 @@ export default function HoseRunter() {
             </li>
           ))}
         </ul>
-        {room.members.filter((m) => m.online).length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
+        {!known && <p className="fine-print">{t('Put this phone in the middle: it shows the middle cards. Everyone else plays on their own phone.')}</p>}
+        {room.members.filter((m) => m.online && !m.host).length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
         {!known && <p className="fine-print">{t('Turn order is the order above. A random player deals first.')}</p>}
         <div className="settings-list">
           <Tap className={`setting-row${allowPass ? ' on' : ''}`} onClick={() => setAllowPass(!allowPass)} ariaLabel={t('Allow passing')}>
@@ -218,15 +220,49 @@ export default function HoseRunter() {
   if (view.phase === 'reveal' || view.phase === 'over') {
     return <Reveal view={view} myId={myId} isHost={isHost} onNext={() => act({ type: 'next' })} onNewGame={() => setState(null)} />;
   }
+  if (isHost) return <HostTable view={view} />;
   return <Table view={view} myId={myId} act={act} connected={connected} />;
 }
 
-/* ---------------- Table: middle, your hand, actions ---------------- */
+/* ---------------- Host phone: the table in the middle ---------------- */
+
+/** The host's phone lies on the table and doesn't play: it shows the middle cards, big. */
+function HostTable({ view }: { view: PlayerView }) {
+  const seat = (id: string) => view.seats.find((s) => s.id === id);
+  const dealer = seat(view.dealerId);
+  const turnSeat = seat(view.turnId);
+  const stopper = view.stopperId ? seat(view.stopperId) : null;
+  const dealerPhase = view.phase === 'dealer';
+  return (
+    <div className="hr hr-host">
+      <Seats view={view} myId="" />
+      <div className="hr-status">
+        <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
+        <span className="hr-status-text">
+          {dealerPhase ? t('{name} deals and checks their cards…', { name: dealer?.name ?? '' }) : t('{name}’s turn', { name: turnSeat?.name ?? '' })}
+        </span>
+        {stopper && <span className="hr-stop-banner">✋ {t('{name} said STOP', { name: stopper.name })}</span>}
+      </div>
+      <section className="hr-felt big">
+        <span className="hr-zone-label">{t('Middle')}</span>
+        <div className="hr-felt-cards">
+          {dealerPhase
+            ? [0, 1, 2].map((i) => <PlayingCard key={i} card={null} faceUp={false} size="xl" />)
+            : view.middle.map((c, i) => <PlayingCard key={`m${i}-${cardName(c)}`} card={c} size="xl" />)}
+        </div>
+      </section>
+      <LastMove log={view.log} seats={view.seats} myId="" />
+    </div>
+  );
+}
+
+/* ---------------- Player phone: the middle, your hand, actions ---------------- */
 
 function Table({ view, myId, act, connected }: { view: PlayerView; myId: string; act: (a: Action) => void; connected: boolean }) {
   const known = useApp().knows('hose-runter');
   const [pickHand, setPickHand] = useState<number | null>(null);
   const [pickMiddle, setPickMiddle] = useState<number | null>(null);
+  const [fanOpen, setFanOpen] = useState(false);
   const seat = (id: string) => view.seats.find((s) => s.id === id);
   const me = seat(myId);
   const myTurn = view.turnId === myId;
@@ -237,16 +273,18 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
   const score = view.hand.length === 3 ? scoreHand(view.hand) : null;
   const playing = me && !me.out;
 
-  // Clear the selection whenever the table changes.
+  // Clear the selection (and fold the cards) whenever the table changes.
   const tableKey = JSON.stringify([view.middle, view.hand, view.turnId]);
   useEffect(() => {
     setPickHand(null);
     setPickMiddle(null);
+    setFanOpen(false);
   }, [tableKey]);
 
   const send = (a: Action) => {
     setPickHand(null);
     setPickMiddle(null);
+    setFanOpen(false);
     act(a);
   };
 
@@ -270,9 +308,9 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
       </div>
 
       {!dealerPhase && (
-        <section className="hr-zone">
+        <section className="hr-felt">
           <span className="hr-zone-label">{t('Middle')}</span>
-          <div className="hr-cards">
+          <div className="hr-felt-cards">
             {view.middle.map((c, i) => (
               <CardButton
                 key={`m${i}-${cardName(c)}`}
@@ -286,74 +324,112 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
         </section>
       )}
 
-      {playing ? (
-        <section className="hr-zone hand">
-          <span className="hr-zone-label">
+      <LastMove log={view.log} seats={view.seats} myId={myId} />
+
+      {!playing && <p className="notice">{me ? t('You’re out. Watch the others finish.') : t('You’re watching this game.')}</p>}
+
+      {playing && (
+        <div className="sticky-action hr-bottom">
+          <HandFan
+            cards={view.hand}
+            open={fanOpen}
+            onToggle={() => setFanOpen(!fanOpen)}
+            selected={pickHand}
+            selectable={myTurn && !dealerPhase}
+            onPick={(i) => setPickHand(pickHand === i ? null : i)}
+          />
+          <span className="hr-hand-label">
             {t('Your cards')}
             {score && <strong> · {t('{points} points', { points: formatPoints(score.points) })}</strong>}
             {score && score.kind !== 'suit' && <ScoreBadge score={score} />}
           </span>
-          <div className="hr-cards">
-            {view.hand.map((c, i) => (
-              <CardButton
-                key={`h${i}-${cardName(c)}`}
-                card={c}
-                selected={pickHand === i}
-                disabled={!myTurn || dealerPhase}
-                onClick={() => setPickHand(pickHand === i ? null : i)}
-              />
-            ))}
-          </div>
-        </section>
-      ) : (
-        <p className="notice">{me ? t('You’re out. Watch the others finish.') : t('You’re watching this game.')}</p>
-      )}
 
-      <LastMove log={view.log} seats={view.seats} myId={myId} />
-
-      {myTurn && playing && !connected && (
-        <div className="sticky-action hr-actions">
-          <BigButton variant="glass" disabled>
-            {t('Reconnecting…')}
-          </BigButton>
-        </div>
-      )}
-
-      {myTurn && playing && connected && (
-        <div className="sticky-action hr-actions">
-          {dealerPhase ? (
-            <>
-              <BigButton size="xl" onClick={() => send({ type: 'keep' })}>
-                {t('Keep these')}
-              </BigButton>
-              <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
-                {t('Put them in the middle')}
-              </BigButton>
-              {!known && <p className="fine-print center">{t('In the middle, you must play the next three cards instead, whatever they are.')}</p>}
-            </>
-          ) : pickHand !== null && pickMiddle !== null ? (
-            <BigButton size="xl" onClick={() => send({ type: 'swap1', hand: pickHand, middle: pickMiddle })}>
-              {t('Swap {mine} ↔ {middle}', { mine: cardName(view.hand[pickHand]), middle: cardName(view.middle[pickMiddle]) })}
+          {myTurn && !connected && (
+            <BigButton variant="glass" disabled>
+              {t('Reconnecting…')}
             </BigButton>
-          ) : (
-            <>
-              {!known && <p className="hr-hint">{t('Tap one of your cards and one in the middle to swap.')}</p>}
-              {view.allowPass && (
-                <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
-                  {t('Pass')}
+          )}
+
+          {myTurn && connected && (
+            <div className="hr-actions">
+              {dealerPhase ? (
+                <>
+                  <BigButton size="xl" onClick={() => send({ type: 'keep' })}>
+                    {t('Keep these')}
+                  </BigButton>
+                  <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
+                    {t('Put them in the middle')}
+                  </BigButton>
+                  {!known && <p className="fine-print center">{t('In the middle, you must play the next three cards instead, whatever they are.')}</p>}
+                </>
+              ) : pickHand !== null && pickMiddle !== null ? (
+                <BigButton size="xl" onClick={() => send({ type: 'swap1', hand: pickHand, middle: pickMiddle })}>
+                  {t('Swap {mine} ↔ {middle}', { mine: cardName(view.hand[pickHand]), middle: cardName(view.middle[pickMiddle]) })}
                 </BigButton>
+              ) : (
+                <>
+                  {!known && (
+                    <p className="hr-hint">{fanOpen ? t('Tap one of your cards and one in the middle to swap.') : t('Tap your cards to pick them up.')}</p>
+                  )}
+                  {view.allowPass && (
+                    <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
+                      {t('Pass')}
+                    </BigButton>
+                  )}
+                  <div className="hr-action-row">
+                    <BigButton variant="light" onClick={() => send({ type: 'swapAll' })}>
+                      {t('Swap all 3')}
+                    </BigButton>
+                    <BigButton variant="danger" disabled={!view.canStop} onClick={() => send({ type: 'stop' })}>
+                      {view.firstLap ? t('Stop after round 1') : view.stopperId ? t('Stop called') : t('Stop')}
+                    </BigButton>
+                  </div>
+                </>
               )}
-              <div className="hr-action-row">
-                <BigButton variant="light" onClick={() => send({ type: 'swapAll' })}>
-                  {t('Swap all 3')}
-                </BigButton>
-                <BigButton variant="danger" disabled={!view.canStop} onClick={() => send({ type: 'stop' })}>
-                  {view.firstLap ? t('Stop after round 1') : view.stopperId ? t('Stop called') : t('Stop')}
-                </BigButton>
-              </div>
-            </>
+            </div>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Your three cards, held like a real hand at the bottom of the screen: a tight fan.
+ * Tap to pick them up (they spread out); then tap one to choose it for a swap.
+ */
+function HandFan({
+  cards,
+  open,
+  onToggle,
+  selected,
+  selectable,
+  onPick,
+}: {
+  cards: Card[];
+  open: boolean;
+  onToggle: () => void;
+  selected: number | null;
+  selectable: boolean;
+  onPick: (i: number) => void;
+}) {
+  return (
+    <div className={`hr-fan${open ? ' open' : ''}`}>
+      {cards.map((c, i) => (
+        <Tap
+          key={`h${i}-${cardName(c)}`}
+          className={`hr-fan-card${selected === i ? ' selected' : ''}`}
+          style={{ '--i': i - (cards.length - 1) / 2 } as CSSProperties}
+          ariaLabel={cardName(c)}
+          onClick={() => (open && selectable ? onPick(i) : onToggle())}
+        >
+          <PlayingCard card={c} size="lg" />
+        </Tap>
+      ))}
+      {open && (
+        <button type="button" className="hr-fan-close" onClick={onToggle}>
+          {t('Put them down')}
+        </button>
       )}
     </div>
   );

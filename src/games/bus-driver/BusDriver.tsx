@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import NextName from '../../components/NextName';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
@@ -69,6 +70,15 @@ export default function BusDriver({ players, exit }: GameProps) {
   useEffect(() => {
     if (s.stage === 'driver') celebrate();
   }, [s.stage]);
+
+  // Without the round intros (game known), a short card still flags each new question.
+  const [flash, setFlash] = useState<number | null>(null);
+  useEffect(() => {
+    if (!known || s.stage !== 'turn') return;
+    setFlash(s.round);
+    const id = window.setTimeout(() => setFlash(null), 1700);
+    return () => window.clearTimeout(id);
+  }, [known, s.stage, s.round]);
 
   const questions = questionsFor(s.risky);
   const question = questions[s.round];
@@ -288,7 +298,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   const isDealer = seat.player.id === s.dealerId;
   const nextLabel =
     s.turn + 1 < s.seats.length
-      ? t('Next: {name}', { name: s.seats[s.turn + 1].player.name })
+      ? <NextName text={t('Next: {name}')} name={s.seats[s.turn + 1].player.name} />
       : s.round + 1 < questions.length
         ? t('Next round')
         : t('Show everyone’s cards');
@@ -298,6 +308,15 @@ export default function BusDriver({ players, exit }: GameProps) {
   return (
     <div className="bd">
       {progress}
+
+      {flash !== null && (
+        <button key={flash} type="button" className="bd-flash" onClick={() => setFlash(null)}>
+          <span className="bd-flash-card">
+            <span className="kicker">{t('Round {n} of {total}', { n: s.round + 1, total: questions.length })}</span>
+            <span className="bd-flash-title">{t(question.title)}</span>
+          </span>
+        </button>
+      )}
 
       <div className="bd-player">
         <span className="bd-avatar" style={{ background: seat.player.color }}>

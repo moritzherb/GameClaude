@@ -1,5 +1,5 @@
+import Flag from '../components/Flag';
 import TopBar from '../components/TopBar';
-import Tap from '../components/Tap';
 import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
@@ -19,27 +19,36 @@ export default function Settings() {
   const withExplanations = GAMES.filter((g) => g.explains && (g.component || g.online));
 
   return (
-    <main className="screen">
+    <main className="screen settings-page">
       <TopBar onBack={() => navigate(paths.home)} />
       <h1 className="large-title">{t('Settings')}</h1>
 
-      <section className="section">
-        <h2 className="section-title">{t('Language')}</h2>
-        <div className="seg two">
-          {LANGS.map((l) => (
-            <Tap
-              key={l.id}
-              className={`seg-btn${(settings.lang ?? 'en') === l.id ? ' active' : ''}`}
-              onClick={() => updateSettings({ lang: l.id })}
-              ariaLabel={l.label}
-            >
-              <span className="seg-main">{l.label}</span>
-            </Tap>
-          ))}
-        </div>
-      </section>
-
       <div className="settings-list">
+        <div className="setting-row lang-row">
+          <span className="setting-text">
+            <span className="setting-label">{t('Language')}</span>
+          </span>
+          <span className="flags" role="radiogroup" aria-label={t('Language')}>
+            {LANGS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="radio"
+                aria-checked={(settings.lang ?? 'en') === l.id}
+                aria-label={l.label}
+                className={`flag-btn${(settings.lang ?? 'en') === l.id ? ' active' : ''}`}
+                onClick={() => {
+                  sfx.pop();
+                  buzz();
+                  updateSettings({ lang: l.id });
+                }}
+              >
+                <Flag lang={l.id} />
+              </button>
+            ))}
+          </span>
+        </div>
+
         {OPTIONS.map((o) => {
           const on = settings[o.key];
           return (
@@ -92,7 +101,6 @@ export default function Settings() {
                 <span className="setting-emoji">{g.emoji}</span>
                 <span className="setting-text">
                   <span className="setting-label">{t(g.name)}</span>
-                  <span className="setting-hint">{on ? t('We know it: no explanations') : t('Explanations on')}</span>
                 </span>
                 <span className="switch">
                   <span className="switch-knob" />

@@ -22,6 +22,7 @@
   --on-accent: #151612;
   --hero-bg: #151612;
   --hero-fg: #f1ede3;
+  --hero-accent: #c5f235; /* lime that reads on the hero colour */
   --shadow: 0 0 0 1px var(--line);
   --press: inset 0 -4px 0 rgba(0, 0, 0, 0.16);
 
@@ -69,6 +70,7 @@
     --accent-soft: rgba(197, 242, 53, 0.14);
     --hero-bg: #f3efe4;
     --hero-fg: #10110e;
+    --hero-accent: #3f7200;
     color-scheme: dark;
   }
 }
@@ -85,6 +87,7 @@
   --accent-soft: rgba(197, 242, 53, 0.14);
   --hero-bg: #f3efe4;
   --hero-fg: #10110e;
+  --hero-accent: #3f7200;
   color-scheme: dark;
 }
 
@@ -365,6 +368,19 @@ h3 {
 .big-btn-light {
   background: var(--hero-bg);
   color: var(--hero-fg);
+}
+
+/* Whose turn is next, in the "Next: Name →" buttons. */
+.next-name {
+  color: var(--accent-ink);
+}
+
+.big-btn-light .next-name {
+  color: var(--hero-accent);
+}
+
+.big-btn-primary .next-name {
+  color: inherit;
 }
 
 .big-btn-glass {
@@ -1435,6 +1451,104 @@ h3 {
   transform: translateX(20px);
 }
 
+/* The settings page itself: smaller, quieter rows than the in-game switches. */
+.settings-page .section-title {
+  font-size: 1.15rem;
+}
+
+.settings-page .settings-list {
+  box-shadow: inset 0 0 0 1px var(--line);
+  background: transparent;
+}
+
+.settings-page .setting-row {
+  min-height: 46px;
+  padding: 6px 12px;
+  gap: 10px;
+}
+
+.settings-page .setting-row + .setting-row::before {
+  left: 12px;
+}
+
+.settings-page .setting-emoji {
+  width: auto;
+  height: auto;
+  background: none;
+  font-size: 1.05rem;
+}
+
+.settings-page .setting-label {
+  font-size: 0.98rem;
+}
+
+.settings-page .setting-hint {
+  font-size: 0.75rem;
+}
+
+.settings-page .switch {
+  width: 42px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.settings-page .switch-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+
+.settings-page .setting-row.on .switch-knob {
+  transform: translateX(16px);
+}
+
+.settings-page .panel {
+  gap: 10px;
+  padding: 14px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  background: transparent;
+}
+
+.settings-page .plain-list {
+  font-size: 0.875rem;
+}
+
+/* Language: two flags, the chosen one stands out. */
+.flags {
+  display: flex;
+  gap: 10px;
+}
+
+.flag-btn {
+  display: block;
+  width: 36px;
+  height: 25px;
+  border-radius: 5px;
+  overflow: hidden;
+  opacity: 0.4;
+  filter: grayscale(0.6);
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease,
+    transform 0.15s var(--spring);
+}
+
+.flag-btn svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.flag-btn.active {
+  opacity: 1;
+  filter: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+.flag-btn:active {
+  transform: scale(0.9);
+}
+
 @keyframes mesh {
   0% {
     transform: translate(0, 0) rotate(0deg) scale(1);
@@ -2482,6 +2596,55 @@ h3 {
   right: calc(50% - 110px);
   font-size: 4rem;
   animation: drive 2.6s ease-in-out infinite;
+}
+
+/* Round change, when the round intros are off: a card pops up for a moment. Tap to skip. */
+.bd-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--gutter);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  animation: flash-fade 1.7s ease both;
+}
+
+.bd-flash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 360px);
+  padding: 26px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  color: var(--on-accent);
+  text-align: center;
+  animation: pop-in 0.4s var(--spring) both;
+}
+
+.bd-flash-card .kicker {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.bd-flash-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2rem, 9vw, 2.6rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+@keyframes flash-fade {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* ---------- Kings Cup ---------- */
@@ -4238,6 +4401,115 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* The middle of the table: green felt, so it never gets mixed up with your own cards. */
+.hr-felt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 10px 16px;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hr-felt .hr-zone-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hr-felt-cards {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 12px; /* room for a lifted (selected) card */
+}
+
+.hr-felt-cards .pcard-lg {
+  --cw: clamp(76px, calc((100vw - 100px) / 3), 104px);
+}
+
+/* On the host's phone the middle is all there is: as big as it fits. */
+.hr-host .hr-felt {
+  flex: 1 0 auto;
+}
+
+.hr-host .hr-felt-cards {
+  margin: auto 0;
+}
+
+.hr-felt.big .hr-felt-cards {
+  gap: 8px;
+}
+
+.hr-felt.big .pcard-xl {
+  --cw: min(170px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 40px) / 3));
+}
+
+/* Your hand, held at the bottom of the screen. */
+.hr-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hr-fan {
+  --cw: 96px;
+  position: relative;
+  height: calc(var(--cw) * 1.4 + 36px);
+}
+
+.hr-fan-card {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--cw);
+  margin-left: calc(var(--cw) / -2);
+  border-radius: 14px;
+  transform-origin: 50% 130%;
+  transform: translateX(calc(var(--i) * 28px)) rotate(calc(var(--i) * 13deg));
+  transition: transform 0.4s var(--spring);
+}
+
+.hr-fan.open .hr-fan-card {
+  transform: translateX(calc(var(--i) * (var(--cw) + 12px))) translateY(-10px) rotate(calc(var(--i) * 3deg));
+}
+
+.hr-fan.open .hr-fan-card.selected {
+  transform: translateX(calc(var(--i) * (var(--cw) + 12px))) translateY(-30px);
+}
+
+.hr-fan-card.selected .pcard-front {
+  box-shadow: 0 0 0 4px var(--accent), 0 12px 24px -8px rgba(17, 18, 20, 0.5);
+}
+
+.hr-fan .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 6px 14px -6px rgba(0, 0, 0, 0.45);
+}
+
+.hr-fan-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 2px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.hr-hand-label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.hr-hand-label strong {
+  color: var(--ink);
 }
 
 .hr-hint {

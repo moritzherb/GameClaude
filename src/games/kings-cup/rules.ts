@@ -18,10 +18,10 @@ export const CARD_RULES: Record<number, CardRule> = {
   5: { emoji: '🧔', title: tx('Guys'), text: tx('All guys drink.') },
   6: { emoji: '💃', title: tx('Girls'), text: tx('All girls drink.') },
   7: { emoji: '🙌', title: tx('Heaven'), text: tx('Everyone puts both hands up to the sky. Last one drinks.') },
-  8: { emoji: '🤝', title: tx('Mate'), text: tx('Pick a mate. Every time you drink, they drink too. For the rest of the game.') },
+  8: { emoji: '🤝', title: tx('Mate'), text: tx('Pick a mate. Every time you drink, they drink too. Until the next 8.') },
   9: { emoji: '🎤', title: tx('Rhyme'), text: tx('Say a word. Go around rhyming on it. First one who can’t drinks.') },
   10: { emoji: '📋', title: tx('Categories'), text: tx('Pick a category (car brands, beers…). Go around naming things. First one who can’t drinks.') },
-  11: { emoji: '📜', title: tx('Make a rule'), text: tx('Invent a rule that lasts the whole game. Anyone who breaks it drinks.') },
+  11: { emoji: '📜', title: tx('Make a rule'), text: tx('Invent a rule. It lasts until the next Jack. Anyone who breaks it drinks.') },
   12: { emoji: '❓', title: tx('Question Master'), text: tx('Anyone who answers one of your questions drinks. Lasts until the next Queen.') },
   13: { emoji: '👑', title: tx('King’s Cup'), text: tx('Pour some of your drink into the King’s Cup.') },
 };
@@ -29,7 +29,7 @@ export const CARD_RULES: Record<number, CardRule> = {
 export const LAST_KING_RULE: CardRule = {
   emoji: '🏆',
   title: tx('Drink the King’s Cup!'),
-  text: tx('That was the 4th King. Down the whole cup. Game over!'),
+  text: tx('That was the 4th King. Down the whole cup!'),
 };
 
 export const KING = 13;

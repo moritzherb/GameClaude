@@ -24,7 +24,7 @@ const kingsCup: GameDefinition = {
       tx('Put an empty cup in the middle: the King’s Cup.'),
       tx('Take turns drawing a card. Each card has a rule:'),
       ...RANK_ORDER.map((v) => `${rankLabel(v)} · ${CARD_RULES[v].emoji} ${t(CARD_RULES[v].title)}: ${t(CARD_RULES[v].text)}`),
-      tx('Whoever draws the 4th King drinks the King’s Cup. Game over.'),
+      tx('Whoever draws the 4th King drinks the King’s Cup. The game ends when all cards are drawn.'),
     ];
   },
   component: KingsCup,

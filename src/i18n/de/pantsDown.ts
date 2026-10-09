@@ -4,8 +4,8 @@ const pantsDown: Record<string, string> = {
   'Pants down': 'Hose runter',
   'Three cards, one suit, don’t be lowest.': 'Drei Karten, eine Farbe – bloß nicht Letzter werden.',
   'Every player’s phone': 'Ein Handy pro Spieler',
-  'Everyone joins the same room on their own phone. Cards 7 to Ace, three each.':
-    'Alle treten mit dem eigenen Handy demselben Raum bei. Karten von 7 bis Ass, drei für jeden.',
+  'Everyone joins the same room on their own phone. The host’s phone lies in the middle as the table. Cards 7 to Ace, three each.':
+    'Alle treten mit dem eigenen Handy demselben Raum bei. Das Handy vom Host liegt als Tisch in der Mitte. Karten von 7 bis Ass, drei für jeden.',
   'Points: add up the cards of ONE suit. 7–10 = face value, J/Q/K = 10, Ace = 11.':
     'Punkte: Zähl die Karten EINER Farbe zusammen. 7–10 = Augenwert, Bildkarten (J/Q/K) = 10, Ass = 11.',
   'The dealer looks at their three first: keep them (three more go to the middle) or put them in the middle and play the next three.':
@@ -29,7 +29,12 @@ const pantsDown: Record<string, string> = {
   // Lobby
   'Waiting for {name} to deal…': 'Warte, bis {name} austeilt…',
   'Waiting for the host to deal…': 'Warte, bis der Host austeilt…',
-  'Every phone plays': 'Jedes Handy spielt mit',
+  'This phone is the table': 'Dieses Handy ist der Tisch',
+  'Put this phone in the middle: it shows the middle cards. Everyone else plays on their own phone.':
+    'Leg dieses Handy in die Mitte: Es zeigt die Karten in der Mitte. Alle anderen spielen auf ihrem eigenen Handy.',
+  '{name}’s turn': '{name} ist dran',
+  'Tap your cards to pick them up.': 'Tipp auf deine Karten, um sie aufzunehmen.',
+  'Put them down': 'Weglegen',
   'Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {lives} lives each.':
     'Jeder sieht nur seine eigenen Karten. Sammle Punkte in einer Farbe und werd bloß nicht Letzter. {lives} Leben pro Person.',
   'Max {max} players. The first {max} play.': 'Maximal {max} Spieler. Die ersten {max} spielen mit.',

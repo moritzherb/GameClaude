@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
+import NextName from '../../components/NextName';
 import DeckCount from '../../components/DeckCount';
 import { CardFace } from '../../components/PlayingCard';
 import { newDeck, rankLabel, type Card, type Suit } from '../../lib/cards';
@@ -21,8 +22,12 @@ interface State {
   current: Card | null;
   kings: number;
   questionMasterId: string | null;
-  mates: [string, string][];
-  houseRules: string[];
+  /** Only one pair of mates at a time: a new 8 replaces them. */
+  mate: [string, string] | null;
+  /** Only one house rule at a time: a new Jack replaces it. */
+  rule: string | null;
+  /** Who drew the 4th King and drank the cup. */
+  cupBy: string | null;
   over: boolean;
 }
 
@@ -42,8 +47,9 @@ const fresh = (): State => ({
   current: null,
   kings: 0,
   questionMasterId: null,
-  mates: [],
-  houseRules: [],
+  mate: null,
+  rule: null,
+  cupBy: null,
   over: false,
 });
 
@@ -62,7 +68,7 @@ export default function KingsCup({ players, exit }: GameProps) {
   const byId = (id: string) => players.find((p) => p.id === id);
   const lastKing = s.current && isKing(s.current) && s.kings === 4;
   const rule = s.current ? (lastKing ? LAST_KING_RULE : CARD_RULES[s.current.value]) : null;
-  const myMate = s.mates.find(([a]) => a === player.id)?.[1];
+  const myMate = s.mate?.[0] === player.id ? s.mate[1] : undefined;
   const left = s.taken.filter((t) => !t).length;
 
   const draw = (i: number) => {
@@ -77,6 +83,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       current: card,
       kings,
       questionMasterId: card.value === 12 ? player.id : s.questionMasterId,
+      cupBy: isKing(card) && kings === 4 ? player.id : s.cupBy,
     });
     timer.current = window.setTimeout(() => {
       if (isKing(card) && kings === 4) celebrate();
@@ -90,8 +97,8 @@ export default function KingsCup({ players, exit }: GameProps) {
   const next = () => {
     drawing.current = false;
     setRuleDraft('');
-    // The 4th King or an empty deck ends the game.
-    if (lastKing || left === 0) return setS({ ...s, over: true });
+    // The 4th King only empties the cup: the game goes on until every card is drawn.
+    if (left === 0) return setS({ ...s, over: true });
     setS({ ...s, current: null, turn: (s.turn + 1) % players.length });
   };
 
@@ -100,18 +107,17 @@ export default function KingsCup({ players, exit }: GameProps) {
     if (!text) return;
     sfx.pop();
     buzz();
-    setS({ ...s, houseRules: [...s.houseRules, text] });
+    setS({ ...s, rule: text });
     setRuleDraft('');
   };
 
-  const pickMate = (mate: Player) =>
-    setS({ ...s, mates: [...s.mates.filter(([a]) => a !== player.id), [player.id, mate.id]] });
+  const pickMate = (mate: Player) => setS({ ...s, mate: [player.id, mate.id] });
 
   const effects = (
     <ActiveEffects
       questionMaster={s.questionMasterId ? byId(s.questionMasterId) : undefined}
-      mates={s.mates.map(([a, b]) => [byId(a), byId(b)] as const)}
-      houseRules={s.houseRules}
+      mate={s.mate ? [byId(s.mate[0]), byId(s.mate[1])] : null}
+      rule={s.rule}
     />
   );
 
@@ -120,8 +126,10 @@ export default function KingsCup({ players, exit }: GameProps) {
       <div className="kc">
         <div className="bd-head">
           <span className="kicker">{t('Game over')}</span>
-          <h2 className="bd-title big">{s.kings === 4 ? t('{name} drank the King’s Cup', { name: player.name }) : t('Deck’s empty!')}</h2>
-          <p className="lead">{t('{n} cards drawn.', { n: 52 - left })}</p>
+          <h2 className="bd-title big">{t('Deck’s empty!')}</h2>
+          <p className="lead">
+            {s.cupBy ? t('{name} drank the King’s Cup', { name: byId(s.cupBy)?.name ?? '' }) : t('{n} cards drawn.', { n: 52 - left })}
+          </p>
         </div>
         {effects}
         <div className="sticky-action stack">
@@ -236,7 +244,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       {/* Always there (hidden while picking) so the circle doesn't jump when a card is drawn. */}
       <div className={`sticky-action${s.current ? '' : ' kc-idle'}`}>
         <BigButton size="xl" variant={lastKing ? 'primary' : 'light'} onClick={next} disabled={!s.current}>
-          {lastKing || left === 0 ? t('Finish game') : t('Next: {name} →', { name: players[(s.turn + 1) % players.length].name })}
+          {left === 0 ? t('Finish game') : <NextName text={t('Next: {name} →')} name={players[(s.turn + 1) % players.length].name} />}
         </BigButton>
       </div>
     </div>
@@ -350,14 +358,15 @@ function KingCrown({ kings }: { kings: number }) {
 
 function ActiveEffects({
   questionMaster,
-  mates,
-  houseRules,
+  mate,
+  rule,
 }: {
   questionMaster?: Player;
-  mates: (readonly [Player | undefined, Player | undefined])[];
-  houseRules: string[];
+  mate: [Player | undefined, Player | undefined] | null;
+  rule: string | null;
 }) {
-  if (!questionMaster && !mates.length && !houseRules.length) return null;
+  const [a, b] = mate ?? [];
+  if (!questionMaster && !(a && b) && !rule) return null;
   return (
     <section className="panel kc-effects">
       <h3 className="section-title">{t('In play')}</h3>
@@ -367,20 +376,18 @@ function ActiveEffects({
           <span>{rich(t('{name} is Question Master'), { name: <strong>{questionMaster.name}</strong> })}</span>
         </div>
       )}
-      {mates.map(([a, b], i) =>
-        a && b ? (
-          <div key={i} className="kc-effect">
-            <span className="kc-effect-icon">🤝</span>
-            <span>{rich(t('{a} drinks → {b} drinks'), { a: <strong>{a.name}</strong>, b: <strong>{b.name}</strong> })}</span>
-          </div>
-        ) : null,
-      )}
-      {houseRules.map((r, i) => (
-        <div key={i} className="kc-effect">
-          <span className="kc-effect-icon">📜</span>
-          <span>{r}</span>
+      {a && b && (
+        <div className="kc-effect">
+          <span className="kc-effect-icon">🤝</span>
+          <span>{rich(t('{a} is mates with {b}'), { a: <strong>{a.name}</strong>, b: <strong>{b.name}</strong> })}</span>
         </div>
-      ))}
+      )}
+      {rule && (
+        <div className="kc-effect">
+          <span className="kc-effect-icon">📜</span>
+          <span>{rule}</span>
+        </div>
+      )}
     </section>
   );
 }
