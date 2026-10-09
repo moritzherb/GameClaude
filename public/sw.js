@@ -1,5 +1,5 @@
 // Tiny offline cache: party basements rarely have good Wi-Fi.
-const CACHE = 'prost-v4';
+const CACHE = 'prost-v5';
 
 self.addEventListener('install', () => self.skipWaiting());
 
