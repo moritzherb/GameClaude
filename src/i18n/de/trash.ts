@@ -45,6 +45,7 @@ const trash: Record<string, string> = {
   'You can still use this card': 'Die Karte kannst du noch brauchen',
   'You can only take it if you can use it': 'Nur nehmen, wenn du sie brauchen kannst',
   'Discard pile': 'Ablagestapel',
+  'No use: onto the discard pile': 'Bringt nichts: ab auf den Ablagestapel',
 };
 
 export default trash;

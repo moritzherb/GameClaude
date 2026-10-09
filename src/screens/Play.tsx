@@ -18,7 +18,7 @@ export default function Play({ game }: { game: GameDefinition }) {
   useWakeLock();
 
   const Game = game.component;
-  const playable = Game && players.length >= game.minPlayers && (game.maxPlayers == null || players.length <= game.maxPlayers);
+  const playable = Game && players.length >= game.minPlayers && (game.picksPlayers || game.maxPlayers == null || players.length <= game.maxPlayers);
   // Leaving a game (quit, or Back to games at the end) goes all the way home.
   const exit = () => navigate(paths.home);
 

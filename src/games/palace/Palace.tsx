@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
+import Tap from '../../components/Tap';
 import { t } from '../../i18n';
 import { cardName, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -22,9 +23,11 @@ interface Seat {
 interface Match {
   game: Game;
   seats: Seat[];
+  /** No table phone: the host plays too, and every phone shows the stock and the pile itself. */
+  tableless?: boolean;
 }
 
-type PhoneView = View & { seats: Seat[] };
+type PhoneView = View & { seats: Seat[]; tableless: boolean };
 
 type Msg = { g: 'pl'; type: 'view'; view: PhoneView | null } | { g: 'pl'; type: 'act'; act: Act } | { g: 'pl'; type: 'sync' };
 
@@ -32,7 +35,11 @@ const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (
 
 const STORE_KEY = 'palace:match';
 
-const phoneView = (m: Match, id: string): PhoneView => ({ ...viewFor(m.game, m.seats.findIndex((s) => s.id === id)), seats: m.seats });
+const phoneView = (m: Match, id: string): PhoneView => ({
+  ...viewFor(m.game, m.seats.findIndex((s) => s.id === id)),
+  seats: m.seats,
+  tableless: !!m.tableless,
+});
 
 function applyFrom(m: Match, fromId: string, act: Act): Match {
   const who = m.seats.findIndex((s) => s.id === fromId);
@@ -140,6 +147,7 @@ function usePalace() {
 export default function Palace() {
   const { room, isHost, view, act, setMatch, connected } = usePalace();
   const known = useApp().knows('palace');
+  const [tableless, setTableless] = useState(false);
   useFeedback(view);
 
   if (!view) {
@@ -155,13 +163,14 @@ export default function Palace() {
         </div>
       );
     }
-    // The host's phone is the table; everyone else plays on their own phone.
-    const online = room.members.filter((m) => m.online && !m.host);
+    // With a table phone the host's phone lies in the middle and everyone else plays.
+    // Without one the host plays too, and every phone shows the stock and the pile.
+    const online = room.members.filter((m) => m.online && (tableless || !m.host));
     const ready = online.slice(0, MAX_PLAYERS);
     return (
       <div className="pl">
         <div className="bd-head">
-          <span className="kicker">{t('This phone is the table')}</span>
+          <span className="kicker">{tableless ? t('Everyone plays on their own phone') : t('This phone is the table')}</span>
           <h2 className="bd-title big">{t('Palace')}</h2>
           {!known && <p className="lead">{t('Get rid of all your cards: first your hand, then the three face-up cards, then the three face-down ones, blind.')}</p>}
         </div>
@@ -177,7 +186,22 @@ export default function Palace() {
             </li>
           ))}
         </ul>
-        {!known && <p className="fine-print">{t('Put this phone in the middle: it shows the pile and everyone’s face-up cards. Everyone else plays on their own phone.')}</p>}
+        <div className="settings-list">
+          <Tap className={`setting-row${tableless ? '' : ' on'}`} onClick={() => setTableless(!tableless)} ariaLabel={t('Table phone in the middle')}>
+            <span className="setting-emoji">📱</span>
+            <span className="setting-text">
+              <span className="setting-label">{t('Table phone in the middle')}</span>
+              <span className="setting-hint">
+                {tableless
+                  ? t('Off: you play too. Every phone shows the stock, the pile and the others’ table cards.')
+                  : t('This phone shows the pile and everyone’s face-up cards. Everyone else plays on their own phone.')}
+              </span>
+            </span>
+            <span className="switch">
+              <span className="switch-knob" />
+            </span>
+          </Tap>
+        </div>
         {online.length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
         {!known && <p className="fine-print">{t('Turn order is the order above. A random player deals first.')}</p>}
         <div className="sticky-action">
@@ -188,6 +212,7 @@ export default function Palace() {
               setMatch({
                 game: deal(ready.length, randomInt(0, ready.length - 1)),
                 seats: ready.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color })),
+                tableless,
               })
             }
           >
@@ -246,24 +271,7 @@ function turnText(view: PhoneView) {
 
 function TableView({ view }: { view: PhoneView }) {
   const last = view.log.at(-1);
-  // Cards leaving the pile (cleared away, or taken up) stay a moment longer for their exit.
-  const prev = useRef(view);
-  const [ghost, setGhost] = useState<{ cards: Card[]; kind: 'burn' | 'take'; id: string } | null>(null);
-  useEffect(() => {
-    const before = prev.current;
-    prev.current = view;
-    const e = view.log.at(-1);
-    if (!e || JSON.stringify(e) === JSON.stringify(before.log.at(-1))) return;
-    if (view.burned > before.burned && e.k === 'play') setGhost({ cards: [...before.pile, ...e.cards].slice(-4), kind: 'burn', id: JSON.stringify(e) });
-    else if (e.k === 'take') setGhost({ cards: [...before.pile, ...(e.failed ? [e.failed] : [])].slice(-4), kind: 'take', id: JSON.stringify(e) });
-  }, [view]);
-  useEffect(() => {
-    if (!ghost) return;
-    const id = window.setTimeout(() => setGhost(null), 1100);
-    return () => window.clearTimeout(id);
-  }, [ghost]);
-  // The cards just played land one after the other.
-  const fresh = last?.k === 'play' && !last.burn ? Math.min(last.cards.length, view.pile.length) : 0;
+  const { fresh, ghost } = usePileFx(view);
   return (
     <div className="pl pl-table fill">
       <div className="pl-seats" style={{ '--cols': view.seats.length <= 3 ? view.seats.length : view.seats.length === 4 ? 2 : 3 } as CSSProperties}>
@@ -321,13 +329,38 @@ function TableView({ view }: { view: PhoneView }) {
   );
 }
 
+type Ghost = { cards: Card[]; kind: 'burn' | 'take'; id: string };
+
+/** What the pile animates: the cards just played (land one after the other) and cards leaving it. */
+function usePileFx(view: PhoneView) {
+  const last = view.log.at(-1);
+  // Cards leaving the pile (cleared away, or taken up) stay a moment longer for their exit.
+  const prev = useRef(view);
+  const [ghost, setGhost] = useState<Ghost | null>(null);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = view;
+    const e = view.log.at(-1);
+    if (!e || JSON.stringify(e) === JSON.stringify(before.log.at(-1))) return;
+    if (view.burned > before.burned && e.k === 'play') setGhost({ cards: [...before.pile, ...e.cards].slice(-4), kind: 'burn', id: JSON.stringify(e) });
+    else if (e.k === 'take') setGhost({ cards: [...before.pile, ...(e.failed ? [e.failed] : [])].slice(-4), kind: 'take', id: JSON.stringify(e) });
+  }, [view]);
+  useEffect(() => {
+    if (!ghost) return;
+    const id = window.setTimeout(() => setGhost(null), 1100);
+    return () => window.clearTimeout(id);
+  }, [ghost]);
+  const fresh = last?.k === 'play' && !last.burn ? Math.min(last.cards.length, view.pile.length) : 0;
+  return { fresh, ghost };
+}
+
 const tiltOf = (c: Card) => ((c.value * 7 + c.suit.length * 3) % 11) - 5;
 
 /**
  * The top cards of the pile, a little messy, top card on top. Cards just played land on it one after
  * the other; a cleared or taken pile flies off.
  */
-function Pile({ cards, fresh, ghost }: { cards: Card[]; fresh: number; ghost: { cards: Card[]; kind: 'burn' | 'take'; id: string } | null }) {
+function Pile({ cards, fresh, ghost }: { cards: Card[]; fresh: number; ghost: Ghost | null }) {
   return (
     <div className="pl-stack pl-pile">
       {!cards.length && <span className="pl-empty" />}
@@ -522,7 +555,9 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
   const last = view.log.at(-1);
 
   return (
-    <div className="pl pl-player fill">
+    <div className={`pl pl-player fill${view.tableless ? ' tableless' : ''}`}>
+      {view.tableless && <Opponents view={view} />}
+      {view.tableless && <MiniTable view={view} />}
       <div className={`pl-status${myTurn ? ' mine' : ''}`}>
         <div className="pl-status-top">
           <span className="pl-mini" key={top ? `${top.value}${top.suit}` : 'empty'}>
@@ -640,6 +675,55 @@ function Reveal({ card, flip, text, good }: RevealInfo) {
       </div>
       {text && <span className="pl-reveal-text">{text}</span>}
     </div>
+  );
+}
+
+/** Without a table phone: everyone else's table cards, small, and how many cards they hold. */
+function Opponents({ view }: { view: PhoneView }) {
+  return (
+    <div className="pl-opps">
+      {view.seats.map((s, i) => {
+        if (i === view.me) return null;
+        const side = view.sides[i];
+        return (
+          <div key={s.id} className={`pl-opp${i === view.turn && view.phase === 'play' ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
+            <div className="pl-seat-head">
+              <span className="pl-seat-avatar">{s.avatar}</span>
+              <span className="pl-seat-name">{s.name}</span>
+              <span className="pl-opp-hand" aria-label={t('{n} in hand', { n: side.hand })}>
+                🂠 {side.hand}
+              </span>
+            </div>
+            <Palace3 up={side.up} down={side.down} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Without a table phone: the stock, the pile and what's needed, on every phone. */
+function MiniTable({ view }: { view: PhoneView }) {
+  const { fresh, ghost } = usePileFx(view);
+  return (
+    <section className="pl-felt mini">
+      <div className="pl-felt-row">
+        <div className="pl-heap">
+          <div className="pl-stack">{view.stock > 0 ? <span className="pcard-face pcard-back" /> : <span className="pl-empty" />}</div>
+          <span className="pl-heap-label">{view.stock}</span>
+        </div>
+        <div className="pl-heap main">
+          <Pile cards={view.pile} fresh={fresh} ghost={ghost} />
+          <span className="pl-heap-label">{view.pileCount}</span>
+        </div>
+        <span className="pl-need">{needText(view.need)}</span>
+      </div>
+      {ghost?.kind === 'burn' && (
+        <span key={ghost.id} className="pl-flash">
+          🔥 {t('Cleared!')}
+        </span>
+      )}
+    </section>
   );
 }
 

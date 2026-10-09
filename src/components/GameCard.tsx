@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { GAMES } from '../games/registry';
-import type { GameDefinition } from '../games/types';
+import { playerRange, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import Intensity from './Intensity';
@@ -13,7 +13,7 @@ export function gameNumber(game: GameDefinition) {
 /** A game as a ticket: coloured stub with its number, perforation, then the details. */
 export default function GameCard({ game, onOpen }: { game: GameDefinition; onOpen: () => void }) {
   const soon = !game.component && !game.online;
-  const players = game.maxPlayers ? `${game.minPlayers}–${game.maxPlayers}` : `${game.minPlayers}+`;
+  const players = playerRange(game);
   return (
     <button
       type="button"

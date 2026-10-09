@@ -12,6 +12,12 @@ export interface Category {
   color: string;
 }
 
+/** "2", "2–5" or "2+": how many play. */
+export function playerRange(game: Pick<GameDefinition, 'minPlayers' | 'maxPlayers'>) {
+  if (game.maxPlayers == null) return `${game.minPlayers}+`;
+  return game.maxPlayers === game.minPlayers ? String(game.minPlayers) : `${game.minPlayers}–${game.maxPlayers}`;
+}
+
 export const CATEGORIES: Category[] = [
   { id: 'pregame', label: tx('Pregame'), emoji: '🔥', color: 'var(--c-orange)' },
   { id: 'party', label: tx('Party'), emoji: '🪩', color: 'var(--c-pink)' },
@@ -43,6 +49,11 @@ export interface GameDefinition {
   categories: CategoryId[];
   minPlayers: number;
   maxPlayers?: number;
+  /**
+   * The game picks who plays from the player list (e.g. a duel), so a longer list doesn't block it.
+   * maxPlayers then only says how many play.
+   */
+  picksPlayers?: boolean;
   /** How hard it hits: 1 = chill, 2 = tipsy, 3 = dangerous. */
   intensity: 1 | 2 | 3;
   /** Props needed besides drinks, e.g. "Deck of cards". */

@@ -10,6 +10,8 @@ const trash: GameDefinition = {
   color: 'var(--c-red)',
   categories: ['cards', 'quick'],
   minPlayers: 2,
+  maxPlayers: 2,
+  picksPlayers: true,
   intensity: 1,
   explains: true,
   rules: [
