@@ -9,7 +9,8 @@ const text = (hour: number) => {
 describe('headlineFor', () => {
   it('follows the night', () => {
     expect(text(17)).toBe('Pregame o’clock');
-    expect(text(21)).toBe('Pregame o’clock');
+    expect(text(19)).toBe('Pregame o’clock');
+    expect(text(20)).toBe('Party’s on');
     expect(text(22)).toBe('Party’s on');
     expect(text(0)).toBe('Party’s on');
     expect(text(1)).toBe('Party’s on');
