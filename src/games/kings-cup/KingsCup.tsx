@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
-import PlayingCard from '../../components/PlayingCard';
-import { newDeck, type Card } from '../../lib/cards';
+import { CardFace } from '../../components/PlayingCard';
+import { newDeck, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { layRing, type Slot } from './ring';
-import { CARD_RULES, isKing, LAST_KING_RULE } from './rules';
+import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
 
 interface State {
   /** All 52 cards, face down in a messy circle: cards[i] lies at slots[i]. */
@@ -45,7 +45,7 @@ export default function KingsCup({ players, exit }: GameProps) {
   const drawing = useRef(false);
   const timer = useRef<number>(undefined);
   // Where the tapped card lay, so the big card can fly out from there.
-  const from = useRef<FlyFrom | null>(null);
+  const from = useRef<Slot | null>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const player = players[s.turn % players.length];
@@ -55,11 +55,10 @@ export default function KingsCup({ players, exit }: GameProps) {
   const myMate = s.mates.find(([a]) => a === player.id)?.[1];
   const left = s.taken.filter((t) => !t).length;
 
-  const draw = (i: number, el: HTMLElement) => {
+  const draw = (i: number) => {
     if (s.current || drawing.current || s.over || s.taken[i]) return;
     drawing.current = true;
-    const box = el.getBoundingClientRect();
-    from.current = { x: box.left + box.width / 2, y: box.top + box.height / 2, width: el.offsetWidth, rot: s.slots[i].rot };
+    from.current = s.slots[i];
     const card = s.cards[i];
     const kings = s.kings + (isKing(card) ? 1 : 0);
     setS({
@@ -149,44 +148,30 @@ export default function KingsCup({ players, exit }: GameProps) {
         </div>
       </div>
 
-      <div className={`kc-ring${s.current ? ' revealing' : ''}`}>
-        {s.slots.map((slot, i) =>
-          s.taken[i] ? null : (
-            <button
-              key={i}
-              type="button"
-              className="kc-slot"
-              style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
-              disabled={!!s.current}
-              aria-label="Face-down card"
-              onClick={(e) => {
-                sfx.pop();
-                buzz(12);
-                draw(i, e.currentTarget);
-              }}
-            />
-          ),
-        )}
-        <KingsCupGlass kings={s.kings} />
-        {!s.current && !known && <span className="kc-ring-hint">Pick any card</span>}
-        {s.current && <Reveal key={52 - left} card={s.current} from={from.current} />}
-      </div>
-
-      {rule && s.current ? (
-        <div className={`kc-rule${lastKing ? ' finale' : ''}`}>
-          <span className="kc-rule-emoji">{rule.emoji}</span>
-          <span className="kc-rule-text">
-            <span className="kc-rule-title">{rule.title}</span>
-            {!known && <span className="kc-rule-body">{rule.text}</span>}
-            {s.current.value === 13 && !lastKing && (
-              <span className="kc-rule-note">
-                {4 - s.kings} King{4 - s.kings > 1 ? 's' : ''} left. Whoever draws the last one drinks the cup.
-              </span>
-            )}
-            {s.current.value === 12 && <span className="kc-rule-note">{player.name} is the Question Master now.</span>}
-          </span>
+      <div className="kc-stage">
+        <div className={`kc-ring${s.current ? ' revealing' : ''}`}>
+          {s.slots.map((slot, i) =>
+            s.taken[i] ? null : (
+              <button
+                key={i}
+                type="button"
+                className="kc-slot"
+                style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
+                disabled={!!s.current}
+                aria-label="Face-down card"
+                onClick={() => {
+                  sfx.pop();
+                  buzz(12);
+                  draw(i);
+                }}
+              />
+            ),
+          )}
+          <KingsCupGlass kings={s.kings} />
+          {!s.current && !known && <span className="kc-ring-hint">Pick any card</span>}
+          {s.current && rule && <Reveal key={52 - left} card={s.current} rule={rule} finale={!!lastKing} from={from.current} />}
         </div>
-      ) : null}
+      </div>
 
       {s.current?.value === 8 && (
         <div className="kc-action">
@@ -245,36 +230,35 @@ export default function KingsCup({ players, exit }: GameProps) {
 
       {effects}
 
-      {s.current && (
-        <div className="sticky-action">
-          <BigButton size="xl" variant={lastKing ? 'primary' : 'light'} onClick={next}>
-            {lastKing || left === 0 ? 'Finish game' : `Next: ${players[(s.turn + 1) % players.length].name} →`}
-          </BigButton>
-        </div>
-      )}
+      {/* Always there (hidden while picking) so the circle doesn't jump when a card is drawn. */}
+      <div className={`sticky-action${s.current ? '' : ' kc-idle'}`}>
+        <BigButton size="xl" variant={lastKing ? 'primary' : 'light'} onClick={next} disabled={!s.current}>
+          {lastKing || left === 0 ? 'Finish game' : `Next: ${players[(s.turn + 1) % players.length].name} →`}
+        </BigButton>
+      </div>
     </div>
   );
 }
 
-interface FlyFrom {
-  x: number;
-  y: number;
-  width: number;
-  rot: number;
-}
-
-/** The drawn card: flies out of the circle into the middle, grows big and flips over. */
-function Reveal({ card, from }: { card: Card; from: FlyFrom | null }) {
+/**
+ * The drawn card: flies out of the circle into the middle, grows big and flips face up.
+ * Tap it to turn it over and read the rule on the back; tap again for the card.
+ */
+function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; finale: boolean; from: Slot | null }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [up, setUp] = useState(false);
+  // Half turns so far: 0 = still face down, odd = card face, even = the rule.
+  const [turns, setTurns] = useState(0);
+  const known = useApp().knows('kings-cup');
   useLayoutEffect(() => {
     const el = ref.current;
-    const flip = window.setTimeout(() => setUp(true), 160);
-    if (el && from && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const to = el.getBoundingClientRect();
-      const dx = from.x - (to.left + to.width / 2);
-      const dy = from.y - (to.top + to.height / 2);
-      const scale = from.width / el.offsetWidth;
+    const flip = window.setTimeout(() => setTurns(1), 160);
+    const ring = el?.parentElement;
+    if (el && ring && from && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // Measured in the ring's own coordinates, so it lines up even if the page moves.
+      const size = ring.offsetWidth;
+      const dx = ((from.x - 50) / 100) * size;
+      const dy = ((from.y - 50) / 100) * size;
+      const scale = (0.074 * size) / el.offsetWidth;
       el.animate(
         [{ transform: `translate(${dx}px, ${dy}px) rotate(${from.rot}deg) scale(${scale})` }, { transform: 'translate(0, 0) rotate(0deg) scale(1)' }],
         { duration: 620, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
@@ -282,9 +266,35 @@ function Reveal({ card, from }: { card: Card; from: FlyFrom | null }) {
     }
     return () => window.clearTimeout(flip);
   }, [from]);
+
+  const showsRule = turns > 0 && turns % 2 === 0;
   return (
     <div ref={ref} className="kc-reveal">
-      <PlayingCard card={card} faceUp={up} size="xl" />
+      <button
+        type="button"
+        className="kc-big"
+        aria-label={showsRule ? `${rule.title}: ${rule.text} Tap to see the card.` : `${rankLabel(card.value)} of ${card.suit}. Tap for the rule.`}
+        disabled={turns === 0}
+        onClick={() => {
+          sfx.tick();
+          buzz(10);
+          setTurns((t) => t + 1);
+        }}
+      >
+        <span className="kc-big-inner" style={{ transform: `rotateY(${180 * (turns + 1)}deg)` }}>
+          <CardFace card={card} />
+          {turns === 0 ? (
+            <span className="pcard-face pcard-back" />
+          ) : (
+            <span className={`pcard-face kc-rule-face${finale ? ' finale' : ''}`}>
+              <span className="kc-rule-face-emoji">{rule.emoji}</span>
+              <span className="kc-rule-face-title">{rule.title}</span>
+              <span className="kc-rule-face-text">{rule.text}</span>
+            </span>
+          )}
+        </span>
+      </button>
+      {!known && turns > 0 && <span className="kc-big-hint">{showsRule ? 'Tap for the card' : 'Tap for the rule'}</span>}
     </div>
   );
 }

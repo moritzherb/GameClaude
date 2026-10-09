@@ -2617,68 +2617,107 @@ h3 {
   letter-spacing: 0.03em;
 }
 
-/* The drawn card, big in the middle so everyone can see it. */
+/* The drawn card, big in the middle so everyone can see it. Tap turns it to the rule. */
 .kc-reveal {
+  --cw: 52cqw;
   position: absolute;
   left: 50%;
   top: 50%;
+  width: 52cqw;
+  height: 72.8cqw;
   margin: -36.4cqw 0 0 -26cqw;
   z-index: 3;
 }
 
-.kc-reveal .pcard {
-  --cw: 52cqw;
+.kc-big {
+  display: block;
+  width: 100%;
+  height: 100%;
+  perspective: 1400px;
   filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.32));
 }
 
-.kc-rule {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: var(--radius);
-  background: var(--c-lilac);
-  color: var(--on-color);
-  animation: pop-in 0.45s var(--spring) 0.4s both;
+.kc-big:disabled {
+  cursor: default;
 }
 
-.kc-rule.finale {
+.kc-big-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.kc-big:not(:disabled):active .kc-big-inner {
+  scale: 0.97;
+}
+
+.kc-rule-face {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5cqw;
+  padding: 6cqw 5cqw;
+  background: var(--c-lilac);
+  color: var(--on-color);
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.kc-rule-face.finale {
   background: var(--c-yellow);
 }
 
-.kc-rule-emoji {
-  flex: none;
-  font-size: 2.4rem;
+.kc-rule-face-emoji {
+  font-size: 13cqw;
   line-height: 1;
 }
 
-.kc-rule-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.kc-rule-title {
+.kc-rule-face-title {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.61rem;
-  letter-spacing: 0.01em;
-  line-height: 1.05;
+  font-weight: 900;
+  font-size: 7.4cqw;
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
-.kc-rule-body {
-  font-size: 1.08rem;
+.kc-rule-face-text {
+  font-size: 4.3cqw;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
-.kc-rule-note {
-  margin-top: 4px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  opacity: 0.75;
+.kc-big-hint {
+  position: absolute;
+  top: calc(100% + 2.5cqw);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1cqw 3cqw 0.6cqw;
+  border-radius: 999px;
+  background: var(--bg);
+  white-space: nowrap;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 4cqw;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* The circle sits in the middle of the free space between player row and button. */
+.kc-stage {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kc-idle {
+  visibility: hidden;
 }
 
 .kc-action {
