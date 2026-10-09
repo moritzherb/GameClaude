@@ -3301,6 +3301,7 @@ h3 {
 
 /* Everyone's score, one chip per player, scrolls sideways in big groups. */
 .fk-board {
+  position: relative; /* chips measure their offsetLeft from here */
   display: flex;
   gap: 8px;
   margin: 0 calc(-1 * var(--gutter));
@@ -3577,6 +3578,16 @@ h3 {
   flex: none;
   color: var(--accent-ink);
   font-weight: 600;
+}
+
+/* A crashed screen: the error text, small, for a screenshot. */
+.crash-text {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  text-align: center;
 }
 
 /* ---------- Confetti ---------- */

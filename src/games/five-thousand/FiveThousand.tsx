@@ -308,10 +308,18 @@ function TurnVerdict({ g, name }: { g: Game; name: string }) {
 
 /** Everyone's score on the way to 5000; the player whose turn it is stands out. */
 function Scoreboard({ g, players }: { g: Game; players: GameProps['players'] }) {
+  const board = useRef<HTMLDivElement>(null);
   const current = useRef<HTMLDivElement>(null);
-  useEffect(() => current.current?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }), [g.current]);
+  // Bring the player whose turn it is into view. Only the strip scrolls: scrollIntoView
+  // would also move the whole page on iPhones.
+  useEffect(() => {
+    const strip = board.current;
+    const chip = current.current;
+    if (!strip || !chip) return;
+    strip.scrollTo({ left: chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+  }, [g.current]);
   return (
-    <div className="fk-board">
+    <div className="fk-board" ref={board}>
       {players.map((p, i) => (
         <div key={p.id} ref={i === g.current ? current : undefined} className={`fk-chip${i === g.current ? ' on' : ''}${g.opened[i] ? '' : ' out'}`}>
           <span className="fk-chip-top">

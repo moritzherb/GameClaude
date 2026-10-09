@@ -206,6 +206,12 @@ const app: Record<string, string> = {
   'Safe! Drink water 💧': 'Glück gehabt! Trink Wasser 💧',
   'Drink with no hands 🙌': 'Trink ohne Hände 🙌',
   'Waterfall – you start! 🌊': 'Wasserfall – du fängst an! 🌊',
+
+  // A screen crashed (ErrorBoundary)
+  'Oops, something spilled.': 'Hoppla, da ist was verschüttet.',
+  'This screen crashed. Your players and settings are safe.': 'Dieser Bildschirm ist abgestürzt. Deine Spieler und Einstellungen sind sicher.',
+  'Try again': 'Nochmal versuchen',
+  'Back to the start': 'Zurück zum Start',
 };
 
 export default app;
