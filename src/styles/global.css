@@ -1675,7 +1675,8 @@ h3 {
 
 .bd,
 .kc,
-.ftd {
+.ftd,
+.fk {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1686,6 +1687,7 @@ h3 {
 .bd > *,
 .kc > *,
 .ftd > *,
+.fk > *,
 .who-drinks > * {
   flex-shrink: 0;
 }
@@ -3130,6 +3132,288 @@ h3 {
   color: var(--muted);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 5000 ---------- */
+
+/* Everyone's score, one chip per player, scrolls sideways in big groups. */
+.fk-board {
+  display: flex;
+  gap: 8px;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 2px var(--gutter) 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.fk-board::-webkit-scrollbar {
+  display: none;
+}
+
+.fk-chip {
+  flex: 0 0 auto;
+  min-width: 86px;
+  max-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.fk-chip.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.fk-chip-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fk-chip .bd-avatar.xs {
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
+}
+
+.fk-chip-score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fk-chip.out .fk-chip-score {
+  color: var(--muted);
+}
+
+.fk-chip-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fk-chip-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fk-chip-bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.6s var(--spring);
+}
+
+/* Points collected this turn, top right. */
+.fk-turn-points {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.fk-turn-num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2.2rem;
+  line-height: 0.95;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.fk-turn-label {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* The table the dice land on. */
+.fk-table {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.05), transparent 70%),
+    var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  container-type: inline-size;
+}
+
+.fk-die {
+  --size: 15cqw;
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  display: grid;
+  place-items: center;
+  border-radius: 22%;
+  background: linear-gradient(145deg, #fff 55%, #e9e6dd);
+  color: var(--card-black);
+  box-shadow:
+    inset 0 -0.6cqw 0 rgba(0, 0, 0, 0.12),
+    0 0.8cqw 1.6cqw rgba(0, 0, 0, 0.35);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--size) * 0.5);
+  line-height: 1;
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  transition:
+    transform 0.2s var(--spring),
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.fk-die.red {
+  color: var(--card-red);
+}
+
+.fk-die.picked {
+  transform: translate(-50%, -50%) rotate(0deg) scale(1.14);
+  box-shadow:
+    0 0 0 0.9cqw var(--accent),
+    0 1.6cqw 2.4cqw rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.fk-die.dull {
+  opacity: 0.62;
+}
+
+.fk-die:disabled {
+  cursor: default;
+}
+
+.fk-table.dead .fk-die {
+  opacity: 0.45;
+}
+
+/* Small dice in the set-aside tray. */
+.fk-die.sm {
+  --size: 34px;
+  position: static;
+  transform: none;
+  font-size: 1.05rem;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.fk-aside {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+}
+
+.fk-aside-label {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.fk-aside-dice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* The leather dice cup in the middle of the table, before a roll. */
+.fk-cup {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30cqw;
+  transform: translate(-50%, -54%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5cqw;
+}
+
+.fk-cup svg {
+  width: 100%;
+  filter: drop-shadow(0 2cqw 2cqw rgba(0, 0, 0, 0.35));
+}
+
+.fk-cup-body {
+  fill: #7b4a2b;
+}
+
+.fk-cup-rim {
+  fill: #925a35;
+}
+
+.fk-cup-hole {
+  fill: #2c1a0f;
+}
+
+.fk-cup-stitch {
+  fill: none;
+  stroke: #d9a066;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+}
+
+.fk-cup:active svg {
+  transform: scale(0.95);
+}
+
+.fk-cup.shaking svg {
+  animation: cup-shake 0.16s ease-in-out infinite alternate;
+}
+
+@keyframes cup-shake {
+  from {
+    transform: rotate(-11deg) translateX(-4%);
+  }
+  to {
+    transform: rotate(11deg) translateX(4%);
+  }
+}
+
+.fk-cup-hint {
+  white-space: nowrap;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 4.2cqw;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.fk-cup.shaking .fk-cup-hint {
+  visibility: hidden;
+}
+
+.fk-pick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
+}
+
+.fk-pick-info {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.fk-pick-row .text-btn {
+  flex: none;
+  color: var(--accent-ink);
+  font-weight: 600;
 }
 
 /* ---------- Confetti ---------- */
