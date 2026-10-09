@@ -72,6 +72,7 @@ const fiveThousand: Record<string, string> = {
     'Wer zuerst genau 5000 hat, gewinnt. Bringt ein Wurf mehr, als dir noch fehlt, ist der Zug vorbei und seine Punkte sind weg – du kannst nicht nur einen Teil davon nehmen.',
   'If a roll brings exactly what you need, you’ve won, without picking anything.': 'Bringt ein Wurf genau die fehlenden Punkte, hast du gewonnen – ohne etwas auszuwählen.',
   'The roll is worth {value}, you needed {need}.': 'Der Wurf bringt {value}, dir fehlten {need}.',
+  'Show the standings': 'Zum Endstand',
 };
 
 export default fiveThousand;
