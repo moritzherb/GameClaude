@@ -17,8 +17,6 @@ const fiveThousand: Record<string, string> = {
     'Zum Einstieg brauchst du mindestens 500 in einem Zug. Bis dahin kannst du nicht unter 500 aufhören.',
   'Once you’re in, a first roll with nothing to set aside costs 300 points (you can’t go below 0).':
     'Bist du drin, kostet ein erster Wurf ohne Punkte 300 Punkte (weniger als 0 geht nicht).',
-  'First to exactly 5000 wins. Go over and that turn’s points are gone.':
-    'Wer zuerst genau 5000 hat, gewinnt. Wer drüber kommt, verliert die Punkte aus diesem Zug.',
 
   // Dice faces: German poker dice say B (Bube) and D (Dame)
   J: 'B',
@@ -62,13 +60,18 @@ const fiveThousand: Record<string, string> = {
   'Nothing!': 'Nichts dabei!',
   'First roll without points: −{n}.': 'Erster Wurf ohne Punkte: −{n}.',
   '{n} points from this turn are gone.': '{n} Punkte aus diesem Zug sind weg.',
-  'Only exactly 5000 wins.': 'Nur genau 5000 gewinnt.',
   'No King, no Ace, no triple.': 'Kein König, kein Ass, kein Drilling.',
   '{name} stays on {score}.': '{name} bleibt bei {score}.',
 
   // Game over
   'Exactly 5000!': 'Genau 5000!',
   'Final scores': 'Endstand',
+  'A triple is exactly three of a kind: four or five of a kind are none (four Kings are just four Kings). A triple only goes aside as a whole.':
+    'Ein Drilling sind genau drei Gleiche: Vier oder fünf Gleiche sind keiner (vier Könige sind einfach vier Könige). Ein Drilling kommt nur komplett zur Seite.',
+  'First to exactly 5000 wins. If a roll brings more than you still need, the turn is over and its points are gone: you can’t take just part of it.':
+    'Wer zuerst genau 5000 hat, gewinnt. Bringt ein Wurf mehr, als dir noch fehlt, ist der Zug vorbei und seine Punkte sind weg – du kannst nicht nur einen Teil davon nehmen.',
+  'If a roll brings exactly what you need, you’ve won, without picking anything.': 'Bringt ein Wurf genau die fehlenden Punkte, hast du gewonnen – ohne etwas auszuwählen.',
+  'The roll is worth {value}, you needed {need}.': 'Der Wurf bringt {value}, dir fehlten {need}.',
 };
 
 export default fiveThousand;

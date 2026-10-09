@@ -15,12 +15,14 @@ const fiveThousand: GameDefinition = {
   rules: [
     tx('Five dice with 9, 10, J, Q, K and A, rolled from a cup. Pick who starts, then the cup goes round to the left.'),
     tx('Kings are worth 50, Aces 100. Three of a kind in one roll: 9s 100, 10s 200, Jacks 300, Queens 400, Kings 500, Aces 1000.'),
+    tx('A triple is exactly three of a kind: four or five of a kind are none (four Kings are just four Kings). A triple only goes aside as a whole.'),
     tx('After every roll, set aside at least one King, Ace or triple. Then roll the rest again, or stop and bank this turn’s points.'),
     tx('A roll with no King, no Ace and no triple ends your turn, and all of this turn’s points are gone.'),
     tx('If every die has scored, put all five back in the cup and keep going. The points keep adding up.'),
     tx('To get in, you need at least 500 in one turn. Until then you can’t stop below 500.'),
     tx('Once you’re in, a first roll with nothing to set aside costs 300 points (you can’t go below 0).'),
-    tx('First to exactly 5000 wins. Go over and that turn’s points are gone.'),
+    tx('First to exactly 5000 wins. If a roll brings more than you still need, the turn is over and its points are gone: you can’t take just part of it.'),
+    tx('If a roll brings exactly what you need, you’ve won, without picking anything.'),
   ],
   component: FiveThousand,
 };

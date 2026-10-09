@@ -8,6 +8,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { randomInt } from '../../lib/random';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
+import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/sync';
 import { useApp } from '../../state/AppState';
 import { apply, deal, fits, MAX_PLAYERS, MIN_PLAYERS, same, TABLE, viewFor, type Act, type Entry, type Game, type Need, type View } from './logic';
 
@@ -29,7 +30,8 @@ interface Match {
 
 type PhoneView = View & { seats: Seat[]; tableless: boolean };
 
-type Msg = { g: 'pl'; type: 'view'; view: PhoneView | null } | { g: 'pl'; type: 'act'; act: Act } | { g: 'pl'; type: 'sync' };
+/** `n` numbers a phone's moves; `ack` tells that phone which of its moves the host has seen. */
+type Msg = { g: 'pl'; type: 'view'; view: PhoneView | null; ack?: number } | { g: 'pl'; type: 'act'; act: Act; n: number } | { g: 'pl'; type: 'sync' };
 
 const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (d as Msg).g === 'pl';
 
@@ -74,9 +76,10 @@ function usePalace() {
     if (isHost && code && restored.current) save(STORE_KEY, match ? { code, match } : null);
   }, [isHost, code, match]);
 
-  // A move waits for the host's answer (a new view); if none comes, it's sent again. Safe: the
-  // host ignores a move that's no longer valid, so it can't be applied twice.
-  const pending = useRef<{ act: Act; tries: number; timer?: number } | null>(null);
+  // A move is sent again until the host confirms it has seen it (also after a dropped connection).
+  // Moves are numbered, so the host applies each one only once.
+  const nextMove = useMoveNumbers();
+  const pending = useRef<{ act: Act; n: number; timer?: number } | null>(null);
   const clearPending = () => {
     window.clearTimeout(pending.current?.timer);
     pending.current = null;
@@ -84,59 +87,74 @@ function usePalace() {
   const sendPending = useCallback(() => {
     const p = pending.current;
     if (!p) return;
-    sendToHost({ g: 'pl', type: 'act', act: p.act } satisfies Msg);
-    p.tries++;
-    if (p.tries < 5) p.timer = window.setTimeout(sendPending, 3000);
-    else pending.current = null;
+    window.clearTimeout(p.timer);
+    sendToHost({ g: 'pl', type: 'act', act: p.act, n: p.n } satisfies Msg);
+    p.timer = window.setTimeout(sendPending, 2500);
   }, [sendToHost]);
 
   const act = useCallback(
     (a: Act) => {
       if (isHost) {
-        setMatch((m) => (m ? applyFrom(m, myId, a) : m));
+        // Through the ref, like the guests' moves, so moves arriving at the same moment all count.
+        if (!matchRef.current) return;
+        const next = applyFrom(matchRef.current, myId, a);
+        matchRef.current = next;
+        setMatch(next);
         return;
       }
       clearPending();
-      pending.current = { act: a, tries: 0 };
+      pending.current = { act: a, n: nextMove() };
       sendPending();
     },
-    [isHost, myId, sendPending],
+    [isHost, myId, sendPending, nextMove],
   );
 
+  // Host: apply a move once, and answer the phone it came from straight away (with the move confirmed).
+  const fresh = useFreshMoves();
+  const acks = useRef(new Map<string, number>());
   useEffect(() => {
     if (!isHost) return;
     return onGame((data, fromId) => {
       if (!isMsg(data) || !fromId) return;
-      if (data.type === 'act') setMatch((m) => (m ? applyFrom(m, fromId, data.act) : m));
-      if (data.type === 'sync') {
+      if (data.type === 'act') {
+        if (fresh(fromId, data.n) && matchRef.current) {
+          const next = applyFrom(matchRef.current, fromId, data.act);
+          matchRef.current = next;
+          setMatch(next);
+        }
+        acks.current.set(fromId, Math.max(acks.current.get(fromId) ?? 0, data.n));
+      }
+      if (data.type === 'act' || data.type === 'sync') {
         const m = matchRef.current;
-        sendTo(fromId, { g: 'pl', type: 'view', view: m ? phoneView(m, fromId) : null } satisfies Msg);
+        sendTo(fromId, { g: 'pl', type: 'view', view: m ? phoneView(m, fromId) : null, ack: acks.current.get(fromId) } satisfies Msg);
       }
     });
-  }, [isHost, onGame, sendTo]);
+  }, [isHost, onGame, sendTo, fresh]);
 
   useEffect(() => {
     if (!isHost) return;
     for (const m of members) {
       if (m.id === myId || !m.online) continue;
-      sendTo(m.id, { g: 'pl', type: 'view', view: match ? phoneView(match, m.id) : null } satisfies Msg);
+      sendTo(m.id, { g: 'pl', type: 'view', view: match ? phoneView(match, m.id) : null, ack: acks.current.get(m.id) } satisfies Msg);
     }
   }, [isHost, match, members, myId, sendTo]);
 
+  // Guest: take the views, and ask again whenever one could have been missed.
+  const ask = useCallback(() => sendToHost({ g: 'pl', type: 'sync' } satisfies Msg), [sendToHost]);
+  const take = useChanged(setGuestView);
   useEffect(() => {
     if (isHost) return;
-    let last = '';
-    const off = onGame((data) => {
+    return onGame((data) => {
       if (!isMsg(data) || data.type !== 'view') return;
-      const json = JSON.stringify(data.view);
-      if (json === last) return;
-      last = json;
-      clearPending();
-      setGuestView(data.view);
+      if (pending.current && data.ack != null && data.ack >= pending.current.n) clearPending();
+      take(data.view);
     });
-    sendToHost({ g: 'pl', type: 'sync' } satisfies Msg);
-    return off;
-  }, [isHost, onGame, sendToHost]);
+  }, [isHost, onGame, take]);
+  useResync(!isHost, ask);
+  // Back online: a move still waiting goes out again right away.
+  useEffect(() => {
+    if (!isHost && room.status === 'open') sendPending();
+  }, [isHost, room.status, sendPending]);
 
   const view = isHost ? (match ? phoneView(match, myId) : null) : guestView;
   return { room, isHost, view, act, setMatch, connected: isHost || room.status === 'open' };

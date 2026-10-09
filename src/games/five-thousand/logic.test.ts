@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canStop, gainFor, minGain, newGame, nextTurn, roll, score, setAside, type Face, type Game } from './logic';
+import { canStop, gainFor, newGame, nextTurn, roll, rollValue, score, setAside, triples, type Face, type Game } from './logic';
 
 /** A "random" source that rolls exactly these faces. */
 function dice(...faces: Face[]) {
@@ -28,8 +28,25 @@ describe('5000 scoring', () => {
     expect(score([12, 12, 12])).toBe(400);
     expect(score([13, 13, 13])).toBe(500);
     expect(score([14, 14, 14])).toBe(1000);
-    expect(score([14, 14, 14, 14])).toBe(1100);
     expect(score([9, 9, 9, 13])).toBe(150);
+  });
+
+  it('only exactly three of a kind is a triple: four or five are none', () => {
+    expect(triples([14, 14, 14, 14, 9])).toEqual([]);
+    expect(triples([12, 12, 12, 12, 12])).toEqual([]);
+    expect(triples([12, 12, 12, 9, 10])).toEqual([12]);
+    // Four Aces: four single Aces, not a triple plus one.
+    expect(score([14, 14, 14, 14])).toBe(400);
+    expect(score([14, 14, 14], [14, 14, 14, 14, 9])).toBe(300);
+    // Four or five Queens score nothing.
+    expect(score([12, 12, 12], [12, 12, 12, 12, 9])).toBeNull();
+  });
+
+  it('a triple only goes as a whole, also Kings and Aces', () => {
+    const roll: Face[] = [13, 13, 13, 9, 10];
+    expect(score([13], roll)).toBeNull();
+    expect(score([13, 13], roll)).toBeNull();
+    expect(score([13, 13, 13], roll)).toBe(500);
   });
 
   it('rejects dice that don’t score', () => {
@@ -39,10 +56,11 @@ describe('5000 scoring', () => {
     expect(score([13, 10])).toBeNull();
   });
 
-  it('knows the least you can set aside', () => {
-    expect(minGain([13, 14, 9, 9, 10])).toBe(50);
-    expect(minGain([9, 9, 9, 10, 11])).toBe(100);
-    expect(minGain([9, 10, 11, 12, 12])).toBe(0);
+  it('adds up everything a roll brings', () => {
+    expect(rollValue([13, 14, 9, 9, 10])).toBe(150);
+    expect(rollValue([9, 9, 9, 10, 13])).toBe(150);
+    expect(rollValue([14, 14, 14, 14, 13])).toBe(450);
+    expect(rollValue([9, 10, 11, 12, 12])).toBe(0);
   });
 });
 
@@ -113,17 +131,41 @@ describe('5000 turns', () => {
     expect(g.scores[0]).toBe(850);
   });
 
-  it('exactly 5000 wins, more loses the turn', () => {
-    let g = roll(at(4950), dice(13, 14, 9, 10, 11));
-    expect(g.phase).toBe('choose');
-    expect(setAside(g, [1], 'roll')).toBe(g);
-    g = setAside(g, [0], 'roll');
+  it('close to 5000 the whole roll has to fit, or the turn is over without points', () => {
+    // 4900 with an Ace and a King: 150 is more than the 100 needed. You can't take just the Ace.
+    const ak = roll(at(4900), dice(14, 13, 9, 10, 11));
+    expect(ak.end).toEqual({ kind: 'too-much', lost: 0, value: 150, need: 100 });
+    expect(ak.scores[0]).toBe(4900);
+    // A triple of Kings on 4600: 500 is too much, and it can't be split.
+    const kings = roll(at(4600), dice(13, 13, 13, 9, 10));
+    expect(kings.end).toMatchObject({ kind: 'too-much', lost: 0 });
+    // Points collected this turn are gone too.
+    let g = roll(at(4500), dice(14, 9, 10, 11, 12));
+    g = setAside(g, [0], 'roll', dice(14, 14, 14, 13));
+    expect(g.end).toMatchObject({ kind: 'too-much', lost: 100 });
+    expect(g.scores[0]).toBe(4500);
+  });
+
+  it('exactly enough wins by itself, without picking anything', () => {
+    // 4900 and one Ace: won.
+    let g = roll(at(4900), dice(14, 9, 10, 11, 12));
     expect(g.end).toEqual({ kind: 'won' });
     expect(g.scores[0]).toBe(5000);
     expect(nextTurn(g)).toBe(g);
-    // Only an Ace on 4950: nothing fits.
-    const over = roll(at(4950), dice(14, 9, 10, 11, 12));
-    expect(over.end).toEqual({ kind: 'too-much', lost: 0 });
+    // 4900 and two Kings: won as well.
+    g = roll(at(4900), dice(13, 13, 9, 10, 11));
+    expect(g.end).toEqual({ kind: 'won' });
+    // With points from earlier rolls this turn.
+    g = roll(at(4800), dice(14, 9, 10, 11, 12));
+    g = setAside(g, [0], 'roll', dice(13, 13, 9, 10));
+    expect(g.end).toEqual({ kind: 'won' });
+    expect(g.scores[0]).toBe(5000);
+  });
+
+  it('less than needed: pick as usual', () => {
+    const g = roll(at(4700), dice(14, 13, 9, 10, 11));
+    expect(g.phase).toBe('choose');
+    expect(gainFor(g, [0])).toBe(100);
   });
 
   it('passes the cup to the left', () => {

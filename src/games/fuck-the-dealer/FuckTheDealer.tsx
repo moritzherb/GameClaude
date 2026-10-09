@@ -12,6 +12,7 @@ import { pick } from '../../lib/random';
 import { navigate, paths } from '../../lib/router';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
+import { useChanged, useQueuedSend, useResync } from '../../net/sync';
 import { useApp } from '../../state/AppState';
 import { direction, guess, MISSES_TO_PASS, newGame, next, nextGuesser, possible, takeOver, VALUES, type Game } from './logic';
 
@@ -67,12 +68,14 @@ function useFtd() {
     if (isHost && code && restored.current) save(STORE_KEY, hostSession ? { code, session: hostSession } : null);
   }, [isHost, code, hostSession]);
 
+  // A move made while the connection is down goes out once it's back.
+  const queued = useQueuedSend(sendToHost);
   const act = useCallback(
     (a: Act) => {
       if (isHost) setHostSession((s) => (s ? apply(s, a) : s));
-      else sendToHost({ g: 'ftd', type: 'act', act: a } satisfies Msg);
+      else queued({ g: 'ftd', type: 'act', act: a } satisfies Msg);
     },
-    [isHost, sendToHost],
+    [isHost, queued],
   );
 
   useEffect(() => {
@@ -95,14 +98,16 @@ function useFtd() {
     for (const m of members) if (m.id !== myId && m.online) sendTo(m.id, { g: 'ftd', type: 'state', session: hostSession } satisfies Msg);
   }, [isHost, hostSession, members, myId, sendTo]);
 
+  // Deck phone: take the state, and ask again whenever an update could have been missed.
+  const take = useChanged(setGuestSession);
   useEffect(() => {
     if (isHost) return;
-    const off = onGame((data) => {
-      if (isMsg(data) && data.type === 'state') setGuestSession(data.session);
+    return onGame((data) => {
+      if (isMsg(data) && data.type === 'state') take(data.session);
     });
-    sendToHost({ g: 'ftd', type: 'sync' } satisfies Msg);
-    return off;
-  }, [isHost, onGame, sendToHost]);
+  }, [isHost, onGame, take]);
+  const ask = useCallback(() => sendToHost({ g: 'ftd', type: 'sync' } satisfies Msg), [sendToHost]);
+  useResync(!isHost, ask);
 
   return { room, isHost, myId, session: isHost ? hostSession : guestSession, act, setHostSession };
 }

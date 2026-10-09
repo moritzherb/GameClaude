@@ -7,6 +7,7 @@ import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
+import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/sync';
 import { useApp } from '../../state/AppState';
 import {
   applyAction,
@@ -27,9 +28,10 @@ import {
 
 /* ---------------- Messages between phones ---------------- */
 
+/** `n` numbers a phone's moves; `ack` tells that phone which of its moves the host has seen. */
 type Msg =
-  | { g: 'hr'; type: 'view'; view: PlayerView | null }
-  | { g: 'hr'; type: 'action'; action: Action }
+  | { g: 'hr'; type: 'view'; view: PlayerView | null; ack?: number }
+  | { g: 'hr'; type: 'action'; action: Action; n: number }
   | { g: 'hr'; type: 'sync' };
 
 const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (d as Msg).g === 'hr';
@@ -64,10 +66,10 @@ function useHoseRunter() {
     if (isHost && code && restored.current) save(STORE_KEY, state ? { code, state } : null);
   }, [isHost, code, state]);
 
-  // Guest moves wait for the host's answer (a new view). If none comes, e.g. because the
-  // connection blinked, the move is sent again. Safe: the host ignores a move that's no
-  // longer valid, so a move that did arrive can't be applied twice.
-  const pending = useRef<{ action: Action; tries: number; timer?: number } | null>(null);
+  // A move is sent again until the host confirms it has seen it (also after a dropped connection).
+  // Moves are numbered, so the host applies each one only once.
+  const nextMove = useMoveNumbers();
+  const pending = useRef<{ action: Action; n: number; timer?: number } | null>(null);
   const clearPending = () => {
     window.clearTimeout(pending.current?.timer);
     pending.current = null;
@@ -75,64 +77,74 @@ function useHoseRunter() {
   const sendPending = useCallback(() => {
     const p = pending.current;
     if (!p) return;
-    sendToHost({ g: 'hr', type: 'action', action: p.action } satisfies Msg);
-    p.tries++;
-    if (p.tries < 5) p.timer = window.setTimeout(sendPending, 3000);
-    else pending.current = null;
+    window.clearTimeout(p.timer);
+    sendToHost({ g: 'hr', type: 'action', action: p.action, n: p.n } satisfies Msg);
+    p.timer = window.setTimeout(sendPending, 2500);
   }, [sendToHost]);
 
   const act = useCallback(
     (action: Action) => {
       if (isHost) {
-        setState((s) => (s ? applyAction(s, myId, action) : s));
+        if (!stateRef.current) return;
+        const next = applyAction(stateRef.current, myId, action);
+        stateRef.current = next;
+        setState(next);
         return;
       }
       clearPending();
-      pending.current = { action, tries: 0 };
+      pending.current = { action, n: nextMove() };
       sendPending();
     },
-    [isHost, myId, sendPending],
+    [isHost, myId, sendPending, nextMove],
   );
 
-  // Host: hear guests' actions.
+  // Host: apply a move once, and answer the phone it came from straight away (with the move confirmed).
+  const fresh = useFreshMoves();
+  const acks = useRef(new Map<string, number>());
   useEffect(() => {
     if (!isHost) return;
     return onGame((data, fromId) => {
       if (!isMsg(data) || !fromId) return;
-      if (data.type === 'action') setState((s) => (s ? applyAction(s, fromId, data.action) : s));
-      if (data.type === 'sync') {
+      if (data.type === 'action') {
+        if (fresh(fromId, data.n) && stateRef.current) {
+          const next = applyAction(stateRef.current, fromId, data.action);
+          stateRef.current = next;
+          setState(next);
+        }
+        acks.current.set(fromId, Math.max(acks.current.get(fromId) ?? 0, data.n));
+      }
+      if (data.type === 'action' || data.type === 'sync') {
         const s = stateRef.current;
-        sendTo(fromId, { g: 'hr', type: 'view', view: s ? viewFor(s, fromId) : null } satisfies Msg);
+        sendTo(fromId, { g: 'hr', type: 'view', view: s ? viewFor(s, fromId) : null, ack: acks.current.get(fromId) } satisfies Msg);
       }
     });
-  }, [isHost, onGame, sendTo]);
+  }, [isHost, onGame, sendTo, fresh]);
 
   // Host: send every phone its own view whenever something changes (or someone reconnects).
   useEffect(() => {
     if (!isHost) return;
     for (const m of members) {
       if (m.id === myId || !m.online) continue;
-      sendTo(m.id, { g: 'hr', type: 'view', view: state ? viewFor(state, m.id) : null } satisfies Msg);
+      sendTo(m.id, { g: 'hr', type: 'view', view: state ? viewFor(state, m.id) : null, ack: acks.current.get(m.id) } satisfies Msg);
     }
   }, [isHost, state, members, myId, sendTo]);
 
-  // Guest: receive views, and ask for one when this screen opens.
+  // Guest: take the views, and ask again whenever one could have been missed.
+  const ask = useCallback(() => sendToHost({ g: 'hr', type: 'sync' } satisfies Msg), [sendToHost]);
+  const take = useChanged(setGuestView);
   useEffect(() => {
     if (isHost) return;
-    let last = '';
-    const off = onGame((data) => {
+    return onGame((data) => {
       if (!isMsg(data) || data.type !== 'view') return;
-      // The host also re-sends unchanged views (e.g. when someone reconnects): only a
-      // changed view answers our move.
-      const json = JSON.stringify(data.view);
-      if (json === last) return;
-      last = json;
-      clearPending();
-      setGuestView(data.view);
+      if (pending.current && data.ack != null && data.ack >= pending.current.n) clearPending();
+      take(data.view);
     });
-    sendToHost({ g: 'hr', type: 'sync' } satisfies Msg);
-    return off;
-  }, [isHost, onGame, sendToHost]);
+  }, [isHost, onGame, take]);
+  useResync(!isHost, ask);
+  // Back online: a move still waiting goes out again right away.
+  useEffect(() => {
+    if (!isHost && room.status === 'open') sendPending();
+  }, [isHost, room.status, sendPending]);
 
   const view = isHost ? (state ? viewFor(state, myId) : null) : guestView;
   const connected = isHost || room.status === 'open';

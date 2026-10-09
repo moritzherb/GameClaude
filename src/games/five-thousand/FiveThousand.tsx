@@ -123,25 +123,20 @@ export default function FiveThousand({ players, exit }: GameProps) {
   };
 
   const counts = (f: Face) => turn.roll.filter((x) => x === f).length;
-  const pickable = (i: number) => g.phase === 'choose' && (turn.roll[i] >= 13 || counts(turn.roll[i]) >= 3);
+  // A triple is exactly three of a face; it only goes as a whole. Other Kings and Aces count alone.
+  const inTriple = (i: number) => counts(turn.roll[i]) === 3;
+  const pickable = (i: number) => g.phase === 'choose' && (turn.roll[i] >= 13 || inTriple(i));
   const toggle = (i: number) => {
     if (!pickable(i)) return;
     const f = turn.roll[i];
     sfx.tick();
     buzz(10);
-    if (f >= 13) return setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
-    // 9, 10, J and Q only count as a triple: picking one picks three of them.
+    if (!inTriple(i)) return setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
+    // Picking one die of a triple picks all three.
     const same = turn.roll.map((x, j) => (x === f ? j : -1)).filter((j) => j >= 0);
-    setPicked((p) =>
-      p.includes(i) ? p.filter((x) => turn.roll[x] !== f) : [...p.filter((x) => turn.roll[x] !== f), i, ...same.filter((j) => j !== i).slice(0, 2)],
-    );
+    setPicked((p) => (p.includes(i) ? p.filter((x) => turn.roll[x] !== f) : [...p.filter((x) => turn.roll[x] !== f), ...same]));
   };
-  const pickAll = () => {
-    const best: number[] = [];
-    for (const f of [9, 10, 11, 12] as Face[]) if (counts(f) >= 3) best.push(...turn.roll.map((x, j) => (x === f ? j : -1)).filter((j) => j >= 0).slice(0, 3));
-    turn.roll.forEach((f, j) => f >= 13 && best.push(j));
-    setPicked(best);
-  };
+  const pickAll = () => setPicked(turn.roll.map((_, j) => j).filter((j) => pickable(j)));
 
   const gain = gainFor(g, picked);
   const over = gain != null && tooMuch(g, gain);
@@ -292,12 +287,13 @@ function TurnVerdict({ g, name }: { g: Game; name: string }) {
       <span className="bd-result-text">
         <span className="bd-result-title">{end.kind === 'too-much' ? t('Over 5000!') : t('Nothing!')}</span>
         <span className="bd-result-sub">
-          {end.kind === 'nothing' && end.penalty
-            ? t('First roll without points: −{n}.', { n: end.penalty })
-            : lost
-              ? t('{n} points from this turn are gone.', { n: fmt(lost) })
-              : end.kind === 'too-much'
-                ? t('Only exactly 5000 wins.')
+          {end.kind === 'too-much'
+            ? t('The roll is worth {value}, you needed {need}.', { value: fmt(end.value), need: fmt(end.need) }) +
+              (lost ? ` ${t('{n} points from this turn are gone.', { n: fmt(lost) })}` : '')
+            : end.kind === 'nothing' && end.penalty
+              ? t('First roll without points: −{n}.', { n: end.penalty })
+              : lost
+                ? t('{n} points from this turn are gone.', { n: fmt(lost) })
                 : t('No King, no Ace, no triple.')}
         </span>
         <span className="bd-result-card">{t('{name} stays on {score}.', { name, score })}</span>

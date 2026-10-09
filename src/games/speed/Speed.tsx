@@ -7,6 +7,7 @@ import { SUITS, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
+import { useChanged, useQueuedSend, useResync } from '../../net/sync';
 import { useApp } from '../../state/AppState';
 import { draw, HAND_MAX, markReady, newGame, overDrawn, play, putBack, stuck, targetFor, turnOver, type Game, type Who } from './logic';
 
@@ -77,12 +78,14 @@ function useSpeed() {
     if (isHost && code && restored.current) save(STORE_KEY, hostMatch ? { code, match: hostMatch } : null);
   }, [isHost, code, hostMatch]);
 
+  // A move made while the connection is down goes out once it's back.
+  const queued = useQueuedSend(sendToHost);
   const act = useCallback(
     (a: Act) => {
       if (isHost) setHostMatch((m) => (m ? apply(m, myId, a) : m));
-      else sendToHost({ g: 'sp', type: 'act', act: a } satisfies Msg);
+      else queued({ g: 'sp', type: 'act', act: a } satisfies Msg);
     },
-    [isHost, myId, sendToHost],
+    [isHost, myId, queued],
   );
 
   // Host: hear the guests.
@@ -124,15 +127,16 @@ function useSpeed() {
     return () => window.clearTimeout(id);
   }, [isStuck]);
 
-  // Guest: receive the state, and ask for it when this screen opens.
+  // Guest: receive the state, and ask again whenever an update could have been missed.
+  const take = useChanged(setGuestMatch);
   useEffect(() => {
     if (isHost) return;
-    const off = onGame((data) => {
-      if (isMsg(data) && data.type === 'state') setGuestMatch(data.match);
+    return onGame((data) => {
+      if (isMsg(data) && data.type === 'state') take(data.match);
     });
-    sendToHost({ g: 'sp', type: 'sync' } satisfies Msg);
-    return off;
-  }, [isHost, onGame, sendToHost]);
+  }, [isHost, onGame, take]);
+  const ask = useCallback(() => sendToHost({ g: 'sp', type: 'sync' } satisfies Msg), [sendToHost]);
+  useResync(!isHost, ask);
 
   // Host: answer a sync.
   useEffect(() => {
