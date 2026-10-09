@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
@@ -89,7 +89,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
   }
 
   return (
-    <div className="bd">
+    <div className="bd bd-turn fill">
       <div className="bd-progress" aria-label={t('Question {n} of {total}', { n: q + 1, total: questions.length })}>
         {questions.map((x, i) => (
           <span key={x.id} className={i < q ? 'done' : i === q ? (reveal ? (failed ? 'fail' : 'done') : 'now') : ''} />
@@ -109,7 +109,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         <DeckCount left={ride.deck.length} />
       </div>
 
-      <div className="bd-hand">
+      <div className="bd-hand" style={{ '--n': held.length + 1 } as CSSProperties}>
         {held.map((c, i) => (
           <PlayingCard key={i} card={c} />
         ))}

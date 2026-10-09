@@ -234,7 +234,7 @@ function HostTable({ view }: { view: PlayerView }) {
   const stopper = view.stopperId ? seat(view.stopperId) : null;
   const dealerPhase = view.phase === 'dealer';
   return (
-    <div className="hr hr-host">
+    <div className="hr hr-host fill">
       <Seats view={view} myId="" />
       <div className="hr-status">
         <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
@@ -294,7 +294,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
   else headline = t('{name} is swapping…', { name: turnSeat?.name ?? '' });
 
   return (
-    <div className="hr">
+    <div className="hr hr-player fill">
       <Seats view={view} myId={myId} />
 
       <div className={`hr-status${myTurn ? ' mine' : ''}`}>

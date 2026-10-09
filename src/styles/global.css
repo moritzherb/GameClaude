@@ -1560,6 +1560,14 @@ h3 {
 
 /* ---------- Who Drinks? ---------- */
 
+/* Games that are a table on the screen (class "fill" on the game's root) stretch to the
+   screen's full height, and their table parts (flex: 1 1 0, container-type: size) share
+   whatever room is left, sizing their cards from it: no empty strip, no scrolling. If a game
+   has more to show than fits (lots of players, house rules…), it simply grows and scrolls. */
+.play-screen > .fill {
+  flex: 1 0 auto;
+}
+
 .play-screen {
   gap: 16px;
 }
@@ -1572,6 +1580,7 @@ h3 {
 }
 
 .who-drinks-hint {
+  flex: 1 0 auto;
   min-height: 180px;
   display: flex;
   flex-direction: column;
@@ -1596,6 +1605,7 @@ h3 {
 
 .result-card {
   --chip: var(--accent);
+  flex: 1 0 auto;
   min-height: 180px;
   border-radius: var(--radius-lg);
   background: var(--chip);
@@ -2057,6 +2067,23 @@ h3 {
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* A turn fills the screen: the cards grow with the free space, the answers get taller on big phones. */
+.bd-turn .bd-hand {
+  flex: 1 1 0;
+  min-height: 110px;
+  align-items: center;
+  padding: 10px 8px;
+  container-type: size;
+}
+
+.bd-turn .bd-hand .pcard {
+  --cw: min(124px, calc((100cqw - 16px - (var(--n, 5) - 1) * 8px) / var(--n, 5)), calc((100cqh - 20px) / 1.4));
+}
+
+.bd-turn .answer-btn {
+  min-height: clamp(96px, 13dvh, 150px);
 }
 
 .bd-question {
@@ -2663,8 +2690,8 @@ h3 {
 /* The table: face-down cards in a messy circle around the King's Cup. */
 .kc-ring {
   position: relative;
-  width: 100%;
-  max-width: 440px;
+  /* As big as the free space allows, in both directions. */
+  width: min(100cqw, 100cqh, 560px);
   margin: 0 auto;
   aspect-ratio: 1;
   container-type: inline-size;
@@ -2913,10 +2940,12 @@ h3 {
 
 /* The circle sits in the middle of the free space between player row and button. */
 .kc-stage {
-  flex: 1 0 auto;
+  flex: 1 1 0;
+  min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
+  container-type: size;
 }
 
 .kc-idle {
@@ -3370,6 +3399,28 @@ h3 {
   font-size: 0.85rem;
 }
 
+/* The table phone fills the screen: the piles grow with the room it has. */
+.ftd-tablephone .ftd-table {
+  flex: 1 1 0;
+  min-height: 0;
+  justify-content: space-evenly;
+  container-type: size;
+}
+
+.ftd-tablephone .ftd-pile {
+  /* Five across, three rows: as big as the width and the height both allow. */
+  flex-basis: min(calc((100cqw - 20px - 32px) / 5), calc(((100cqh - 28px - 2 * 14px) / 3 - 12px) / 1.4), 110px);
+}
+
+/* The deck phone: card and keys grow on tall phones. */
+.ftd-deckphone .ftd-deck.big {
+  --dw: clamp(120px, min(40vw, 24dvh), 190px);
+}
+
+.ftd-deckphone .ftd-rank {
+  height: clamp(56px, 7dvh, 72px);
+}
+
 /* On the table phone there's nothing to peek at: no room kept for the hint. */
 .ftd-tablephone .ftd-deck {
   padding-bottom: 0;
@@ -3518,21 +3569,22 @@ h3 {
   font-weight: 600;
 }
 
-/* The table the dice land on. */
+/* The table the dice land on: it takes the room the screen has left. */
 .fk-table {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  flex: 1 1 0;
+  min-height: 130px;
   border-radius: var(--radius-lg);
   background:
     radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.05), transparent 70%),
     var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
-  container-type: inline-size;
+  container-type: size;
 }
 
 .fk-die {
-  --size: 15cqw;
+  --size: min(15cqw, 24cqh);
   position: absolute;
   width: var(--size);
   height: var(--size);
@@ -3613,7 +3665,7 @@ h3 {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 30cqw;
+  width: min(30cqw, 42cqh);
   transform: translate(-50%, -54%);
   display: flex;
   flex-direction: column;
@@ -3791,13 +3843,14 @@ h3 {
 /* The middle: side stacks left and right, the two piles to play on in between. */
 .sp-middle {
   position: relative;
-  flex: 1 0 auto;
+  flex: 1 1 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
   min-height: calc(var(--sp-mid) * 1.4 + 56px);
   padding: 28px 12px;
+  container-type: size;
   border-radius: var(--radius-lg);
   background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -3831,7 +3884,8 @@ h3 {
 }
 
 .sp-mid-pile {
-  --cw: var(--sp-mid);
+  /* Grows with the middle: as big as both its width and its height allow. */
+  --cw: max(var(--sp-mid), min(calc((100cqw - 72px) / 2), calc((100cqh - 56px) / 1.4), 172px));
   position: relative;
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
@@ -4168,16 +4222,25 @@ h3 {
   flex-shrink: 0;
 }
 
+/* The track takes the room the screen has left; the rows share its height. */
+.hs-track-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  container-type: size;
+}
+
 /* The track: a finish zone, one row per side card, the start; Aces move up their lanes. */
 .hs-track {
   --side: 52px;
-  --rh: clamp(42px, calc((100dvh - 290px) / (var(--rows) + 2)), 66px);
+  --rh: min(72px, calc((100cqh - 32px) / (var(--rows) + 2.12)));
+  flex: 1;
   /* Cards may reach a little over the row lines, so they stay readable. */
   --cw: min(calc((100cqw - var(--side)) / 4 - 14px), calc(var(--rh) * 1.12 / 1.4));
   position: relative;
   display: grid;
   grid-template-columns: var(--side) 1fr;
-  grid-template-rows: var(--rh) repeat(var(--rows), var(--rh)) calc(var(--cw) * 1.4 + 32px);
+  grid-template-rows: var(--rh) repeat(var(--rows), var(--rh)) minmax(calc(var(--cw) * 1.4 + 32px), 1fr);
   padding: 0 8px;
   border-radius: var(--radius-lg);
   background:
@@ -4367,6 +4430,279 @@ h3 {
 .hs-finish-card {
   margin: 6px 0;
   animation: pop-in 0.5s var(--spring) both;
+}
+
+/* ---------- Trash ---------- */
+
+.tr {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  touch-action: manipulation;
+}
+
+/* A player's ten slots. Card size follows the space the board actually has. */
+.tr-board {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
+  container-type: size;
+  transition: box-shadow 0.25s ease;
+}
+
+.tr-board.flipped {
+  transform: rotate(180deg);
+}
+
+.tr-board.active {
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+.tr-board-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  color: #fff;
+}
+
+.tr-board-head .bd-avatar.xs {
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
+}
+
+.tr-board-name {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-board-count {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.tr-dealer {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.tr-slots {
+  /* Five across, two rows: as big as both the width and the height allow. */
+  --gap: 6px;
+  --cw: min(calc((100cqw - 16px - 4 * var(--gap)) / 5), calc((100cqh - 16px - 32px - var(--gap)) / 2 / 1.4));
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, var(--cw));
+  grid-auto-rows: calc(var(--cw) * 1.4);
+  gap: var(--gap);
+  justify-content: center;
+  align-content: center;
+}
+
+.tr-slot {
+  position: relative;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  border-radius: calc(var(--cw) * 0.12);
+}
+
+.tr-slot .pcard-face {
+  backface-visibility: visible;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.tr-slot .pcard-back {
+  transform: none;
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.07) #fff, 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.tr-slot .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.tr-slot.up .pcard-front {
+  animation: pop-in 0.35s var(--spring) both;
+}
+
+.tr-slot.gone {
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+}
+
+.tr-slot.target .pcard-back {
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.07) #fff, 0 0 0 3px var(--c-yellow);
+}
+
+.tr-slot.pickable {
+  animation: nudge 1.2s ease-in-out infinite;
+}
+
+.tr-slot.pickable .pcard-back {
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.07) #fff, 0 0 0 3px var(--accent);
+}
+
+.tr-slot:disabled {
+  cursor: default;
+}
+
+/* The slot's number on its face-down card. */
+.tr-slot-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: calc(var(--cw) * 0.42);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* The middle: stock, discard pile, the card in hand and what happens. Its size follows the screen height. */
+.tr-middle {
+  --mw: clamp(46px, 7.5dvh, 74px);
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.tr-middle.flipped {
+  transform: rotate(180deg);
+}
+
+.tr-stock,
+.tr-discard,
+.tr-hand {
+  --cw: var(--mw);
+  position: relative;
+  width: var(--mw);
+  height: calc(var(--mw) * 1.4);
+  border-radius: calc(var(--mw) * 0.12);
+}
+
+.tr-stock {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 3px, transparent 3px 7px), var(--accent);
+  box-shadow: inset 0 0 0 calc(var(--mw) * 0.07) #fff, 3px 3px 0 var(--surface-2), 6px 6px 0 var(--line);
+}
+
+.tr-stock.ready {
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+.tr-count {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  min-width: 26px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.tr-discard .pcard-face,
+.tr-hand .pcard-face {
+  backface-visibility: visible;
+}
+
+.tr-discard.nope {
+  animation: sp-nope 0.3s ease;
+}
+
+.tr-hand-card {
+  position: absolute;
+  inset: 0;
+  animation: pop-in 0.3s var(--spring) both;
+}
+
+.tr-hand-card .pcard-front {
+  box-shadow: 0 0 0 3px var(--accent), 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.tr-hand-card.useless .pcard-front {
+  box-shadow: 0 0 0 3px var(--bad), 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.tr-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border: 1.5px dashed var(--line);
+}
+
+.tr-status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tr-status-name {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.tr-status-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.tr-status-hint {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+/* Round or game over: a card over the table. */
+.tr-over {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.tr-over-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 380px);
+  padding: 22px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  animation: pop-in 0.4s var(--spring) both;
 }
 
 /* ---------- Confetti ---------- */
@@ -5217,6 +5553,62 @@ h3 {
 
 .hr-felt-cards .pcard-lg {
   --cw: clamp(76px, calc((100vw - 100px) / 3), 104px);
+}
+
+/* A player's phone fills the screen: the middle shrinks on small phones, grows on big ones. */
+.hr-player .hr-felt {
+  flex: 1 1 0;
+  min-height: 150px;
+  justify-content: center;
+  container-type: size;
+}
+
+.hr-player .hr-felt-cards .pcard-lg {
+  --cw: max(56px, min(calc((100cqw - 40px) / 3), calc((100cqh - 56px) / 1.4), 112px));
+}
+
+.hr-player .hr-fan {
+  --cw: clamp(62px, 10.5dvh, 96px);
+}
+
+/* Short phones (iPhone SE and the like): a tighter player screen so it fits without scrolling. */
+@media (max-height: 700px) {
+  .hr-player {
+    gap: 10px;
+  }
+
+  .hr-player .hr-seat {
+    width: 64px;
+    padding: 6px 4px;
+  }
+
+  .hr-player .hr-seat-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 1.15rem;
+  }
+
+  .hr-player .hr-status {
+    padding: 8px 12px;
+  }
+
+  .hr-player .hr-status-text {
+    font-size: 1.15rem;
+  }
+
+  .hr-player .hr-felt {
+    min-height: 128px;
+    padding: 8px 10px 10px;
+  }
+
+  .hr-player .hr-hint,
+  .hr-player .hr-last {
+    display: none;
+  }
+
+  .hr-player .hr-bottom {
+    gap: 6px;
+  }
 }
 
 /* On the host's phone the middle is all there is: as big as it fits. */

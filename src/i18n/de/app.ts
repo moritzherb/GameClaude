@@ -63,6 +63,9 @@ const app: Record<string, string> = {
   // Play shells
   Rules: 'Regeln',
   'Leave the game?': 'Spiel verlassen?',
+  'Leave game': 'Spiel verlassen',
+  'The others keep playing. You can come back any time under Play together.':
+    'Die anderen spielen weiter. Du kannst jederzeit über „Zusammen spielen“ zurück.',
   'Keep playing': 'Weiterspielen',
   'Quit game': 'Spiel beenden',
   '{game} needs a room': '{game} braucht einen Raum',

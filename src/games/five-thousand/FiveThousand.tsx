@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import Tap from '../../components/Tap';
@@ -154,7 +154,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
   );
 
   return (
-    <div className="fk">
+    <div className="fk fill">
       <Scoreboard g={g} players={players} />
 
       <div className="kc-status">
@@ -367,15 +367,23 @@ interface Spot {
 }
 
 /** Where the dice land: spread over the table without touching, each turned a little. */
-function scatter(n: number): Spot[] {
-  const spots: Spot[] = [];
-  for (let tries = 0; spots.length < n && tries < 400; tries++) {
-    const s = { x: 14 + Math.random() * 72, y: 15 + Math.random() * 45, rot: Math.random() * 60 - 30 };
-    if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > 21)) spots.push(s);
+/**
+ * Where the dice land on a table of the given shape (height / width): spread out without
+ * touching, each turned a little. x and y are percentages of the table's width and height.
+ */
+function scatter(n: number, aspect: number): Spot[] {
+  // Work in units of 1% of the width; the die is as big as the CSS makes it (min(15cqw, 24cqh)).
+  const h = 100 * aspect;
+  const die = Math.min(15, 0.24 * h);
+  const margin = die * 0.85;
+  const spots: { x: number; y: number; rot: number }[] = [];
+  for (let tries = 0; spots.length < n && tries < 600; tries++) {
+    const s = { x: margin + Math.random() * (100 - 2 * margin), y: margin + Math.random() * (h - 2 * margin), rot: Math.random() * 60 - 30 };
+    if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > die * 1.45)) spots.push(s);
   }
   // Very unlucky? Fall back to a row.
-  while (spots.length < n) spots.push({ x: 14 + spots.length * 18, y: 38, rot: 0 });
-  return spots;
+  while (spots.length < n) spots.push({ x: 12 + spots.length * 19, y: h / 2, rot: 0 });
+  return spots.map((s) => ({ x: s.x, y: (s.y / h) * 100, rot: s.rot }));
 }
 
 /** The table: the cup before a roll, the rolled dice after. Tap dice to set them aside. */
@@ -400,17 +408,23 @@ function Table({
   hint: string | null;
   onCup: () => void;
 }) {
-  const spots = useMemo(() => scatter(roll.length), [roll]);
   const dice = useRef<HTMLDivElement>(null);
-  // Dice tumble out of the cup (bottom middle) to where they land.
+  // The table takes whatever room the screen has, so the dice are spread out once its shape is known.
+  const [spots, setSpots] = useState<Spot[]>([]);
   useLayoutEffect(() => {
     const box = dice.current;
-    if (!box || !roll.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (box) setSpots(scatter(roll.length, box.offsetHeight / Math.max(1, box.offsetWidth)));
+  }, [roll]);
+  // Dice tumble out of the cup (in the middle) to where they land.
+  useLayoutEffect(() => {
+    const box = dice.current;
+    if (!box || !roll.length || spots.length !== roll.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const w = box.offsetWidth;
+    const h = box.offsetHeight;
     box.querySelectorAll<HTMLElement>('.fk-die').forEach((el, i) => {
       const s = spots[i];
       const dx = ((50 - s.x) / 100) * w;
-      const dy = ((75 - s.y) / 100) * w;
+      const dy = ((55 - s.y) / 100) * h;
       el.animate(
         [
           { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${s.rot + 400}deg) scale(0.4)`, opacity: 0 },
@@ -424,12 +438,13 @@ function Table({
 
   return (
     <div className={`fk-table${dead ? ' dead' : ''}`} ref={dice}>
-      {roll.map((f, i) => (
+      {spots.length === roll.length &&
+        roll.map((f, i) => (
         <button
           key={i}
           type="button"
           className={`fk-die${f >= 13 ? ' red' : ''}${picked.includes(i) ? ' picked' : ''}${!dead && !pickable(i) ? ' dull' : ''}`}
-          style={{ left: `${spots[i].x}%`, top: `${(spots[i].y / 75) * 100}%`, '--rot': `${spots[i].rot}deg` } as CSSProperties}
+          style={{ left: `${spots[i].x}%`, top: `${spots[i].y}%`, '--rot': `${spots[i].rot}deg` } as CSSProperties}
           disabled={!pickable(i)}
           aria-pressed={picked.includes(i)}
           onClick={() => onTap(i)}
