@@ -4082,6 +4082,288 @@ h3 {
   text-transform: uppercase;
 }
 
+/* ---------- Horse race ---------- */
+
+/* Bets: one row per player, the four suits to tap. */
+.hs-bets {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hs-bet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.hs-bet-row + .hs-bet-row {
+  border-top: 1px solid var(--line);
+}
+
+.hs-bet-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hs-bet-suits {
+  display: flex;
+  gap: 6px;
+}
+
+.hs-suit {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--card-black);
+  font-size: 1.3rem;
+  box-shadow: inset 0 0 0 1px #dcdfe4;
+  opacity: 0.45;
+  transition: transform 0.15s var(--spring), opacity 0.15s ease;
+}
+
+.hs-suit.red {
+  color: var(--card-red);
+}
+
+.hs-suit.on {
+  opacity: 1;
+  box-shadow: 0 0 0 3px var(--accent);
+  transform: scale(1.06);
+}
+
+.hs-tally-suit {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+
+.hs-tally-suit.red {
+  color: var(--card-red);
+}
+
+/* The race. */
+.hs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 0 auto;
+}
+
+.hs > * {
+  flex-shrink: 0;
+}
+
+/* The track: a finish zone, one row per side card, the start; Aces move up their lanes. */
+.hs-track {
+  --side: 52px;
+  --rh: clamp(42px, calc((100dvh - 290px) / (var(--rows) + 2)), 66px);
+  /* Cards may reach a little over the row lines, so they stay readable. */
+  --cw: min(calc((100cqw - var(--side)) / 4 - 14px), calc(var(--rh) * 1.12 / 1.4));
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--side) 1fr;
+  grid-template-rows: var(--rh) repeat(var(--rows), var(--rh)) calc(var(--cw) * 1.4 + 32px);
+  padding: 0 8px;
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(to right, transparent var(--side), rgba(255, 255, 255, 0.06) var(--side)),
+    radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+/* Checkered finish line along the bottom of the finish zone. */
+.hs-finish-line {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  align-self: end;
+  height: 10px;
+  margin: 0 -8px;
+  background: repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0 / 10px 10px;
+}
+
+.hs-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+.hs-row-num {
+  width: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.hs-side {
+  /* A bit smaller than the row, so the side cards don't run into each other. */
+  --cw: calc((var(--rh) - 6px) / 1.4);
+  position: relative;
+  z-index: 1;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+}
+
+.hs-side .pcard-face {
+  backface-visibility: visible;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.hs-side .pcard-back {
+  transform: none;
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.08) #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.hs-side .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.hs-side.open {
+  animation: pop-in 0.35s var(--spring) both;
+}
+
+.hs-start {
+  grid-column: 1 / -1;
+  border-top: 3px solid rgba(255, 255, 255, 0.7);
+}
+
+/* An Ace: placed by lane and row, it slides when it moves. */
+.hs-ace {
+  position: absolute;
+  z-index: 2;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  left: calc(8px + var(--side) + (100cqw - var(--side)) * (var(--lane) * 2 + 1) / 8 - var(--cw) / 2);
+  transition: top 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.hs-ace .pcard-face {
+  backface-visibility: visible;
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+.hs-backers {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  padding-bottom: 3px;
+}
+
+.hs-backer-lane {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  min-height: 22px;
+}
+
+.hs-backer {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  box-shadow: 0 0 0 1.5px #17553a;
+}
+
+/* What just happened. */
+.hs-now {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+}
+
+.hs-now .deck-count {
+  align-self: flex-start;
+}
+
+.hs-now-card {
+  flex: none;
+  animation: pop-in 0.3s var(--spring) both;
+}
+
+.hs-now-card .pcard {
+  --cw: 52px;
+}
+
+.hs-now-card.side .pcard-front {
+  box-shadow: 0 0 0 3px var(--c-yellow);
+}
+
+.hs-now-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hs-now-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.45rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.hs-now-sub {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.hs-now-card.side + .hs-now-text .hs-now-sub {
+  color: var(--accent-ink);
+}
+
+.hs-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hs-actions .big-btn {
+  flex: 1;
+}
+
+.hs-auto {
+  flex: none;
+  height: 64px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+}
+
+.hs-auto.on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.hs-finish-card {
+  margin: 6px 0;
+  animation: pop-in 0.5s var(--spring) both;
+}
+
 /* ---------- Confetti ---------- */
 
 .confetti-layer {
