@@ -17,13 +17,18 @@
       <stop offset="0" stop-color="#23251e"/>
       <stop offset="1" stop-color="#0c0d0a"/>
     </radialGradient>
+    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0" stop-color="#34362e"/>
+      <stop offset="1" stop-color="#1c1d19"/>
+    </radialGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="16"/>
     </filter>
   </defs>
-  <rect width="512" height="512" fill="#10110e"/>
+  <!-- dark grey with a soft light behind the die, not flat black -->
+  <rect width="512" height="512" fill="url(#bg)"/>
   <!-- a lime die showing five, tilted like it was just thrown -->
-  <g transform="rotate(-12 256 256)">
+  <g transform="translate(0 -3) rotate(-12 256 256)">
     <rect x="124" y="150" width="280" height="280" rx="60" fill="#000" opacity="0.5" filter="url(#shadow)"/>
     <rect x="116" y="128" width="280" height="280" rx="60" fill="url(#lip)"/>
     <rect x="116" y="112" width="280" height="280" rx="60" fill="url(#face)"/>
