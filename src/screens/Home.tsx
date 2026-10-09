@@ -7,12 +7,11 @@ import { RoundButton } from '../components/TopBar';
 import { GAMES, playableGames } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
 import { buzz, sfx } from '../lib/fx';
+import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
-
-const TICKER = ['Pregame', 'House party', 'Afters', 'Water counts as a sip', 'Never drink and drive', 'Last call'];
 
 export default function Home() {
   const { players } = useApp();
@@ -22,6 +21,14 @@ export default function Home() {
   const timer = useRef<number>(undefined);
 
   useEffect(() => () => window.clearInterval(timer.current), []);
+
+  // The headline follows the night, so check the clock every minute while home is open.
+  const [hour, setHour] = useState(() => new Date().getHours());
+  useEffect(() => {
+    const t = window.setInterval(() => setHour(new Date().getHours()), 60_000);
+    return () => window.clearInterval(t);
+  }, []);
+  const headline = headlineFor(hour);
 
   const randomGame = () => {
     const pool = playableGames();
@@ -62,14 +69,14 @@ export default function Home() {
       </header>
 
       <h1 className="poster-title fade-up">
-        Tonight’s <span className="hl">line-up</span>
+        {headline.top} <span className="hl">{headline.sticker}</span>
       </h1>
 
       <Tap className="crew fade-up" onClick={() => navigate(paths.players())}>
         <span className="crew-count">{players.length || <PlusIcon />}</span>
         <span className="crew-text">
           <span className="crew-label">The crew</span>
-          <span className="crew-sub">{players.length ? 'Tap to edit who’s in' : 'Add who’s playing tonight'}</span>
+          <span className="crew-sub">{players.length ? 'Tap to edit' : 'Who’s playing tonight?'}</span>
         </span>
         {players.length > 0 && (
           <span className="avatar-stack">
@@ -129,23 +136,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      <div className="ticker" aria-hidden>
-        <div className="ticker-track">
-          {[0, 1].map((k) => (
-            <span key={k}>
-              {TICKER.map((t) => (
-                <span key={t}>
-                  {t}
-                  <i>✦</i>
-                </span>
-              ))}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <p className="fine-print center">Drink responsibly. Water counts as a sip.</p>
 
       {rolling && (
         <div className="roulette-overlay">

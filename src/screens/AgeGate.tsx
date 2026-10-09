@@ -34,7 +34,6 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
               Not yet
             </BigButton>
           </div>
-          <p className="fine-print">Drink responsibly. Every sip can be water. Never drink and drive.</p>
         </div>
       )}
     </main>

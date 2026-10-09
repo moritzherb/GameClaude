@@ -318,11 +318,11 @@ h3 {
 .big-btn {
   width: 100%;
   min-height: 54px;
-  padding: 12px 20px 14px;
+  padding: 12px 16px 14px;
   border-radius: 10px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.45rem;
+  font-size: clamp(1.25rem, 6.2vw, 1.45rem);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   line-height: 1;
@@ -341,7 +341,7 @@ h3 {
 
 .big-btn-xl {
   min-height: 60px;
-  font-size: 1.6rem;
+  font-size: clamp(1.35rem, 6.8vw, 1.6rem);
 }
 
 .big-btn-primary {
@@ -534,6 +534,7 @@ h3 {
 }
 
 .crew-label {
+  white-space: nowrap;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.35rem;
@@ -542,6 +543,9 @@ h3 {
 }
 
 .crew-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--muted);
   font-size: 0.8125rem;
 }
@@ -571,6 +575,13 @@ h3 {
   margin-left: 0;
 }
 
+/* Very narrow phones: the count already says how many. */
+@media (max-width: 359px) {
+  .crew .avatar-stack {
+    display: none;
+  }
+}
+
 .avatar-stack .more {
   background: var(--surface-2);
   font-size: 0.75rem;
@@ -579,7 +590,7 @@ h3 {
 
 .quick-row {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
@@ -613,9 +624,9 @@ h3 {
 
 .quick-icon {
   position: absolute;
-  top: -10px;
+  top: -12px;
   right: -12px;
-  font-size: 4.4rem;
+  font-size: min(4.2rem, 16vw);
   line-height: 1;
   transform: rotate(14deg);
 }
@@ -629,7 +640,7 @@ h3 {
   margin-top: auto;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 2.1rem;
+  font-size: min(2.1rem, 8.6vw);
   text-transform: uppercase;
   line-height: 0.9;
 }
@@ -651,38 +662,6 @@ h3 {
   border-radius: 50%;
   background: var(--bad);
   animation: pulse 1.4s ease-in-out infinite;
-}
-
-/* Running headline strip near the bottom of home. */
-.ticker {
-  margin: 6px calc(-1 * var(--gutter)) 0;
-  overflow: hidden;
-  border-block: 1px solid var(--line);
-  padding: 11px 0 9px;
-}
-
-.ticker-track {
-  display: flex;
-  width: max-content;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.3rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  animation: ticker 30s linear infinite;
-}
-
-.ticker-track i {
-  padding: 0 14px;
-  font-style: normal;
-  color: var(--accent-ink);
-}
-
-@keyframes ticker {
-  to {
-    transform: translateX(-50%);
-  }
 }
 
 /* Random game roulette */
@@ -1031,9 +1010,9 @@ h3 {
 
 .detail-emoji {
   position: absolute;
-  top: -18px;
-  right: -20px;
-  font-size: 8.5rem;
+  top: -14px;
+  right: -18px;
+  font-size: clamp(6.5rem, 30vw, 8.5rem);
   line-height: 1;
   transform: rotate(12deg);
   animation: bob 3.4s ease-in-out infinite;
@@ -1637,30 +1616,31 @@ h3 {
 
 .pcard-corner {
   position: absolute;
-  top: 5%;
-  left: 9%;
+  top: 6%;
+  left: 8%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: calc(var(--cw) * 0.26);
-  line-height: 0.95;
+  gap: calc(var(--cw) * 0.02);
+  font-size: calc(var(--cw) * 0.22);
+  font-weight: 800;
+  line-height: 0.9;
 }
 
-.pcard-corner span {
-  font-size: 0.85em;
+.pcard-corner svg {
+  font-size: 0.68em;
 }
 
 .pcard-corner.bottom {
   top: auto;
   left: auto;
-  bottom: 5%;
-  right: 9%;
+  bottom: 6%;
+  right: 8%;
   transform: rotate(180deg);
 }
 
 .pcard-center {
-  font-size: calc(var(--cw) * 0.48);
-  line-height: 1;
+  font-size: calc(var(--cw) * 0.36);
 }
 
 .pcard-sm .pcard-corner.bottom,
@@ -1883,7 +1863,9 @@ h3 {
   font-size: 1.61rem;
   letter-spacing: 0.01em;
   line-height: 1.05;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-transform: uppercase;
 }
 
@@ -2342,6 +2324,7 @@ h3 {
 
 .hand-name {
   font-weight: 600;
+  font-size: 0.9375rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2350,7 +2333,7 @@ h3 {
 .hand-cards {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 
 .hand-empty {
@@ -2825,9 +2808,9 @@ h3 {
   border: 0;
   border-bottom: 2px solid var(--line);
   background: transparent;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.4rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.25rem;
   color: var(--ink);
 }
 
@@ -3371,6 +3354,7 @@ h3 {
   display: flex;
   justify-content: center;
   gap: 10px;
+  padding-top: 12px; /* room for a lifted (selected) card */
 }
 
 .hr-cards .pcard-lg {
