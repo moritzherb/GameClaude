@@ -3,6 +3,7 @@ import { findGame } from './games/registry';
 import { CATEGORIES, type CategoryId } from './games/types';
 import { useRoute } from './lib/router';
 import CheersToast from './components/CheersToast';
+import ErrorBoundary from './components/ErrorBoundary';
 import RoomGameRedirect from './components/RoomGameRedirect';
 import AgeGate from './screens/AgeGate';
 import GameDetail from './screens/GameDetail';
@@ -52,7 +53,7 @@ export default function App() {
   // Switching the language re-mounts the screens so every text is rendered again.
   return (
     <Fragment key={settings.lang ?? 'en'}>
-      {ageConfirmed ? <Screen /> : <AgeGate onConfirm={confirmAge} />}
+      <ErrorBoundary>{ageConfirmed ? <Screen /> : <AgeGate onConfirm={confirmAge} />}</ErrorBoundary>
       <CheersToast />
       <RoomGameRedirect />
     </Fragment>
