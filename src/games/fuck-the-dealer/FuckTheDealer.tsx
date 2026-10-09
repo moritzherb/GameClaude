@@ -214,7 +214,7 @@ function Handover({ session, children }: { session: Session; children?: React.Re
           <span className="ftd-sips-num">{sips}</span>
           <span className="ftd-sips-label">{sips === 1 ? t('sip') : t('sips')}</span>
         </div>
-        <p className="lead">{sips ? t('Everything saved up as dealer, all at once.') : t('Not a single sip saved up. Lucky.')}</p>
+        <p className="lead">{sips ? t('All the sips from this round as dealer, at once.') : t('Not a single sip this round. Lucky.')}</p>
       </div>
       {children}
     </div>
@@ -296,7 +296,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{dealer.name}</span>
-            <span className="bd-player-sub">{g.saved === 1 ? t('Dealer · 1 sip saved') : t('Dealer · {n} sips saved', { n: g.saved })}</span>
+            <span className="bd-player-sub">{g.saved === 1 ? t('Dealer · 1 sip so far') : t('Dealer · {n} sips so far', { n: g.saved })}</span>
           </span>
         </div>
         <DeckCount left={g.deck.length + (r && !landed ? 1 : 0)} />
@@ -476,9 +476,9 @@ function Verdict({ result, dealer, lastOfThree }: { result: NonNullable<Game['re
   const card = cardName(result.card);
   const [tone, emoji, title, sub] =
     result.outcome === 'first'
-      ? ['correct', '🎯', t('Bullseye!'), t('{name} saves 6 sips.', { name: dealer })]
+      ? ['correct', '🎯', t('Bullseye!'), t('{name} gets 6 sips.', { name: dealer })]
       : result.outcome === 'second'
-        ? ['same', '👌', t('Got it!'), t('{name} saves 3 sips.', { name: dealer })]
+        ? ['same', '👌', t('Got it!'), t('{name} gets 3 sips.', { name: dealer })]
         : ['wrong', '🙅', t('Missed!'), lastOfThree ? t('Third miss in a row: the deck moves on.') : t('Nobody drinks.')];
   return (
     <div className={`bd-result ${tone}`}>

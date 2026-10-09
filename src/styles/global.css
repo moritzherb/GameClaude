@@ -3709,9 +3709,10 @@ h3 {
 /* ---------- Speed ---------- */
 
 .sp {
-  --sp-card: min(66px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 24px) / 5));
-  /* The middle piles: as big as two fit side by side. */
-  --sp-mid: min(160px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 40px) / 2));
+  /* Hand cards overlap a little, like a fan, so five fit at a size you can read. */
+  --sp-card: min(88px, calc((min(100vw, var(--max)) - 2 * var(--gutter)) / 4.2));
+  /* The middle piles: big, but leaving room for the hand. */
+  --sp-mid: min(124px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 72px) / 2));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -3930,13 +3931,17 @@ h3 {
 .sp-hand {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 0;
   min-height: calc(var(--sp-card) * 1.4 + 10px);
   padding-top: 10px;
 }
 
+.sp-card + .sp-card {
+  margin-left: calc(var(--sp-card) * -0.2);
+}
+
 .sp-hand.crowded .sp-card + .sp-card {
-  margin-left: calc(var(--sp-card) * -0.35);
+  margin-left: calc(var(--sp-card) * -0.42);
 }
 
 .sp-card {
@@ -3998,8 +4003,8 @@ h3 {
 .sp-pile {
   position: relative;
   flex: none;
-  width: calc(var(--sp-card) * 0.9);
-  height: calc(var(--sp-card) * 1.26);
+  width: calc(var(--sp-card) * 0.72);
+  height: calc(var(--sp-card) * 1.01);
   border-radius: 8px;
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
   box-shadow: inset 0 0 0 3px #fff, 3px 3px 0 var(--surface-2), 6px 6px 0 var(--line);
