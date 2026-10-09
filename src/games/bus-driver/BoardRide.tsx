@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -109,6 +110,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
             Attempt {board.attempt - (failed ? 1 : 0)} · {board.drunk} sips
           </span>
         </span>
+        <DeckCount left={board.deck.length} />
       </div>
 
       <div className="board" style={{ '--cols': Math.max(...rows) } as CSSProperties}>

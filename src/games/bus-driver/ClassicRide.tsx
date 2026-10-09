@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import BigButton from '../../components/BigButton';
+import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -101,6 +102,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
             Attempt {ride.attempt - (failed ? 1 : 0)} · {ride.drunk} sips
           </span>
         </span>
+        <DeckCount left={ride.deck.length} />
       </div>
 
       <div className="bd-hand">

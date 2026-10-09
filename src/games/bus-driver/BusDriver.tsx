@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { cardName, newDeck, type Card } from '../../lib/cards';
@@ -308,6 +309,7 @@ export default function BusDriver({ players, exit }: GameProps) {
             {s.turn + 1} of {s.seats.length}
           </span>
         </span>
+        <DeckCount left={s.deck.length} />
       </div>
 
       <div className="bd-hand">
