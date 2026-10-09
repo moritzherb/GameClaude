@@ -4,7 +4,7 @@ import { gameNumber } from '../components/GameCard';
 import Intensity from '../components/Intensity';
 import RulesList from '../components/RulesList';
 import TopBar from '../components/TopBar';
-import type { GameDefinition } from '../games/types';
+import { playerRange, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
@@ -13,8 +13,8 @@ import { useApp } from '../state/AppState';
 export default function GameDetail({ game }: { game: GameDefinition }) {
   const { players } = useApp();
   const missing = Math.max(0, game.minPlayers - players.length);
-  const tooMany = game.maxPlayers != null && players.length > game.maxPlayers;
-  const playerRange = game.maxPlayers ? `${game.minPlayers}–${game.maxPlayers}` : `${game.minPlayers}+`;
+  const tooMany = !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
+  const range = playerRange(game);
 
   return (
     <main className="screen">
@@ -32,7 +32,7 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
       <div className="stats">
         <div className="stat">
           <span className="stat-label">{t('Players')}</span>
-          <span className="stat-value">{playerRange}</span>
+          <span className="stat-value">{range}</span>
         </div>
         <div className="stat">
           <span className="stat-label">{t('Intensity')}</span>

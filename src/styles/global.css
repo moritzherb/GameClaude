@@ -6702,3 +6702,15 @@ h3 {
     --pw: 32px;
   }
 }
+
+/* Play and Risk side by side: one line each, whatever the language. */
+.pl-action-row .big-btn {
+  white-space: nowrap;
+  font-size: clamp(1rem, 4.8vw, 1.25rem);
+}
+
+@media (max-height: 700px) {
+  .pl-player .pl-hint {
+    display: none;
+  }
+}
