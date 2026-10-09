@@ -45,7 +45,7 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
     <main className="screen play-screen">
       <TopBar
         title={`${game.emoji} ${t(game.name)}`}
-        onBack={() => (isHost ? setConfirmExit(true) : navigate(paths.home))}
+        onBack={() => setConfirmExit(true)}
         icon="close"
         right={
           <RoundButton label={t('Rules')} onClick={() => setShowRules(true)}>
@@ -62,16 +62,31 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
         <RulesList rules={game.rules} />
       </Sheet>
 
-      <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title={t('End the game for everyone?')} closeLabel={t('Keep playing')}>
-        <BigButton
-          variant="danger"
-          onClick={() => {
-            room.endGame();
-            navigate(paths.room);
-          }}
-        >
-          {t('End game')}
-        </BigButton>
+      {/* Host: ends the game for everyone. Everyone else: leaves just this phone, after asking first too. */}
+      <Sheet
+        open={confirmExit}
+        onClose={() => setConfirmExit(false)}
+        title={isHost ? t('End the game for everyone?') : t('Leave the game?')}
+        closeLabel={t('Keep playing')}
+      >
+        {isHost ? (
+          <BigButton
+            variant="danger"
+            onClick={() => {
+              room.endGame();
+              navigate(paths.room);
+            }}
+          >
+            {t('End game')}
+          </BigButton>
+        ) : (
+          <>
+            <p className="lead">{t('The others keep playing. You can come back any time under Play together.')}</p>
+            <BigButton variant="danger" onClick={() => navigate(paths.home)}>
+              {t('Leave game')}
+            </BigButton>
+          </>
+        )}
       </Sheet>
     </main>
   );
