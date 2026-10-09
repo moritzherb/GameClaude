@@ -8,14 +8,16 @@ import { shuffle } from '../../lib/random';
  *   on their face-down cards. The rest is the stock.
  * - Starting left of the dealer, play one card or several of the same value onto the pile: the same
  *   value or higher. While the stock lasts, draw back up to three hand cards after playing.
- * - Can't play? Take the whole pile, or risk it: turn over the top card of the stock onto the pile.
- *   If it fits, you're lucky and play goes on. If not, you take the pile and that card.
+ * - Can't play? Take the whole pile. Or risk it (allowed any time while the stock lasts, to save
+ *   your good cards): turn over the top card of the stock onto the pile. If it fits, you're lucky
+ *   and play goes on. If not, you take the pile and that card.
  * - Once the stock is gone and your hand is empty, play your face-up cards; once those are gone,
  *   your face-down cards, one at a time, blind. Whatever doesn't fit means taking the pile, and the
  *   hand has to go first again. First player with no cards left wins.
  * - Specials: 2, 3 and 10 can always be played, and so can four of a kind.
  *   7: the next player has to play 7 or lower; after that it's 7 or higher again.
- *   10 (and four of a kind): the pile is cleared away, draw up, play again.
+ *   10, and four cards of the same value in a row on the pile (played at once or one after the
+ *   other; a 3 copying them doesn't count): the pile is cleared away, draw up, play again.
  *   2: start again from 2 (the pile stays), play again without drawing first.
  *   3: copies the card it lies on, specials included (on a 7: 7 or lower; on a 2: play again).
  */
@@ -176,7 +178,8 @@ export function apply(g: Game, who: number, a: Act): Game {
   }
 
   if (a.t === 'risk') {
-    if (z !== 'hand' || canPlay(g, who) || !g.stock.length) return g;
+    // Allowed any time from the hand while the stock lasts: you may keep your good cards.
+    if (z !== 'hand' || !g.stock.length) return g;
     const [card, ...stock] = g.stock;
     const after = { ...g, stock };
     return fits(g.need, card.value) ? lay(after, who, [card], 'risk') : takePile(after, who, card, 'risk');
@@ -188,7 +191,9 @@ export function apply(g: Game, who: number, a: Act): Game {
 /** Cards go on the pile (already taken from the player); specials, drawing up and the next turn. */
 function lay(g: Game, who: number, cards: Card[], from: Zone | 'risk'): Game {
   const value = cards[0].value;
-  const burn = value === 10 || cards.length >= 4;
+  // Four of the same value on top of the pile, really the same: a 3 in between breaks the row.
+  const row = [...g.pile, ...cards].slice(-4);
+  const burn = value === 10 || (row.length === 4 && row.every((c) => c.value === value));
   let { need, top } = g;
   let again = false;
   let pile = [...g.pile];

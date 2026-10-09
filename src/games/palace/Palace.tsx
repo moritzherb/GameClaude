@@ -246,6 +246,24 @@ function turnText(view: PhoneView) {
 
 function TableView({ view }: { view: PhoneView }) {
   const last = view.log.at(-1);
+  // Cards leaving the pile (cleared away, or taken up) stay a moment longer for their exit.
+  const prev = useRef(view);
+  const [ghost, setGhost] = useState<{ cards: Card[]; kind: 'burn' | 'take'; id: string } | null>(null);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = view;
+    const e = view.log.at(-1);
+    if (!e || JSON.stringify(e) === JSON.stringify(before.log.at(-1))) return;
+    if (view.burned > before.burned && e.k === 'play') setGhost({ cards: [...before.pile, ...e.cards].slice(-4), kind: 'burn', id: JSON.stringify(e) });
+    else if (e.k === 'take') setGhost({ cards: [...before.pile, ...(e.failed ? [e.failed] : [])].slice(-4), kind: 'take', id: JSON.stringify(e) });
+  }, [view]);
+  useEffect(() => {
+    if (!ghost) return;
+    const id = window.setTimeout(() => setGhost(null), 1100);
+    return () => window.clearTimeout(id);
+  }, [ghost]);
+  // The cards just played land one after the other.
+  const fresh = last?.k === 'play' && !last.burn ? Math.min(last.cards.length, view.pile.length) : 0;
   return (
     <div className="pl pl-table fill">
       <div className="pl-seats" style={{ '--cols': view.seats.length <= 3 ? view.seats.length : view.seats.length === 4 ? 2 : 3 } as CSSProperties}>
@@ -278,12 +296,17 @@ function TableView({ view }: { view: PhoneView }) {
             <span className="pl-heap-label">{t('Stock · {n}', { n: view.stock })}</span>
           </div>
           <div className="pl-heap main">
-            <Pile cards={view.pile} />
+            <Pile cards={view.pile} fresh={fresh} ghost={ghost} />
             <span className="pl-heap-label">{t('Pile · {n}', { n: view.pileCount })}</span>
           </div>
         </div>
         <span className="pl-need">{view.phase === 'setup' ? t('Everyone picks their face-up cards') : needText(view.need)}</span>
         {view.burned > 0 && <span className="pl-burned">{t('Cleared away: {n}', { n: view.burned })}</span>}
+        {ghost?.kind === 'burn' && (
+          <span key={ghost.id} className="pl-flash">
+            🔥 {t('Cleared!')}
+          </span>
+        )}
       </section>
 
       <div className="pl-status">
@@ -298,20 +321,38 @@ function TableView({ view }: { view: PhoneView }) {
   );
 }
 
-/** The top cards of the pile, a little messy, top card on top. */
-function Pile({ cards }: { cards: Card[] }) {
-  if (!cards.length) return <div className="pl-stack">{<span className="pl-empty" />}</div>;
+const tiltOf = (c: Card) => ((c.value * 7 + c.suit.length * 3) % 11) - 5;
+
+/**
+ * The top cards of the pile, a little messy, top card on top. Cards just played land on it one after
+ * the other; a cleared or taken pile flies off.
+ */
+function Pile({ cards, fresh, ghost }: { cards: Card[]; fresh: number; ghost: { cards: Card[]; kind: 'burn' | 'take'; id: string } | null }) {
   return (
     <div className="pl-stack pl-pile">
+      {!cards.length && <span className="pl-empty" />}
       {cards.map((c, i) => {
-        const depth = cards.length - 1 - i;
-        const tilt = ((c.value * 7 + c.suit.length * 3) % 11) - 5;
+        const k = i - (cards.length - fresh);
         return (
-          <span key={`${i}${c.value}${c.suit}`} className="pl-pile-card" style={{ '--d': depth, '--tilt': `${tilt}deg` } as CSSProperties}>
+          <span
+            key={`${c.value}${c.suit}`}
+            className={`pl-pile-card${k >= 0 ? ' land' : ''}`}
+            style={{ '--d': cards.length - 1 - i, '--tilt': `${tiltOf(c)}deg`, animationDelay: k > 0 ? `${k * 110}ms` : undefined } as CSSProperties}
+          >
             <CardFace card={c} />
           </span>
         );
       })}
+      {ghost &&
+        ghost.cards.map((c, i) => (
+          <span
+            key={`${ghost.id}${c.value}${c.suit}`}
+            className={`pl-pile-card ghost ${ghost.kind}`}
+            style={{ '--d': ghost.cards.length - 1 - i, '--tilt': `${tiltOf(c)}deg`, animationDelay: `${i * 50}ms` } as CSSProperties}
+          >
+            <CardFace card={c} />
+          </span>
+        ))}
     </div>
   );
 }
@@ -323,6 +364,7 @@ function Palace3({
   onUp,
   onDown,
   selected,
+  leaving,
   pick,
 }: {
   up: (Card | null)[];
@@ -330,6 +372,7 @@ function Palace3({
   onUp?: (c: Card) => void;
   onDown?: (i: number) => void;
   selected?: (c: Card) => boolean;
+  leaving?: (c: Card) => boolean;
   pick?: 'up' | 'down' | null;
 }) {
   return (
@@ -348,7 +391,7 @@ function Palace3({
             {u && (
               <button
                 type="button"
-                className={`pl-slot-up${selected?.(u) ? ' selected' : ''}`}
+                className={`pl-slot-up${selected?.(u) ? ' selected' : ''}${leaving?.(u) ? ' leaving' : ''}`}
                 disabled={pick !== 'up'}
                 onClick={() => onUp?.(u)}
                 aria-label={cardName(u)}
@@ -418,6 +461,8 @@ const sorted = (cards: Card[]) => [...cards].sort((a, b) => a.value - b.value ||
 function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) => void; connected: boolean }) {
   const known = useApp().knows('palace');
   const [sel, setSel] = useState<Card[]>([]);
+  // Cards on their way to the pile: they fly up first, then the move is sent.
+  const [leaving, setLeaving] = useState<Card[]>([]);
   const mine = view.sides[view.me];
   const myTurn = view.turn === view.me && view.phase === 'play';
   const hand = sorted(view.hand);
@@ -430,8 +475,12 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
   const selFits = sel.length > 0 && fits(view.need, sel[0].value, sel.length);
 
   // A new state (someone moved) clears the selection.
-  const key = JSON.stringify([view.pile, view.hand, view.turn, view.log.length]);
-  useEffect(() => setSel([]), [key]);
+  const key = JSON.stringify([view.pile, view.hand, view.turn, view.log]);
+  useEffect(() => {
+    setSel([]);
+    setLeaving([]);
+  }, [key]);
+  const reveal = useReveal(view);
 
   const tap = (c: Card) => {
     if (!myTurn) return;
@@ -452,6 +501,14 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
     setSel([]);
     act(a);
   };
+  const play = () => {
+    if (!selFits || leaving.length) return;
+    const cards = sel;
+    setLeaving(cards);
+    setSel([]);
+    window.setTimeout(() => act({ t: 'play', cards }), 220);
+  };
+  const isLeaving = (c: Card) => leaving.some((y) => same(y, c));
 
   const top = view.pile.at(-1);
   let headline: string;
@@ -468,14 +525,16 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
     <div className="pl pl-player fill">
       <div className={`pl-status${myTurn ? ' mine' : ''}`}>
         <div className="pl-status-top">
-          <span className="pl-mini">{top ? <CardFace card={top} /> : <span className="pl-empty" />}</span>
+          <span className="pl-mini" key={top ? `${top.value}${top.suit}` : 'empty'}>
+            {top ? <CardFace card={top} /> : <span className="pl-empty" />}
+          </span>
           <span className="pl-status-need">
             {needText(view.need)}
             <small>{t('Stock · {n}', { n: view.stock })}</small>
           </span>
         </div>
         <span className="pl-status-text">{headline}</span>
-        {last && !myTurn && <span className="pl-status-sub">{entryText(last, view)}</span>}
+        {last && (!myTurn || view.again) && <span className="pl-status-sub">{entryText(last, view)}</span>}
       </div>
 
       <div className="pl-mine">
@@ -484,6 +543,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
           down={mine.down}
           pick={myTurn ? (zone === 'up' ? 'up' : zone === 'down' ? 'down' : null) : null}
           selected={(c) => sel.some((y) => same(y, c))}
+          leaving={isLeaving}
           onUp={tap}
           onDown={(i) => send({ t: 'blind', i })}
         />
@@ -492,6 +552,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
       <HandSpread
         cards={hand}
         isSelected={(c) => sel.some((y) => same(y, c))}
+        isLeaving={isLeaving}
         isDim={myTurn && zone === 'hand' ? (c) => !ok(c) : undefined}
         onTap={zone === 'hand' ? tap : undefined}
         empty={zone === 'up' ? t('Hand empty: play your face-up cards') : zone === 'down' ? t('Hand empty: play your face-down cards, blind') : undefined}
@@ -504,26 +565,80 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
           </BigButton>
         ) : myTurn && zone === 'down' ? (
           !known && <p className="pl-hint">{t('Tap one of your face-down cards. If it doesn’t fit, you take the pile.')}</p>
-        ) : myTurn && can ? (
-          <BigButton size="xl" disabled={!selFits} onClick={() => send({ t: 'play', cards: sel })}>
-            {selFits ? t('Play {cards}', { cards: group(sel) }) : known ? t('Pick cards') : t('Pick one or more cards of one value')}
-          </BigButton>
         ) : myTurn ? (
           <div className="pl-action-row">
-            <BigButton variant="danger" onClick={() => send({ t: 'take' })}>
-              {t('Take the pile ({n})', { n: view.pileCount })}
-            </BigButton>
+            {can ? (
+              <BigButton disabled={!selFits || leaving.length > 0} onClick={play}>
+                {selFits ? t('Play {cards}', { cards: group(sel) }) : t('Pick cards')}
+              </BigButton>
+            ) : (
+              <BigButton variant="danger" onClick={() => send({ t: 'take' })}>
+                {t('Take the pile ({n})', { n: view.pileCount })}
+              </BigButton>
+            )}
+            {/* Risking is always allowed while the stock lasts: keep your good cards. */}
             {zone === 'hand' && view.stock > 0 && (
-              <BigButton variant="light" onClick={() => send({ t: 'risk' })}>
+              <BigButton variant="light" className="pl-risk" disabled={leaving.length > 0} onClick={() => send({ t: 'risk' })}>
                 {t('Risk it 🎲')}
               </BigButton>
             )}
           </div>
         ) : null}
+        {myTurn && can && zone !== 'down' && !selFits && !known && <p className="pl-hint">{t('Pick one or more cards of one value')}</p>}
         {myTurn && !can && zone === 'hand' && view.stock > 0 && !known && (
           <p className="pl-hint">{t('Risk it: the top card of the stock goes on the pile. If it doesn’t fit, you take the pile and that card.')}</p>
         )}
       </div>
+      {reveal && <Reveal key={reveal.id} {...reveal} />}
+    </div>
+  );
+}
+
+interface RevealInfo {
+  id: string;
+  card: Card;
+  /** Was face down (blind card, risked card): it turns over. */
+  flip: boolean;
+  text: string;
+  good: boolean;
+}
+
+/** Your own blind or risked card, a cleared pile or a play-again: shown big for a moment. */
+function useReveal(view: PhoneView): RevealInfo | null {
+  const seen = useRef(JSON.stringify(view.log.at(-1) ?? null));
+  const [info, setInfo] = useState<RevealInfo | null>(null);
+  useEffect(() => {
+    const e = view.log.at(-1);
+    const id = JSON.stringify(e ?? null);
+    if (id === seen.current) return;
+    seen.current = id;
+    if (!e || e.by !== view.me) return;
+    if (e.k === 'take') {
+      if (e.failed && e.how) setInfo({ id, card: e.failed, flip: true, good: false, text: t('Doesn’t fit: you take the pile') });
+      return;
+    }
+    const flip = e.from === 'down' || e.from === 'risk';
+    const text = e.burn ? t('The pile is cleared! Go again.') : e.again ? t('Go again!') : flip ? t('It fits!') : '';
+    if (flip || text) setInfo({ id, card: e.cards[0], flip, good: true, text });
+  }, [view.log, view.me]);
+  useEffect(() => {
+    if (!info) return;
+    const timer = window.setTimeout(() => setInfo(null), 1700);
+    return () => window.clearTimeout(timer);
+  }, [info]);
+  return info;
+}
+
+function Reveal({ card, flip, text, good }: RevealInfo) {
+  return (
+    <div className={`pl-reveal${good ? ' good' : ' bad'}`} aria-live="polite">
+      <div className={`pl-reveal-card${flip ? ' flip' : ''}`}>
+        <div className="pl-reveal-inner">
+          <CardFace card={card} />
+          <span className="pcard-face pcard-back" />
+        </div>
+      </div>
+      {text && <span className="pl-reveal-text">{text}</span>}
     </div>
   );
 }
@@ -535,12 +650,14 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
 function HandSpread({
   cards,
   isSelected,
+  isLeaving,
   isDim,
   onTap,
   empty,
 }: {
   cards: Card[];
   isSelected?: (c: Card) => boolean;
+  isLeaving?: (c: Card) => boolean;
   isDim?: (c: Card) => boolean;
   onTap?: (c: Card) => void;
   empty?: string;
@@ -594,6 +711,7 @@ function HandSpread({
         const angle = fan ? ((col - mid) / mid) * tilt : 0;
         const drop = fan ? ((col - mid) / mid) ** 2 * cw * 0.08 : 0;
         const sel = isSelected?.(c) ?? false;
+        const gone = isLeaving?.(c) ?? false;
         return (
           <button
             key={`${c.value}${c.suit}`}
@@ -604,7 +722,8 @@ function HandSpread({
                 '--cw': `${cw}px`,
                 left,
                 top: top0 + row * shift,
-                transform: `translateY(${sel ? -LIFT : drop}px) rotate(${angle}deg)`,
+                transform: gone ? `translateY(${-ch * 0.9}px) scale(0.85)` : `translateY(${sel ? -LIFT : drop}px) rotate(${angle}deg)`,
+                opacity: gone ? 0 : undefined,
                 zIndex: i + 1,
               } as CSSProperties
             }

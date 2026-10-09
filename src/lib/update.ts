@@ -4,7 +4,9 @@
  * check whether a newer build is online and load it – but never in the middle of a game.
  */
 
-const MIN_GAP_MS = 60_000;
+const MIN_GAP_MS = 15_000;
+/** Also look now and then while the app stays open outside a game. */
+const POLL_MS = 90_000;
 let lastCheck = 0;
 
 /** The script of the build that's running now. */
@@ -34,5 +36,7 @@ export function watchForUpdates() {
   document.addEventListener('visibilitychange', check);
   // Leaving a game is a good moment too.
   window.addEventListener('hashchange', check);
+  // An update that lands while the app is open (and was checked a moment too early) still arrives.
+  window.setInterval(check, POLL_MS);
   check();
 }

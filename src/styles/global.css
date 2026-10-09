@@ -6072,6 +6072,12 @@ h3 {
   transform: translateY(-12px);
 }
 
+.pl-slot-up.leaving {
+  transform: translateY(-80%) scale(0.85);
+  opacity: 0;
+  transition: transform 0.22s ease-in, opacity 0.22s ease-in;
+}
+
 .pl-slot-up.selected .pcard-front {
   box-shadow: 0 0 0 4px var(--accent), 0 10px 20px -8px rgba(17, 18, 20, 0.5);
 }
@@ -6105,6 +6111,7 @@ h3 {
 }
 
 .pl-felt {
+  position: relative;
   flex: 1 1 0;
   min-height: 210px;
   display: flex;
@@ -6125,7 +6132,7 @@ h3 {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: max(18px, 6cqw);
+  gap: max(30px, 9cqw);
 }
 
 .pl-heap {
@@ -6147,18 +6154,93 @@ h3 {
 }
 
 .pl-pile-card {
+  --base: translate(calc(var(--d) * 6%), calc(var(--d) * -4%)) rotate(var(--tilt));
   position: absolute;
   inset: 0;
-  transform: translate(calc(var(--d) * -7%), calc(var(--d) * -3%)) rotate(var(--tilt));
+  transform: var(--base);
 }
 
-.pl-pile-card:last-child {
-  animation: pl-land 0.3s var(--spring);
+/* Cards just played: thrown onto the pile, one after the other. */
+.pl-pile-card.land {
+  animation: pl-land 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
 
 @keyframes pl-land {
   from {
-    transform: translateY(-30%) scale(1.15) rotate(var(--tilt));
+    transform: translateY(70%) scale(1.3) rotate(calc(var(--tilt) + 14deg));
+    opacity: 0;
+  }
+}
+
+/* A cleared pile goes up in smoke; a taken pile slides off towards the players. */
+.pl-pile-card.ghost {
+  pointer-events: none;
+}
+
+.pl-pile-card.ghost.burn {
+  animation: pl-burn 0.9s ease-in both;
+}
+
+.pl-pile-card.ghost.take {
+  animation: pl-take 0.7s ease-in both;
+}
+
+@keyframes pl-burn {
+  0%,
+  30% {
+    transform: var(--base);
+    opacity: 1;
+    filter: none;
+  }
+  100% {
+    transform: translateY(-45%) scale(0.6) rotate(calc(var(--tilt) + 30deg));
+    opacity: 0;
+    filter: sepia(1) saturate(4) hue-rotate(-20deg) brightness(1.2);
+  }
+}
+
+@keyframes pl-take {
+  0%,
+  20% {
+    transform: var(--base);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120%) scale(0.5) rotate(calc(var(--tilt) - 20deg));
+    opacity: 0;
+  }
+}
+
+.pl-flash {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 3;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--c-orange);
+  color: var(--on-color);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: pl-flash 1.1s ease both;
+}
+
+@keyframes pl-flash {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+  20%,
+  70% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -80%) scale(1);
     opacity: 0;
   }
 }
@@ -6226,6 +6308,7 @@ h3 {
   flex: none;
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
+  animation: pop-in 0.3s var(--spring) backwards;
 }
 
 .pl-mini .pl-empty {
@@ -6287,7 +6370,7 @@ h3 {
   height: calc(var(--cw) * 1.4);
   border-radius: calc(var(--cw) * 0.12);
   transform-origin: 50% 120%;
-  transition: transform 0.25s var(--spring), left 0.3s ease, top 0.3s ease, filter 0.2s ease;
+  transition: transform 0.25s var(--spring), left 0.3s ease, top 0.3s ease, filter 0.2s ease, opacity 0.22s ease-in;
 }
 
 .pl-card:disabled {
@@ -6332,6 +6415,15 @@ h3 {
 
 .pl-action-row > * {
   flex: 1 1 0;
+  min-width: 0;
+}
+
+.pl-action-row > .pl-risk {
+  flex: 0 0 auto;
+  width: auto;
+  padding-left: 18px;
+  padding-right: 18px;
+  white-space: nowrap;
 }
 
 .pl-hint {
@@ -6358,6 +6450,84 @@ h3 {
   .pl-player .pl-status-sub {
     display: none;
   }
+}
+
+/* Your blind or risked card, a cleared pile, a play-again: big for a moment, then it fades. */
+.pl-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  animation: pl-reveal-out 1.7s ease both;
+}
+
+@keyframes pl-reveal-out {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.pl-reveal-card {
+  --cw: min(42vw, 26dvh, 180px);
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  perspective: 900px;
+  animation: pop-in 0.35s var(--spring) both;
+}
+
+.pl-reveal-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.pl-reveal-card.flip .pl-reveal-inner {
+  animation: pl-turn 0.6s 0.2s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+}
+
+@keyframes pl-turn {
+  from {
+    transform: rotateY(180deg);
+  }
+}
+
+.pl-reveal .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 20px 40px -10px rgba(0, 0, 0, 0.55);
+}
+
+.pl-reveal.good .pcard-front {
+  box-shadow: 0 0 0 5px var(--good), 0 20px 40px -10px rgba(0, 0, 0, 0.55);
+}
+
+.pl-reveal.bad .pcard-front {
+  box-shadow: 0 0 0 5px var(--bad), 0 20px 40px -10px rgba(0, 0, 0, 0.55);
+}
+
+.pl-reveal-text {
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  text-align: center;
+  animation: pop-in 0.35s 0.5s var(--spring) both;
 }
 
 .pl-over {

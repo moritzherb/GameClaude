@@ -102,6 +102,27 @@ describe('Palace', () => {
     expect(g.turn).toBe(0);
   });
 
+  it('four of a value in a row on the pile clear it, played one after the other too', () => {
+    const queens = [c(12, 'hearts'), c(12, 'clubs'), c(12, 'diamonds')];
+    let g = playing({ hand: [c(12), c(5), c(6)] }, { pile: [c(4, 'clubs'), ...queens], need: { kind: 'min', v: 12 }, top: 12 });
+    g = apply(g, 0, { t: 'play', cards: [c(12)] });
+    expect(g.pile).toEqual([]);
+    expect(g.burned).toHaveLength(5);
+    expect(g.turn).toBe(0);
+    expect(g.again).toBe(true);
+    expect(g.sides[0].hand).toHaveLength(3);
+
+    // Two at once onto two.
+    g = playing({ hand: [c(9), c(9, 'hearts'), c(5)] }, { pile: [c(9, 'clubs'), c(9, 'diamonds')], need: { kind: 'min', v: 9 }, top: 9 });
+    expect(apply(g, 0, { t: 'play', cards: [c(9), c(9, 'hearts')] }).pile).toEqual([]);
+
+    // A 3 in between breaks the row: Q Q 3 Q is not four of a kind.
+    g = playing({ hand: [c(12), c(5), c(6)] }, { pile: [c(12, 'hearts'), c(12, 'clubs'), c(3, 'clubs')], need: { kind: 'min', v: 12 }, top: 12 });
+    g = apply(g, 0, { t: 'play', cards: [c(12)] });
+    expect(g.pile).toHaveLength(4);
+    expect(g.turn).toBe(1);
+  });
+
   it('2: start again from 2, play again without drawing first', () => {
     let g = playing({ hand: [c(2), c(5), c(6)] }, { pile: [c(13)], need: { kind: 'min', v: 13 }, top: 13 });
     g = apply(g, 0, { t: 'play', cards: [c(2)] });
@@ -151,9 +172,9 @@ describe('Palace', () => {
     expect(lucky.sides[0].hand).toHaveLength(3);
     expect(lucky.turn).toBe(1);
 
-    // Risk only while you can't play, and only from the hand while the stock lasts.
+    // Risking is allowed even when you could play (to keep your good cards); taking the pile isn't.
     const could = { ...base, need: { kind: 'any' as const } };
-    expect(apply(could, 0, { t: 'risk' })).toBe(could);
+    expect(apply(could, 0, { t: 'risk' }).pile.at(-1)).toEqual(c(9, 'diamonds'));
     expect(apply(could, 0, { t: 'take' })).toBe(could);
     const empty = { ...base, stock: [] };
     expect(apply(empty, 0, { t: 'risk' })).toBe(empty);

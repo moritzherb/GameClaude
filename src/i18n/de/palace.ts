@@ -64,6 +64,14 @@ const palace: Record<string, string> = {
   'Risk it 🎲': 'Riskieren 🎲',
   'Risk it: the top card of the stock goes on the pile. If it doesn’t fit, you take the pile and that card.':
     'Riskieren: Die oberste Karte vom Stapel kommt auf den Ablegestapel. Passt sie nicht, nimmst du den Ablegestapel samt dieser Karte auf.',
+  'You may risk it any time while the stock lasts, even if you could play: that way you keep your good cards.':
+    'Riskieren darfst du immer, solange der Stapel reicht – auch wenn du legen könntest. So sparst du deine guten Karten.',
+  'Four of the same value in a row on the pile clear it too, also when played one after the other (Q, Q, Q, then the fourth Q). A 3 in between breaks the row.':
+    'Liegen vier gleiche Werte direkt hintereinander auf dem Ablegestapel, wird er ebenfalls gelöscht – auch wenn sie nacheinander gelegt wurden (Dame, Dame, Dame, dann die vierte Dame). Eine 3 dazwischen unterbricht die Reihe.',
+  'Cleared!': 'Gelöscht!',
+  'Doesn’t fit: you take the pile': 'Passt nicht: Du nimmst den Ablegestapel auf',
+  'The pile is cleared! Go again.': 'Ablegestapel gelöscht! Nochmal legen.',
+  'It fits!': 'Passt!',
 };
 
 export default palace;
