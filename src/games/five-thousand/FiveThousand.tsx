@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import NextName from '../../components/NextName';
 import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -260,7 +261,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
                 setG(nextTurn(g));
               }}
             >
-              {t('Next: {name} →', { name: players[(g.current + 1) % players.length].name })}
+              <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
             </BigButton>
           </div>
         </>

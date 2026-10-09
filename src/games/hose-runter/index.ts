@@ -16,7 +16,7 @@ const hoseRunter: GameDefinition = {
   explains: true,
   needs: [tx('Every player’s phone')],
   rules: [
-    tx('Everyone joins the same room on their own phone. Cards 7 to Ace, three each.'),
+    tx('Everyone joins the same room on their own phone. The host’s phone lies in the middle as the table. Cards 7 to Ace, three each.'),
     tx('Points: add up the cards of ONE suit. 7–10 = face value, J/Q/K = 10, Ace = 11.'),
     tx('The dealer looks at their three first: keep them (three more go to the middle) or put them in the middle and play the next three.'),
     tx('Starting left of the dealer: swap one card with the middle, swap all three, or say STOP. No Stop in the first round.'),

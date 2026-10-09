@@ -5,6 +5,7 @@ import './styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { watchForUpdates } from './lib/update';
 import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
 
@@ -22,4 +23,5 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
+  watchForUpdates();
 }

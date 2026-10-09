@@ -19,7 +19,8 @@ export default function Play({ game }: { game: GameDefinition }) {
 
   const Game = game.component;
   const playable = Game && players.length >= game.minPlayers && (game.maxPlayers == null || players.length <= game.maxPlayers);
-  const exit = () => navigate(paths.game(game.id));
+  // Leaving a game (quit, or Back to games at the end) goes all the way home.
+  const exit = () => navigate(paths.home);
 
   useEffect(() => {
     if (!playable) navigate(paths.game(game.id));

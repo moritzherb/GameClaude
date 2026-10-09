@@ -1,5 +1,5 @@
 // Tiny offline cache: party basements rarely have good Wi-Fi.
-const CACHE = 'prost-v5';
+const CACHE = 'prost-v6';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -14,11 +14,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  // The app's update check asks the network directly; don't cache those.
+  if (request.cache === 'no-store') return;
 
-  // Pages: network first so updates arrive, cache as fallback when offline.
+  // Pages: network first (checked with the server, not the browser cache) so updates
+  // arrive, cache as fallback when offline.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(request, copy));

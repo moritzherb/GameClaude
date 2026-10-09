@@ -6,7 +6,8 @@ const kingsCup: Record<string, string> = {
   'An empty cup in the middle': 'Ein leerer Becher in der Mitte',
   'Put an empty cup in the middle: the King’s Cup.': 'Stellt einen leeren Becher in die Mitte: den King’s Cup.',
   'Take turns drawing a card. Each card has a rule:': 'Zieht reihum eine Karte. Jede Karte hat eine Regel:',
-  'Whoever draws the 4th King drinks the King’s Cup. Game over.': 'Wer den 4. König zieht, trinkt den King’s Cup. Spiel vorbei.',
+  'Whoever draws the 4th King drinks the King’s Cup. The game ends when all cards are drawn.':
+    'Wer den 4. König zieht, trinkt den King’s Cup. Das Spiel endet, wenn alle Karten gezogen sind.',
 
   // Card rules (rules.ts)
   Waterfall: 'Wasserfall',
@@ -25,8 +26,8 @@ const kingsCup: Record<string, string> = {
   Heaven: 'Himmel',
   'Everyone puts both hands up to the sky. Last one drinks.': 'Alle strecken beide Hände in den Himmel. Wer zuletzt, trinkt.',
   Mate: 'Trinkpartner',
-  'Pick a mate. Every time you drink, they drink too. For the rest of the game.':
-    'Such dir einen Trinkpartner. Immer wenn du trinkst, trinkt ihr beide. Bis zum Spielende.',
+  'Pick a mate. Every time you drink, they drink too. Until the next 8.':
+    'Such dir einen Trinkpartner. Immer wenn du trinkst, trinkt ihr beide. Bis zur nächsten 8.',
   Rhyme: 'Reim',
   'Say a word. Go around rhyming on it. First one who can’t drinks.':
     'Sag ein Wort. Reihum wird darauf gereimt. Wem zuerst nichts mehr einfällt, der trinkt.',
@@ -34,15 +35,15 @@ const kingsCup: Record<string, string> = {
   'Pick a category (car brands, beers…). Go around naming things. First one who can’t drinks.':
     'Wähl eine Kategorie (Automarken, Biersorten …). Reihum zählt ihr was auf. Wem zuerst nichts mehr einfällt, der trinkt.',
   'Make a rule': 'Regel',
-  'Invent a rule that lasts the whole game. Anyone who breaks it drinks.':
-    'Denk dir eine Regel aus, die das ganze Spiel gilt. Wer sie bricht, trinkt.',
+  'Invent a rule. It lasts until the next Jack. Anyone who breaks it drinks.':
+    'Denk dir eine Regel aus. Sie gilt bis zum nächsten Buben. Wer sie bricht, trinkt.',
   'Question Master': 'Fragenmeister',
   'Anyone who answers one of your questions drinks. Lasts until the next Queen.':
     'Wer eine deiner Fragen beantwortet, trinkt. Gilt bis zur nächsten Dame.',
   'King’s Cup': 'King’s Cup',
   'Pour some of your drink into the King’s Cup.': 'Kipp einen Schluck von deinem Drink in den King’s Cup.',
   'Drink the King’s Cup!': 'Ex den King’s Cup!',
-  'That was the 4th King. Down the whole cup. Game over!': 'Das war der 4. König. Trink den ganzen Becher leer. Spiel vorbei!',
+  'That was the 4th King. Down the whole cup!': 'Das war der 4. König. Trink den ganzen Becher leer!',
 
   // Game screen (KingsCup.tsx)
   hearts: 'Herz',
@@ -72,7 +73,7 @@ const kingsCup: Record<string, string> = {
   '{n} of 4 Kings drawn': '{n} von 4 Königen gezogen',
   'In play': 'Im Spiel',
   '{name} is Question Master': '{name} ist Fragenmeister',
-  '{a} drinks → {b} drinks': '{a} trinkt → {b} trinkt',
+  '{a} is mates with {b}': '{a} ist Trinkpartner von {b}',
 };
 
 export default kingsCup;

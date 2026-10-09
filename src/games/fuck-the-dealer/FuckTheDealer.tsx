@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import NextName from '../../components/NextName';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import Suit from '../../components/Suit';
@@ -269,7 +270,7 @@ export default function FuckTheDealer({ players, exit }: GameProps) {
               ? t('Finish game')
               : lastOfThree
                 ? t('Pass the deck →')
-                : t('Next: {name} →', { name: players[nextGuesser(g.guesser, g.dealer, players.length)].name })}
+                : <NextName text={t('Next: {name} →')} name={players[nextGuesser(g.guesser, g.dealer, players.length)].name} />}
           </BigButton>
         </div>
       )}
