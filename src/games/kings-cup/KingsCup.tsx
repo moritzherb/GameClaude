@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import DeckCount from '../../components/DeckCount';
 import { CardFace } from '../../components/PlayingCard';
 import { newDeck, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -136,16 +137,7 @@ export default function KingsCup({ players, exit }: GameProps) {
             <span className="bd-player-sub">{s.current ? 'drew a card' : 'your turn'}</span>
           </span>
         </div>
-        <div className="kc-counters">
-          <span className="kc-kings" aria-label={`${s.kings} of 4 kings drawn`}>
-            {[1, 2, 3, 4].map((n) => (
-              <i key={n} className={n <= s.kings ? 'on' : ''}>
-                👑
-              </i>
-            ))}
-          </span>
-          <span className="kc-left">{left} cards left</span>
-        </div>
+        <DeckCount left={left} />
       </div>
 
       <div className="kc-stage">
