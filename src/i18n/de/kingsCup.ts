@@ -26,13 +26,13 @@ const kingsCup: Record<string, string> = {
   'Everyone puts both hands up to the sky. Last one drinks.': 'Alle strecken beide Hände in den Himmel. Wer zuletzt, trinkt.',
   Mate: 'Trinkpartner',
   'Pick a mate. Every time you drink, they drink too. For the rest of the game.':
-    'Such dir einen Trinkpartner. Immer wenn du trinkst, trinkt er mit. Bis zum Spielende.',
+    'Such dir einen Trinkpartner. Immer wenn du trinkst, trinkt ihr beide. Bis zum Spielende.',
   Rhyme: 'Reim',
   'Say a word. Go around rhyming on it. First one who can’t drinks.':
-    'Sag ein Wort. Reihum wird darauf gereimt. Wem zuerst nichts mehr einfällt, trinkt.',
+    'Sag ein Wort. Reihum wird darauf gereimt. Wem zuerst nichts mehr einfällt, der trinkt.',
   Categories: 'Kategorien',
   'Pick a category (car brands, beers…). Go around naming things. First one who can’t drinks.':
-    'Wähl eine Kategorie (Automarken, Biersorten …). Reihum zählt ihr was auf. Wem zuerst nichts mehr einfällt, trinkt.',
+    'Wähl eine Kategorie (Automarken, Biersorten …). Reihum zählt ihr was auf. Wem zuerst nichts mehr einfällt, der trinkt.',
   'Make a rule': 'Regel',
   'Invent a rule that lasts the whole game. Anyone who breaks it drinks.':
     'Denk dir eine Regel aus, die das ganze Spiel gilt. Wer sie bricht, trinkt.',

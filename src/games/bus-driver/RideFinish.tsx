@@ -26,7 +26,9 @@ export default function RideFinish({ driver, stats, onPlayAgain, onExit }: { dri
           {fails === 0
             ? t('First try. Legend.')
             : fails === 1
-              ? t('{fails} restart and {sips} sips later.', { fails, sips: stats.drunk })
+              ? stats.drunk === 1
+                ? t('{fails} restart and 1 sip later.', { fails })
+                : t('{fails} restart and {sips} sips later.', { fails, sips: stats.drunk })
               : t('{fails} restarts and {sips} sips later.', { fails, sips: stats.drunk })}
         </p>
       </div>

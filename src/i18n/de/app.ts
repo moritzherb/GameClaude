@@ -22,7 +22,7 @@ const app: Record<string, string> = {
 
   // Home
   'The crew': 'Die Crew',
-  'Tap to edit': 'Tippen zum Bearbeiten',
+  'Tap to edit': 'Antippen & ändern',
   'Who’s playing tonight?': 'Wer spielt heute mit?',
   Shuffle: 'Zufall',
   'We pick, you play': 'Wir wählen, ihr spielt',
