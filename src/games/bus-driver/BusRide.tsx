@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import BigButton from '../../components/BigButton';
 import Tap from '../../components/Tap';
+import { t, tx } from '../../i18n';
 import { useApp, type Player } from '../../state/AppState';
 import BoardRide from './BoardRide';
 import { BOARD_ROWS, type BoardMode } from './board';
@@ -12,24 +13,26 @@ type RideMode = 'classic' | BoardMode;
 const MODES: { id: RideMode; name: string; layout: number[]; explain: string }[] = [
   {
     id: 'classic',
-    name: 'Classic',
+    name: tx('Classic'),
     layout: [5],
     explain:
-      'Fresh deck, all five questions from part 1 in a row. Get one wrong: drink the question number in sips and start again from question 1.',
+      tx('Fresh deck, all five questions from part 1 in a row. Get one wrong: drink the question number in sips and start again from question 1.'),
   },
   {
     id: 'diamond',
-    name: 'Diamond',
+    name: tx('Diamond'),
     layout: BOARD_ROWS.diamond,
     explain:
-      'A 1-2-3-2-1 diamond. Bottom card: red or black? Then higher or lower, row by row, following the road: you can only pick a card that touches the one below. Wrong: drink the row number, the turned cards get covered, start again at the bottom.',
+      tx(
+        'A 1-2-3-2-1 diamond. Bottom card: red or black? Then higher or lower, row by row, following the road: you can only pick a card that touches the one below. Wrong: drink the row number, the turned cards get covered, start again at the bottom.',
+      ),
   },
   {
     id: 'zigzag',
     name: '1-2-1-2-1',
     layout: BOARD_ROWS.zigzag,
     explain:
-      'Single cards: red or black? Pairs: pick a card, higher or lower? Wrong: drink the row number, the turned cards get covered, start again at the bottom.',
+      tx('Single cards: red or black? Pairs: pick a card, higher or lower? Wrong: drink the row number, the turned cards get covered, start again at the bottom.'),
   },
 ];
 
@@ -66,26 +69,26 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
         </span>
       </div>
       <div className="bd-head center">
-        <span className="kicker">Part 3 · The bus ride</span>
-        <h2 className="bd-title big">{driver.name} drives the bus</h2>
+        <span className="kicker">{t('Part 3 · The bus ride')}</span>
+        <h2 className="bd-title big">{t('{name} drives the bus', { name: driver.name })}</h2>
       </div>
 
       <section className="section">
-        <h3 className="section-title">Which road?</h3>
+        <h3 className="section-title">{t('Which road?')}</h3>
         <div className="seg three">
           {MODES.map((m) => (
-            <Tap key={m.id} className={`seg-btn size-btn${m.id === mode ? ' active' : ''}`} onClick={() => setMode(m.id)} ariaLabel={m.name}>
+            <Tap key={m.id} className={`seg-btn size-btn${m.id === mode ? ' active' : ''}`} onClick={() => setMode(m.id)} ariaLabel={t(m.name)}>
               <MiniLayout rows={m.layout} />
-              <span className="seg-main">{m.name}</span>
+              <span className="seg-main">{t(m.name)}</span>
             </Tap>
           ))}
         </div>
-        {!known && <p className="lead">{current.explain}</p>}
+        {!known && <p className="lead">{t(current.explain)}</p>}
       </section>
 
       <div className="sticky-action">
         <BigButton size="xl" onClick={() => setStarted(true)}>
-          Start the ride
+          {t('Start the ride')}
         </BigButton>
       </div>
     </div>

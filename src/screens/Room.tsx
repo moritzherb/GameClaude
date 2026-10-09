@@ -5,6 +5,7 @@ import QrCode from '../components/QrCode';
 import Tap from '../components/Tap';
 import TopBar from '../components/TopBar';
 import { findGame, onlineGames } from '../games/registry';
+import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 import { useProfile } from '../net/profile';
@@ -57,26 +58,26 @@ function Start({ joinCode }: { joinCode: string | null }) {
   return (
     <main className="screen">
       <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="large-title">Play together</h1>
-      <p className="lead">Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.</p>
+      <h1 className="large-title">{t('Play together')}</h1>
+      <p className="lead">{t('Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.')}</p>
 
       {embedded && (
-        <p className="notice">This preview can’t connect phones. Open the prost! website (moritzherb.github.io/GameClaude) to play together.</p>
+        <p className="notice">{t('This preview can’t connect phones. Open the prost! website (moritzherb.github.io/GameClaude) to play together.')}</p>
       )}
       {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}
 
       <section className="me-card">
-        <Tap className="player-avatar me-avatar" style={{ '--chip': profile.color } as CSSProperties} onClick={rerollAvatar} ariaLabel="New avatar">
+        <Tap className="player-avatar me-avatar" style={{ '--chip': profile.color } as CSSProperties} onClick={rerollAvatar} ariaLabel={t('New avatar')}>
           {profile.avatar}
         </Tap>
         <label className="me-field" htmlFor="room-name">
-          <span className="me-label">Your name</span>
+          <span className="me-label">{t('Your name')}</span>
           <input
             id="room-name"
             className={`me-input${nameMissing && !profile.name.trim() ? ' missing' : ''}`}
             value={profile.name}
             maxLength={18}
-            placeholder="Type your name"
+            placeholder={t('Type your name')}
             autoComplete="off"
             autoCapitalize="words"
             enterKeyHint="done"
@@ -88,20 +89,20 @@ function Start({ joinCode }: { joinCode: string | null }) {
       {fromLink ? (
         <div className="stack">
           <BigButton size="xl" onClick={doJoin}>
-            Join room {code}
+            {t('Join room {code}', { code })}
           </BigButton>
           <button type="button" className="text-btn" onClick={() => navigate(paths.room)}>
-            Host my own room instead
+            {t('Host my own room instead')}
           </button>
         </div>
       ) : (
         <>
           <BigButton size="xl" onClick={() => ready() && room.host({ ...profile, name: profile.name.trim() })}>
-            Host a room
+            {t('Host a room')}
           </BigButton>
 
           <div className="divider">
-            <span>or join one</span>
+            <span>{t('or join one')}</span>
           </div>
 
           <form
@@ -115,24 +116,24 @@ function Start({ joinCode }: { joinCode: string | null }) {
               id="room-code"
               className="code-input"
               value={code}
-              placeholder="CODE"
+              placeholder={t('CODE')}
               maxLength={6}
               autoComplete="off"
               autoCapitalize="characters"
               spellCheck={false}
               enterKeyHint="go"
-              aria-label="Room code"
+              aria-label={t('Room code')}
               onChange={(e) => setCode(normalizeCode(e.target.value))}
             />
             <button type="submit" className="join-btn" disabled={code.length < 4}>
-              Join
+              {t('Join')}
             </button>
           </form>
         </>
       )}
 
       <p className="fine-print">
-        Phones connect directly to each other. Works on the same Wi-Fi or on mobile data. Keep the app open on the host phone.
+        {t('Phones connect directly to each other. Works on the same Wi-Fi or on mobile data. Keep the app open on the host phone.')}
       </p>
     </main>
   );
@@ -161,12 +162,12 @@ function Lobby() {
         <TopBar onBack={() => room.leave()} icon="close" />
         <div className="connecting">
           <div className="connecting-emoji">📡</div>
-          <h1 className="bd-title">{isHost ? 'Opening the room…' : `Joining ${code}…`}</h1>
-          <p className="lead">This takes a few seconds.</p>
+          <h1 className="bd-title">{isHost ? t('Opening the room…') : t('Joining {code}…', { code })}</h1>
+          <p className="lead">{t('This takes a few seconds.')}</p>
         </div>
         <div className="sticky-action">
           <BigButton variant="glass" onClick={() => room.leave()}>
-            Cancel
+            {t('Cancel')}
           </BigButton>
         </div>
       </main>
@@ -177,7 +178,7 @@ function Lobby() {
     const url = joinLink(code);
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'prost! room', text: `Join my prost! room: ${code}`, url });
+        await navigator.share({ title: t('prost! room'), text: t('Join my prost! room: {code}', { code }), url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -193,27 +194,27 @@ function Lobby() {
 
   return (
     <main className="screen">
-      <TopBar onBack={() => navigate(paths.home)} title={isHost ? 'Your room' : 'Room'} />
+      <TopBar onBack={() => navigate(paths.home)} title={isHost ? t('Your room') : t('Room')} />
 
-      {room.status === 'reconnecting' && <p className="notice">Connection lost. Reconnecting to the host…</p>}
+      {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting to the host…')}</p>}
 
       <section className="room-code-card">
-        <span className="kicker">Room code</span>
-        <span className="room-code" aria-label={`Room code ${code.split('').join(' ')}`}>
+        <span className="kicker">{t('Room code')}</span>
+        <span className="room-code" aria-label={t('Room code {code}', { code: code.split('').join(' ') })}>
           {code}
         </span>
-        <QrCode text={joinLink(code)} label={`QR code to join room ${code}`} />
-        <span className="fine-print">Scan with the camera to join</span>
+        <QrCode text={joinLink(code)} label={t('QR code to join room {code}', { code })} />
+        <span className="fine-print">{t('Scan with the camera to join')}</span>
         <button type="button" className="link-btn" onClick={share}>
-          {copied ? 'Link copied ✓' : 'Share link'}
+          {copied ? t('Link copied ✓') : t('Share link')}
         </button>
       </section>
 
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">Players</h2>
+          <h2 className="section-title">{t('Players')}</h2>
           <span className="fine-print">
-            {online} phone{online === 1 ? '' : 's'} connected
+            {online === 1 ? t('{n} phone connected', { n: online }) : t('{n} phones connected', { n: online })}
           </span>
         </div>
         <ul className="member-list">
@@ -225,36 +226,36 @@ function Lobby() {
               <span className="member-text">
                 <span className="member-name">{m.name}</span>
                 <span className="member-tags">
-                  {m.host && <span className="tag-pill">Host</span>}
-                  {m.id === profile.clientId && <span className="tag-pill you">You</span>}
-                  {!m.online && <span className="tag-pill off">Offline</span>}
+                  {m.host && <span className="tag-pill">{t('Host')}</span>}
+                  {m.id === profile.clientId && <span className="tag-pill you">{t('You')}</span>}
+                  {!m.online && <span className="tag-pill off">{t('Offline')}</span>}
                 </span>
               </span>
-              <span className={`online-dot${m.online ? ' on' : ''}`} aria-label={m.online ? 'Online' : 'Offline'} />
+              <span className={`online-dot${m.online ? ' on' : ''}`} aria-label={m.online ? t('Online') : t('Offline')} />
               {isHost && !m.host && (
-                <Tap className="player-remove" onClick={() => room.removeMember(m.id)} ariaLabel={`Remove ${m.name}`}>
+                <Tap className="player-remove" onClick={() => room.removeMember(m.id)} ariaLabel={t('Remove {name}', { name: m.name })}>
                   <CloseIcon />
                 </Tap>
               )}
             </li>
           ))}
         </ul>
-        {room.members.length <= 1 && isHost && <p className="lead">Waiting for the others to join…</p>}
+        {room.members.length <= 1 && isHost && <p className="lead">{t('Waiting for the others to join…')}</p>}
       </section>
 
       <Tap className="cheers-btn" onClick={room.sendCheers}>
         <span className="cheers-emoji">🍻</span>
-        <span>Cheers!</span>
-        <span className="cheers-sub">Shows up on every phone</span>
+        <span>{t('Cheers!')}</span>
+        <span className="cheers-sub">{t('Shows up on every phone')}</span>
       </Tap>
 
       {running ? (
         <BigButton size="xl" onClick={() => navigate(paths.online(running.id))}>
-          {running.emoji} Back to {running.name}
+          {running.emoji} {t('Back to {game}', { game: t(running.name) })}
         </BigButton>
       ) : isHost ? (
         <section className="section">
-          <h2 className="section-title">Games for every phone</h2>
+          <h2 className="section-title">{t('Games for every phone')}</h2>
           <div className="online-games">
             {onlineGames().map((g) => (
               <Tap
@@ -268,14 +269,14 @@ function Lobby() {
               >
                 <span className="online-game-emoji">{g.emoji}</span>
                 <span className="online-game-text">
-                  <span className="online-game-name">{g.name}</span>
-                  <span className="online-game-tagline">{g.tagline}</span>
+                  <span className="online-game-name">{t(g.name)}</span>
+                  <span className="online-game-tagline">{t(g.tagline)}</span>
                 </span>
-                <span className="online-game-go">Start</span>
+                <span className="online-game-go">{t('Start')}</span>
               </Tap>
             ))}
           </div>
-          <p className="fine-print">Or use everyone in the room as the player list for the one-phone games:</p>
+          <p className="fine-print">{t('Or use everyone in the room as the player list for the one-phone games:')}</p>
           <BigButton
             variant="glass"
             disabled={room.members.length < 2}
@@ -284,11 +285,11 @@ function Lobby() {
               navigate(paths.players());
             }}
           >
-            Use as player list
+            {t('Use as player list')}
           </BigButton>
         </section>
       ) : (
-        <p className="lead center">Waiting for the host to start a game…</p>
+        <p className="lead center">{t('Waiting for the host to start a game…')}</p>
       )}
 
       <button
@@ -300,7 +301,13 @@ function Lobby() {
           else setArmLeave(true);
         }}
       >
-        {armLeave ? (isHost ? 'Tap again to close the room for everyone' : 'Tap again to leave') : isHost ? 'Close room' : 'Leave room'}
+        {armLeave
+          ? isHost
+            ? t('Tap again to close the room for everyone')
+            : t('Tap again to leave')
+          : isHost
+            ? t('Close room')
+            : t('Leave room')}
       </button>
     </main>
   );

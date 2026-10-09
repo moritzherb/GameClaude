@@ -1,7 +1,7 @@
 import TopBar from '../components/TopBar';
 import Tap from '../components/Tap';
 import { GAMES } from '../games/registry';
-import { LANGS, t } from '../i18n';
+import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 import { useApp } from '../state/AppState';
@@ -9,9 +9,9 @@ import { useApp } from '../state/AppState';
 type Toggle = 'sound' | 'haptics' | 'bigMode';
 
 const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
-  { key: 'sound', emoji: '🔊', label: 'Sounds', hint: 'Boops, ticks and fanfares' },
-  { key: 'haptics', emoji: '📳', label: 'Vibration', hint: 'Phone buzzes when you tap' },
-  { key: 'bigMode', emoji: '🔍', label: 'Giant Mode', hint: 'Everything bigger. For later tonight.' },
+  { key: 'sound', emoji: '🔊', label: tx('Sounds'), hint: tx('Boops, ticks and fanfares') },
+  { key: 'haptics', emoji: '📳', label: tx('Vibration'), hint: tx('Phone buzzes when you tap') },
+  { key: 'bigMode', emoji: '🔍', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
 ];
 
 export default function Settings() {
@@ -59,8 +59,8 @@ export default function Settings() {
             >
               <span className="setting-emoji">{o.emoji}</span>
               <span className="setting-text">
-                <span className="setting-label">{o.label}</span>
-                <span className="setting-hint">{o.hint}</span>
+                <span className="setting-label">{t(o.label)}</span>
+                <span className="setting-hint">{t(o.hint)}</span>
               </span>
               <span className="switch">
                 <span className="switch-knob" />
@@ -71,8 +71,8 @@ export default function Settings() {
       </div>
 
       <section className="section">
-        <h2 className="section-title">Games you know</h2>
-        <p className="fine-print">Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.</p>
+        <h2 className="section-title">{t('Games you know')}</h2>
+        <p className="fine-print">{t('Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.')}</p>
         <div className="settings-list">
           {withExplanations.map((g) => {
             const on = knows(g.id);
@@ -91,8 +91,8 @@ export default function Settings() {
               >
                 <span className="setting-emoji">{g.emoji}</span>
                 <span className="setting-text">
-                  <span className="setting-label">{g.name}</span>
-                  <span className="setting-hint">{on ? 'We know it: no explanations' : 'Explanations on'}</span>
+                  <span className="setting-label">{t(g.name)}</span>
+                  <span className="setting-hint">{on ? t('We know it: no explanations') : t('Explanations on')}</span>
                 </span>
                 <span className="switch">
                   <span className="switch-knob" />
@@ -104,12 +104,12 @@ export default function Settings() {
       </section>
 
       <section className="panel">
-        <h2 className="section-title">Play nice</h2>
+        <h2 className="section-title">{t('Play nice')}</h2>
         <ul className="plain-list">
-          <li>Every sip can be water or a soft drink. No pressure, ever.</li>
-          <li>Eat something before you start.</li>
-          <li>Never drink and drive – plan your ride home.</li>
-          <li>Look out for your mates.</li>
+          <li>{t('Every sip can be water or a soft drink. No pressure, ever.')}</li>
+          <li>{t('Eat something before you start.')}</li>
+          <li>{t('Never drink and drive – plan your ride home.')}</li>
+          <li>{t('Look out for your mates.')}</li>
         </ul>
       </section>
     </main>

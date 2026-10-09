@@ -1,4 +1,204 @@
 // German translations for this game. Keys are the exact English text.
-const busDriver: Record<string, string> = {};
+const busDriver: Record<string, string> = {
+  /* ---------- Game info and rules (index.ts) ---------- */
+  'Bus Driver': 'Busfahrer',
+  'Guess your cards. Pray you don’t drive the bus.': 'Rate deine Karten. Und bete, dass du nicht Bus fahren musst.',
+  'Pick a dealer. Play starts left of them, the dealer goes last.': 'Bestimmt einen Geber. Links von ihm geht’s los, der Geber ist als Letztes dran.',
+  'Each round, everyone answers one question about the next card, then keeps that card.':
+    'Jede Runde beantwortet jeder eine Frage zur nächsten Karte und behält sie danach.',
+  'Round 1 · Red or black?': 'Runde 1 · Rot oder Schwarz?',
+  'Round 2 · Higher or lower than your first card? Same value: drink double.':
+    'Runde 2 · Höher oder tiefer als deine erste Karte? Gleicher Wert: doppelt trinken.',
+  'Round 3 · Inside or outside your first two cards? Hitting one of their values: drink double.':
+    'Runde 3 · Innerhalb oder außerhalb deiner ersten beiden Karten? Triffst du genau einen ihrer Werte: doppelt trinken.',
+  'Round 4 · Will the suit be one you already have?': 'Runde 4 · Hast du die Farbe schon auf der Hand?',
+  'Risky mode adds Round 5 · Guess the exact suit.': 'Der Risiko-Modus legt Runde 5 drauf · Tipp die genaue Farbe.',
+  'Right: give out as many sips as the round number. Wrong: drink them yourself.':
+    'Richtig: Verteil so viele Schlucke wie die Rundennummer. Falsch: Trink sie selbst.',
+  'Part 2 · The rest of the deck becomes a pyramid (5-4-3-2-1 by default), flipped from the bottom row up.':
+    'Teil 2 · Der Rest vom Deck wird zur Pyramide (standardmäßig 5-4-3-2-1) und wird von der untersten Reihe nach oben aufgedeckt.',
+  'Hold the same value as the flipped card? Lay it down and give out that row’s sips: 1-2-3-4-5, Tipsy ×2 (1-2-4-8-16) or Tipsy +2 (2-4-6-8-10). Two matching cards = give out twice.':
+    'Du hast den Wert der aufgedeckten Karte? Leg deine Karte drauf und verteil die Schlucke der Reihe: 1-2-3-4-5, Beschwipst ×2 (1-2-4-8-16) oder Beschwipst +2 (2-4-6-8-10). Zwei passende Karten = doppelt verteilen.',
+  'Most cards left at the end drives the bus. A tie goes to a tiebreaker: everyone gets a new card, the deck is flipped, and whoever’s value shows up last drives.':
+    'Wer am Ende die meisten Karten hat, fährt Bus. Bei Gleichstand gibt’s ein Stechen: Jeder bekommt eine neue Karte, der Stapel wird aufgedeckt, und wessen Wert zuletzt kommt, der fährt.',
+  'Part 3 · The bus ride, three roads to pick from:': 'Teil 3 · Die Busfahrt, drei Strecken zur Wahl:',
+  'Classic: all five questions (including Which suit?) on a fresh deck, all in a row.':
+    'Klassisch: alle fünf Fragen (inklusive „Welche Farbe?“) mit frischem Deck, alle am Stück.',
+  'Diamond 1-2-3-2-1: red or black on the bottom card, then higher or lower row by row. Follow the road: only cards touching the one you picked below.':
+    'Raute 1-2-3-2-1: Rot oder Schwarz bei der untersten Karte, dann Reihe für Reihe höher oder tiefer. Bleib auf der Straße: nur Karten, die deine gewählte Karte darunter berühren.',
+  '1-2-1-2-1: single cards red or black, pairs higher or lower (pick one).':
+    '1-2-1-2-1: Einzelkarten Rot oder Schwarz, Paare höher oder tiefer (eine davon auswählen).',
+  'Wrong answer: drink the question or row number in sips (same value: double), turned cards get covered, start over at the bottom. The ride ends when every question is right in one go.':
+    'Falsche Antwort: Trink so viele Schlucke wie die Nummer der Frage bzw. Reihe (gleicher Wert: doppelt), aufgedeckte Karten werden zugedeckt, und es geht unten von vorn los. Die Fahrt endet, wenn alle Fragen in einem Rutsch richtig sind.',
+
+  /* ---------- Questions (logic.ts) ---------- */
+  'Red or black?': 'Rot oder Schwarz?',
+  'Guess the colour of your first card.': 'Ist deine erste Karte rot oder schwarz?',
+  'Higher or lower?': 'Höher oder tiefer?',
+  'Will the next card be higher or lower than your first card? Same value means double sips!':
+    'Wird die nächste Karte höher oder tiefer als deine erste? Gleicher Wert heißt doppelte Schlucke!',
+  'Inside or outside?': 'Innerhalb oder außerhalb?',
+  'Will the next card land between your two cards or outside of them? Hitting one of their values exactly means double sips!':
+    'Landet die nächste Karte zwischen deinen beiden Karten oder außerhalb? Triffst du genau einen ihrer Werte, gibt’s doppelte Schlucke!',
+  'Got it already?': 'Hast du die Farbe schon?',
+  'Will the next card have a suit you already hold?': 'Hat die nächste Karte eine Farbe, die du schon auf der Hand hast?',
+  'Which suit?': 'Welche Farbe?',
+  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant! Tipp die genaue Farbe der nächsten Karte. Chance: eins zu vier.',
+
+  /* ---------- Answer buttons ---------- */
+  Red: 'Rot',
+  Black: 'Schwarz',
+  Higher: 'Höher',
+  Lower: 'Tiefer',
+  Inside: 'Innerhalb',
+  Outside: 'Außerhalb',
+  'Yes, got it': 'Ja, hab ich',
+  Nope: 'Nö',
+  Hearts: 'Herz',
+  Diamonds: 'Karo',
+  Spades: 'Pik',
+  Clubs: 'Kreuz',
+
+  /* ---------- Part 1 ---------- */
+  'Part 1 · Collect your cards': 'Teil 1 · Karten sammeln',
+  'Who’s dealing?': 'Wer gibt?',
+  'Play starts left of the dealer. The dealer plays too and goes last.': 'Links vom Geber geht’s los. Der Geber spielt mit und ist als Letztes dran.',
+  Dealer: 'Geber',
+  'Pick a random dealer': 'Zufälligen Geber wählen',
+  'Risky mode': 'Risiko-Modus',
+  'Adds a 5th question: guess the exact suit.': 'Mit 5. Frage: Tipp die genaue Farbe.',
+  'Deal the cards': 'Karten austeilen',
+  'Part 1 done': 'Teil 1 geschafft',
+  'Everyone’s got their cards.': 'Alle haben ihre Karten.',
+  'drank {drank} · gave {gave}': '{drank} getrunken · {gave} verteilt',
+  'Part 2: The pyramid': 'Teil 2: Die Pyramide',
+  'Round {n} of {total}': 'Runde {n} von {total}',
+  'Right → give out {n}': 'Richtig → verteil {n}',
+  'Wrong → drink {n}': 'Falsch → trink {n}',
+  'Same value → drink {n}': 'Gleicher Wert → trink {n}',
+  starts: 'fängt an',
+  '{name} deals': '{name} gibt',
+  'Let’s go': 'Los geht’s',
+  'Next: {name}': 'Weiter: {name}',
+  'Next round': 'Nächste Runde',
+  'Show everyone’s cards': 'Alle Karten zeigen',
+  '{n} of {total}': '{n} von {total}',
+  'Correct!': 'Richtig!',
+  'Wrong!': 'Falsch!',
+  'Same value!': 'Gleicher Wert!',
+  'Give out {n} sip': 'Verteil {n} Schluck',
+  'Give out {n} sips': 'Verteil {n} Schlucke',
+  'Drink {n} sip': 'Trink {n} Schluck',
+  'Drink {n} sips': 'Trink {n} Schlucke',
+  'Double trouble: drink {n} sips': 'Doppelt bitter: Trink {n} Schlucke',
+  'It was {card}': 'Es war {card}',
+  'It was {card} · fresh deck opened': 'Es war {card} · neues Deck aufgemacht',
+
+  /* ---------- Part 2: pyramid ---------- */
+  'Part 2 · The pyramid': 'Teil 2 · Die Pyramide',
+  'Get rid of your cards.': 'Werd deine Karten los.',
+  'We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end drives the bus.':
+    'Wir decken die Pyramide von unten nach oben auf. Gleicher Wert? Deine Karte kommt drauf und du verteilst Schlucke. Wer am Ende die meisten Karten hat, fährt Bus.',
+  'Pyramid size': 'Größe der Pyramide',
+  '{rows} rows, {cards} cards': '{rows} Reihen, {cards} Karten',
+  '{n} cards': '{n} Karten',
+  'Sips per row': 'Schlucke pro Reihe',
+  Normal: 'Normal',
+  'Tipsy ×2': 'Beschwipst ×2',
+  'Tipsy +2': 'Beschwipst +2',
+  'Bottom to top: {sips} sips per card.': 'Von unten nach oben: {sips} Schlucke pro Karte.',
+  'Not enough cards left, so a second deck fills the gap (no card twice in the pyramid).':
+    'Nicht genug Karten übrig, also füllt ein zweites Deck die Lücke (keine Karte doppelt in der Pyramide).',
+  'The other {n} cards are put aside.': 'Die restlichen {n} Karten kommen zur Seite.',
+  'Lay out the pyramid': 'Pyramide auslegen',
+  'Pyramid done': 'Pyramide fertig',
+  'It’s a tie!': 'Gleichstand!',
+  '{name} drives the bus': '{name} fährt Bus',
+  '{names} have {n} card left each. Tiebreaker!': '{names} haben noch je {n} Karte. Stechen!',
+  '{names} have {n} cards left each. Tiebreaker!': '{names} haben noch je {n} Karten. Stechen!',
+  'Most cards left: {n}.': 'Die meisten Karten: {n}.',
+  '{n} left · gave {gave}': '{n} übrig · {gave} verteilt',
+  'Start the tiebreaker': 'Ab ins Stechen',
+  Continue: 'Weiter',
+  'Flip this card': 'Diese Karte aufdecken',
+  'Row {row} · {n} sip per card': 'Reihe {row} · {n} Schluck pro Karte',
+  'Row {row} · {n} sips per card': 'Reihe {row} · {n} Schlucke pro Karte',
+  'lays {cards}': 'legt {cards}',
+  'gives out': 'verteilt',
+  'Nobody has an {rank}.': 'Keine {rank} auf der Hand.',
+  'Nobody has a {rank}.': 'Keine {rank} auf der Hand.',
+  'Flip the first card. Bottom row, left to right.': 'Deck die erste Karte auf. Unterste Reihe, von links nach rechts.',
+  Hands: 'Karten auf der Hand',
+  'All gone 🎉': 'Alle weg 🎉',
+  'A fresh deck was added to build the pyramid.': 'Für die Pyramide kam ein frisches Deck dazu.',
+  'Who drives the bus?': 'Wer fährt Bus?',
+  'Flip card {n} of {total}': 'Karte {n} von {total} aufdecken',
+
+  /* ---------- Tiebreaker ---------- */
+  Tiebreaker: 'Stechen',
+  'Tiebreaker · round {n}': 'Stechen · Runde {n}',
+  'Whose card shows up first?': 'Wessen Karte kommt zuerst?',
+  'Everyone got a new card. We flip the deck: when your value shows up, you’re safe. The last one left drives the bus.':
+    'Jeder hat eine neue Karte. Wir decken den Stapel auf: Kommt dein Wert, bist du raus. Wer als Letztes übrig bleibt, fährt Bus.',
+  '{name} drives the bus!': '{name} fährt Bus!',
+  'Still tied!': 'Immer noch Gleichstand!',
+  '{names} go again with new cards.': '{names} müssen nochmal ran – mit neuen Karten.',
+  'Safe ✓': 'Raus ✓',
+  'Waiting…': 'Wartet…',
+  '{rank}! {names} are safe.': '{rank}! {names} sind raus.',
+  '{rank}! {names} is safe.': '{rank}! {names} ist raus.',
+  '{rank}. Nobody’s safe.': '{rank}. Keiner kommt davon.',
+  'Ready?': 'Bereit?',
+  '{n} flipped': '{n} aufgedeckt',
+  'Deal new cards': 'Neue Karten geben',
+  'Flip next card': 'Nächste Karte aufdecken',
+
+  /* ---------- Part 3: the bus ride ---------- */
+  Classic: 'Klassisch',
+  Diamond: 'Raute',
+  'Fresh deck, all five questions from part 1 in a row. Get one wrong: drink the question number in sips and start again from question 1.':
+    'Frisches Deck, alle fünf Fragen aus Teil 1 am Stück. Eine falsch: Trink so viele Schlucke wie die Nummer der Frage und fang wieder bei Frage 1 an.',
+  'A 1-2-3-2-1 diamond. Bottom card: red or black? Then higher or lower, row by row, following the road: you can only pick a card that touches the one below. Wrong: drink the row number, the turned cards get covered, start again at the bottom.':
+    'Eine 1-2-3-2-1-Raute. Unterste Karte: Rot oder Schwarz? Dann Reihe für Reihe höher oder tiefer, immer der Straße nach: Du darfst nur eine Karte nehmen, die die Karte darunter berührt. Falsch: Trink die Nummer der Reihe, die aufgedeckten Karten werden zugedeckt, zurück nach unten.',
+  'Single cards: red or black? Pairs: pick a card, higher or lower? Wrong: drink the row number, the turned cards get covered, start again at the bottom.':
+    'Einzelkarten: Rot oder Schwarz? Paare: Wähl eine Karte, höher oder tiefer? Falsch: Trink die Nummer der Reihe, die aufgedeckten Karten werden zugedeckt, zurück nach unten.',
+  'Part 3 · The bus ride': 'Teil 3 · Die Busfahrt',
+  'Which road?': 'Welche Strecke?',
+  'Start the ride': 'Losfahren',
+  'It was {card} · new deck shuffled': 'Es war {card} · neues Deck gemischt',
+  'All correct!': 'Alles richtig!',
+  'The bus has arrived.': 'Der Bus ist angekommen.',
+  'Finish the ride': 'Fahrt beenden',
+  'Next: {question}': 'Weiter: {question}',
+  'Next question →': 'Nächste Frage →',
+  'Same value! Drink {n}': 'Gleicher Wert! Trink {n}',
+  'Wrong! Drink {n}': 'Falsch! Trink {n}',
+  'Back to question 1.': 'Zurück zu Frage 1.',
+  'Start over': 'Nochmal von vorn',
+  'Question {n} of {total}': 'Frage {n} von {total}',
+  'Attempt {n} · {sips} sips': 'Versuch {n} · {sips} getrunken',
+  'Next row: {question}': 'Nächste Reihe: {question}',
+  'Next row →': 'Nächste Reihe →',
+  'Turned cards get covered. Back to the bottom.': 'Aufgedeckte Karten werden zugedeckt. Zurück nach unten.',
+  'Row {n} of {total}': 'Reihe {n} von {total}',
+  'Pick card {n}': 'Karte {n} wählen',
+  'Face-down card': 'Verdeckte Karte',
+  'Row {n}/{total}': 'Reihe {n}/{total}',
+  'than {card}': 'als {card}',
+  'Pick a card in row {n}.': 'Wähl eine Karte in Reihe {n}.',
+  'Pick a card in row {n}: tap the left or the right one.': 'Wähl eine Karte in Reihe {n}: Tipp auf die linke oder die rechte.',
+
+  /* ---------- Ride finish ---------- */
+  'Ride complete': 'Fahrt geschafft',
+  '{name} made it!': '{name} hat’s geschafft!',
+  'First try. Legend.': 'Im ersten Versuch. Legende.',
+  '{fails} restart and {sips} sips later.': '{fails} Neustart und {sips} Schlucke später.',
+  '{fails} restarts and {sips} sips later.': '{fails} Neustarts und {sips} Schlucke später.',
+  Attempts: 'Versuche',
+  'Sips drunk': 'Schlucke getrunken',
+  'Cards flipped': 'Karten aufgedeckt',
+  'Play again': 'Nochmal spielen',
+  'Back to games': 'Zurück zu den Spielen',
+};
 
 export default busDriver;
