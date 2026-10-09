@@ -1674,7 +1674,8 @@ h3 {
 /* ---------- Bus Driver ---------- */
 
 .bd,
-.kc {
+.kc,
+.ftd {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1684,6 +1685,7 @@ h3 {
 /* Never squash content to fit the screen – let the page scroll instead. */
 .bd > *,
 .kc > *,
+.ftd > *,
 .who-drinks > * {
   flex-shrink: 0;
 }
@@ -2784,6 +2786,350 @@ h3 {
   flex: none;
   width: 28px;
   text-align: center;
+}
+
+/* ---------- F*ck the Dealer ---------- */
+
+/* The middle of the table: a pile per value from 2 to Ace, seven on top, six below. */
+.ftd-table {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 6px;
+  padding: 16px 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ftd-pile {
+  flex: 0 0 calc((100% - 36px) / 7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  container-type: inline-size;
+}
+
+.ftd-pile-cards {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.4;
+}
+
+.ftd-pile-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12cqw;
+  border: 1.5px dashed var(--line);
+  color: var(--muted);
+  opacity: 0.7;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 40cqw;
+}
+
+/* Cards on a pile: each one lies a little crooked, the pile grows upwards. */
+.ftd-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqw;
+  border-radius: 12cqw;
+  background: #fff;
+  color: var(--card-black);
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+}
+
+.ftd-card.red {
+  color: var(--card-red);
+}
+
+.ftd-card.back {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 6cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ftd-card-rank {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44cqw;
+  line-height: 0.9;
+}
+
+.ftd-card-suit {
+  font-size: 30cqw;
+}
+
+/* How many of a value are out: four dots under the pile. */
+.ftd-pile-count {
+  display: flex;
+  gap: 3px;
+}
+
+.ftd-pile-count i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.ftd-pile-count i.on {
+  background: var(--muted);
+}
+
+/* The dealer's deck and the question. */
+.ftd-turn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ftd-deck {
+  position: relative;
+  flex: none;
+  padding-bottom: 36px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Two cards peeking out underneath, so it reads as a deck. */
+.ftd-deck.stacked::before,
+.ftd-deck.stacked::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 96px;
+  height: calc(96px * 1.4);
+  border-radius: calc(96px * 0.12);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 calc(96px * 0.06) #fff;
+  transform: translate(4px, 4px) rotate(3deg);
+  opacity: 0.45;
+}
+
+.ftd-deck.stacked::after {
+  transform: translate(-3px, 2px) rotate(-2.5deg);
+  opacity: 0.7;
+}
+
+.ftd-deck .pcard {
+  position: relative;
+  z-index: 1;
+}
+
+.ftd-deck-empty {
+  display: block;
+  width: 96px;
+  height: calc(96px * 1.4);
+  border-radius: calc(96px * 0.12);
+  border: 1.5px dashed var(--line);
+}
+
+.ftd-peek-hint {
+  position: absolute;
+  left: 50%;
+  top: calc(96px * 1.4 + 8px);
+  width: 112px;
+  transform: translateX(-50%);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.ftd-peek-hint.off {
+  visibility: hidden;
+}
+
+.ftd-ask {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.ftd-guesser {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.ftd-guesser-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ftd-question {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 8.5vw, 2.3rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ftd-question.hint {
+  color: var(--accent-ink);
+  animation: pop-in 0.4s var(--spring) both;
+}
+
+.ftd-ask-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.ftd-ask-sub:empty {
+  display: none;
+}
+
+.ftd-misses {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.ftd-misses i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+
+.ftd-misses i.on {
+  background: var(--bad);
+  box-shadow: none;
+}
+
+.ftd-misses-label {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* The values to guess: five per row, white like cards. */
+.ftd-pad {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ftd-rank {
+  flex: 0 0 calc((100% - 32px) / 5);
+  height: 56px;
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--card-black);
+  box-shadow: inset 0 0 0 1px #dcdfe4;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  transition:
+    transform 0.15s var(--spring),
+    opacity 0.2s ease;
+}
+
+.ftd-rank:not(:disabled):active {
+  transform: scale(0.92);
+}
+
+.ftd-rank:disabled {
+  opacity: 0.22;
+  cursor: default;
+}
+
+.ftd-rank.crossed {
+  opacity: 0.5;
+  color: var(--card-red);
+  text-decoration: line-through 3px;
+}
+
+/* Dealer change and game over. */
+.ftd-handover .bd-avatar.xl {
+  margin: 8px 0 4px;
+}
+
+.ftd-sips {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--accent-ink);
+  animation: pop-in 0.5s var(--spring) 0.15s both;
+}
+
+.ftd-sips.none {
+  color: var(--muted);
+}
+
+.ftd-sips-num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 5.5rem;
+  line-height: 0.9;
+}
+
+.ftd-sips-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+}
+
+.ftd-next-dealer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ftd-tally {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ftd-tally-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ftd-tally-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ftd-tally-num {
+  color: var(--muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Confetti ---------- */
