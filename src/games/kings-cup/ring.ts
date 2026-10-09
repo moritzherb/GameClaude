@@ -9,7 +9,9 @@ export interface Slot {
   rot: number;
 }
 
-export const RING_RADIUS = 42;
+export const RING_RADIUS = 39.5;
+/** Card width in % of the table (the CSS .kc-slot width uses the same number in cqw). */
+export const SLOT_WIDTH = 9.2;
 
 export function layRing(count: number, rand: () => number = Math.random): Slot[] {
   const spread = (amount: number) => (rand() * 2 - 1) * amount;

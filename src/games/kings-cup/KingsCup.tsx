@@ -7,7 +7,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
-import { layRing, type Slot } from './ring';
+import { layRing, SLOT_WIDTH, type Slot } from './ring';
 import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
 
 interface State {
@@ -142,23 +142,25 @@ export default function KingsCup({ players, exit }: GameProps) {
 
       <div className="kc-stage">
         <div className={`kc-ring${s.current ? ' revealing' : ''}`}>
-          {s.slots.map((slot, i) =>
-            s.taken[i] ? null : (
-              <button
-                key={i}
-                type="button"
-                className="kc-slot"
-                style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
-                disabled={!!s.current}
-                aria-label="Face-down card"
-                onClick={() => {
-                  sfx.pop();
-                  buzz(12);
-                  draw(i);
-                }}
-              />
-            ),
-          )}
+          <div className="kc-slots">
+            {s.slots.map((slot, i) =>
+              s.taken[i] ? null : (
+                <button
+                  key={i}
+                  type="button"
+                  className="kc-slot"
+                  style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
+                  disabled={!!s.current}
+                  aria-label="Face-down card"
+                  onClick={() => {
+                    sfx.pop();
+                    buzz(12);
+                    draw(i);
+                  }}
+                />
+              ),
+            )}
+          </div>
           <KingCrown kings={s.kings} />
           {!s.current && !known && <span className="kc-ring-hint">Pick any card</span>}
           {s.current && rule && <Reveal key={52 - left} card={s.current} rule={rule} finale={!!lastKing} from={from.current} />}
@@ -238,55 +240,70 @@ export default function KingsCup({ players, exit }: GameProps) {
  */
 function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; finale: boolean; from: Slot | null }) {
   const ref = useRef<HTMLDivElement>(null);
-  // Half turns so far: 0 = still face down, odd = card face, even = the rule.
-  const [turns, setTurns] = useState(0);
+  const inner = useRef<HTMLSpanElement>(null);
+  // Half turns: odd = card face, even = the rule. Starts face up; the first flip is animated below.
+  const [turns, setTurns] = useState(1);
+  // Until the card has landed, its back is the card back (not the rule) and it can't be tapped.
+  const [landed, setLanded] = useState(false);
   const known = useApp().knows('kings-cup');
   useLayoutEffect(() => {
     const el = ref.current;
-    const flip = window.setTimeout(() => setTurns(1), 160);
+    const face = inner.current;
     const ring = el?.parentElement;
-    if (el && ring && from && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!el || !face || !ring || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setLanded(true);
+      return;
+    }
+    // Flight and flip both run as compositor animations, with no React render until the card lands.
+    if (from) {
       // Measured in the ring's own coordinates, so it lines up even if the page moves.
       const size = ring.offsetWidth;
       const dx = ((from.x - 50) / 100) * size;
       const dy = ((from.y - 50) / 100) * size;
-      const scale = (0.074 * size) / el.offsetWidth;
+      const scale = ((SLOT_WIDTH / 100) * size) / el.offsetWidth;
       el.animate(
         [{ transform: `translate(${dx}px, ${dy}px) rotate(${from.rot}deg) scale(${scale})` }, { transform: 'translate(0, 0) rotate(0deg) scale(1)' }],
-        { duration: 620, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+        { duration: 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
       );
     }
-    return () => window.clearTimeout(flip);
+    const flip = face.animate([{ transform: 'rotateY(180deg)' }, { transform: 'rotateY(360deg)' }], {
+      duration: 650,
+      delay: 90,
+      easing: 'cubic-bezier(0.45, 0, 0.25, 1)',
+      fill: 'backwards',
+    });
+    flip.onfinish = () => setLanded(true);
+    return () => flip.cancel();
   }, [from]);
 
-  const showsRule = turns > 0 && turns % 2 === 0;
+  const showsRule = turns % 2 === 0;
   return (
     <div ref={ref} className="kc-reveal">
       <button
         type="button"
         className="kc-big"
         aria-label={showsRule ? `${rule.title}: ${rule.text} Tap to see the card.` : `${rankLabel(card.value)} of ${card.suit}. Tap for the rule.`}
-        disabled={turns === 0}
+        disabled={!landed}
         onClick={() => {
           sfx.tick();
           buzz(10);
           setTurns((t) => t + 1);
         }}
       >
-        <span className="kc-big-inner" style={{ transform: `rotateY(${180 * (turns + 1)}deg)` }}>
+        <span ref={inner} className="kc-big-inner" style={{ transform: `rotateY(${180 * (turns + 1)}deg)` }}>
           <CardFace card={card} />
-          {turns === 0 ? (
-            <span className="pcard-face pcard-back" />
-          ) : (
+          {landed ? (
             <span className={`pcard-face kc-rule-face${finale ? ' finale' : ''}`}>
               <span className="kc-rule-face-emoji">{rule.emoji}</span>
               <span className="kc-rule-face-title">{rule.title}</span>
               <span className="kc-rule-face-text">{rule.text}</span>
             </span>
+          ) : (
+            <span className="pcard-face pcard-back" />
           )}
         </span>
       </button>
-      {!known && turns > 0 && <span className="kc-big-hint">{showsRule ? 'Tap for the card' : 'Tap for the rule'}</span>}
+      {!known && landed && <span className="kc-big-hint">{showsRule ? 'Tap for the card' : 'Tap for the rule'}</span>}
     </div>
   );
 }
