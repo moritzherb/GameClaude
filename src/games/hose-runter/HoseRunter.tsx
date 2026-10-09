@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
+import { t } from '../../i18n';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
@@ -154,8 +155,8 @@ export default function HoseRunter() {
         <div className="hr">
           <div className="connecting">
             <div className="connecting-emoji">👖</div>
-            <h2 className="bd-title">Hose runter</h2>
-            <p className="lead">Waiting for {host?.name ?? 'the host'} to deal…</p>
+            <h2 className="bd-title">{t('Pants down')}</h2>
+            <p className="lead">{host ? t('Waiting for {name} to deal…', { name: host.name }) : t('Waiting for the host to deal…')}</p>
           </div>
         </div>
       );
@@ -164,11 +165,11 @@ export default function HoseRunter() {
     return (
       <div className="hr">
         <div className="bd-head">
-          <span className="kicker">Every phone plays</span>
-          <h2 className="bd-title big">Hose runter</h2>
+          <span className="kicker">{t('Every phone plays')}</span>
+          <h2 className="bd-title big">{t('Pants down')}</h2>
           {!known && (
             <p className="lead">
-              Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {START_LIVES} lives each.
+              {t('Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {lives} lives each.', { lives: START_LIVES })}
             </p>
           )}
         </div>
@@ -185,14 +186,14 @@ export default function HoseRunter() {
             </li>
           ))}
         </ul>
-        {room.members.filter((m) => m.online).length > MAX_PLAYERS && <p className="notice">Max {MAX_PLAYERS} players. The first {MAX_PLAYERS} play.</p>}
-        {!known && <p className="fine-print">Turn order is the order above. A random player deals first.</p>}
+        {room.members.filter((m) => m.online).length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
+        {!known && <p className="fine-print">{t('Turn order is the order above. A random player deals first.')}</p>}
         <div className="settings-list">
-          <Tap className={`setting-row${allowPass ? ' on' : ''}`} onClick={() => setAllowPass(!allowPass)} ariaLabel="Allow passing">
+          <Tap className={`setting-row${allowPass ? ' on' : ''}`} onClick={() => setAllowPass(!allowPass)} ariaLabel={t('Allow passing')}>
             <span className="setting-emoji">👉</span>
             <span className="setting-text">
-              <span className="setting-label">Allow passing</span>
-              <span className="setting-hint">House rule for big groups: skip your turn instead of swapping (“schieben”).</span>
+              <span className="setting-label">{t('Allow passing')}</span>
+              <span className="setting-hint">{t('House rule for big groups: skip your turn instead of swapping (“schieben”).')}</span>
             </span>
             <span className="switch">
               <span className="switch-knob" />
@@ -207,7 +208,7 @@ export default function HoseRunter() {
               setState(newGame(ready.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color })), undefined, { allowPass }))
             }
           >
-            {ready.length < MIN_PLAYERS ? 'Waiting for players…' : 'Deal the cards'}
+            {ready.length < MIN_PLAYERS ? t('Waiting for players…') : t('Deal the cards')}
           </BigButton>
         </div>
       </div>
@@ -250,9 +251,9 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
   };
 
   let headline: string;
-  if (dealerPhase) headline = myTurn ? 'You’re dealing. Keep these cards?' : `${dealer?.name} deals and checks their cards…`;
-  else if (myTurn) headline = stopper ? 'Last turn! Swap one or all.' : 'Your turn!';
-  else headline = `${turnSeat?.name} is swapping…`;
+  if (dealerPhase) headline = myTurn ? t('You’re dealing. Keep these cards?') : t('{name} deals and checks their cards…', { name: dealer?.name ?? '' });
+  else if (myTurn) headline = stopper ? t('Last turn! Swap one or all.') : t('Your turn!');
+  else headline = t('{name} is swapping…', { name: turnSeat?.name ?? '' });
 
   return (
     <div className="hr">
@@ -260,15 +261,17 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
 
       <div className={`hr-status${myTurn ? ' mine' : ''}`}>
         <span className="hr-status-round">
-          Round {view.round} · {dealer?.name} deals
+          {t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}
         </span>
         <span className="hr-status-text">{headline}</span>
-        {stopper && <span className="hr-stop-banner">✋ {stopper.id === myId ? 'You' : stopper.name} said STOP</span>}
+        {stopper && (
+          <span className="hr-stop-banner">✋ {stopper.id === myId ? t('You said STOP') : t('{name} said STOP', { name: stopper.name })}</span>
+        )}
       </div>
 
       {!dealerPhase && (
         <section className="hr-zone">
-          <span className="hr-zone-label">Middle</span>
+          <span className="hr-zone-label">{t('Middle')}</span>
           <div className="hr-cards">
             {view.middle.map((c, i) => (
               <CardButton
@@ -286,7 +289,8 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
       {playing ? (
         <section className="hr-zone hand">
           <span className="hr-zone-label">
-            Your cards{score && <strong> · {formatPoints(score.points)} points</strong>}
+            {t('Your cards')}
+            {score && <strong> · {t('{points} points', { points: formatPoints(score.points) })}</strong>}
             {score && score.kind !== 'suit' && <ScoreBadge score={score} />}
           </span>
           <div className="hr-cards">
@@ -302,7 +306,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           </div>
         </section>
       ) : (
-        <p className="notice">{me ? 'You’re out. Watch the others finish.' : 'You’re watching this game.'}</p>
+        <p className="notice">{me ? t('You’re out. Watch the others finish.') : t('You’re watching this game.')}</p>
       )}
 
       <LastMove log={view.log} seats={view.seats} myId={myId} />
@@ -310,7 +314,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
       {myTurn && playing && !connected && (
         <div className="sticky-action hr-actions">
           <BigButton variant="glass" disabled>
-            Reconnecting…
+            {t('Reconnecting…')}
           </BigButton>
         </div>
       )}
@@ -320,31 +324,31 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           {dealerPhase ? (
             <>
               <BigButton size="xl" onClick={() => send({ type: 'keep' })}>
-                Keep these
+                {t('Keep these')}
               </BigButton>
               <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
-                Put them in the middle
+                {t('Put them in the middle')}
               </BigButton>
-              {!known && <p className="fine-print center">In the middle, you must play the next three cards instead, whatever they are.</p>}
+              {!known && <p className="fine-print center">{t('In the middle, you must play the next three cards instead, whatever they are.')}</p>}
             </>
           ) : pickHand !== null && pickMiddle !== null ? (
             <BigButton size="xl" onClick={() => send({ type: 'swap1', hand: pickHand, middle: pickMiddle })}>
-              Swap {cardName(view.hand[pickHand])} ↔ {cardName(view.middle[pickMiddle])}
+              {t('Swap {mine} ↔ {middle}', { mine: cardName(view.hand[pickHand]), middle: cardName(view.middle[pickMiddle]) })}
             </BigButton>
           ) : (
             <>
-              {!known && <p className="hr-hint">Tap one of your cards and one in the middle to swap.</p>}
+              {!known && <p className="hr-hint">{t('Tap one of your cards and one in the middle to swap.')}</p>}
               {view.allowPass && (
                 <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
-                  Pass
+                  {t('Pass')}
                 </BigButton>
               )}
               <div className="hr-action-row">
                 <BigButton variant="light" onClick={() => send({ type: 'swapAll' })}>
-                  Swap all 3
+                  {t('Swap all 3')}
                 </BigButton>
                 <BigButton variant="danger" disabled={!view.canStop} onClick={() => send({ type: 'stop' })}>
-                  {view.firstLap ? 'Stop after round 1' : view.stopperId ? 'Stop called' : 'Stop'}
+                  {view.firstLap ? t('Stop after round 1') : view.stopperId ? t('Stop called') : t('Stop')}
                 </BigButton>
               </div>
             </>
@@ -364,7 +368,7 @@ function CardButton({ card, selected, disabled, onClick }: { card: Card; selecte
 }
 
 function ScoreBadge({ score }: { score: Score }) {
-  const label = { feuer: '🔥 Feuer', hose: '👖 Hose runter', triple: '30½', suit: '' }[score.kind];
+  const label = { feuer: `🔥 ${t('Fire')}`, hose: `👖 ${t('Pants down')}`, triple: '30½', suit: '' }[score.kind];
   return label ? <span className={`hr-badge ${score.kind}`}>{label}</span> : null;
 }
 
@@ -381,10 +385,10 @@ function Seats({ view, myId }: { view: PlayerView; myId: string }) {
         >
           <span className="hr-seat-avatar">
             {s.out ? '💀' : s.avatar}
-            {s.id === view.dealerId && !s.out && <span className="hr-dealer">D</span>}
+            {s.id === view.dealerId && !s.out && <span className="hr-dealer">{t('D')}</span>}
             {s.id === view.stopperId && <span className="hr-stopper">✋</span>}
           </span>
-          <span className="hr-seat-name">{s.id === myId ? 'You' : s.name}</span>
+          <span className="hr-seat-name">{s.id === myId ? t('You') : s.name}</span>
           <Lives seat={s} />
         </div>
       ))}
@@ -393,9 +397,9 @@ function Seats({ view, myId }: { view: PlayerView; myId: string }) {
 }
 
 function Lives({ seat }: { seat: Seat }) {
-  if (seat.out) return <span className="hr-lives out">out</span>;
+  if (seat.out) return <span className="hr-lives out">{t('out')}</span>;
   return (
-    <span className="hr-lives" aria-label={`${seat.lives} lives`}>
+    <span className="hr-lives" aria-label={t('{n} lives', { n: seat.lives })}>
       {'♥'.repeat(Math.max(0, seat.lives))}
     </span>
   );
@@ -404,15 +408,32 @@ function Lives({ seat }: { seat: Seat }) {
 function LastMove({ log, seats, myId }: { log: LogEntry[]; seats: Seat[]; myId: string }) {
   const last = log.at(-1);
   if (!last) return null;
-  const who = last.by === myId ? 'You' : seats.find((s) => s.id === last.by)?.name ?? 'Someone';
-  const text = {
-    keep: `${who} kept the first cards.`,
-    toss: `${who} put the first cards in the middle.`,
-    swapAll: `${who} swapped all three.`,
-    pass: `${who} passed.`,
-    stop: `${who} said STOP. Everyone else gets one more turn.`,
-    swap1: last.kind === 'swap1' ? `${who} swapped ${cardName(last.gave)} for ${cardName(last.took)}.` : '',
-  }[last.kind];
+  // "You" and "{name}" are separate texts: other languages conjugate differently.
+  const me = last.by === myId;
+  const name = seats.find((s) => s.id === last.by)?.name ?? t('Someone');
+  let text: string;
+  switch (last.kind) {
+    case 'keep':
+      text = me ? t('You kept the first cards.') : t('{name} kept the first cards.', { name });
+      break;
+    case 'toss':
+      text = me ? t('You put the first cards in the middle.') : t('{name} put the first cards in the middle.', { name });
+      break;
+    case 'swapAll':
+      text = me ? t('You swapped all three.') : t('{name} swapped all three.', { name });
+      break;
+    case 'pass':
+      text = me ? t('You passed.') : t('{name} passed.', { name });
+      break;
+    case 'stop':
+      text = me ? t('You said STOP. Everyone else gets one more turn.') : t('{name} said STOP. Everyone else gets one more turn.', { name });
+      break;
+    case 'swap1': {
+      const cards = { gave: cardName(last.gave), took: cardName(last.took) };
+      text = me ? t('You swapped {gave} for {took}.', cards) : t('{name} swapped {gave} for {took}.', { name, ...cards });
+      break;
+    }
+  }
   return <p key={log.length} className="hr-last pop-in">{text}</p>;
 }
 
@@ -422,31 +443,44 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
   const r = view.result;
   if (!r) return null;
   const order = Object.keys(r.scores).sort((a, b) => r.scores[b].points - r.scores[a].points);
-  const name = (id: string | null) => (id === myId ? 'You' : view.seats.find((s) => s.id === id)?.name ?? '');
+  const name = (id: string | null) => (id === myId ? t('You') : view.seats.find((s) => s.id === id)?.name ?? '');
+  const byMe = r.by === myId;
+  const byName = view.seats.find((s) => s.id === r.by)?.name ?? '';
   const over = view.phase === 'over';
   const winner = view.winnerId ? view.seats.find((s) => s.id === view.winnerId) : null;
 
   const title = over
     ? winner
-      ? `${winner.id === myId ? 'You win' : `${winner.name} wins`}!`
-      : 'Nobody survived!'
+      ? winner.id === myId
+        ? t('You win!')
+        : t('{name} wins!', { name: winner.name })
+      : t('Nobody survived!')
     : r.endedBy === 'feuer'
-      ? `🔥 Feuer from ${name(r.by)}!`
+      ? byMe
+        ? t('🔥 Fire from You!')
+        : t('🔥 Fire from {name}!', { name: byName })
       : r.endedBy === 'hose'
-        ? `👖 Hose runter from ${name(r.by)}!`
-        : 'Cards on the table!';
+        ? byMe
+          ? t('👖 Pants down from You!')
+          : t('👖 Pants down from {name}!', { name: byName })
+        : t('Cards on the table!');
+
+  const losers = r.losers.map(name).join(' & ');
+  const lead = r.decider
+    ? t('Tie at the end! {names} stay in on one life and play a decider round.', { names: losers })
+    : r.losers.length !== 1
+      ? t('{names} lose a life.', { names: losers })
+      : r.losers[0] === myId
+        ? t('You lose a life.')
+        : t('{name} loses a life.', { name: losers });
 
   return (
     <div className="hr">
       <Seats view={view} myId={myId} />
       <div className="bd-head center">
-        <span className="kicker">{over ? 'Game over' : `Round ${view.round}`}</span>
+        <span className="kicker">{over ? t('Game over') : t('Round {round}', { round: view.round })}</span>
         <h2 className="bd-title big">{title}</h2>
-        <p className="lead">
-          {r.decider
-            ? `Tie at the end! ${r.losers.map(name).join(' & ')} stay in on one life and play a decider round.`
-            : `${r.losers.map(name).join(' & ')} ${r.losers.length === 1 && r.losers[0] !== myId ? 'loses' : 'lose'} a life.`}
-        </p>
+        <p className="lead">{lead}</p>
       </div>
 
       <ul className="hr-results">
@@ -465,7 +499,7 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
                   <PlayingCard key={i} card={c} size="sm" />
                 ))}
                 <span className="hr-result-note">
-                  {r.out.includes(id) ? 'Out 💀' : r.extraLife.includes(id) ? 'Extra life! ♥' : lost ? '−1 ♥' : ''}
+                  {r.out.includes(id) ? t('Out 💀') : r.extraLife.includes(id) ? t('Extra life! ♥') : lost ? '−1 ♥' : ''}
                 </span>
               </div>
             </li>
@@ -477,15 +511,15 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
         {isHost ? (
           over ? (
             <BigButton size="xl" onClick={onNewGame}>
-              New game
+              {t('New game')}
             </BigButton>
           ) : (
             <BigButton size="xl" onClick={onNext}>
-              Next round →
+              {t('Next round →')}
             </BigButton>
           )
         ) : (
-          <p className="lead center">{over ? 'Waiting for the host…' : 'Waiting for the host to deal the next round…'}</p>
+          <p className="lead center">{over ? t('Waiting for the host…') : t('Waiting for the host to deal the next round…')}</p>
         )}
       </div>
     </div>

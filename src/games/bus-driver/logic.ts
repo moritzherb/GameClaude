@@ -1,3 +1,4 @@
+import { tx } from '../../i18n';
 import { cardColor, type Card, type Suit } from '../../lib/cards';
 
 export type QuestionId = 'color' | 'higher-lower' | 'inside-outside' | 'have-it' | 'suit';
@@ -18,15 +19,15 @@ export interface Question {
 
 /** The questions in order. Round N is worth N sips. "suit" only plays in risky mode. */
 export const QUESTIONS: Question[] = [
-  { id: 'color', title: 'Red or black?', explain: 'Guess the colour of your first card.' },
-  { id: 'higher-lower', title: 'Higher or lower?', explain: 'Will the next card be higher or lower than your first card? Same value means double sips!' },
+  { id: 'color', title: tx('Red or black?'), explain: tx('Guess the colour of your first card.') },
+  { id: 'higher-lower', title: tx('Higher or lower?'), explain: tx('Will the next card be higher or lower than your first card? Same value means double sips!') },
   {
     id: 'inside-outside',
-    title: 'Inside or outside?',
-    explain: 'Will the next card land between your two cards or outside of them? Hitting one of their values exactly means double sips!',
+    title: tx('Inside or outside?'),
+    explain: tx('Will the next card land between your two cards or outside of them? Hitting one of their values exactly means double sips!'),
   },
-  { id: 'have-it', title: 'Got it already?', explain: 'Will the next card have a suit you already hold?' },
-  { id: 'suit', title: 'Which suit?', explain: 'Risky! Guess the exact suit of the next card. One in four chance.' },
+  { id: 'have-it', title: tx('Got it already?'), explain: tx('Will the next card have a suit you already hold?') },
+  { id: 'suit', title: tx('Which suit?'), explain: tx('Risky! Guess the exact suit of the next card. One in four chance.') },
 ];
 
 export function questionsFor(risky: boolean) {

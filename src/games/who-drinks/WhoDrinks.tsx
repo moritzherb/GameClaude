@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import { t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, randomInt } from '../../lib/random';
 import type { GameProps } from '../types';
 
+// Picked when the wheel stops (at runtime), so t() is fine here.
 const FATES = [
   () => {
     const n = randomInt(1, 3);
-    return `Drink ${n} sip${n > 1 ? 's' : ''}`;
+    return n === 1 ? t('Drink {n} sip', { n }) : t('Drink {n} sips', { n });
   },
-  () => `Give out ${randomInt(2, 4)} sips`,
-  () => 'Finish your drink! 🫗',
-  () => 'Everybody drinks! 🍻',
-  () => 'Pick a drinking buddy 🤝',
-  () => 'Safe! Drink water 💧',
-  () => 'Drink with no hands 🙌',
-  () => 'Waterfall – you start! 🌊',
+  () => t('Give out {n} sips', { n: randomInt(2, 4) }),
+  () => t('Finish your drink! 🫗'),
+  () => t('Everybody drinks! 🍻'),
+  () => t('Pick a drinking buddy 🤝'),
+  () => t('Safe! Drink water 💧'),
+  () => t('Drink with no hands 🙌'),
+  () => t('Waterfall – you start! 🌊'),
 ];
 
 export default function WhoDrinks({ players }: GameProps) {
@@ -64,7 +66,7 @@ export default function WhoDrinks({ players }: GameProps) {
       ) : (
         <div className="who-drinks-hint">
           <span className="who-drinks-hint-emoji">{spinning ? '🥁' : '👀'}</span>
-          {spinning ? 'Rolling…' : 'Who’s gonna drink?'}
+          {spinning ? t('Rolling…') : t('Who’s gonna drink?')}
         </div>
       )}
 
@@ -83,7 +85,7 @@ export default function WhoDrinks({ players }: GameProps) {
 
       <div className="sticky-action">
         <BigButton size="xl" onClick={spin} disabled={spinning}>
-          {result ? 'Spin again' : 'Spin'}
+          {result ? t('Spin again') : t('Spin')}
         </BigButton>
       </div>
     </div>

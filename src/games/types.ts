@@ -1,22 +1,24 @@
 import type { ComponentType } from 'react';
+import { tx } from '../i18n';
 import type { Player } from '../state/AppState';
 
 export type CategoryId = 'pregame' | 'party' | 'quick' | 'cards' | 'dice' | 'teams';
 
 export interface Category {
   id: CategoryId;
+  /** English; render with t(label). */
   label: string;
   emoji: string;
   color: string;
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'pregame', label: 'Pregame', emoji: '🔥', color: 'var(--c-orange)' },
-  { id: 'party', label: 'Party', emoji: '🪩', color: 'var(--c-pink)' },
-  { id: 'quick', label: 'Quick', emoji: '⚡', color: 'var(--c-yellow)' },
-  { id: 'cards', label: 'Cards', emoji: '🃏', color: 'var(--c-blue)' },
-  { id: 'dice', label: 'Dice', emoji: '🎲', color: 'var(--c-mint)' },
-  { id: 'teams', label: 'Teams', emoji: '🤝', color: 'var(--c-lilac)' },
+  { id: 'pregame', label: tx('Pregame'), emoji: '🔥', color: 'var(--c-orange)' },
+  { id: 'party', label: tx('Party'), emoji: '🪩', color: 'var(--c-pink)' },
+  { id: 'quick', label: tx('Quick'), emoji: '⚡', color: 'var(--c-yellow)' },
+  { id: 'cards', label: tx('Cards'), emoji: '🃏', color: 'var(--c-blue)' },
+  { id: 'dice', label: tx('Dice'), emoji: '🎲', color: 'var(--c-mint)' },
+  { id: 'teams', label: tx('Teams'), emoji: '🤝', color: 'var(--c-lilac)' },
 ];
 
 /** Props every game screen receives from the game shell. */
