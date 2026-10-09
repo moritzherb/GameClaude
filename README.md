@@ -1,4 +1,4 @@
-# 🍻 PROST! – Drinking Games
+# 🍻 prost! – Drinking Games
 
 A party & pregame drinking games app. Gig-poster look (condensed caps, games as numbered tickets, lime and yellow on warm black or paper), but still **drunk-proof**: huge buttons, one obvious action per screen,
 the escape button is always top-left, and the screen stays on while you play.
