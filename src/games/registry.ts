@@ -1,11 +1,12 @@
 import type { GameDefinition } from './types';
 import busDriver from './bus-driver';
+import fuckTheDealer from './fuck-the-dealer';
 import hoseRunter from './hose-runter';
 import kingsCup from './kings-cup';
 import whoDrinks from './who-drinks';
 
 /** Every game in the app. New games get imported and added here. */
-export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, whoDrinks];
+export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, fuckTheDealer, whoDrinks];
 
 export function findGame(id: string | undefined) {
   return GAMES.find((g) => g.id === id);
