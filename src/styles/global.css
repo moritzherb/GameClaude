@@ -1863,6 +1863,66 @@ h3 {
   min-width: 0;
 }
 
+/* Cards left in the deck: a tiny card stack and the number, top right of the player row. */
+.deck-count {
+  flex: none;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.deck-count-stack {
+  position: relative;
+  width: 20px;
+  height: 26px;
+}
+
+.deck-count-stack i {
+  position: absolute;
+  width: 16px;
+  height: 22px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 1.5px #fff;
+}
+
+.deck-count-stack i:first-child {
+  top: 0;
+  left: 4px;
+  opacity: 0.55;
+}
+
+.deck-count-stack i:last-child {
+  top: 4px;
+  left: 0;
+}
+
+.deck-count-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-count-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.tb-flip-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tb-flip-meta .deck-count {
+  margin-left: 0;
+}
+
 .bd-player-name {
   font-family: var(--font-display);
   font-weight: 800;
@@ -2443,120 +2503,241 @@ h3 {
   min-width: 0;
 }
 
-.kc-counters {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+/* The table: face-down cards in a messy circle around the King's Cup. */
+.kc-ring {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  container-type: inline-size;
 }
 
-.kc-kings {
-  display: flex;
-  gap: 2px;
-  font-size: 1.3rem;
+.kc-slot {
+  position: absolute;
+  width: 7.4cqw;
+  height: 10.4cqw;
+  border-radius: 1cqw;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 0.55cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  transition: transform 0.18s var(--spring), opacity 0.3s ease;
 }
 
-.kc-kings i {
-  font-style: normal;
-  opacity: 0.2;
-  filter: grayscale(1);
-  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s var(--spring);
+.kc-slot:not(:disabled):active {
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.18);
+  z-index: 2;
 }
 
-.kc-kings i.on {
-  opacity: 1;
-  filter: none;
-  transform: scale(1.12);
+.kc-slot:disabled {
+  cursor: default;
 }
 
-.kc-left {
+.kc-ring.revealing .kc-slot {
+  opacity: 0.3;
+}
+
+/* The crown in the middle while picking: floats gently, glows softly. */
+.kc-crown-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36cqw;
+  height: 36cqw;
+  transform: translate(-50%, -56%);
+  transition: opacity 0.3s ease;
+}
+
+.kc-ring.revealing .kc-crown-wrap {
+  opacity: 0;
+}
+
+.kc-crown-glow {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 38%, transparent), transparent);
+  animation: crown-glow 3.2s ease-in-out infinite;
+}
+
+.kc-crown {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: crown-idle 3.2s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+.kc-crown-body {
+  fill: var(--sun);
+  stroke: color-mix(in srgb, var(--sun) 60%, #000);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.kc-crown-band {
+  fill: color-mix(in srgb, var(--sun) 78%, #000);
+}
+
+.kc-crown-gem {
+  fill: var(--c-red);
+}
+
+.kc-crown-tip {
+  fill: color-mix(in srgb, var(--sun) 55%, #000);
+  transition: fill 0.4s ease;
+}
+
+.kc-crown-tip.on {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 3px var(--accent));
+}
+
+@keyframes crown-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-4%) rotate(3deg);
+  }
+}
+
+@keyframes crown-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kc-crown,
+  .kc-crown-glow {
+    animation: none;
+  }
+}
+
+.kc-ring-hint {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 5cqw;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.kc-table {
+/* The drawn card, big in the middle so everyone can see it. Tap turns it to the rule. */
+.kc-reveal {
+  --cw: 52cqw;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52cqw;
+  height: 72.8cqw;
+  margin: -36.4cqw 0 0 -26cqw;
+  z-index: 3;
+}
+
+.kc-big {
+  display: block;
+  width: 100%;
+  height: 100%;
+  perspective: 1400px;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.32));
+}
+
+.kc-big:disabled {
+  cursor: default;
+}
+
+.kc-big-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.kc-big:not(:disabled):active .kc-big-inner {
+  scale: 0.97;
+}
+
+.kc-rule-face {
+  transform: rotateY(180deg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  min-height: 260px;
-  padding: 24px 16px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.kc-table .pcard {
-  transition: transform 0.15s var(--spring);
-}
-
-.kc-table:not(:disabled):active .pcard {
-  transform: scale(0.92) rotate(-3deg);
-}
-
-.kc-table:disabled {
-  cursor: default;
-}
-
-.kc-hint {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.438rem;
-  text-transform: uppercase;
-}
-
-.kc-rule {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: var(--radius);
+  gap: 2.5cqw;
+  padding: 6cqw 5cqw;
   background: var(--c-lilac);
   color: var(--on-color);
-  animation: pop-in 0.45s var(--spring) 0.4s both;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
-.kc-rule.finale {
+.kc-rule-face.finale {
   background: var(--c-yellow);
 }
 
-.kc-rule-emoji {
-  flex: none;
-  font-size: 2.4rem;
+.kc-rule-face-emoji {
+  font-size: 13cqw;
   line-height: 1;
 }
 
-.kc-rule-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.kc-rule-title {
+.kc-rule-face-title {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.61rem;
-  letter-spacing: 0.01em;
-  line-height: 1.05;
+  font-weight: 900;
+  font-size: 7.4cqw;
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
-.kc-rule-body {
-  font-size: 1.08rem;
+.kc-rule-face-text {
+  font-size: 4.3cqw;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
-.kc-rule-note {
-  margin-top: 4px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  opacity: 0.75;
+.kc-big-hint {
+  position: absolute;
+  top: calc(100% + 2.5cqw);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1cqw 3cqw 0.6cqw;
+  border-radius: 999px;
+  background: var(--bg);
+  white-space: nowrap;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 4cqw;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* The circle sits in the middle of the free space between player row and button. */
+.kc-stage {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kc-idle {
+  visibility: hidden;
 }
 
 .kc-action {

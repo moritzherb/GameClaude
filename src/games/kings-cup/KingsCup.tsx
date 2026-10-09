@@ -1,15 +1,20 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
-import PlayingCard from '../../components/PlayingCard';
-import { newDeck, type Card } from '../../lib/cards';
+import DeckCount from '../../components/DeckCount';
+import { CardFace } from '../../components/PlayingCard';
+import { newDeck, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
-import { CARD_RULES, isKing, LAST_KING_RULE } from './rules';
+import { layRing, type Slot } from './ring';
+import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
 
 interface State {
-  deck: Card[];
+  /** All 52 cards, face down in a messy circle: cards[i] lies at slots[i]. */
+  cards: Card[];
+  slots: Slot[];
+  taken: boolean[];
   turn: number;
   /** The card just drawn by the current player (null = not drawn yet). */
   current: Card | null;
@@ -21,7 +26,9 @@ interface State {
 }
 
 const fresh = (): State => ({
-  deck: shuffle(newDeck()),
+  cards: shuffle(newDeck()),
+  slots: layRing(52),
+  taken: Array<boolean>(52).fill(false),
   turn: 0,
   current: null,
   kings: 0,
@@ -32,10 +39,14 @@ const fresh = (): State => ({
 });
 
 export default function KingsCup({ players, exit }: GameProps) {
+  // Groups who know the game only see each card's rule name, not the explanation.
+  const known = useApp().knows('kings-cup');
   const [s, setS] = useState<State>(fresh);
   const [ruleDraft, setRuleDraft] = useState('');
   const drawing = useRef(false);
   const timer = useRef<number>(undefined);
+  // Where the tapped card lay, so the big card can fly out from there.
+  const from = useRef<Slot | null>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const player = players[s.turn % players.length];
@@ -43,15 +54,17 @@ export default function KingsCup({ players, exit }: GameProps) {
   const lastKing = s.current && isKing(s.current) && s.kings === 4;
   const rule = s.current ? (lastKing ? LAST_KING_RULE : CARD_RULES[s.current.value]) : null;
   const myMate = s.mates.find(([a]) => a === player.id)?.[1];
+  const left = s.taken.filter((t) => !t).length;
 
-  const draw = () => {
-    if (s.current || drawing.current || s.over) return;
+  const draw = (i: number) => {
+    if (s.current || drawing.current || s.over || s.taken[i]) return;
     drawing.current = true;
-    const [card, ...deck] = s.deck;
+    from.current = s.slots[i];
+    const card = s.cards[i];
     const kings = s.kings + (isKing(card) ? 1 : 0);
     setS({
       ...s,
-      deck,
+      taken: s.taken.map((t, j) => t || j === i),
       current: card,
       kings,
       questionMasterId: card.value === 12 ? player.id : s.questionMasterId,
@@ -62,14 +75,14 @@ export default function KingsCup({ players, exit }: GameProps) {
         sfx.tick();
         buzz(isKing(card) ? [40, 40, 80] : 20);
       }
-    }, 450);
+    }, 650);
   };
 
   const next = () => {
     drawing.current = false;
     setRuleDraft('');
     // The 4th King or an empty deck ends the game.
-    if (lastKing || s.deck.length === 0) return setS({ ...s, over: true });
+    if (lastKing || left === 0) return setS({ ...s, over: true });
     setS({ ...s, current: null, turn: (s.turn + 1) % players.length });
   };
 
@@ -99,7 +112,7 @@ export default function KingsCup({ players, exit }: GameProps) {
         <div className="bd-head">
           <span className="kicker">Game over</span>
           <h2 className="bd-title big">{s.kings === 4 ? `${player.name} drank the King’s Cup` : 'Deck’s empty!'}</h2>
-          <p className="lead">{52 - s.deck.length} cards drawn.</p>
+          <p className="lead">{52 - left} cards drawn.</p>
         </div>
         {effects}
         <div className="sticky-action stack">
@@ -124,40 +137,33 @@ export default function KingsCup({ players, exit }: GameProps) {
             <span className="bd-player-sub">{s.current ? 'drew a card' : 'your turn'}</span>
           </span>
         </div>
-        <div className="kc-counters">
-          <span className="kc-kings" aria-label={`${s.kings} of 4 kings drawn`}>
-            {[1, 2, 3, 4].map((n) => (
-              <i key={n} className={n <= s.kings ? 'on' : ''}>
-                👑
-              </i>
-            ))}
-          </span>
-          <span className="kc-left">{s.deck.length} cards left</span>
-        </div>
+        <DeckCount left={left} />
       </div>
 
-      <button type="button" className="kc-table" onClick={draw} disabled={!!s.current} aria-label="Draw a card">
-        <PlayingCard key={52 - s.deck.length - (s.current ? 1 : 0)} card={s.current} faceUp={!!s.current} size="xl" waiting={!s.current} />
-        {!s.current && <span className="kc-hint">Tap to draw</span>}
-      </button>
-
-      {rule && s.current ? (
-        <div className={`kc-rule${lastKing ? ' finale' : ''}`}>
-          <span className="kc-rule-emoji">{rule.emoji}</span>
-          <span className="kc-rule-text">
-            <span className="kc-rule-title">{rule.title}</span>
-            <span className="kc-rule-body">{rule.text}</span>
-            {s.current.value === 13 && !lastKing && (
-              <span className="kc-rule-note">
-                {4 - s.kings} King{4 - s.kings > 1 ? 's' : ''} left. Whoever draws the last one drinks the cup.
-              </span>
-            )}
-            {s.current.value === 12 && <span className="kc-rule-note">{player.name} is the Question Master now.</span>}
-          </span>
+      <div className="kc-stage">
+        <div className={`kc-ring${s.current ? ' revealing' : ''}`}>
+          {s.slots.map((slot, i) =>
+            s.taken[i] ? null : (
+              <button
+                key={i}
+                type="button"
+                className="kc-slot"
+                style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
+                disabled={!!s.current}
+                aria-label="Face-down card"
+                onClick={() => {
+                  sfx.pop();
+                  buzz(12);
+                  draw(i);
+                }}
+              />
+            ),
+          )}
+          <KingCrown kings={s.kings} />
+          {!s.current && !known && <span className="kc-ring-hint">Pick any card</span>}
+          {s.current && rule && <Reveal key={52 - left} card={s.current} rule={rule} finale={!!lastKing} from={from.current} />}
         </div>
-      ) : (
-        <p className="lead center">Draw a card and do what it says.</p>
-      )}
+      </div>
 
       {s.current?.value === 8 && (
         <div className="kc-action">
@@ -216,14 +222,97 @@ export default function KingsCup({ players, exit }: GameProps) {
 
       {effects}
 
-      {s.current && (
-        <div className="sticky-action">
-          <BigButton size="xl" variant={lastKing ? 'primary' : 'light'} onClick={next}>
-            {lastKing || s.deck.length === 0 ? 'Finish game' : `Next: ${players[(s.turn + 1) % players.length].name} →`}
-          </BigButton>
-        </div>
-      )}
+      {/* Always there (hidden while picking) so the circle doesn't jump when a card is drawn. */}
+      <div className={`sticky-action${s.current ? '' : ' kc-idle'}`}>
+        <BigButton size="xl" variant={lastKing ? 'primary' : 'light'} onClick={next} disabled={!s.current}>
+          {lastKing || left === 0 ? 'Finish game' : `Next: ${players[(s.turn + 1) % players.length].name} →`}
+        </BigButton>
+      </div>
     </div>
+  );
+}
+
+/**
+ * The drawn card: flies out of the circle into the middle, grows big and flips face up.
+ * Tap it to turn it over and read the rule on the back; tap again for the card.
+ */
+function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; finale: boolean; from: Slot | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Half turns so far: 0 = still face down, odd = card face, even = the rule.
+  const [turns, setTurns] = useState(0);
+  const known = useApp().knows('kings-cup');
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const flip = window.setTimeout(() => setTurns(1), 160);
+    const ring = el?.parentElement;
+    if (el && ring && from && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // Measured in the ring's own coordinates, so it lines up even if the page moves.
+      const size = ring.offsetWidth;
+      const dx = ((from.x - 50) / 100) * size;
+      const dy = ((from.y - 50) / 100) * size;
+      const scale = (0.074 * size) / el.offsetWidth;
+      el.animate(
+        [{ transform: `translate(${dx}px, ${dy}px) rotate(${from.rot}deg) scale(${scale})` }, { transform: 'translate(0, 0) rotate(0deg) scale(1)' }],
+        { duration: 620, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+      );
+    }
+    return () => window.clearTimeout(flip);
+  }, [from]);
+
+  const showsRule = turns > 0 && turns % 2 === 0;
+  return (
+    <div ref={ref} className="kc-reveal">
+      <button
+        type="button"
+        className="kc-big"
+        aria-label={showsRule ? `${rule.title}: ${rule.text} Tap to see the card.` : `${rankLabel(card.value)} of ${card.suit}. Tap for the rule.`}
+        disabled={turns === 0}
+        onClick={() => {
+          sfx.tick();
+          buzz(10);
+          setTurns((t) => t + 1);
+        }}
+      >
+        <span className="kc-big-inner" style={{ transform: `rotateY(${180 * (turns + 1)}deg)` }}>
+          <CardFace card={card} />
+          {turns === 0 ? (
+            <span className="pcard-face pcard-back" />
+          ) : (
+            <span className={`pcard-face kc-rule-face${finale ? ' finale' : ''}`}>
+              <span className="kc-rule-face-emoji">{rule.emoji}</span>
+              <span className="kc-rule-face-title">{rule.title}</span>
+              <span className="kc-rule-face-text">{rule.text}</span>
+            </span>
+          )}
+        </span>
+      </button>
+      {!known && turns > 0 && <span className="kc-big-hint">{showsRule ? 'Tap for the card' : 'Tap for the rule'}</span>}
+    </div>
+  );
+}
+
+/** A crown in the middle while someone picks: it idles gently, and each King drawn lights one of its four tips. */
+function KingCrown({ kings }: { kings: number }) {
+  const tips = [
+    [13, 30],
+    [37, 20],
+    [63, 20],
+    [87, 30],
+  ];
+  return (
+    <span className="kc-crown-wrap" role="img" aria-label={`${kings} of 4 Kings drawn`}>
+      <span className="kc-crown-glow" />
+      <svg className="kc-crown" viewBox="0 0 100 100">
+        <path className="kc-crown-body" d="M18 70 13 32 27 49 37 22 50 47 63 22 73 49 87 32 82 70z" />
+        <rect className="kc-crown-band" x="17" y="66" width="66" height="13" rx="3" />
+        <circle className="kc-crown-gem" cx="35" cy="72.5" r="3.2" />
+        <circle className="kc-crown-gem" cx="50" cy="72.5" r="3.2" />
+        <circle className="kc-crown-gem" cx="65" cy="72.5" r="3.2" />
+        {tips.map(([x, y], i) => (
+          <circle key={i} className={`kc-crown-tip${i < kings ? ' on' : ''}`} cx={x} cy={y} r="5.5" />
+        ))}
+      </svg>
+    </span>
   );
 }
 

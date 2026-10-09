@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import Answers, { Verdict } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
 import type { Guess } from './logic';
@@ -13,6 +14,7 @@ const TITLES = { color: 'Red or black?', 'higher-lower': 'Higher or lower?' } as
 
 /** Bus ride on a Diamond (1-2-3-2-1) or Zigzag (1-2-1-2-1) board, driven bottom to top. */
 export default function BoardRide({ driver, mode, onFinish }: { driver: Player; mode: BoardMode; onFinish: (stats: RideStats) => void }) {
+  const known = useApp().knows('bus-driver');
   const [board, setBoard] = useState<BoardState>(() => startBoard(mode));
   const [pick, setPick] = useState<number | null>(null);
   const [step, setStep] = useState<BoardStep | null>(null);
@@ -108,6 +110,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
             Attempt {board.attempt - (failed ? 1 : 0)} · {board.drunk} sips
           </span>
         </span>
+        <DeckCount left={board.deck.length} />
       </div>
 
       <div className="board" style={{ '--cols': Math.max(...rows) } as CSSProperties}>
@@ -154,7 +157,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
       {step ? (
         <div ref={verdictRef}>{verdict}</div>
       ) : slot === null ? (
-        <p className="notice center">Pick a card in row {row + 1}: tap the left or the right one.</p>
+        <p className="notice center">{known ? `Pick a card in row ${row + 1}.` : `Pick a card in row ${row + 1}: tap the left or the right one.`}</p>
       ) : (
         <Answers questionId={questions[row]} onAnswer={answer} />
       )}

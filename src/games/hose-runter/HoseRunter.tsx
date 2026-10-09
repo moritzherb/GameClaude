@@ -6,6 +6,7 @@ import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
+import { useApp } from '../../state/AppState';
 import {
   applyAction,
   formatPoints,
@@ -141,6 +142,8 @@ function useHoseRunter() {
 
 export default function HoseRunter() {
   const { room, isHost, myId, view, act, setState, connected } = useHoseRunter();
+  // Each phone follows its own setting: whoever knows the game skips the explanations.
+  const known = useApp().knows('hose-runter');
   const [allowPass, setAllowPass] = useState(false);
   useFeedback(view, myId);
 
@@ -163,9 +166,11 @@ export default function HoseRunter() {
         <div className="bd-head">
           <span className="kicker">Every phone plays</span>
           <h2 className="bd-title big">Hose runter</h2>
-          <p className="lead">
-            Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {START_LIVES} lives each.
-          </p>
+          {!known && (
+            <p className="lead">
+              Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {START_LIVES} lives each.
+            </p>
+          )}
         </div>
         <ul className="member-list">
           {ready.map((m) => (
@@ -181,7 +186,7 @@ export default function HoseRunter() {
           ))}
         </ul>
         {room.members.filter((m) => m.online).length > MAX_PLAYERS && <p className="notice">Max {MAX_PLAYERS} players. The first {MAX_PLAYERS} play.</p>}
-        <p className="fine-print">Turn order is the order above. A random player deals first.</p>
+        {!known && <p className="fine-print">Turn order is the order above. A random player deals first.</p>}
         <div className="settings-list">
           <Tap className={`setting-row${allowPass ? ' on' : ''}`} onClick={() => setAllowPass(!allowPass)} ariaLabel="Allow passing">
             <span className="setting-emoji">👉</span>
@@ -218,6 +223,7 @@ export default function HoseRunter() {
 /* ---------------- Table: middle, your hand, actions ---------------- */
 
 function Table({ view, myId, act, connected }: { view: PlayerView; myId: string; act: (a: Action) => void; connected: boolean }) {
+  const known = useApp().knows('hose-runter');
   const [pickHand, setPickHand] = useState<number | null>(null);
   const [pickMiddle, setPickMiddle] = useState<number | null>(null);
   const seat = (id: string) => view.seats.find((s) => s.id === id);
@@ -319,7 +325,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
               <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
                 Put them in the middle
               </BigButton>
-              <p className="fine-print center">In the middle, you must play the next three cards instead, whatever they are.</p>
+              {!known && <p className="fine-print center">In the middle, you must play the next three cards instead, whatever they are.</p>}
             </>
           ) : pickHand !== null && pickMiddle !== null ? (
             <BigButton size="xl" onClick={() => send({ type: 'swap1', hand: pickHand, middle: pickMiddle })}>
@@ -327,7 +333,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
             </BigButton>
           ) : (
             <>
-              <p className="hr-hint">Tap one of your cards and one in the middle to swap.</p>
+              {!known && <p className="hr-hint">Tap one of your cards and one in the middle to swap.</p>}
               {view.allowPass && (
                 <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
                   Pass

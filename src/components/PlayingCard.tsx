@@ -23,23 +23,30 @@ export default function PlayingCard({ card, faceUp = true, size = 'md', waiting,
       aria-label={up && card ? `${rankLabel(card.value)} of ${card.suit}` : 'Face-down card'}
     >
       <div className="pcard-inner">
-        <div className={`pcard-face pcard-front ${card ? cardColor(card) : ''}`}>
-          {card && (
-            <>
-              <span className="pcard-corner">
-                {rankLabel(card.value)}
-                <Suit suit={card.suit} />
-              </span>
-              <Suit suit={card.suit} className="pcard-center" />
-              <span className="pcard-corner bottom">
-                {rankLabel(card.value)}
-                <Suit suit={card.suit} />
-              </span>
-            </>
-          )}
-        </div>
+        <CardFace card={card} />
         <div className="pcard-face pcard-back" />
       </div>
+    </div>
+  );
+}
+
+/** The printed side of a card. Sized by the --cw of whatever it sits in. */
+export function CardFace({ card }: { card?: Card | null }) {
+  return (
+    <div className={`pcard-face pcard-front ${card ? cardColor(card) : ''}`}>
+      {card && (
+        <>
+          <span className="pcard-corner">
+            {rankLabel(card.value)}
+            <Suit suit={card.suit} />
+          </span>
+          <Suit suit={card.suit} className="pcard-center" />
+          <span className="pcard-corner bottom">
+            {rankLabel(card.value)}
+            <Suit suit={card.suit} />
+          </span>
+        </>
+      )}
     </div>
   );
 }

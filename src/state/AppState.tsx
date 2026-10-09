@@ -15,6 +15,8 @@ export interface Settings {
   haptics: boolean;
   /** Everything gets even bigger. For later in the night. */
   bigMode: boolean;
+  /** Games the group already knows: their in-game explanations are hidden. Missing in older saves. */
+  known?: string[];
 }
 
 export const AVATARS = ['🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '👽', '🤖', '👻', '🤠', '🥸', '😎', '🤡', '🍕', '🌮'];
@@ -31,6 +33,9 @@ interface AppState {
   replacePlayers: (list: Omit<Player, 'id'>[]) => void;
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => void;
+  /** True when the players marked this game as known, so tutorials and explanations stay hidden. */
+  knows: (gameId: string) => boolean;
+  setKnown: (gameId: string, known: boolean) => void;
   ageConfirmed: boolean;
   confirmAge: () => void;
 }
@@ -75,6 +80,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: crypto.randomUUID?.() ?? String(Date.now() + Math.random()) }))),
       settings,
       updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
+      knows: (gameId) => !!settings.known?.includes(gameId),
+      setKnown: (gameId, known) =>
+        setSettings((s) => {
+          const rest = (s.known ?? []).filter((id) => id !== gameId);
+          return { ...s, known: known ? [...rest, gameId] : rest };
+        }),
       ageConfirmed,
       confirmAge: () => setAgeConfirmed(true),
     }),

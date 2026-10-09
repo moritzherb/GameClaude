@@ -4,7 +4,7 @@ import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { cardName, rankLabel, type Card } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import {
   buildPyramid,
   DEFAULT_PYRAMID_SIZE,
@@ -60,6 +60,7 @@ function MiniPyramid({ rows }: { rows: number }) {
 }
 
 export default function Pyramid({ seats, deck, onDone }: Props) {
+  const known = useApp().knows('bus-driver');
   const [rows, setRows] = useState(DEFAULT_PYRAMID_SIZE);
   const [sipMode, setSipMode] = useState<SipMode>('normal');
   const [game, setGame] = useState<Game | null>(null);
@@ -78,10 +79,12 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
         <div className="bd-head">
           <span className="kicker">Part 2 · The pyramid</span>
           <h2 className="bd-title">Get rid of your cards.</h2>
-          <p className="lead">
-            We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end drives
-            the bus.
-          </p>
+          {!known && (
+            <p className="lead">
+              We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end
+              drives the bus.
+            </p>
+          )}
         </div>
 
         <section className="section">
@@ -272,7 +275,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           )}
         </div>
       ) : (
-        <p className="lead center">Flip the first card. Bottom row, left to right.</p>
+        !known && <p className="lead center">Flip the first card. Bottom row, left to right.</p>
       )}
 
       <section className="panel hands">
