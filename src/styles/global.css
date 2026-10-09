@@ -3590,6 +3590,328 @@ h3 {
   text-align: center;
 }
 
+/* ---------- Speed ---------- */
+
+.sp {
+  --sp-card: min(66px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 24px) / 5));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 0 auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sp > * {
+  flex-shrink: 0;
+}
+
+/* The other player: name, their hand face down, cards left. */
+.sp-opp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.sp-name {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-opp-hand {
+  display: flex;
+  margin-left: auto;
+}
+
+.sp-opp-hand i {
+  width: 16px;
+  height: 22px;
+  margin-left: -5px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 1.5px #fff;
+}
+
+.sp-opp-hand i.extra {
+  background: var(--bad);
+}
+
+.sp-left {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-opp-ready {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sp-opp-ready.on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* The middle: side stacks left and right, the two piles to play on in between. */
+.sp-middle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 18px 12px;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sp-stack {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(var(--sp-card) * 0.72);
+  height: calc(var(--sp-card) * 1.01);
+  border-radius: 7px;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 3px #fff, 2px 2px 0 rgba(0, 0, 0, 0.25);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+.sp-stack.empty {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+}
+
+.sp-mid-pile {
+  --cw: calc(var(--sp-card) * 1.35);
+  position: relative;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  border-radius: calc(var(--cw) * 0.12);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+}
+
+.sp-mid-card {
+  position: absolute;
+  inset: 0;
+  transform: rotate(var(--tilt));
+}
+
+.sp-mid-card .pcard-face {
+  backface-visibility: visible;
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.sp-mid-card.top {
+  animation: sp-land 0.22s ease-out both;
+}
+
+@keyframes sp-land {
+  from {
+    transform: rotate(var(--tilt)) scale(1.18);
+    opacity: 0.4;
+  }
+}
+
+.sp-count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 6rem;
+  line-height: 1;
+  animation: pop-in 0.3s var(--spring) both;
+  pointer-events: none;
+}
+
+/* Your side, at the bottom: the hand, then your pile. */
+.sp-mine {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sp-hand {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  min-height: calc(var(--sp-card) * 1.4 + 10px);
+  padding-top: 10px;
+}
+
+.sp-hand.crowded .sp-card + .sp-card {
+  margin-left: calc(var(--sp-card) * -0.35);
+}
+
+.sp-card {
+  --cw: var(--sp-card);
+  position: relative;
+  flex: none;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  border-radius: calc(var(--cw) * 0.12);
+  transition: transform 0.15s var(--spring);
+}
+
+.sp-card .pcard-face {
+  backface-visibility: visible;
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 3px 8px -2px rgba(0, 0, 0, 0.4);
+}
+
+.sp-card:active {
+  transform: translateY(-6px) scale(1.04);
+}
+
+.sp-card.extra {
+  transform: translateY(-8px);
+}
+
+.sp-card.extra .pcard-face {
+  box-shadow: 0 0 0 3px var(--bad), 0 3px 8px -2px rgba(0, 0, 0, 0.4);
+}
+
+.sp-card.back-next {
+  animation: nudge 1s ease-in-out infinite;
+}
+
+.sp-card.nope {
+  animation: sp-nope 0.3s ease;
+}
+
+@keyframes sp-nope {
+  25% {
+    transform: translateX(-6px) rotate(-3deg);
+  }
+  75% {
+    transform: translateX(6px) rotate(3deg);
+  }
+}
+
+.sp-hand-empty {
+  align-self: center;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sp-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sp-pile {
+  position: relative;
+  flex: none;
+  width: calc(var(--sp-card) * 0.9);
+  height: calc(var(--sp-card) * 1.26);
+  border-radius: 8px;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 3px #fff, 3px 3px 0 var(--surface-2), 6px 6px 0 var(--line);
+  transition: transform 0.12s ease;
+}
+
+.sp-pile:active {
+  transform: scale(0.94);
+}
+
+.sp-pile.empty {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.sp-pile-count {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  min-width: 26px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.sp-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sp-info-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.sp-warn {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  animation: pop-in 0.25s var(--spring) both;
+}
+
+.sp-ready {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-ready-hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.sp-over {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0 calc(2px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 80%, transparent);
+}
+
+.sp-result {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 /* ---------- Confetti ---------- */
 
 .confetti-layer {

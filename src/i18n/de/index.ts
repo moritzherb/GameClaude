@@ -5,7 +5,8 @@ import fiveThousand from './fiveThousand';
 import fuckTheDealer from './fuckTheDealer';
 import kingsCup from './kingsCup';
 import pantsDown from './pantsDown';
+import speed from './speed';
 
-const de: Record<string, string> = { ...app, ...busDriver, ...kingsCup, ...fuckTheDealer, ...fiveThousand, ...pantsDown };
+const de: Record<string, string> = { ...app, ...busDriver, ...kingsCup, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...speed };
 
 export default de;
