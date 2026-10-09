@@ -16,7 +16,7 @@ describe('headlineFor', () => {
     expect(text(1)).toBe('Party’s on');
     expect(text(2)).toBe('Last round');
     expect(text(5)).toBe('Last round');
-    expect(text(6)).toBe('Games on');
-    expect(text(16)).toBe('Games on');
+    expect(text(6)).toBe('Game’s on');
+    expect(text(16)).toBe('Game’s on');
   });
 });
