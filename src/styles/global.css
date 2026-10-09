@@ -5875,3 +5875,487 @@ h3 {
 .board-slot.blocked {
   opacity: 0.35;
 }
+
+/* ---------- Palace ---------- */
+
+.pl {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 0 auto;
+}
+
+.pl > * {
+  flex-shrink: 0;
+}
+
+/* The table phone: everyone's face-up cards on top, the pile in the middle. */
+.pl-seats {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pl-seat {
+  --chip: var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  container-type: inline-size;
+  transition: box-shadow 0.2s ease, transform 0.2s var(--spring);
+}
+
+.pl-seat.turn {
+  box-shadow: inset 0 0 0 3px var(--accent-ink);
+  transform: translateY(-2px);
+}
+
+.pl-seat.won {
+  box-shadow: inset 0 0 0 3px var(--good);
+}
+
+.pl-seat-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.pl-seat-avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--chip);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+}
+
+.pl-seat-name {
+  min-width: 0;
+  font-weight: 700;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pl-dealer {
+  flex: none;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.pl-seat-hand {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Three face-down cards, each with its face-up card on top (shifted down so the back peeks out). */
+.pl-palace {
+  --pw: 60px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pl-seat .pl-palace {
+  --pw: min(56px, calc((100cqw - 16px) / 3));
+  gap: 4px;
+}
+
+.pl-slot {
+  --cw: var(--pw);
+  position: relative;
+  width: var(--pw);
+  height: calc(var(--pw) * 1.62);
+}
+
+.pl-slot-down,
+.pl-slot-up,
+.pl-slot-gone {
+  position: absolute;
+  left: 0;
+  width: var(--pw);
+  height: calc(var(--pw) * 1.4);
+  border-radius: calc(var(--pw) * 0.12);
+}
+
+.pl-slot-down,
+.pl-slot-gone {
+  top: 0;
+}
+
+.pl-slot-up {
+  top: calc(var(--pw) * 0.22);
+  transition: transform 0.2s var(--spring);
+}
+
+.pl-slot-gone {
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+
+.pl-slot-up .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 4px 10px -4px rgba(0, 0, 0, 0.45);
+}
+
+.pl-slot-down .pcard-back,
+.pl-stack .pcard-back {
+  transform: none;
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.07) #fff, 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.pl-slot-up:disabled,
+.pl-slot-down:disabled {
+  cursor: default;
+}
+
+.pl-slot-up.selected {
+  transform: translateY(-12px);
+}
+
+.pl-slot-up.selected .pcard-front {
+  box-shadow: 0 0 0 4px var(--accent), 0 10px 20px -8px rgba(17, 18, 20, 0.5);
+}
+
+.pl-palace.pick-up .pl-slot-up:not(:disabled):not(.selected) .pcard-front {
+  box-shadow: 0 0 0 3px var(--accent-ink);
+}
+
+.pl-palace.pick-down .pl-slot-down:not(:disabled) {
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+.pl-palace.pick-down .pl-slot-down:not(:disabled) .pcard-back {
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.06) #fff, 0 0 0 3px var(--accent-ink);
+}
+
+/* Small cards: just the rank and suit, big, in the middle. */
+.pl-seat .pcard-corner.bottom,
+.pl-seat .pcard-center,
+.pl-mini .pcard-corner.bottom,
+.pl-mini .pcard-center {
+  display: none;
+}
+
+.pl-seat .pcard-corner,
+.pl-mini .pcard-corner {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--cw) * 0.36);
+}
+
+.pl-felt {
+  flex: 1 1 0;
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 2px 12px rgba(0, 0, 0, 0.3);
+  container-type: size;
+  color: #fff;
+}
+
+.pl-felt-row {
+  --fw: max(64px, min(34cqw, calc((100cqh - 110px) / 1.4), 170px));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: max(18px, 6cqw);
+}
+
+.pl-heap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pl-stack {
+  --cw: calc(var(--fw) * 0.66);
+  position: relative;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+}
+
+.pl-heap.main .pl-stack {
+  --cw: var(--fw);
+}
+
+.pl-pile-card {
+  position: absolute;
+  inset: 0;
+  transform: translate(calc(var(--d) * -7%), calc(var(--d) * -3%)) rotate(var(--tilt));
+}
+
+.pl-pile-card:last-child {
+  animation: pl-land 0.3s var(--spring);
+}
+
+@keyframes pl-land {
+  from {
+    transform: translateY(-30%) scale(1.15) rotate(var(--tilt));
+    opacity: 0;
+  }
+}
+
+.pl-pile-card .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+}
+
+.pl-empty {
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--cw) * 0.12);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.pl-heap-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.pl-need {
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.1rem, 5cqw, 1.6rem);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.pl-burned {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pl-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.pl-status.mine {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.pl-status-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pl-mini {
+  --cw: 30px;
+  position: relative;
+  flex: none;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+}
+
+.pl-mini .pl-empty {
+  box-shadow: inset 0 0 0 2px currentColor;
+  opacity: 0.35;
+}
+
+.pl-status-need {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.pl-status-need small {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.pl-status-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.pl-status-sub,
+.pl-last {
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* A player's phone: your table cards, then your hand filling the rest of the screen. */
+.pl-mine {
+  flex: 1 1 0;
+  min-height: min-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pl-player .pl-palace {
+  --pw: clamp(46px, 9dvh, 92px);
+}
+
+.pl-hand {
+  position: relative;
+  flex: 1.6 1 0;
+  min-height: 150px;
+}
+
+.pl-card {
+  position: absolute;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  border-radius: calc(var(--cw) * 0.12);
+  transform-origin: 50% 120%;
+  transition: transform 0.25s var(--spring), left 0.3s ease, top 0.3s ease, filter 0.2s ease;
+}
+
+.pl-card:disabled {
+  cursor: default;
+}
+
+.pl-card .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 6px 14px -6px rgba(0, 0, 0, 0.45);
+}
+
+.pl-card.selected .pcard-front {
+  box-shadow: 0 0 0 4px var(--accent), 0 12px 24px -8px rgba(17, 18, 20, 0.5);
+}
+
+.pl-card.dim {
+  filter: brightness(0.62) saturate(0.4);
+}
+
+.pl-hand-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 24px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.pl-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 56px;
+  justify-content: flex-end;
+}
+
+.pl-action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pl-action-row > * {
+  flex: 1 1 0;
+}
+
+.pl-hint {
+  text-align: center;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Short phones: tighter, so the hand keeps its room. */
+@media (max-height: 700px) {
+  .pl-player {
+    gap: 8px;
+  }
+
+  .pl-status {
+    padding: 8px 12px;
+  }
+
+  .pl-status-text {
+    font-size: 1.1rem;
+  }
+
+  .pl-player .pl-status-sub {
+    display: none;
+  }
+}
+
+.pl-over {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.pl-over-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 380px);
+  padding: 22px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  animation: pop-in 0.4s var(--spring) both;
+}
+
+.pl-over-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pl-over-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-weight: 600;
+}
