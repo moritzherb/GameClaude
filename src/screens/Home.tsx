@@ -7,11 +7,11 @@ import { RoundButton } from '../components/TopBar';
 import { GAMES, playableGames } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
 import { buzz, sfx } from '../lib/fx';
+import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
-
 
 export default function Home() {
   const { players } = useApp();
@@ -21,6 +21,14 @@ export default function Home() {
   const timer = useRef<number>(undefined);
 
   useEffect(() => () => window.clearInterval(timer.current), []);
+
+  // The headline follows the night, so check the clock every minute while home is open.
+  const [hour, setHour] = useState(() => new Date().getHours());
+  useEffect(() => {
+    const t = window.setInterval(() => setHour(new Date().getHours()), 60_000);
+    return () => window.clearInterval(t);
+  }, []);
+  const headline = headlineFor(hour);
 
   const randomGame = () => {
     const pool = playableGames();
@@ -61,7 +69,7 @@ export default function Home() {
       </header>
 
       <h1 className="poster-title fade-up">
-        Tonight’s <span className="hl">line-up</span>
+        {headline.top} <span className="hl">{headline.sticker}</span>
       </h1>
 
       <Tap className="crew fade-up" onClick={() => navigate(paths.players())}>
