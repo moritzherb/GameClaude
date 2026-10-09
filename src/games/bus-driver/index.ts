@@ -10,6 +10,7 @@ const busDriver: GameDefinition = {
   categories: ['cards', 'pregame', 'party'],
   minPlayers: 2,
   intensity: 3,
+  explains: true,
   rules: [
     'Pick a dealer. Play starts left of them, the dealer goes last.',
     'Each round, everyone answers one question about the next card, then keeps that card.',

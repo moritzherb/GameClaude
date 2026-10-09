@@ -5,7 +5,7 @@ import Tap from '../../components/Tap';
 import { cardName, newDeck, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Answers, { Verdict } from './Answers';
 import BusRide from './BusRide';
@@ -44,8 +44,10 @@ function seatOrder(players: Player[], dealerId: string): Seat[] {
   return [...players.slice(i + 1), ...players.slice(0, i + 1)].map((player) => ({ player, hand: [], drank: 0, gave: 0 }));
 }
 
-
 export default function BusDriver({ players, exit }: GameProps) {
+  // Groups who know the game skip the explanations and the round intros.
+  const known = useApp().knows('bus-driver');
+  const roundStart = known ? 'turn' : 'intro';
   const [s, setS] = useState<State>(() => ({
     stage: 'setup',
     risky: false,
@@ -73,7 +75,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   const dealer = players.find((p) => p.id === s.dealerId);
 
   const start = () =>
-    setS({ ...s, stage: 'intro', seats: seatOrder(players, s.dealerId), deck: shuffle(newDeck()), round: 0, turn: 0, reveal: null });
+    setS({ ...s, stage: roundStart, seats: seatOrder(players, s.dealerId), deck: shuffle(newDeck()), round: 0, turn: 0, reveal: null });
 
   const answer = (guess: Guess) => {
     if (s.reveal || answered.current) return;
@@ -109,7 +111,7 @@ export default function BusDriver({ players, exit }: GameProps) {
     const lastTurn = s.turn + 1 >= s.seats.length;
     if (!lastTurn) return setS({ ...s, turn: s.turn + 1, reveal: null, newDeckOpened: false });
     const lastRound = s.round + 1 >= questions.length;
-    setS({ ...s, stage: lastRound ? 'done' : 'intro', round: lastRound ? s.round : s.round + 1, turn: 0, reveal: null, newDeckOpened: false });
+    setS({ ...s, stage: lastRound ? 'done' : roundStart, round: lastRound ? s.round : s.round + 1, turn: 0, reveal: null, newDeckOpened: false });
   };
 
   /* ---------- Setup: pick the dealer, risky mode ---------- */
@@ -119,7 +121,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         <div className="bd-head">
           <span className="kicker">Part 1 · Collect your cards</span>
           <h2 className="bd-title">Who’s dealing?</h2>
-          <p className="lead">Play starts left of the dealer. The dealer plays too and goes last.</p>
+          {!known && <p className="lead">Play starts left of the dealer. The dealer plays too and goes last.</p>}
         </div>
 
         <div className="pick-grid">

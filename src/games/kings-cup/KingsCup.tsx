@@ -4,7 +4,7 @@ import PlayingCard from '../../components/PlayingCard';
 import { newDeck, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { CARD_RULES, isKing, LAST_KING_RULE } from './rules';
 
@@ -32,6 +32,8 @@ const fresh = (): State => ({
 });
 
 export default function KingsCup({ players, exit }: GameProps) {
+  // Groups who know the game only see each card's rule name, not the explanation.
+  const known = useApp().knows('kings-cup');
   const [s, setS] = useState<State>(fresh);
   const [ruleDraft, setRuleDraft] = useState('');
   const drawing = useRef(false);
@@ -146,7 +148,7 @@ export default function KingsCup({ players, exit }: GameProps) {
           <span className="kc-rule-emoji">{rule.emoji}</span>
           <span className="kc-rule-text">
             <span className="kc-rule-title">{rule.title}</span>
-            <span className="kc-rule-body">{rule.text}</span>
+            {!known && <span className="kc-rule-body">{rule.text}</span>}
             {s.current.value === 13 && !lastKing && (
               <span className="kc-rule-note">
                 {4 - s.kings} King{4 - s.kings > 1 ? 's' : ''} left. Whoever draws the last one drinks the cup.
@@ -156,7 +158,7 @@ export default function KingsCup({ players, exit }: GameProps) {
           </span>
         </div>
       ) : (
-        <p className="lead center">Draw a card and do what it says.</p>
+        !known && <p className="lead center">Draw a card and do what it says.</p>
       )}
 
       {s.current?.value === 8 && (

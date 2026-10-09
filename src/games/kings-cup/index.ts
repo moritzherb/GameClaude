@@ -14,6 +14,7 @@ const kingsCup: GameDefinition = {
   categories: ['cards', 'party', 'pregame'],
   minPlayers: 2,
   intensity: 2,
+  explains: true,
   needs: ['An empty cup in the middle'],
   rules: [
     'Put an empty cup in the middle: the King’s Cup.',

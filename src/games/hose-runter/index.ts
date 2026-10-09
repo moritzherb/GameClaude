@@ -12,6 +12,7 @@ const hoseRunter: GameDefinition = {
   minPlayers: MIN_PLAYERS,
   maxPlayers: MAX_PLAYERS,
   intensity: 1,
+  explains: true,
   needs: ['Every player’s phone'],
   rules: [
     'Everyone joins the same room on their own phone. Cards 7 to Ace, three each.',

@@ -3,7 +3,7 @@ import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import { rankLabel } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import { dealTiebreak, flipTiebreak, type TiebreakOutcome, type TiebreakState } from './pyramid';
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
  * Your value shows up → you're safe. The last one still holding a card drives the bus.
  */
 export default function Tiebreak({ tied, onDone }: Props) {
+  const known = useApp().knows('bus-driver');
   const [t, setT] = useState<TiebreakState>(() => dealTiebreak(tied.map((p) => p.id)));
   const [attempt, setAttempt] = useState(1);
   const [outcome, setOutcome] = useState<TiebreakOutcome>({ kind: 'continue' });
@@ -58,7 +59,7 @@ export default function Tiebreak({ tied, onDone }: Props) {
       <div className="bd-head">
         <span className="kicker">Tiebreaker{attempt > 1 ? ` · round ${attempt}` : ''}</span>
         <h2 className="bd-title">Whose card shows up first?</h2>
-        {outcome.kind === 'continue' && (
+        {outcome.kind === 'continue' && !known && (
           <p className="lead">Everyone got a new card. We flip the deck: when your value shows up, you’re safe. The last one left drives the bus.</p>
         )}
       </div>

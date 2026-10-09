@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import BigButton from '../../components/BigButton';
 import Tap from '../../components/Tap';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import BoardRide from './BoardRide';
 import { BOARD_ROWS, type BoardMode } from './board';
 import ClassicRide from './ClassicRide';
@@ -42,6 +42,7 @@ interface Props {
 
 /** Part 3: pick how the bus is driven, drive it, arrive. */
 export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
+  const known = useApp().knows('bus-driver');
   const [mode, setMode] = useState<RideMode>('classic');
   const [started, setStarted] = useState(false);
   const [stats, setStats] = useState<RideStats | null>(null);
@@ -79,7 +80,7 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
             </Tap>
           ))}
         </div>
-        <p className="lead">{current.explain}</p>
+        {!known && <p className="lead">{current.explain}</p>}
       </section>
 
       <div className="sticky-action">

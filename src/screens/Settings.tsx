@@ -1,16 +1,20 @@
 import TopBar from '../components/TopBar';
+import { GAMES } from '../games/registry';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
-import { useApp, type Settings as SettingsShape } from '../state/AppState';
+import { useApp } from '../state/AppState';
 
-const OPTIONS: { key: keyof SettingsShape; emoji: string; label: string; hint: string }[] = [
+type Toggle = 'sound' | 'haptics' | 'bigMode';
+
+const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'sound', emoji: '🔊', label: 'Sounds', hint: 'Boops, ticks and fanfares' },
   { key: 'haptics', emoji: '📳', label: 'Vibration', hint: 'Phone buzzes when you tap' },
   { key: 'bigMode', emoji: '🔍', label: 'Giant Mode', hint: 'Everything bigger. For later tonight.' },
 ];
 
 export default function Settings() {
-  const { settings, updateSettings } = useApp();
+  const { settings, updateSettings, knows, setKnown } = useApp();
+  const withExplanations = GAMES.filter((g) => g.explains && (g.component || g.online));
 
   return (
     <main className="screen">
@@ -47,6 +51,39 @@ export default function Settings() {
           );
         })}
       </div>
+
+      <section className="section">
+        <h2 className="section-title">Games you know</h2>
+        <p className="fine-print">Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.</p>
+        <div className="settings-list">
+          {withExplanations.map((g) => {
+            const on = knows(g.id);
+            return (
+              <button
+                key={g.id}
+                type="button"
+                role="switch"
+                aria-checked={on}
+                className={`setting-row${on ? ' on' : ''}`}
+                onClick={() => {
+                  setKnown(g.id, !on);
+                  sfx.pop();
+                  buzz();
+                }}
+              >
+                <span className="setting-emoji">{g.emoji}</span>
+                <span className="setting-text">
+                  <span className="setting-label">{g.name}</span>
+                  <span className="setting-hint">{on ? 'We know it: no explanations' : 'Explanations on'}</span>
+                </span>
+                <span className="switch">
+                  <span className="switch-knob" />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="panel">
         <h2 className="section-title">Play nice</h2>
