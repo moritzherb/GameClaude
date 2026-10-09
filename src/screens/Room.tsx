@@ -61,7 +61,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
       <p className="lead">Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.</p>
 
       {embedded && (
-        <p className="notice">This preview can’t connect phones. Open the PROST! website (moritzherb.github.io/GameClaude) to play together.</p>
+        <p className="notice">This preview can’t connect phones. Open the prost! website (moritzherb.github.io/GameClaude) to play together.</p>
       )}
       {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}
 
@@ -177,7 +177,7 @@ function Lobby() {
     const url = joinLink(code);
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'PROST! room', text: `Join my PROST! room: ${code}`, url });
+        await navigator.share({ title: 'prost! room', text: `Join my prost! room: ${code}`, url });
         return;
       }
       await navigator.clipboard.writeText(url);
