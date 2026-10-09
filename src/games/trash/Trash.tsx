@@ -11,6 +11,10 @@ import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
 
 const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+/** How long the card in play takes to fly in (and turn over, if it was face down). */
+const FLY_MS = 380;
+/** A card that's no use at all goes onto the discard pile by itself after this long. */
+const AUTO_TOSS_MS = 1100;
 
 export default function Trash({ players, exit }: GameProps) {
   const known = useApp().knows('trash');
@@ -162,7 +166,7 @@ export default function Trash({ players, exit }: GameProps) {
     g.phase === 'draw'
       ? t('{name}: draw a card', { name: me.name })
       : kind === 'toss'
-        ? t('No use: drag it onto the discard pile')
+        ? t('No use: onto the discard pile')
         : kind === 'swap'
           ? t('Swap it for your Jack, or drag it onto the discard pile')
           : kind === 'wild'
@@ -202,6 +206,7 @@ export default function Trash({ players, exit }: GameProps) {
               useless={kind === 'toss'}
               rotated={g.turn === 1}
               fly={fly}
+              onAutoToss={kind === 'toss' ? dropOnDiscard : undefined}
               onDrop={(target) => {
                 const drop = target?.closest<HTMLElement>('[data-drop]');
                 if (!drop) return false;
@@ -338,6 +343,7 @@ function HeldCard({
   rotated,
   fly,
   onDrop,
+  onAutoToss,
 }: {
   card: Card;
   useless: boolean;
@@ -345,6 +351,8 @@ function HeldCard({
   rotated: boolean;
   fly: { x: number; y: number; flip: boolean } | null;
   onDrop: (target: Element | null) => boolean;
+  /** Set for a card that's no use at all: after a moment it slides onto the discard pile by itself. */
+  onAutoToss?: () => void;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const backRef = useRef<HTMLSpanElement>(null);
@@ -361,19 +369,19 @@ function HeldCard({
     const dx = (fly.x - (r.left + r.width / 2)) * sign;
     const dy = (fly.y - (r.top + r.height / 2)) * sign;
     if (Math.abs(dx) + Math.abs(dy) < 4) return;
-    const mid = `translate(${dx * 0.45}px, ${dy * 0.45 - 30}px) scale(1.18)`;
+    const mid = `translate(${dx * 0.4}px, ${dy * 0.4 - 24}px) scale(1.14)`;
     el.animate(
       fly.flip
         ? [
             { transform: `translate(${dx}px, ${dy}px) scaleX(1)` },
-            { transform: `${mid} scaleX(0)`, offset: 0.45 },
+            { transform: `${mid} scaleX(0)`, offset: 0.35 },
             { transform: 'none' },
           ]
         : [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: mid, offset: 0.5 }, { transform: 'none' }],
-      { duration: fly.flip ? 620 : 420, easing: 'cubic-bezier(0.3, 0.9, 0.4, 1)' },
+      { duration: FLY_MS, easing: 'cubic-bezier(0.3, 0.9, 0.4, 1)' },
     );
     if (fly.flip && backRef.current) {
-      backRef.current.animate([{ opacity: 1 }, { opacity: 1, offset: 0.44 }, { opacity: 0, offset: 0.46 }, { opacity: 0 }], { duration: 620 });
+      backRef.current.animate([{ opacity: 1 }, { opacity: 1, offset: 0.34 }, { opacity: 0, offset: 0.36 }, { opacity: 0 }], { duration: FLY_MS });
     }
     // Only when the card first shows up.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -381,13 +389,40 @@ function HeldCard({
 
   useEffect(() => {
     setBack(!!fly?.flip);
-    const id = window.setTimeout(() => setBack(false), 620);
+    const id = window.setTimeout(() => setBack(false), FLY_MS);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // No use at all: after a short look, off it goes onto the discard pile (unless you grab it first).
+  const autoTimer = useRef<number | undefined>(undefined);
+  const tossRef = useRef(onAutoToss);
+  tossRef.current = onAutoToss;
+  const auto = !!onAutoToss;
+  useEffect(() => {
+    if (!auto) return;
+    autoTimer.current = window.setTimeout(() => {
+      const el = ref.current;
+      const pile = document.querySelector('[data-drop="discard"]');
+      if (!el || !pile || typeof el.animate !== 'function') return tossRef.current?.();
+      const a = el.getBoundingClientRect();
+      const b = pile.getBoundingClientRect();
+      const dx = (b.left + b.width / 2 - (a.left + a.width / 2)) * sign;
+      const dy = (b.top + b.height / 2 - (a.top + a.height / 2)) * sign;
+      const anim = el.animate([{ transform: 'none' }, { transform: `translate(${dx}px, ${dy}px) rotate(-8deg)` }], {
+        duration: 260,
+        easing: 'ease-in',
+        fill: 'forwards',
+      });
+      anim.onfinish = () => tossRef.current?.();
+    }, AUTO_TOSS_MS);
+    return () => window.clearTimeout(autoTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auto]);
+
   const down = (e: ReactPointerEvent<HTMLSpanElement>) => {
     if (e.button !== 0) return;
+    window.clearTimeout(autoTimer.current);
     // No text selection or native drag-and-drop: either would cancel this drag.
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);

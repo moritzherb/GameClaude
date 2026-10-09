@@ -6571,3 +6571,134 @@ h3 {
   background: var(--surface-2);
   font-weight: 600;
 }
+
+/* Palace without a table phone: the others' table cards and a small table on every phone. */
+.pl-player.tableless .pl-status-top {
+  display: none;
+}
+
+.pl-opps {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 2px var(--gutter);
+  scrollbar-width: none;
+}
+
+.pl-opps::-webkit-scrollbar {
+  display: none;
+}
+
+.pl-opp {
+  --chip: var(--accent);
+  flex: 1 0 116px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow 0.2s ease;
+}
+
+.pl-opp.turn {
+  box-shadow: inset 0 0 0 3px var(--accent-ink);
+}
+
+.pl-opp .pl-seat-head {
+  min-width: 0;
+}
+
+.pl-opp-hand {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Small, but big enough to read: just rank and suit. */
+.pl-opp .pl-palace {
+  --pw: 36px;
+  gap: 4px;
+}
+
+.pl-opp .pcard-corner.bottom,
+.pl-opp .pcard-center {
+  display: none;
+}
+
+.pl-opp .pcard-corner {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--cw) * 0.38);
+}
+
+.pl-felt.mini {
+  flex: 0.9 1 0;
+  min-height: 104px;
+  padding: 8px 10px;
+  gap: 4px;
+}
+
+.pl-felt.mini .pl-felt-row {
+  --fw: max(44px, min(24cqw, calc((100cqh - 30px) / 1.4), 104px));
+  align-items: center;
+  gap: max(16px, 5cqw);
+}
+
+.pl-felt.mini .pl-heap {
+  gap: 4px;
+}
+
+.pl-felt.mini .pl-heap-label {
+  font-size: 0.75rem;
+}
+
+.pl-felt.mini .pl-need {
+  max-width: 34cqw;
+  padding: 6px 12px;
+  font-size: clamp(0.85rem, 4.4cqw, 1.2rem);
+  line-height: 1.1;
+}
+
+.pl-felt.mini .pl-flash {
+  font-size: 1.1rem;
+}
+
+.pl-player.tableless .pl-palace {
+  --pw: clamp(40px, 7.2dvh, 74px);
+}
+
+.pl-player.tableless .pl-opp .pl-palace {
+  --pw: 36px;
+}
+
+.pl-player.tableless .pl-hand {
+  min-height: 130px;
+}
+
+@media (max-height: 700px) {
+  .pl-player.tableless {
+    gap: 6px;
+  }
+
+  .pl-player.tableless .pl-hand {
+    min-height: 112px;
+  }
+
+  .pl-felt.mini {
+    min-height: 92px;
+  }
+
+  .pl-opp .pl-palace,
+  .pl-player.tableless .pl-opp .pl-palace {
+    --pw: 32px;
+  }
+}

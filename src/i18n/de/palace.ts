@@ -2,7 +2,6 @@
 const palace: Record<string, string> = {
   Palace: 'Palace',
   'Same or higher. First one out of cards wins.': 'Gleich oder höher. Wer zuerst keine Karten mehr hat, gewinnt.',
-  'Every player’s phone, plus one for the table': 'Jedes Spieler-Handy, plus eins als Spielfeld',
   'Everyone joins the same room on their own phone. The host’s phone lies in the middle as the table. One deck of 52 cards, 2 to 5 players.':
     'Alle treten mit dem eigenen Handy demselben Raum bei. Das Handy des Hosts liegt als Spielfeld in der Mitte. Ein Deck mit 52 Karten, 2 bis 5 Spieler.',
   'Dealt one at a time, starting left of the dealer: three face-down cards each, then six hand cards. Everyone lays three of their hand cards face up on their face-down ones.':
@@ -25,8 +24,6 @@ const palace: Record<string, string> = {
 
   'Get rid of all your cards: first your hand, then the three face-up cards, then the three face-down ones, blind.':
     'Werde alle Karten los: erst deine Hand, dann die drei aufgedeckten, dann die drei verdeckten Karten – blind.',
-  'Put this phone in the middle: it shows the pile and everyone’s face-up cards. Everyone else plays on their own phone.':
-    'Leg dieses Handy in die Mitte: Es zeigt den Ablegestapel und die aufgedeckten Karten aller Spieler. Alle anderen spielen auf ihrem eigenen Handy.',
   'Anything goes': 'Alles geht',
   '7 or lower': '7 oder niedriger',
   '{rank} or higher': '{rank} oder höher',
@@ -72,6 +69,15 @@ const palace: Record<string, string> = {
   'Doesn’t fit: you take the pile': 'Passt nicht: Du nimmst den Ablegestapel auf',
   'The pile is cleared! Go again.': 'Ablegestapel gelöscht! Nochmal legen.',
   'It fits!': 'Passt!',
+  'Everyone plays on their own phone': 'Alle spielen auf ihrem eigenen Handy',
+  'Table phone in the middle': 'Tisch-Handy in der Mitte',
+  'Off: you play too. Every phone shows the stock, the pile and the others’ table cards.':
+    'Aus: Du spielst mit. Jedes Handy zeigt Stapel, Ablegestapel und die ausliegenden Karten der anderen.',
+  'This phone shows the pile and everyone’s face-up cards. Everyone else plays on their own phone.':
+    'Dieses Handy zeigt den Ablegestapel und die aufgedeckten Karten aller Spieler. Alle anderen spielen auf ihrem eigenen Handy.',
+  'No spare phone for the table? Switch the table phone off: the host plays too, and every phone shows the stock and the pile.':
+    'Kein Handy übrig für den Tisch? Schalte das Tisch-Handy aus: Der Host spielt mit, und jedes Handy zeigt Stapel und Ablegestapel.',
+  'Every player’s phone (plus one for the table, if you like)': 'Jedes Spieler-Handy (plus eins als Spielfeld, wenn ihr wollt)',
 };
 
 export default palace;

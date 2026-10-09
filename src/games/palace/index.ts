@@ -14,9 +14,10 @@ const palace: GameDefinition = {
   maxPlayers: MAX_PLAYERS,
   intensity: 1,
   explains: true,
-  needs: [tx('Every player’s phone, plus one for the table')],
+  needs: [tx('Every player’s phone (plus one for the table, if you like)')],
   rules: [
     tx('Everyone joins the same room on their own phone. The host’s phone lies in the middle as the table. One deck of 52 cards, 2 to 5 players.'),
+    tx('No spare phone for the table? Switch the table phone off: the host plays too, and every phone shows the stock and the pile.'),
     tx('Dealt one at a time, starting left of the dealer: three face-down cards each, then six hand cards. Everyone lays three of their hand cards face up on their face-down ones.'),
     tx('Starting left of the dealer, play one card or several of the same value onto the pile: the same value or higher. While the stock lasts, draw back up to three hand cards.'),
     tx('Can’t play? Take the whole pile, or risk it: the top card of the stock goes on the pile. If it fits, you got lucky. If not, you take the pile and that card.'),
