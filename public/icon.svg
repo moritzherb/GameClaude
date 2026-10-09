@@ -1,14 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d9ff5c"/>
+      <stop offset="0.55" stop-color="#c5f235"/>
+      <stop offset="1" stop-color="#a9d61f"/>
+    </linearGradient>
+    <radialGradient id="pip" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#2a2c24"/>
+      <stop offset="1" stop-color="#0b0c09"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
   <rect width="512" height="512" fill="#10110e"/>
   <!-- a lime die showing five, tilted like it was just thrown -->
   <g transform="rotate(-12 256 256)">
-    <rect x="116" y="116" width="280" height="280" rx="56" fill="#c5f235"/>
-    <g fill="#10110e">
-      <circle cx="180" cy="180" r="28"/>
-      <circle cx="332" cy="180" r="28"/>
-      <circle cx="256" cy="256" r="28"/>
-      <circle cx="180" cy="332" r="28"/>
-      <circle cx="332" cy="332" r="28"/>
+    <rect x="124" y="148" width="280" height="280" rx="60" fill="#000" opacity="0.55" filter="url(#shadow)"/>
+    <!-- the lip underneath, like the app's buttons -->
+    <rect x="116" y="128" width="280" height="280" rx="60" fill="#7fa312"/>
+    <rect x="116" y="112" width="280" height="280" rx="60" fill="url(#face)"/>
+    <path d="M176 120h160a52 52 0 0 1 52 52v6c-60-34-196-34-260 0v-6a52 52 0 0 1 52-52z" fill="#fff" opacity="0.22"/>
+    <g fill="url(#pip)">
+      <circle cx="180" cy="176" r="29"/>
+      <circle cx="332" cy="176" r="29"/>
+      <circle cx="256" cy="252" r="29"/>
+      <circle cx="180" cy="328" r="29"/>
+      <circle cx="332" cy="328" r="29"/>
     </g>
   </g>
 </svg>
