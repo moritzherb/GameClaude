@@ -4547,6 +4547,10 @@ h3 {
   border: 1.5px dashed rgba(255, 255, 255, 0.15);
 }
 
+.tr-slot.target.up .pcard-front {
+  box-shadow: 0 0 0 3px var(--c-yellow), 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
 .tr-slot.target .pcard-back {
   box-shadow: inset 0 0 0 calc(var(--cw) * 0.07) #fff, 0 0 0 3px var(--c-yellow);
 }
@@ -4580,6 +4584,8 @@ h3 {
 /* The middle: stock, discard pile, the card in hand and what happens. Its size follows the screen height. */
 .tr-middle {
   --mw: clamp(46px, 7.5dvh, 74px);
+  position: relative;
+  z-index: 5; /* a dragged card goes over both boards */
   flex: none;
   display: grid;
   grid-template-columns: auto auto auto 1fr;
@@ -4633,10 +4639,36 @@ h3 {
   animation: sp-nope 0.3s ease;
 }
 
+.tr-discard.drop-here {
+  box-shadow: 0 0 0 3px var(--bad);
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
 .tr-hand-card {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  touch-action: none;
+  cursor: grab;
   animation: pop-in 0.3s var(--spring) both;
+  transition: transform 0.25s var(--spring);
+}
+
+/* Dragged: follows the finger (no easing), above everything on the table. */
+.tr-hand-card.dragging {
+  z-index: 30;
+  cursor: grabbing;
+  transition: none;
+  animation: none;
+}
+
+.tr-hand-card.dragging .pcard-front {
+  box-shadow: 0 0 0 3px var(--accent), 0 18px 30px rgba(0, 0, 0, 0.45);
+}
+
+.tr-hand-card .pcard-back {
+  transform: none;
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.07) #fff;
 }
 
 .tr-hand-card .pcard-front {
@@ -4679,6 +4711,12 @@ h3 {
   color: var(--muted);
   font-size: 0.75rem;
   line-height: 1.3;
+}
+
+.tr-status-hint.warn {
+  color: var(--bad);
+  font-weight: 600;
+  animation: pop-in 0.3s var(--spring);
 }
 
 /* Round or game over: a card over the table. */
