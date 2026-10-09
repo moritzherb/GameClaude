@@ -143,7 +143,7 @@ export default function KingsCup({ players, exit }: GameProps) {
   }
 
   return (
-    <div className="kc">
+    <div className="kc fill">
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: player.color }}>

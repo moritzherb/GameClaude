@@ -265,7 +265,7 @@ export default function Speed() {
   };
 
   return (
-    <div className={`sp${playing ? '' : ' watching'}`}>
+    <div className={`sp fill${playing ? '' : ' watching'}`}>
       {playing ? (
         <Opponent g={g} who={them} seat={match.seats[them]} />
       ) : (

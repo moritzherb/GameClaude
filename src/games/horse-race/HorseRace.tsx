@@ -179,8 +179,10 @@ export default function HorseRace({ players, exit }: GameProps) {
   const sideBackers = s?.kind === 'side' ? backers(s.by) : [];
 
   return (
-    <div className="hs" style={{ '--rows': race.rows } as CSSProperties}>
-      <Track race={race} backers={backers} />
+    <div className="hs fill" style={{ '--rows': race.rows } as CSSProperties}>
+      <div className="hs-track-wrap">
+        <Track race={race} backers={backers} />
+      </div>
 
       <div className="hs-now">
         {s ? (

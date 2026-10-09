@@ -288,7 +288,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
   const shown: Card | undefined = r && !landed ? r.card : g.deck[0];
 
   return (
-    <div className="ftd ftd-tablephone">
+    <div className="ftd ftd-tablephone fill">
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: dealer.color }}>
@@ -400,7 +400,7 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
   const lastOfThree = r?.outcome === 'miss' && g.misses >= MISSES_TO_PASS;
 
   return (
-    <div className="ftd ftd-deckphone">
+    <div className="ftd ftd-deckphone fill">
       <div className="ftd-deckphone-head">
         <span className="kicker">{t('Deck · {name} deals', { name: dealer.name })}</span>
         <span className="ftd-deckphone-ask">

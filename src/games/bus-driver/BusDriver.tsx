@@ -306,7 +306,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   const held = reveal ? seat.hand.slice(0, -1) : seat.hand;
 
   return (
-    <div className="bd">
+    <div className="bd bd-turn fill">
       {progress}
 
       {flash !== null && (
@@ -331,7 +331,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         </span>
       </div>
 
-      <div className="bd-hand">
+      <div className="bd-hand" style={{ '--n': held.length + 1 } as CSSProperties}>
         {held.map((c, i) => (
           <PlayingCard key={i} card={c} />
         ))}
