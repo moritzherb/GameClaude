@@ -5,7 +5,7 @@ import Logo from '../components/Logo';
 import Tap from '../components/Tap';
 import { RoundButton } from '../components/TopBar';
 import { GAMES, playableGames } from '../games/registry';
-import { CATEGORIES, type GameDefinition } from '../games/types';
+import type { GameDefinition } from '../games/types';
 import { buzz, sfx } from '../lib/fx';
 import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
@@ -122,17 +122,6 @@ export default function Home() {
         <div className="ticket-list">
           {featured.map((g) => (
             <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <h2 className="section-title">In the mood for</h2>
-        <div className="chips wrap">
-          {CATEGORIES.map((c) => (
-            <Tap key={c.id} className="chip" onClick={() => navigate(paths.games(c.id))}>
-              {c.emoji} {c.label}
-            </Tap>
           ))}
         </div>
       </section>
