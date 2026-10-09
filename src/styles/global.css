@@ -2537,36 +2537,98 @@ h3 {
   font-variant-numeric: tabular-nums;
 }
 
-.kc-table {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  min-height: 260px;
-  padding: 24px 16px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
+/* The table: face-down cards in a messy circle around the King's Cup. */
+.kc-ring {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  container-type: inline-size;
 }
 
-.kc-table .pcard {
-  transition: transform 0.15s var(--spring);
+.kc-slot {
+  position: absolute;
+  width: 7.4cqw;
+  height: 10.4cqw;
+  border-radius: 1cqw;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 0.55cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  transition: transform 0.18s var(--spring), opacity 0.3s ease;
 }
 
-.kc-table:not(:disabled):active .pcard {
-  transform: scale(0.92) rotate(-3deg);
+.kc-slot:not(:disabled):active {
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.18);
+  z-index: 2;
 }
 
-.kc-table:disabled {
+.kc-slot:disabled {
   cursor: default;
 }
 
-.kc-hint {
+.kc-ring.revealing .kc-slot {
+  opacity: 0.3;
+}
+
+.kc-cup {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34cqw;
+  height: 34cqw;
+  transform: translate(-50%, -54%);
+  transition: opacity 0.3s ease;
+}
+
+.kc-ring.revealing .kc-cup {
+  opacity: 0;
+}
+
+.kc-cup-glass {
+  fill: color-mix(in srgb, var(--ink) 6%, transparent);
+  stroke: var(--ink);
+  stroke-opacity: 0.55;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.kc-cup-drink {
+  fill: var(--sun);
+  transition: y 0.8s var(--ease);
+}
+
+.kc-cup-foam {
+  fill: #fff;
+  opacity: 0.9;
+}
+
+.kc-ring-hint {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--muted);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.438rem;
+  font-size: 5cqw;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* The drawn card, big in the middle so everyone can see it. */
+.kc-reveal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -36.4cqw 0 0 -26cqw;
+  z-index: 3;
+}
+
+.kc-reveal .pcard {
+  --cw: 52cqw;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.32));
 }
 
 .kc-rule {
