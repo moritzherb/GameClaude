@@ -16,6 +16,8 @@ export default function Suit({ suit, className }: { suit: SuitName; className?: 
           <circle cx="12" cy="6.6" r="4.6" />
           <circle cx="6.6" cy="13.4" r="4.6" />
           <circle cx="17.4" cy="13.4" r="4.6" />
+          {/* fills the gap where the three leaves meet */}
+          <circle cx="12" cy="11.6" r="3.4" />
           <path d="M10.6 12.5h2.8c.3 4.1 1.3 7 3.4 10H7.2c2.1-3 3.1-5.9 3.4-10z" />
         </>
       )}
