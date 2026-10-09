@@ -11,8 +11,8 @@ import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
 
 const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-/** How long the card in play takes to fly in (and turn over, if it was face down). */
-const FLY_MS = 380;
+/** How long the card in play takes to glide in. */
+const FLY_MS = 300;
 /** A card that's no use at all goes onto the discard pile by itself after this long. */
 const AUTO_TOSS_MS = 1100;
 
@@ -38,8 +38,8 @@ export default function Trash({ players, exit }: GameProps) {
           ? 'swap'
           : 'toss'
       : null;
-  // Where the held card comes from, so it can fly (and flip) from there into the hand spot.
-  const [fly, setFly] = useState<{ x: number; y: number; flip: boolean } | null>(null);
+  // Where the held card comes from, so it can glide from there into the hand spot.
+  const [fly, setFly] = useState<{ x: number; y: number } | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   useEffect(() => {
     if (!msg) return;
@@ -99,15 +99,15 @@ export default function Trash({ players, exit }: GameProps) {
   }
 
   const me = two[g.turn];
-  const from = (el: Element | null, flip: boolean) => {
+  const from = (el: Element | null) => {
     const r = el?.getBoundingClientRect();
-    setFly(r ? { x: r.left + r.width / 2, y: r.top + r.height / 2, flip } : null);
+    setFly(r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null);
   };
   const tapStock = (el: Element) => {
     if (g.phase !== 'draw') return;
     sfx.tick();
     buzz(10);
-    from(el, true);
+    from(el);
     setG(draw(g));
   };
   const tapDiscard = (el: Element) => {
@@ -124,7 +124,7 @@ export default function Trash({ players, exit }: GameProps) {
       return;
     }
     sfx.tick();
-    from(el, false);
+    from(el);
     setG(next);
   };
   const miss = (text: string) => {
@@ -146,7 +146,7 @@ export default function Trash({ players, exit }: GameProps) {
     sfx.pop();
     buzz(12);
     // The card that lay there comes up into the hand spot: turning over, or the swapped-out Jack.
-    from(el, kind !== 'swap');
+    from(el);
     setMsg(null);
     setG(next);
     return true;
@@ -334,7 +334,7 @@ function Board({
 }
 
 /**
- * The card in play. It arrives with a little flight (and a flip, when it was face down) from wherever
+ * The card in play. It glides in, face up, from wherever
  * it came from. Drag it onto a slot or the discard pile; if it's dropped anywhere else it slides back.
  */
 function HeldCard({
@@ -349,19 +349,17 @@ function HeldCard({
   useless: boolean;
   /** The middle is turned around for the player opposite: screen moves are mirrored inside it. */
   rotated: boolean;
-  fly: { x: number; y: number; flip: boolean } | null;
+  fly: { x: number; y: number } | null;
   onDrop: (target: Element | null) => boolean;
   /** Set for a card that's no use at all: after a moment it slides onto the discard pile by itself. */
   onAutoToss?: () => void;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const backRef = useRef<HTMLSpanElement>(null);
   const start = useRef<{ x: number; y: number; id: number } | null>(null);
   const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
-  const [back, setBack] = useState(false);
   const sign = rotated ? -1 : 1;
 
-  // Fly in from where the card came from, flipping over on the way if it was face down.
+  // Glide in from where the card came from, already showing its face.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || !fly || typeof el.animate !== 'function') return;
@@ -369,28 +367,11 @@ function HeldCard({
     const dx = (fly.x - (r.left + r.width / 2)) * sign;
     const dy = (fly.y - (r.top + r.height / 2)) * sign;
     if (Math.abs(dx) + Math.abs(dy) < 4) return;
-    const mid = `translate(${dx * 0.4}px, ${dy * 0.4 - 24}px) scale(1.14)`;
-    el.animate(
-      fly.flip
-        ? [
-            { transform: `translate(${dx}px, ${dy}px) scaleX(1)` },
-            { transform: `${mid} scaleX(0)`, offset: 0.35 },
-            { transform: 'none' },
-          ]
-        : [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: mid, offset: 0.5 }, { transform: 'none' }],
-      { duration: FLY_MS, easing: 'cubic-bezier(0.3, 0.9, 0.4, 1)' },
-    );
-    if (fly.flip && backRef.current) {
-      backRef.current.animate([{ opacity: 1 }, { opacity: 1, offset: 0.34 }, { opacity: 0, offset: 0.36 }, { opacity: 0 }], { duration: FLY_MS });
-    }
+    el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(0.92)` }, { transform: 'none' }], {
+      duration: FLY_MS,
+      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+    });
     // Only when the card first shows up.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    setBack(!!fly?.flip);
-    const id = window.setTimeout(() => setBack(false), FLY_MS);
-    return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -447,7 +428,7 @@ function HeldCard({
   return (
     <span
       ref={ref}
-      className={`tr-hand-card${useless ? ' useless' : ''}${drag ? ' dragging' : ''}`}
+      className={`tr-hand-card${useless ? ' useless' : ''}${drag ? ' dragging' : ''}${fly ? ' gliding' : ''}`}
       style={drag ? { transform: `translate(${drag.dx}px, ${drag.dy}px) scale(1.08) rotate(${drag.dx * 0.03}deg)` } : undefined}
       onPointerDown={down}
       onPointerMove={move}
@@ -458,7 +439,6 @@ function HeldCard({
       }}
     >
       <CardFace card={card} />
-      {back && <span ref={backRef} className="pcard-face pcard-back" />}
     </span>
   );
 }
