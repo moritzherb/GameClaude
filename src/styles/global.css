@@ -4649,8 +4649,13 @@ h3 {
   inset: 0;
   z-index: 2;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
   cursor: grab;
-  animation: pop-in 0.3s var(--spring) both;
+  /* Only fills before it starts: afterwards the drag's own transform must win. */
+  animation: pop-in 0.3s var(--spring) backwards;
   transition: transform 0.25s var(--spring);
 }
 
@@ -4659,7 +4664,6 @@ h3 {
   z-index: 30;
   cursor: grabbing;
   transition: none;
-  animation: none;
 }
 
 .tr-hand-card.dragging .pcard-front {

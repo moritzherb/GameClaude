@@ -39,7 +39,7 @@ const trash: Record<string, string> = {
   'Jack! Drag it onto any face-down slot': 'Bube! Zieh ihn auf einen beliebigen verdeckten Platz',
   'No use: drag it onto the discard pile': 'Bringt nichts: Zieh sie auf den Ablagestapel',
   'Swap it for your Jack, or drag it onto the discard pile': 'Tausch sie gegen deinen Buben oder zieh sie auf den Ablagestapel',
-  'Not there: a {rank} goes into slot {slot}': 'Nicht dort: Eine {rank} gehört auf Platz {slot}',
+  'Not there: this card goes into slot {slot}': 'Nicht dort: Die Karte gehört auf Platz {slot}',
   'That one is already face up': 'Die liegt schon offen',
   'That’s not your side': 'Das ist nicht deine Seite',
   'You can still use this card': 'Die Karte kannst du noch brauchen',

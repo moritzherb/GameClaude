@@ -135,7 +135,7 @@ export default function Trash({ players, exit }: GameProps) {
     if (kind === 'toss') return miss(t('No use: drag it onto the discard pile'));
     const slot = g.sides[who][i];
     if (!slot) return false;
-    if (kind !== 'wild' && i !== slotFor(hand)) return miss(t('Not there: a {rank} goes into slot {slot}', { rank: rankLabel(hand.value), slot: SLOT_LABELS[slotFor(hand) as number] }));
+    if (kind !== 'wild' && i !== slotFor(hand)) return miss(t('Not there: this card goes into slot {slot}', { slot: SLOT_LABELS[slotFor(hand) as number] }));
     if (slot.up && kind !== 'swap') return miss(t('That one is already face up'));
     const next = kind === 'wild' ? place(g, i) : place(g);
     if (next === g) return false;
@@ -388,6 +388,8 @@ function HeldCard({
 
   const down = (e: ReactPointerEvent<HTMLSpanElement>) => {
     if (e.button !== 0) return;
+    // No text selection or native drag-and-drop: either would cancel this drag.
+    e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     start.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
     setDrag({ dx: 0, dy: 0 });
