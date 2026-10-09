@@ -100,6 +100,30 @@ describe('Trash', () => {
     expect(faceDown(g, 0)).toBe(0);
   });
 
+  it('a face-up Jack can be swapped for its slot’s real card; the Jack is played again', () => {
+    // Slot 2 holds a Jack (face up); slot 5 is still face down.
+    let g = holding(c(2), [c(13), c(11), c(12), c(13), c(4)], [0, 1, 2, 3]);
+    expect(usable(g, 0, c(2))).toBe(true);
+    g = place(g);
+    expect(g.sides[0][1]).toEqual({ card: c(2), up: true });
+    expect(g.hand).toEqual(c(11));
+    g = place(g, 4);
+    expect(g.sides[0][4]).toEqual({ card: c(11), up: true });
+    expect(g.phase).toBe('round-over');
+  });
+
+  it('swapping a Jack is a choice: the card may go on the discard pile instead', () => {
+    const g = holding(c(2), [c(13), c(11), c(12)], [0, 1]);
+    const tossed = toss(g);
+    expect(tossed.discard.at(-1)).toEqual(c(2));
+    // A card that fits a face-down slot has to be played.
+    const must = holding(c(3), [c(13), c(11), c(12)], [0, 1]);
+    expect(toss(must)).toBe(must);
+    // A Jack never swaps out a Jack, and real cards stay put.
+    expect(usable(holding(c(11), [c(11)], [0]), 0, c(11))).toBe(false);
+    expect(usable(holding(c(1 + 1), [c(13), c(2)], [0, 1]), 0, c(2))).toBe(false);
+  });
+
   it('deals uneven sizes', () => {
     const g = deal([7, 10], 1, 3, newDeck());
     expect(g.sides[0]).toHaveLength(7);

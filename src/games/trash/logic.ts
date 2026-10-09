@@ -9,6 +9,8 @@ import { shuffle } from '../../lib/random';
  * - A card goes face up into its own slot (Ace = 1 … 10) if that slot is still face down; the card
  *   that lay there is picked up and played the same way, and so on.
  * - A Jack is wild: it goes into any face-down slot you like. Queens and Kings are useless.
+ * - A Jack lying face up in a slot can be swapped for that slot's real card: put the card there,
+ *   take the Jack back and play it again.
  * - A card you can't use (its slot is already face up, or Q/K) goes on the discard pile and the
  *   turn passes.
  * - Whoever turns all their slots face up first wins the round. Next round the winner gets one
@@ -49,12 +51,25 @@ export function slotFor(card: Card): number | 'wild' | null {
   return null;
 }
 
-/** Can this player put the card down? */
-export function usable(g: Game, who: Who, card: Card) {
+/** Does the card go into a face-down slot of this player? */
+export function fitsDown(g: Game, who: Who, card: Card) {
   const slots = g.sides[who];
   const at = slotFor(card);
   if (at === 'wild') return slots.some((s) => !s.up);
   return at != null && at < slots.length && !slots[at].up;
+}
+
+/** Is a Jack lying face up in this card's slot, ready to be swapped for it? */
+export function swapsJack(g: Game, who: Who, card: Card) {
+  const at = slotFor(card);
+  if (typeof at !== 'number') return false;
+  const slot = g.sides[who][at];
+  return !!slot && slot.up && slot.card.value === 11;
+}
+
+/** Can this player put the card down (into a face-down slot, or in place of a Jack)? */
+export function usable(g: Game, who: Who, card: Card) {
+  return fitsDown(g, who, card) || swapsJack(g, who, card);
 }
 
 /** Deal a round: the dealer gives the other player the first card, then takes turns. */
@@ -90,13 +105,17 @@ export function takeDiscard(g: Game): Game {
   return { ...g, discard: g.discard.slice(0, -1), hand: top, phase: 'place' };
 }
 
-/** Put the held card into its slot (a Jack into the chosen slot) and pick up what lay there. */
+/**
+ * Put the held card into its slot (a Jack into the chosen slot) and pick up what lay there:
+ * the face-down card, or the Jack it replaces.
+ */
 export function place(g: Game, chosen?: number): Game {
   const card = g.hand;
   if (g.phase !== 'place' || !card || !usable(g, g.turn, card)) return g;
   const at = slotFor(card) === 'wild' ? chosen : (slotFor(card) as number);
   const slots = g.sides[g.turn];
-  if (at == null || at < 0 || at >= slots.length || slots[at].up) return g;
+  if (at == null || at < 0 || at >= slots.length) return g;
+  if (slots[at].up && !(card.value !== 11 && slots[at].card.value === 11)) return g;
   const picked = slots[at].card;
   const mine = slots.map((s, i) => (i === at ? { card, up: true } : s));
   const sides: [Slot[], Slot[]] = g.turn === 0 ? [mine, g.sides[1]] : [g.sides[0], mine];
@@ -108,9 +127,12 @@ export function place(g: Game, chosen?: number): Game {
   return { ...g, sides, hand: picked };
 }
 
-/** The held card is no use: onto the discard pile, and it's the other player's turn. */
+/**
+ * The held card goes on the discard pile and it's the other player's turn. Only if it fits no
+ * face-down slot (swapping it for a Jack is allowed, not a must).
+ */
 export function toss(g: Game): Game {
-  if (g.phase !== 'place' || !g.hand || usable(g, g.turn, g.hand)) return g;
+  if (g.phase !== 'place' || !g.hand || fitsDown(g, g.turn, g.hand)) return g;
   return { ...g, discard: [...g.discard, g.hand], hand: null, turn: other(g.turn), phase: 'draw' };
 }
 
