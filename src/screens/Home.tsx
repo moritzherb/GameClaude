@@ -7,6 +7,7 @@ import { RoundButton } from '../components/TopBar';
 import { GAMES, playableGames } from '../games/registry';
 import type { GameDefinition } from '../games/types';
 import { buzz, sfx } from '../lib/fx';
+import { getLang, t } from '../i18n';
 import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
 import { navigate, paths } from '../lib/router';
@@ -25,10 +26,11 @@ export default function Home() {
   // The headline follows the night, so check the clock every minute while home is open.
   const [hour, setHour] = useState(() => new Date().getHours());
   useEffect(() => {
-    const t = window.setInterval(() => setHour(new Date().getHours()), 60_000);
-    return () => window.clearInterval(t);
+    const clock = window.setInterval(() => setHour(new Date().getHours()), 60_000);
+    return () => window.clearInterval(clock);
   }, []);
-  const headline = headlineFor(hour);
+  const lang = getLang();
+  const headline = headlineFor(hour, lang);
 
   const randomGame = () => {
     const pool = playableGames();
@@ -56,14 +58,19 @@ export default function Home() {
 
   const featured = [...GAMES].sort((a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online)).slice(0, 8);
 
-  const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace(',', '').replace('/', '.');
+  // "Fri 09.10" / "Fr. 09.10"
+  const date = new Date()
+    .toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' })
+    .replace(',', '')
+    .replace('/', '.')
+    .replace(/\.$/, '');
 
   return (
     <main className="screen home">
       <header className="home-header">
         <Logo />
         <span className="home-date">{date}</span>
-        <RoundButton label="Settings" onClick={() => navigate(paths.settings)}>
+        <RoundButton label={t('Settings')} onClick={() => navigate(paths.settings)}>
           <SettingsIcon />
         </RoundButton>
       </header>
@@ -75,8 +82,8 @@ export default function Home() {
       <Tap className="crew fade-up" onClick={() => navigate(paths.players())}>
         <span className="crew-count">{players.length || <PlusIcon />}</span>
         <span className="crew-text">
-          <span className="crew-label">The crew</span>
-          <span className="crew-sub">{players.length ? 'Tap to edit' : 'Who’s playing tonight?'}</span>
+          <span className="crew-label">{t('The crew')}</span>
+          <span className="crew-sub">{players.length ? t('Tap to edit') : t('Who’s playing tonight?')}</span>
         </span>
         {players.length > 0 && (
           <span className="avatar-stack">
@@ -98,25 +105,25 @@ export default function Home() {
           <span className="quick-icon" aria-hidden>
             🎲
           </span>
-          <span className="quick-title">Shuffle</span>
-          <span className="quick-sub">We pick, you play</span>
+          <span className="quick-title">{t('Shuffle')}</span>
+          <span className="quick-sub">{t('We pick, you play')}</span>
         </Tap>
         <Tap className={`quick quick-room${inRoom ? ' live' : ''}`} onClick={() => navigate(paths.room)}>
           <span className="quick-icon" aria-hidden>
             📱
           </span>
-          <span className="quick-title">{inRoom ? room.code : 'Together'}</span>
+          <span className="quick-title">{inRoom ? room.code : t('Together')}</span>
           <span className="quick-sub">
-            {inRoom ? `${room.members.filter((m) => m.online).length} phones live` : 'Every phone joins'}
+            {inRoom ? t('{n} phones live', { n: room.members.filter((m) => m.online).length }) : t('Every phone joins')}
           </span>
         </Tap>
       </div>
 
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">The line-up</h2>
+          <h2 className="section-title">{t('The line-up')}</h2>
           <button type="button" className="link-btn" onClick={() => navigate(paths.games())}>
-            All games
+            {t('All games')}
           </button>
         </div>
         <div className="ticket-list">
@@ -130,9 +137,9 @@ export default function Home() {
         <div className="roulette-overlay">
           <div className="roulette-card" style={{ '--card-bg': rolling.color } as CSSProperties}>
             <div className="roulette-emoji">{rolling.emoji}</div>
-            <div className="roulette-name">{rolling.name}</div>
+            <div className="roulette-name">{t(rolling.name)}</div>
           </div>
-          <div className="roulette-caption">Picking your game…</div>
+          <div className="roulette-caption">{t('Picking your game…')}</div>
         </div>
       )}
     </main>

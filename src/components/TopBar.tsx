@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { BackIcon, CloseIcon } from './Icons';
 
@@ -33,7 +34,7 @@ export default function TopBar({ title, onBack, icon = 'back', right }: Props) {
     <header className="top-bar">
       <div className="top-bar-side">
         {onBack && (
-          <RoundButton onClick={onBack} label={icon === 'back' ? 'Back' : 'Close'}>
+          <RoundButton onClick={onBack} label={icon === 'back' ? t('Back') : t('Close')}>
             {icon === 'back' ? <BackIcon /> : <CloseIcon />}
           </RoundButton>
         )}

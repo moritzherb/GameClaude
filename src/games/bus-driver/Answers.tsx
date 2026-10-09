@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 import Tap from '../../components/Tap';
-import { SUIT_NAME, SUIT_SYMBOL, SUITS } from '../../lib/cards';
+import { t, tx } from '../../i18n';
+import { SUIT_SYMBOL, SUITS, type Suit } from '../../lib/cards';
 import type { Guess, Outcome, QuestionId } from './logic';
+
+const SUIT_LABEL: Record<Suit, string> = { hearts: tx('Hearts'), diamonds: tx('Diamonds'), spades: tx('Spades'), clubs: tx('Clubs') };
 
 /** The big answer buttons for each Bus Driver question (used in part 1 and the bus ride). */
 export default function Answers({ questionId, onAnswer }: { questionId: QuestionId; onAnswer: (g: Guess) => void }) {
@@ -16,36 +19,36 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
     case 'color':
       return (
         <div className="answer-grid">
-          {btn('red', '♥♦', 'Red', 'tone-red', { q: 'color', color: 'red' })}
-          {btn('black', '♠♣', 'Black', 'tone-black', { q: 'color', color: 'black' })}
+          {btn('red', '♥♦', t('Red'), 'tone-red', { q: 'color', color: 'red' })}
+          {btn('black', '♠♣', t('Black'), 'tone-black', { q: 'color', color: 'black' })}
         </div>
       );
     case 'higher-lower':
       return (
         <div className="answer-grid">
-          {btn('higher', '⬆', 'Higher', 'tone-mint', { q: 'higher-lower', dir: 'higher' })}
-          {btn('lower', '⬇', 'Lower', 'tone-ocean', { q: 'higher-lower', dir: 'lower' })}
+          {btn('higher', '⬆', t('Higher'), 'tone-mint', { q: 'higher-lower', dir: 'higher' })}
+          {btn('lower', '⬇', t('Lower'), 'tone-ocean', { q: 'higher-lower', dir: 'lower' })}
         </div>
       );
     case 'inside-outside':
       return (
         <div className="answer-grid">
-          {btn('inside', '→ ←', 'Inside', 'tone-violet', { q: 'inside-outside', where: 'inside' })}
-          {btn('outside', '← →', 'Outside', 'tone-berry', { q: 'inside-outside', where: 'outside' })}
+          {btn('inside', '→ ←', t('Inside'), 'tone-violet', { q: 'inside-outside', where: 'inside' })}
+          {btn('outside', '← →', t('Outside'), 'tone-berry', { q: 'inside-outside', where: 'outside' })}
         </div>
       );
     case 'have-it':
       return (
         <div className="answer-grid">
-          {btn('yes', '👍', 'Yes, got it', 'tone-mint', { q: 'have-it', has: true })}
-          {btn('no', '👎', 'Nope', 'tone-black', { q: 'have-it', has: false })}
+          {btn('yes', '👍', t('Yes, got it'), 'tone-mint', { q: 'have-it', has: true })}
+          {btn('no', '👎', t('Nope'), 'tone-black', { q: 'have-it', has: false })}
         </div>
       );
     default:
       return (
         <div className="answer-grid">
           {SUITS.map((suit) =>
-            btn(suit, SUIT_SYMBOL[suit], SUIT_NAME[suit], suit === 'hearts' || suit === 'diamonds' ? 'tone-suit-red' : 'tone-suit-black', {
+            btn(suit, SUIT_SYMBOL[suit], t(SUIT_LABEL[suit]), suit === 'hearts' || suit === 'diamonds' ? 'tone-suit-red' : 'tone-suit-black', {
               q: 'suit',
               suit,
             }),

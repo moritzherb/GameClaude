@@ -1,20 +1,21 @@
+import { tx } from '../../i18n';
 import type { GameDefinition } from '../types';
 import WhoDrinks from './WhoDrinks';
 
 const whoDrinks: GameDefinition = {
   id: 'who-drinks',
-  name: 'Who Drinks?',
+  name: tx('Who Drinks?'),
   emoji: '🎰',
-  tagline: 'Spin it. Someone’s getting wrecked.',
+  tagline: tx('Spin it. Someone’s getting wrecked.'),
   color: 'var(--c-orange)',
   categories: ['quick', 'pregame', 'party'],
   minPlayers: 2,
   intensity: 2,
   rules: [
-    'Hit SPIN.',
-    'The wheel lands on someone.',
-    'That person does whatever the screen says.',
-    'No arguing with the machine. 🤖',
+    tx('Hit SPIN.'),
+    tx('The wheel lands on someone.'),
+    tx('That person does whatever the screen says.'),
+    tx('No arguing with the machine. 🤖'),
   ],
   component: WhoDrinks,
 };

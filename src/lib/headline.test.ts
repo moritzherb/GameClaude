@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import type { Lang } from '../i18n';
 import { headlineFor } from './headline';
 
-const text = (hour: number) => {
-  const h = headlineFor(hour);
+const text = (hour: number, lang?: Lang) => {
+  const h = headlineFor(hour, lang);
   return `${h.top} ${h.sticker}`;
 };
 
@@ -18,5 +19,16 @@ describe('headlineFor', () => {
     expect(text(5)).toBe('Last round');
     expect(text(6)).toBe('Game’s on');
     expect(text(16)).toBe('Game’s on');
+  });
+
+  it('speaks German', () => {
+    expect(text(18, 'de')).toBe('Zeit zum Vorglühen?');
+    expect(text(23, 'de')).toBe('Party läuft');
+    expect(text(3, 'de')).toBe('Letzte Runde');
+    expect(text(12, 'de')).toBe('Los geht’s');
+  });
+
+  it('keeps English as the default', () => {
+    expect(text(12, 'en')).toBe('Game’s on');
   });
 });

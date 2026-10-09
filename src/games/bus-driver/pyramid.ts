@@ -1,3 +1,4 @@
+import { tx } from '../../i18n';
 import { newDeck, type Card } from '../../lib/cards';
 import { shuffle } from '../../lib/random';
 
@@ -17,9 +18,9 @@ export function pyramidRows(rows: number) {
 export type SipMode = 'normal' | 'double' | 'plus2';
 
 export const SIP_MODES: { id: SipMode; label: string }[] = [
-  { id: 'normal', label: 'Normal' },
-  { id: 'double', label: 'Tipsy ×2' },
-  { id: 'plus2', label: 'Tipsy +2' },
+  { id: 'normal', label: tx('Normal') },
+  { id: 'double', label: tx('Tipsy ×2') },
+  { id: 'plus2', label: tx('Tipsy +2') },
 ];
 
 /**

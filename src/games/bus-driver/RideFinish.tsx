@@ -1,4 +1,5 @@
 import BigButton from '../../components/BigButton';
+import { t } from '../../i18n';
 import type { Player } from '../../state/AppState';
 
 export interface RideStats {
@@ -19,28 +20,36 @@ export default function RideFinish({ driver, stats, onPlayAgain, onExit }: { dri
         </span>
       </div>
       <div className="bd-head center">
-        <span className="kicker">Ride complete</span>
-        <h2 className="bd-title big">{driver.name} made it!</h2>
-        <p className="lead">{fails === 0 ? 'First try. Legend.' : `${fails} restart${fails > 1 ? 's' : ''} and ${stats.drunk} sips later.`}</p>
+        <span className="kicker">{t('Ride complete')}</span>
+        <h2 className="bd-title big">{t('{name} made it!', { name: driver.name })}</h2>
+        <p className="lead">
+          {fails === 0
+            ? t('First try. Legend.')
+            : fails === 1
+              ? stats.drunk === 1
+                ? t('{fails} restart and 1 sip later.', { fails })
+                : t('{fails} restart and {sips} sips later.', { fails, sips: stats.drunk })
+              : t('{fails} restarts and {sips} sips later.', { fails, sips: stats.drunk })}
+        </p>
       </div>
       <div className="stats">
         <div className="stat">
-          <span className="stat-label">Attempts</span>
+          <span className="stat-label">{t('Attempts')}</span>
           <span className="stat-value">{stats.attempt}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">Sips drunk</span>
+          <span className="stat-label">{t('Sips drunk')}</span>
           <span className="stat-value">{stats.drunk}</span>
         </div>
         <div className="stat wide">
-          <span className="stat-label">Cards flipped</span>
+          <span className="stat-label">{t('Cards flipped')}</span>
           <span className="stat-value">{stats.drawn}</span>
         </div>
       </div>
       <div className="sticky-action stack">
-        <BigButton onClick={onPlayAgain}>Play again</BigButton>
+        <BigButton onClick={onPlayAgain}>{t('Play again')}</BigButton>
         <BigButton variant="glass" onClick={onExit}>
-          Back to games
+          {t('Back to games')}
         </BigButton>
       </div>
     </div>

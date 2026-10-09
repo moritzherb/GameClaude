@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
+import { t } from '../../i18n';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
@@ -62,31 +63,34 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
   let verdict = null;
   let nextLabel = '';
   if (reveal) {
-    const detail = `It was ${cardName(reveal.card)}${reveal.reshuffled ? ' · new deck shuffled' : ''}`;
+    const card = cardName(reveal.card);
+    const detail = reveal.reshuffled ? t('It was {card} · new deck shuffled', { card }) : t('It was {card}', { card });
     if (ride.done) {
-      verdict = <Verdict tone="correct" emoji="🏁" title="All correct!" sub="The bus has arrived." detail={detail} />;
-      nextLabel = 'Finish the ride';
+      verdict = <Verdict tone="correct" emoji="🏁" title={t('All correct!')} sub={t('The bus has arrived.')} detail={detail} />;
+      nextLabel = t('Finish the ride');
     } else if (!failed) {
-      verdict = <Verdict tone="correct" emoji="✅" title="Correct!" sub={`Next: ${questions[q + 1].title}`} detail={detail} />;
-      nextLabel = 'Next question →';
+      verdict = (
+        <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next: {question}', { question: t(questions[q + 1].title) })} detail={detail} />
+      );
+      nextLabel = t('Next question →');
     } else {
       const { sips, outcome } = reveal.result;
       verdict = (
         <Verdict
           tone={outcome}
           emoji={outcome === 'same' ? '😱' : '🍺'}
-          title={outcome === 'same' ? `Same value! Drink ${sips}` : `Wrong! Drink ${sips}`}
-          sub="Back to question 1."
+          title={outcome === 'same' ? t('Same value! Drink {n}', { n: sips }) : t('Wrong! Drink {n}', { n: sips })}
+          sub={t('Back to question 1.')}
           detail={detail}
         />
       );
-      nextLabel = 'Start over';
+      nextLabel = t('Start over');
     }
   }
 
   return (
     <div className="bd">
-      <div className="bd-progress" aria-label={`Question ${q + 1} of ${questions.length}`}>
+      <div className="bd-progress" aria-label={t('Question {n} of {total}', { n: q + 1, total: questions.length })}>
         {questions.map((x, i) => (
           <span key={x.id} className={i < q ? 'done' : i === q ? (reveal ? (failed ? 'fail' : 'done') : 'now') : ''} />
         ))}
@@ -99,7 +103,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         <span className="bd-player-text">
           <span className="bd-player-name">{driver.name}</span>
           <span className="bd-player-sub">
-            Attempt {ride.attempt - (failed ? 1 : 0)} · {ride.drunk} sips
+            {t('Attempt {n} · {sips} sips', { n: ride.attempt - (failed ? 1 : 0), sips: ride.drunk })}
           </span>
         </span>
         <DeckCount left={ride.deck.length} />
@@ -116,7 +120,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         <span className="bd-question-num">
           {q + 1}/{questions.length}
         </span>{' '}
-        {question.title}
+        {t(question.title)}
       </h2>
 
       {reveal ? verdict : <Answers questionId={question.id} onAnswer={answer} />}

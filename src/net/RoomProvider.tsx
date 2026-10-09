@@ -1,5 +1,6 @@
 import Peer, { type DataConnection, type PeerError, type PeerOptions } from 'peerjs';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { load } from '../lib/storage';
 import { newRoomCode, peerIdFor, type Member, type Profile, type ToGuest, type ToHost } from './protocol';
@@ -91,17 +92,17 @@ function peerOptions(): PeerOptions {
 function friendlyError(err: PeerError<string>, code: string | null) {
   switch (err.type) {
     case 'peer-unavailable':
-      return `No room with code ${code}. Check the code or ask the host to open the room again.`;
+      return t('No room with code {code}. Check the code or ask the host to open the room again.', { code: code ?? '' });
     case 'browser-incompatible':
     case 'webrtc':
-      return 'This browser can’t connect phones. Open the app in Safari or Chrome (not inside another app).';
+      return t('This browser can’t connect phones. Open the app in Safari or Chrome (not inside another app).');
     case 'network':
     case 'server-error':
     case 'socket-error':
     case 'socket-closed':
-      return 'No connection to the room server. Check your internet and try again.';
+      return t('No connection to the room server. Check your internet and try again.');
     default:
-      return 'Something went wrong with the connection. Try again.';
+      return t('Something went wrong with the connection. Try again.');
   }
 }
 
@@ -207,7 +208,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
             }
             broadcastLobby();
           } else if (msg.t === 'cheers' && memberId) {
-            const from = membersRef.current.find((m) => m.id === memberId)?.name ?? 'Someone';
+            const from = membersRef.current.find((m) => m.id === memberId)?.name ?? t('Someone');
             showCheers(from);
             guests.current.forEach((c) => c.open && c.send({ t: 'cheers', from } satisfies ToGuest));
           } else if (msg.t === 'game' && memberId) {
@@ -282,7 +283,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
         teardown();
         saveRoom(null);
         setStatus('closed');
-        setMessage(msg.reason === 'removed' ? 'The host removed you from the room.' : 'The host closed the room.');
+        setMessage(msg.reason === 'removed' ? t('The host removed you from the room.') : t('The host closed the room.'));
       }
     });
 
@@ -299,7 +300,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       teardown();
       saveRoom(null);
       setStatus('error');
-      setMessage('Lost the connection to the host. Ask them to keep the app open, then join again.');
+      setMessage(t('Lost the connection to the host. Ask them to keep the app open, then join again.'));
       return;
     }
     setStatus('reconnecting');
@@ -423,7 +424,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       },
       sendCheers: () => {
         if (role === 'host') {
-          const from = profileRef.current?.name ?? 'Host';
+          const from = profileRef.current?.name ?? t('Host');
           showCheers(from);
           guests.current.forEach((c) => c.open && c.send({ t: 'cheers', from } satisfies ToGuest));
         } else if (toHost.current?.open) {

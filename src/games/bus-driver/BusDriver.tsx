@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
+import { t } from '../../i18n';
 import { cardName, newDeck, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
@@ -119,9 +120,9 @@ export default function BusDriver({ players, exit }: GameProps) {
     return (
       <div className="bd">
         <div className="bd-head">
-          <span className="kicker">Part 1 · Collect your cards</span>
-          <h2 className="bd-title">Who’s dealing?</h2>
-          {!known && <p className="lead">Play starts left of the dealer. The dealer plays too and goes last.</p>}
+          <span className="kicker">{t('Part 1 · Collect your cards')}</span>
+          <h2 className="bd-title">{t('Who’s dealing?')}</h2>
+          {!known && <p className="lead">{t('Play starts left of the dealer. The dealer plays too and goes last.')}</p>}
         </div>
 
         <div className="pick-grid">
@@ -134,12 +135,12 @@ export default function BusDriver({ players, exit }: GameProps) {
             >
               <span className="pick-chip-avatar">{p.avatar}</span>
               <span className="pick-chip-name">{p.name}</span>
-              {p.id === s.dealerId && <span className="pick-chip-badge">Dealer</span>}
+              {p.id === s.dealerId && <span className="pick-chip-badge">{t('Dealer')}</span>}
             </Tap>
           ))}
         </div>
         <button type="button" className="text-btn" onClick={() => setS({ ...s, dealerId: pick(players).id })}>
-          Pick a random dealer
+          {t('Pick a random dealer')}
         </button>
 
         <div className="settings-list">
@@ -156,8 +157,8 @@ export default function BusDriver({ players, exit }: GameProps) {
           >
             <span className="setting-emoji">🔥</span>
             <span className="setting-text">
-              <span className="setting-label">Risky mode</span>
-              <span className="setting-hint">Adds a 5th question: guess the exact suit.</span>
+              <span className="setting-label">{t('Risky mode')}</span>
+              <span className="setting-hint">{t('Adds a 5th question: guess the exact suit.')}</span>
             </span>
             <span className="switch">
               <span className="switch-knob" />
@@ -167,7 +168,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
         <div className="sticky-action">
           <BigButton size="xl" onClick={start}>
-            Deal the cards
+            {t('Deal the cards')}
           </BigButton>
         </div>
       </div>
@@ -179,8 +180,8 @@ export default function BusDriver({ players, exit }: GameProps) {
     return (
       <div className="bd">
         <div className="bd-head">
-          <span className="kicker">Part 1 done</span>
-          <h2 className="bd-title">Everyone’s got their cards.</h2>
+          <span className="kicker">{t('Part 1 done')}</span>
+          <h2 className="bd-title">{t('Everyone’s got their cards.')}</h2>
         </div>
 
         <div className="bd-summary">
@@ -192,7 +193,7 @@ export default function BusDriver({ players, exit }: GameProps) {
                 </span>
                 <span className="bd-summary-name">{x.player.name}</span>
                 <span className="bd-summary-stats">
-                  drank {x.drank} · gave {x.gave}
+                  {t('drank {drank} · gave {gave}', { drank: x.drank, gave: x.gave })}
                 </span>
               </div>
               <div className="bd-summary-hand">
@@ -206,7 +207,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => setS({ ...s, stage: 'pyramid' })}>
-            Part 2: The pyramid
+            {t('Part 2: The pyramid')}
           </BigButton>
         </div>
       </div>
@@ -237,7 +238,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   }
 
   const progress = (
-    <div className="bd-progress" aria-label={`Round ${s.round + 1} of ${questions.length}`}>
+    <div className="bd-progress" aria-label={t('Round {n} of {total}', { n: s.round + 1, total: questions.length })}>
       {questions.map((q, i) => (
         <span key={q.id} className={i < s.round ? 'done' : i === s.round ? 'now' : ''} />
       ))}
@@ -254,14 +255,14 @@ export default function BusDriver({ players, exit }: GameProps) {
         {progress}
         <div className="bd-intro fade-up">
           <span className="kicker">
-            Round {s.round + 1} of {questions.length}
+            {t('Round {n} of {total}', { n: s.round + 1, total: questions.length })}
           </span>
-          <h2 className="bd-title big">{question.title}</h2>
-          <p className="lead">{question.explain}</p>
+          <h2 className="bd-title big">{t(question.title)}</h2>
+          <p className="lead">{t(question.explain)}</p>
           <div className="bd-rules">
-            <span className="bd-rule good">Right → give out {sips}</span>
-            <span className="bd-rule bad">Wrong → drink {sips}</span>
-            {hasSame && <span className="bd-rule bad">Same value → drink {sips * 2}</span>}
+            <span className="bd-rule good">{t('Right → give out {n}', { n: sips })}</span>
+            <span className="bd-rule bad">{t('Wrong → drink {n}', { n: sips })}</span>
+            {hasSame && <span className="bd-rule bad">{t('Same value → drink {n}', { n: sips * 2 })}</span>}
           </div>
         </div>
         <div className="bd-first">
@@ -269,12 +270,13 @@ export default function BusDriver({ players, exit }: GameProps) {
             {first.avatar}
           </span>
           <span>
-            <strong>{first.name}</strong> starts{dealer ? ` · ${dealer.name} deals` : ''}
+            <strong>{first.name}</strong> {t('starts')}
+            {dealer ? ` · ${t('{name} deals', { name: dealer.name })}` : ''}
           </span>
         </div>
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => setS({ ...s, stage: 'turn' })}>
-            Let’s go
+            {t('Let’s go')}
           </BigButton>
         </div>
       </div>
@@ -286,10 +288,10 @@ export default function BusDriver({ players, exit }: GameProps) {
   const isDealer = seat.player.id === s.dealerId;
   const nextLabel =
     s.turn + 1 < s.seats.length
-      ? `Next: ${s.seats[s.turn + 1].player.name}`
+      ? t('Next: {name}', { name: s.seats[s.turn + 1].player.name })
       : s.round + 1 < questions.length
-        ? 'Next round'
-        : 'Show everyone’s cards';
+        ? t('Next round')
+        : t('Show everyone’s cards');
   // The hand already contains the revealed card once answered; show it in the flip slot instead.
   const held = reveal ? seat.hand.slice(0, -1) : seat.hand;
 
@@ -304,8 +306,8 @@ export default function BusDriver({ players, exit }: GameProps) {
         <span className="bd-player-text">
           <span className="bd-player-name">{seat.player.name}</span>
           <span className="bd-player-sub">
-            {isDealer ? 'Dealer · ' : ''}
-            {s.turn + 1} of {s.seats.length}
+            {isDealer ? `${t('Dealer')} · ` : ''}
+            {t('{n} of {total}', { n: s.turn + 1, total: s.seats.length })}
           </span>
         </span>
       </div>
@@ -317,7 +319,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         <PlayingCard key={`slot-${s.round}-${s.turn}`} card={reveal?.card} faceUp={!!reveal} waiting={!reveal} />
       </div>
 
-      <h2 className="bd-question">{question.title}</h2>
+      <h2 className="bd-question">{t(question.title)}</h2>
 
       {reveal ? (
         <ResultBanner result={reveal.result} card={reveal.card} newDeck={s.newDeckOpened} />
@@ -337,11 +339,13 @@ export default function BusDriver({ players, exit }: GameProps) {
 }
 
 function ResultBanner({ result, card, newDeck }: { result: Result; card: Card; newDeck: boolean }) {
-  const s = result.sips > 1 ? 's' : '';
+  const n = result.sips;
+  const one = n === 1;
   const copy = {
-    correct: { emoji: '🎉', title: 'Correct!', sub: `Give out ${result.sips} sip${s}` },
-    wrong: { emoji: '🍺', title: 'Wrong!', sub: `Drink ${result.sips} sip${s}` },
-    same: { emoji: '😱', title: 'Same value!', sub: `Double trouble: drink ${result.sips} sips` },
+    correct: { emoji: '🎉', title: t('Correct!'), sub: one ? t('Give out {n} sip', { n }) : t('Give out {n} sips', { n }) },
+    wrong: { emoji: '🍺', title: t('Wrong!'), sub: one ? t('Drink {n} sip', { n }) : t('Drink {n} sips', { n }) },
+    same: { emoji: '😱', title: t('Same value!'), sub: t('Double trouble: drink {n} sips', { n }) },
   }[result.outcome];
-  return <Verdict tone={result.outcome} {...copy} detail={`It was ${cardName(card)}${newDeck ? ' · fresh deck opened' : ''}`} />;
+  const detail = newDeck ? t('It was {card} · fresh deck opened', { card: cardName(card) }) : t('It was {card}', { card: cardName(card) });
+  return <Verdict tone={result.outcome} {...copy} detail={detail} />;
 }
