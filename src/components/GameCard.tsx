@@ -35,7 +35,7 @@ export default function GameCard({ game, onOpen }: { game: GameDefinition; onOpe
         <span className="ticket-meta">
           <span>{t('{n} players', { n: players })}</span>
           <Intensity level={game.intensity} showLabel />
-          {game.online && <span className="ticket-flag">{t('Every phone')}</span>}
+          {game.online && <span className="ticket-flag">{t(game.phones ?? 'Every phone')}</span>}
         </span>
       </span>
       {soon && <span className="stamp">{t('Soon')}</span>}

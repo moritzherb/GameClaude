@@ -10,8 +10,8 @@ import { shuffle } from '../../lib/random';
  * - Both play at the same time: a card goes on a middle pile if it's one higher or lower.
  *   Aces wrap around: an Ace goes on a King or a 2, a 2 on an Ace or a 3.
  * - When neither player can play (hands full or piles empty), two new cards are turned over.
- *   Once the side stacks are used up, the middle piles (all but their top cards) are shuffled into
- *   new side stacks.
+ *   Once the side stacks are used up, every card in the middle is shuffled into two new side stacks
+ *   and play goes on.
  * - The first to get rid of every card wins.
  */
 
@@ -121,14 +121,14 @@ export function blocked(g: Game, who: Who) {
 /** Both players stuck: time to turn over two new middle cards. */
 export const stuck = (g: Game) => g.phase === 'play' && blocked(g, 0) && blocked(g, 1);
 
-/** 1-2-3: turn a card from each side stack onto the middle. Refills the stacks from the middle when they're empty. */
+/** 1-2-3: turn a card from each side stack onto the middle. Once the stacks are empty, every card in the middle is shuffled into two new ones first. */
 export function turnOver(g: Game, rand: <T>(items: readonly T[]) => T[] = shuffle): Game {
   let { stacks, middle } = g;
   if (!stacks[0].length || !stacks[1].length) {
-    const under = rand([...middle[0].slice(0, -1), ...middle[1].slice(0, -1), ...stacks[0], ...stacks[1]]);
-    const half = Math.ceil(under.length / 2);
-    stacks = [under.slice(0, half), under.slice(half)];
-    middle = [middle[0].slice(-1), middle[1].slice(-1)];
+    const all = rand([...middle[0], ...middle[1], ...stacks[0], ...stacks[1]]);
+    const half = Math.ceil(all.length / 2);
+    stacks = [all.slice(0, half), all.slice(half)];
+    middle = [[], []];
   }
   const nextMiddle: [Card[], Card[]] = [
     stacks[0].length ? [...middle[0], stacks[0][0]] : middle[0],

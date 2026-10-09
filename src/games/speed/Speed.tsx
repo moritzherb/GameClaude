@@ -113,13 +113,13 @@ function useSpeed() {
     return () => window.clearInterval(id);
   }, [counting]);
 
-  // Host: nobody can play – give it a moment, then count down to two new middle cards.
+  // Host: nobody can play – show it for a moment, then count down to two new middle cards.
   const isStuck = isHost && !!hostMatch && stuck(hostMatch.game);
   useEffect(() => {
     if (!isStuck) return;
     const id = window.setTimeout(
       () => setHostMatch((m) => (m && stuck(m.game) ? { ...m, game: { ...m.game, phase: 'count' }, count: 3 } : m)),
-      900,
+      1700,
     );
     return () => window.clearTimeout(id);
   }, [isStuck]);
@@ -407,6 +407,9 @@ function MyHalf({
 
 /** The middle of the table: the two side stacks and the two piles everyone plays on. */
 function Middle({ g, count }: { g: Game; count: number | null }) {
+  // Every phone works this out from the same state, so everyone sees it at once.
+  const nobody = stuck(g);
+  const restart = g.middle[0].length > 0 || g.middle[1].length > 0;
   return (
     <div className="sp-middle">
       <span className={`sp-stack${g.stacks[0].length ? '' : ' empty'}`}>{g.stacks[0].length || ''}</span>
@@ -420,8 +423,15 @@ function Middle({ g, count }: { g: Game; count: number | null }) {
         </span>
       ))}
       <span className={`sp-stack${g.stacks[1].length ? '' : ' empty'}`}>{g.stacks[1].length || ''}</span>
+      {nobody && (
+        <span className="sp-stuck">
+          <span className="sp-stuck-title">{t('Nobody can play!')}</span>
+          <span className="sp-stuck-sub">{t('Two new cards are coming…')}</span>
+        </span>
+      )}
       {count != null && count > 0 && (
         <span className="sp-count" key={count}>
+          {restart && <span className="sp-count-label">{t('New cards in')}</span>}
           {count}
         </span>
       )}

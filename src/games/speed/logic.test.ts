@@ -80,15 +80,16 @@ describe('Speed', () => {
     expect(blocked(h, 0)).toBe(false);
   });
 
-  it('refills the side stacks from the middle once they run out', () => {
+  it('shuffles every card in the middle into new side stacks once they run out', () => {
     let g = started(newGame(newDeck()));
     for (let i = 0; i < 5; i++) g = turnOver(g);
     expect(g.stacks[0]).toHaveLength(0);
     expect(g.middle[0]).toHaveLength(6);
     g = turnOver(g, (x) => [...x]);
-    // 5 + 5 under the tops went back, one each was turned over again.
-    expect(g.middle[0]).toHaveLength(2);
-    expect(g.stacks[0].length + g.stacks[1].length).toBe(8);
+    // All 12 went back into two stacks of 6, and one of each was turned over again.
+    expect(g.middle[0]).toHaveLength(1);
+    expect(g.middle[1]).toHaveLength(1);
+    expect(g.stacks[0].length + g.stacks[1].length).toBe(10);
     expect(allCards(g)).toHaveLength(52);
     expect(new Set(allCards(g).map((x) => `${x.value}${x.suit}`)).size).toBe(52);
   });

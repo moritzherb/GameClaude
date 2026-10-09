@@ -2955,20 +2955,25 @@ h3 {
 
 /* ---------- F*ck the Dealer ---------- */
 
-/* The middle of the table: a pile per value from 2 to Ace, seven on top, six below. */
+/* The middle of the table: a pile per value from 2 to Ace in three rows (2–6, 7–10, J–A). */
 .ftd-table {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px 6px;
+  flex-direction: column;
+  gap: 14px;
   padding: 16px 10px 12px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
+.ftd-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
 .ftd-pile {
-  flex: 0 0 calc((100% - 36px) / 7);
+  flex: 0 0 calc((100% - 32px) / 5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3057,6 +3062,7 @@ h3 {
 }
 
 .ftd-deck {
+  --dw: 96px;
   position: relative;
   flex: none;
   padding-bottom: 36px;
@@ -3073,11 +3079,11 @@ h3 {
   position: absolute;
   top: 0;
   left: 0;
-  width: 96px;
-  height: calc(96px * 1.4);
-  border-radius: calc(96px * 0.12);
+  width: var(--dw);
+  height: calc(var(--dw) * 1.4);
+  border-radius: calc(var(--dw) * 0.12);
   background: var(--accent);
-  box-shadow: inset 0 0 0 calc(96px * 0.06) #fff;
+  box-shadow: inset 0 0 0 calc(var(--dw) * 0.06) #fff;
   transform: translate(4px, 4px) rotate(3deg);
   opacity: 0.45;
 }
@@ -3094,9 +3100,9 @@ h3 {
 
 .ftd-deck-empty {
   display: block;
-  width: 96px;
-  height: calc(96px * 1.4);
-  border-radius: calc(96px * 0.12);
+  width: var(--dw);
+  height: calc(var(--dw) * 1.4);
+  border-radius: calc(var(--dw) * 0.12);
   border: 1.5px dashed var(--line);
 }
 
@@ -3295,6 +3301,116 @@ h3 {
   color: var(--muted);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Two phones: the lobby shows whether the deck phone is there. */
+.ftd-deck-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ftd-deck-status.on {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.ftd-deck-status-icon {
+  font-size: 1.5rem;
+}
+
+.notice-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The deck phone: one big card to peek at, the values to tap below. */
+.ftd-deckphone {
+  align-items: center;
+}
+
+.ftd-deckphone > * {
+  width: 100%;
+}
+
+.ftd-deckphone .ftd-deck {
+  width: auto;
+}
+
+.ftd-deck.big {
+  --dw: clamp(120px, 36vw, 150px);
+  align-self: center;
+  margin-top: 4px;
+}
+
+.ftd-deck.big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.ftd-deck.big::before,
+.ftd-deck.big::after {
+  left: calc(50% - var(--dw) / 2);
+}
+
+.ftd-deck.big .ftd-peek-hint {
+  position: static;
+  transform: none;
+  width: auto;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+/* On the table phone there's nothing to peek at: no room kept for the hint. */
+.ftd-tablephone .ftd-deck {
+  padding-bottom: 0;
+}
+
+.ftd-tablephone .ftd-turn .bd-result {
+  flex: 1;
+  min-width: 0;
+  padding: 14px;
+  gap: 10px;
+}
+
+.ftd-tablephone .ftd-turn .bd-result-title {
+  font-size: 1.3rem;
+}
+
+.ftd-deckphone-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.ftd-deckphone-ask {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.ftd-ask-sub.center {
+  text-align: center;
+}
+
+.ftd-pass {
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 /* ---------- 5000 ---------- */
@@ -3594,6 +3710,8 @@ h3 {
 
 .sp {
   --sp-card: min(66px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 24px) / 5));
+  /* The middle piles: as big as two fit side by side. */
+  --sp-mid: min(160px, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 40px) / 2));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -3672,29 +3790,38 @@ h3 {
 /* The middle: side stacks left and right, the two piles to play on in between. */
 .sp-middle {
   position: relative;
+  flex: 1 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 18px 12px;
+  justify-content: center;
+  gap: 16px;
+  min-height: calc(var(--sp-mid) * 1.4 + 56px);
+  padding: 28px 12px;
   border-radius: var(--radius-lg);
   background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
 .sp-stack {
-  flex: none;
+  position: absolute;
+  top: 8px;
+  left: 10px;
   display: grid;
   place-items: center;
-  width: calc(var(--sp-card) * 0.72);
-  height: calc(var(--sp-card) * 1.01);
-  border-radius: 7px;
+  width: 30px;
+  height: 42px;
+  border-radius: 5px;
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
-  box-shadow: inset 0 0 0 3px #fff, 2px 2px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 0 0 2px #fff, 2px 2px 0 rgba(0, 0, 0, 0.25);
   color: var(--on-accent);
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
+}
+
+.sp-stack + .sp-mid-pile + .sp-mid-pile + .sp-stack {
+  left: auto;
+  right: 10px;
 }
 
 .sp-stack.empty {
@@ -3703,7 +3830,7 @@ h3 {
 }
 
 .sp-mid-pile {
-  --cw: calc(var(--sp-card) * 1.35);
+  --cw: var(--sp-mid);
   position: relative;
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
@@ -3736,8 +3863,10 @@ h3 {
 .sp-count {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border-radius: inherit;
   background: rgba(0, 0, 0, 0.35);
   color: var(--accent);
@@ -3747,6 +3876,47 @@ h3 {
   line-height: 1;
   animation: pop-in 0.3s var(--spring) both;
   pointer-events: none;
+}
+
+.sp-count-label {
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Nobody can play: say so before the countdown. */
+.sp-stuck {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  background: var(--bad);
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: pop-in 0.3s var(--spring) both;
+}
+
+.sp-stuck-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+}
+
+.sp-stuck-sub {
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 /* Your side, at the bottom: the hand, then your pile. */

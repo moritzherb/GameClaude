@@ -56,6 +56,8 @@ export interface GameDefinition {
    * Rendered on every phone in the room; the host's copy runs the game.
    */
   online?: ComponentType;
+  /** For room games: what the ticket says about phones (default "Every phone"). English; render with t(). */
+  phones?: string;
   /** Has in-game explanations that groups who know the game can switch off in Settings. */
   explains?: boolean;
 }

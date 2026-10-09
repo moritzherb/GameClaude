@@ -12,7 +12,10 @@ const fuckTheDealer: GameDefinition = {
   minPlayers: 2,
   intensity: 3,
   explains: true,
+  needs: [tx('A second phone as the deck')],
+  phones: tx('2 phones'),
   rules: [
+    tx('Two phones in a room: the host’s phone lies in the middle as the table, the second one is the deck and always goes to the dealer.'),
     tx('Pick a dealer. They hold the deck and peek at the top card.'),
     tx('The player on the dealer’s left guesses its value, 2 to Ace. The suit doesn’t matter.'),
     tx('Right on the first guess: the dealer saves up 6 sips.'),
@@ -22,7 +25,7 @@ const fuckTheDealer: GameDefinition = {
     tx('After 3 players in a row miss, the dealer drinks all the sips they saved up and passes the deck to their left. The new dealer goes on with the player after the last one who guessed.'),
     tx('When the deck is empty, the last dealer drinks what they saved up. Game over.'),
   ],
-  component: FuckTheDealer,
+  online: FuckTheDealer,
 };
 
 export default fuckTheDealer;

@@ -18,7 +18,37 @@ const fuckTheDealer: Record<string, string> = {
   'When the deck is empty, the last dealer drinks what they saved up. Game over.':
     'Ist der Stapel leer, trinkt der letzte Dealer, was er gesammelt hat. Spiel vorbei.',
 
+  'A second phone as the deck': 'Ein zweites Handy als Kartendeck',
+  '2 phones': '2 Handys',
+  'Two phones in a room: the host’s phone lies in the middle as the table, the second one is the deck and always goes to the dealer.':
+    'Zwei Handys in einem Raum: Das Handy vom Host liegt als Tisch in der Mitte, das zweite ist das Kartendeck und geht immer an den Dealer.',
+
   // Setup
+  'Two phones': 'Zwei Handys',
+  'This phone lies in the middle as the table. The second phone is the deck: it always goes to the dealer, who peeks at the card on it.':
+    'Dieses Handy liegt als Tisch in der Mitte. Das zweite Handy ist das Kartendeck: Es geht immer an den Dealer, der sich darauf die Karte anschaut.',
+  'Deck phone: {name}': 'Deck-Handy: {name}',
+  'Connect a second phone to this room. It becomes the deck.': 'Verbinde ein zweites Handy mit diesem Raum. Es wird zum Kartendeck.',
+  'Add at least 2 players on this phone first.': 'Füg auf diesem Handy zuerst mindestens 2 Spieler hinzu.',
+  'Add players': 'Spieler hinzufügen',
+  'Waiting for the deck phone…': 'Warte auf das Deck-Handy…',
+  'You’re the deck': 'Du bist das Kartendeck',
+  'Waiting for {name} to start the game…': 'Warte, bis {name} das Spiel startet…',
+  'Waiting for the table…': 'Warte auf den Tisch…',
+
+  // Table phone
+  'Pass the deck phone to {name}.': 'Gib das Deck-Handy an {name}.',
+  'First guess: {rank}. Last try!': 'Erster Tipp: {rank}. Letzter Versuch!',
+  '{name} has the deck and types in the guess.': '{name} hat das Deck und tippt den Tipp ein.',
+
+  // Deck phone
+  'Game over. The table shows who drank what.': 'Spiel vorbei. Der Tisch zeigt, wer wie viel getrunken hat.',
+  'Pass this phone to {name}.': 'Gib dieses Handy an {name}.',
+  'Deck · {name} deals': 'Deck · {name} ist Dealer',
+  'Ask {name}: Which card?': 'Frag {name}: Welche Karte?',
+  'Hold to peek, don’t let anyone see': 'Halten zum Anschauen, keinen mitgucken lassen',
+  'Tap the value {name} says.': 'Tipp den Wert an, den {name} sagt.',
+
   'Who’s the dealer?': 'Wer ist der Dealer?',
   'The dealer holds the deck and peeks at the top card. Everyone else guesses, starting on the dealer’s left.':
     'Der Dealer hält den Stapel und schaut sich die oberste Karte an. Alle anderen raten, angefangen links vom Dealer.',
