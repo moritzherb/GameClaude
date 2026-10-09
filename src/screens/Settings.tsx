@@ -1,5 +1,7 @@
 import TopBar from '../components/TopBar';
+import Tap from '../components/Tap';
 import { GAMES } from '../games/registry';
+import { LANGS, t } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 import { useApp } from '../state/AppState';
@@ -19,7 +21,23 @@ export default function Settings() {
   return (
     <main className="screen">
       <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="large-title">Settings</h1>
+      <h1 className="large-title">{t('Settings')}</h1>
+
+      <section className="section">
+        <h2 className="section-title">{t('Language')}</h2>
+        <div className="seg two">
+          {LANGS.map((l) => (
+            <Tap
+              key={l.id}
+              className={`seg-btn${(settings.lang ?? 'en') === l.id ? ' active' : ''}`}
+              onClick={() => updateSettings({ lang: l.id })}
+              ariaLabel={l.label}
+            >
+              <span className="seg-main">{l.label}</span>
+            </Tap>
+          ))}
+        </div>
+      </section>
 
       <div className="settings-list">
         {OPTIONS.map((o) => {

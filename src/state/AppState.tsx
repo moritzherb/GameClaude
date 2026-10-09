@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { setLang, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { usePersistentState } from '../lib/storage';
@@ -17,6 +18,8 @@ export interface Settings {
   bigMode: boolean;
   /** Games the group already knows: their in-game explanations are hidden. Missing in older saves. */
   known?: string[];
+  /** App language. English is the default (and missing in older saves). */
+  lang?: Lang;
 }
 
 export const AVATARS = ['🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '👽', '🤖', '👻', '🤠', '🥸', '😎', '🤡', '🍕', '🌮'];
@@ -46,6 +49,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [players, setPlayers] = usePersistentState<Player[]>('players', []);
   const [settings, setSettings] = usePersistentState<Settings>('settings', { sound: true, haptics: true, bigMode: false });
   const [ageConfirmed, setAgeConfirmed] = usePersistentState('age-ok', false);
+  // Set before the children render, so every t() call below uses the chosen language.
+  setLang(settings.lang ?? 'en');
 
   useEffect(() => {
     fxSettings.sound = settings.sound;
