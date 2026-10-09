@@ -4660,6 +4660,10 @@ h3 {
 }
 
 /* Dragged: follows the finger (no easing), above everything on the table. */
+.tr-hand-card.gliding {
+  animation: none;
+}
+
 .tr-hand-card.dragging {
   z-index: 30;
   cursor: grabbing;
