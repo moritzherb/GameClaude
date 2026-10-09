@@ -7,7 +7,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
-import { layRing, type Slot } from './ring';
+import { layRing, SLOT_WIDTH, type Slot } from './ring';
 import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
 
 interface State {
@@ -260,7 +260,7 @@ function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; fina
       const size = ring.offsetWidth;
       const dx = ((from.x - 50) / 100) * size;
       const dy = ((from.y - 50) / 100) * size;
-      const scale = (0.074 * size) / el.offsetWidth;
+      const scale = ((SLOT_WIDTH / 100) * size) / el.offsetWidth;
       el.animate(
         [{ transform: `translate(${dx}px, ${dy}px) rotate(${from.rot}deg) scale(${scale})` }, { transform: 'translate(0, 0) rotate(0deg) scale(1)' }],
         { duration: 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },

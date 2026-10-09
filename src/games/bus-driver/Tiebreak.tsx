@@ -1,6 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
-import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { rankLabel } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
@@ -109,10 +108,7 @@ export default function Tiebreak({ tied, onDone }: Props) {
               : `${rankLabel(last.value)}. Nobody’s safe.`
             : 'Ready?'}
         </span>
-        <span className="tb-flip-meta">
-          <span className="fine-print">{t.flipped.length} flipped</span>
-          <DeckCount left={t.deck.length} />
-        </span>
+        <span className="fine-print">{t.flipped.length} flipped</span>
       </div>
 
       <div className="sticky-action">
