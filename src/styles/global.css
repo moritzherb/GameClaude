@@ -2571,36 +2571,90 @@ h3 {
   opacity: 0.3;
 }
 
-.kc-cup {
+/* The crown in the middle while picking: floats gently, glows softly. */
+.kc-crown-wrap {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 34cqw;
-  height: 34cqw;
-  transform: translate(-50%, -54%);
+  width: 36cqw;
+  height: 36cqw;
+  transform: translate(-50%, -56%);
   transition: opacity 0.3s ease;
 }
 
-.kc-ring.revealing .kc-cup {
+.kc-ring.revealing .kc-crown-wrap {
   opacity: 0;
 }
 
-.kc-cup-glass {
-  fill: color-mix(in srgb, var(--ink) 6%, transparent);
-  stroke: var(--ink);
-  stroke-opacity: 0.55;
-  stroke-width: 3;
+.kc-crown-glow {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 38%, transparent), transparent);
+  animation: crown-glow 3.2s ease-in-out infinite;
+}
+
+.kc-crown {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: crown-idle 3.2s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+.kc-crown-body {
+  fill: var(--sun);
+  stroke: color-mix(in srgb, var(--sun) 60%, #000);
+  stroke-width: 2;
   stroke-linejoin: round;
 }
 
-.kc-cup-drink {
-  fill: var(--sun);
-  transition: y 0.8s var(--ease);
+.kc-crown-band {
+  fill: color-mix(in srgb, var(--sun) 78%, #000);
 }
 
-.kc-cup-foam {
-  fill: #fff;
-  opacity: 0.9;
+.kc-crown-gem {
+  fill: var(--c-red);
+}
+
+.kc-crown-tip {
+  fill: color-mix(in srgb, var(--sun) 55%, #000);
+  transition: fill 0.4s ease;
+}
+
+.kc-crown-tip.on {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 3px var(--accent));
+}
+
+@keyframes crown-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-4%) rotate(3deg);
+  }
+}
+
+@keyframes crown-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kc-crown,
+  .kc-crown-glow {
+    animation: none;
+  }
 }
 
 .kc-ring-hint {

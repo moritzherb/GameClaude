@@ -167,7 +167,7 @@ export default function KingsCup({ players, exit }: GameProps) {
               />
             ),
           )}
-          <KingsCupGlass kings={s.kings} />
+          <KingCrown kings={s.kings} />
           {!s.current && !known && <span className="kc-ring-hint">Pick any card</span>}
           {s.current && rule && <Reveal key={52 - left} card={s.current} rule={rule} finale={!!lastKing} from={from.current} />}
         </div>
@@ -299,22 +299,28 @@ function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; fina
   );
 }
 
-/** The King's Cup in the middle of the circle: every King pours a bit more in. */
-function KingsCupGlass({ kings }: { kings: number }) {
-  const level = 92 - kings * 17;
+/** A crown in the middle while someone picks: it idles gently, and each King drawn lights one of its four tips. */
+function KingCrown({ kings }: { kings: number }) {
+  const tips = [
+    [13, 30],
+    [37, 20],
+    [63, 20],
+    [87, 30],
+  ];
   return (
-    <svg className="kc-cup" viewBox="0 0 100 100" aria-label={`King’s Cup, ${kings} of 4 poured in`} role="img">
-      <defs>
-        <clipPath id="kc-cup-inside">
-          <path d="M26 18h48l-6 68a6 6 0 0 1-6 5H38a6 6 0 0 1-6-5z" />
-        </clipPath>
-      </defs>
-      <g clipPath="url(#kc-cup-inside)">
-        <rect className="kc-cup-drink" x="0" y={level} width="100" height={100 - level} />
-        {kings > 0 && <rect className="kc-cup-foam" x="0" y={level - 4} width="100" height="5" />}
-      </g>
-      <path className="kc-cup-glass" d="M26 18h48l-6 68a6 6 0 0 1-6 5H38a6 6 0 0 1-6-5z" />
-    </svg>
+    <span className="kc-crown-wrap" role="img" aria-label={`${kings} of 4 Kings drawn`}>
+      <span className="kc-crown-glow" />
+      <svg className="kc-crown" viewBox="0 0 100 100">
+        <path className="kc-crown-body" d="M18 70 13 32 27 49 37 22 50 47 63 22 73 49 87 32 82 70z" />
+        <rect className="kc-crown-band" x="17" y="66" width="66" height="13" rx="3" />
+        <circle className="kc-crown-gem" cx="35" cy="72.5" r="3.2" />
+        <circle className="kc-crown-gem" cx="50" cy="72.5" r="3.2" />
+        <circle className="kc-crown-gem" cx="65" cy="72.5" r="3.2" />
+        {tips.map(([x, y], i) => (
+          <circle key={i} className={`kc-crown-tip${i < kings ? ' on' : ''}`} cx={x} cy={y} r="5.5" />
+        ))}
+      </svg>
+    </span>
   );
 }
 
