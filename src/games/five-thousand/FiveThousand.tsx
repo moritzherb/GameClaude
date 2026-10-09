@@ -14,6 +14,7 @@ import {
   newGame,
   nextTurn,
   roll,
+  scoringDice,
   setAside,
   TARGET,
   tooMuch,
@@ -34,6 +35,8 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const [g, setG] = useState<Game | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
   const [shaking, setShaking] = useState(false);
+  // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
+  const [podium, setPodium] = useState(false);
   const timer = useRef<number>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -81,8 +84,8 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const opened = g.opened[g.current];
   const turn = g.turn;
 
-  /* ---------- Someone hit exactly 5000 ---------- */
-  if (won) {
+  /* ---------- Someone hit exactly 5000: the standings ---------- */
+  if (won && podium) {
     return (
       <div className="bd fk-win">
         <div className="bd-head center">
@@ -94,7 +97,14 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
         <Standings g={g} players={players} />
         <div className="sticky-action stack">
-          <BigButton onClick={() => setG(null)}>{t('Play again')}</BigButton>
+          <BigButton
+            onClick={() => {
+              setPodium(false);
+              setG(null);
+            }}
+          >
+            {t('Play again')}
+          </BigButton>
           <BigButton variant="glass" onClick={exit}>
             {t('Back to games')}
           </BigButton>
@@ -160,7 +170,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
           <span className="bd-player-text">
             <span className="bd-player-name">{me.name}</span>
             <span className="bd-player-sub">
-              {opened ? t('{score} · {left} to go', { score: fmt(score), left: fmt(TARGET - score) }) : t('Not in yet · needs 500')}
+              {opened || won ? t('{score} · {left} to go', { score: fmt(score), left: fmt(TARGET - score) }) : t('Not in yet · needs 500')}
             </span>
           </span>
         </div>
@@ -173,12 +183,12 @@ export default function FiveThousand({ players, exit }: GameProps) {
       <Table
         key={`${g.current}-${turn.rolls}-${g.phase === 'roll' ? 'cup' : 'dice'}`}
         roll={g.phase === 'roll' || shaking ? EMPTY : turn.roll}
-        picked={picked}
+        picked={won ? scoringDice(turn.roll) : picked}
         pickable={pickable}
         onTap={toggle}
         cup={g.phase === 'roll' || shaking}
         shaking={shaking}
-        dead={g.phase === 'over'}
+        dead={g.phase === 'over' && !won}
         hint={g.phase === 'roll' && !known ? t('Tap the cup to roll') : null}
         onCup={() => g.phase === 'roll' && shake(roll)}
       />
@@ -244,7 +254,22 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </>
       )}
 
-      {g.phase === 'over' && g.end && (
+      {won && (
+        <>
+          <div className="fk-burst" aria-live="polite">
+            <span className="kicker">{t('Exactly 5000!')}</span>
+            <span className="fk-burst-num">5000</span>
+            <span className="fk-burst-name">{t('{name} wins!', { name: me.name })}</span>
+          </div>
+          <div className="sticky-action">
+            <BigButton size="xl" onClick={() => setPodium(true)}>
+              {t('Show the standings')}
+            </BigButton>
+          </div>
+        </>
+      )}
+
+      {g.phase === 'over' && g.end && !won && (
         <>
           <TurnVerdict g={g} name={me.name} />
           <div className="sticky-action">
