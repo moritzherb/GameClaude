@@ -6415,12 +6415,15 @@ h3 {
 
 .pl-action-row > * {
   flex: 1 1 0;
+  min-width: 0;
 }
 
 .pl-action-row > .pl-risk {
   flex: 0 0 auto;
+  width: auto;
   padding-left: 18px;
   padding-right: 18px;
+  white-space: nowrap;
 }
 
 .pl-hint {

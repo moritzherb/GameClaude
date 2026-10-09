@@ -568,8 +568,8 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
         ) : myTurn ? (
           <div className="pl-action-row">
             {can ? (
-              <BigButton size="xl" disabled={!selFits || leaving.length > 0} onClick={play}>
-                {selFits ? t('Play {cards}', { cards: group(sel) }) : known ? t('Pick cards') : t('Pick one or more cards of one value')}
+              <BigButton disabled={!selFits || leaving.length > 0} onClick={play}>
+                {selFits ? t('Play {cards}', { cards: group(sel) }) : t('Pick cards')}
               </BigButton>
             ) : (
               <BigButton variant="danger" onClick={() => send({ t: 'take' })}>
@@ -584,6 +584,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
             )}
           </div>
         ) : null}
+        {myTurn && can && zone !== 'down' && !selFits && !known && <p className="pl-hint">{t('Pick one or more cards of one value')}</p>}
         {myTurn && !can && zone === 'hand' && view.stock > 0 && !known && (
           <p className="pl-hint">{t('Risk it: the top card of the stock goes on the pile. If it doesn’t fit, you take the pile and that card.')}</p>
         )}
