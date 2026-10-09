@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { cardColor, rankLabel, SUIT_SYMBOL, type Card } from '../lib/cards';
+import { cardColor, rankLabel, type Card } from '../lib/cards';
+import Suit from './Suit';
 
 interface Props {
   /** Leave empty for a face-down card with nothing behind it yet. */
@@ -27,12 +28,12 @@ export default function PlayingCard({ card, faceUp = true, size = 'md', waiting,
             <>
               <span className="pcard-corner">
                 {rankLabel(card.value)}
-                <span>{SUIT_SYMBOL[card.suit]}</span>
+                <Suit suit={card.suit} />
               </span>
-              <span className="pcard-center">{SUIT_SYMBOL[card.suit]}</span>
+              <Suit suit={card.suit} className="pcard-center" />
               <span className="pcard-corner bottom">
                 {rankLabel(card.value)}
-                <span>{SUIT_SYMBOL[card.suit]}</span>
+                <Suit suit={card.suit} />
               </span>
             </>
           )}

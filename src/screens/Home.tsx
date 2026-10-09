@@ -12,7 +12,6 @@ import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
-const TICKER = ['Pregame', 'House party', 'Afters', 'Water counts as a sip', 'Never drink and drive', 'Last call'];
 
 export default function Home() {
   const { players } = useApp();
@@ -69,7 +68,7 @@ export default function Home() {
         <span className="crew-count">{players.length || <PlusIcon />}</span>
         <span className="crew-text">
           <span className="crew-label">The crew</span>
-          <span className="crew-sub">{players.length ? 'Tap to edit who’s in' : 'Add who’s playing tonight'}</span>
+          <span className="crew-sub">{players.length ? 'Tap to edit' : 'Who’s playing tonight?'}</span>
         </span>
         {players.length > 0 && (
           <span className="avatar-stack">
@@ -129,23 +128,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      <div className="ticker" aria-hidden>
-        <div className="ticker-track">
-          {[0, 1].map((k) => (
-            <span key={k}>
-              {TICKER.map((t) => (
-                <span key={t}>
-                  {t}
-                  <i>✦</i>
-                </span>
-              ))}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <p className="fine-print center">Drink responsibly. Water counts as a sip.</p>
 
       {rolling && (
         <div className="roulette-overlay">

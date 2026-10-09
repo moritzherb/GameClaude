@@ -11,7 +11,8 @@ export interface Card {
 
 export const SUITS: Suit[] = ['hearts', 'diamonds', 'spades', 'clubs'];
 
-export const SUIT_SYMBOL: Record<Suit, string> = { hearts: '♥', diamonds: '♦', spades: '♠', clubs: '♣' };
+// U+FE0E asks for the plain text glyph; without it iPhones draw the suits as big emoji.
+export const SUIT_SYMBOL: Record<Suit, string> = { hearts: '♥\uFE0E', diamonds: '♦\uFE0E', spades: '♠\uFE0E', clubs: '♣\uFE0E' };
 export const SUIT_NAME: Record<Suit, string> = { hearts: 'Hearts', diamonds: 'Diamonds', spades: 'Spades', clubs: 'Clubs' };
 
 const RANK_LABEL: Record<number, string> = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
