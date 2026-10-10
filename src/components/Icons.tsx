@@ -43,3 +43,9 @@ export const SettingsIcon = () => (
     <circle cx="8" cy="17" r="2.2" />
   </Icon>
 );
+export const PhoneIcon = () => (
+  <Icon strokeWidth={2.2}>
+    <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+    <path d="M10.5 18.5h3" />
+  </Icon>
+);

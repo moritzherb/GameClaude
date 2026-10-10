@@ -114,6 +114,23 @@ body {
   overscroll-behavior-y: none;
 }
 
+/*
+ * No scroll bars anywhere in the app: not for the page, not inside a game. Hidden bars take no
+ * room either, so the page stays centred (and 100vw is the whole width).
+ */
+html,
+*:not(.library-scroll) {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+*:not(.library-scroll)::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 body {
   overflow-x: hidden;
   /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
@@ -523,6 +540,74 @@ h3 {
 
 /* ---------- Home ---------- */
 
+/* Pull to refresh on home: the name comes down with the finger, in lime, and hops while refreshing. */
+.ptr {
+  flex: none;
+  height: 0;
+  margin-bottom: -18px; /* takes no room (nor a gap) while it's closed */
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ptr:not(.pull) {
+  transition: height 0.34s var(--spring);
+}
+
+.ptr-logo {
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--accent-ink);
+  opacity: var(--p, 0);
+  transform: scale(calc(0.6 + 0.4 * var(--p, 0))) rotate(calc((1 - var(--p, 0)) * -14deg));
+}
+
+.ptr.refresh .ptr-logo {
+  opacity: 1;
+  transform: none;
+  transition: transform 0.2s var(--spring);
+}
+
+.ptr-logo span {
+  display: inline-block;
+}
+
+.ptr.refresh .ptr-logo span {
+  animation: ptr-hop 0.42s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
+@keyframes ptr-hop {
+  to {
+    transform: translateY(-7px);
+  }
+}
+
+/* A fresh line-up deals in one ticket after the other. */
+.ticket-list.dealt > * {
+  animation: rise 0.45s var(--spring) backwards;
+}
+
+.ticket-list.dealt > :nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.ticket-list.dealt > :nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.ticket-list.dealt > :nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.ticket-list.dealt > :nth-child(5) {
+  animation-delay: 240ms;
+}
+
 .home-header {
   display: flex;
   align-items: center;
@@ -844,6 +929,27 @@ h3 {
   line-height: 1;
 }
 
+/*
+ * All games: one screen tall. Title and categories stay; only the games scroll, in their own box
+ * (the one place in the app with a scroll bar, beside the games only). The box reaches the screen's
+ * edges, so the bar sits at the edge.
+ */
+.screen.library {
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.library-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: -8px calc(-1 * var(--gutter)) 0;
+  padding: 8px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+  scrollbar-width: thin;
+}
+
 .ticket-list {
   display: flex;
   flex-direction: column;
@@ -965,11 +1071,15 @@ h3 {
   color: var(--muted);
 }
 
-.ticket-flag {
-  padding: 2px 6px;
-  border-radius: 4px;
+.ticket-phone {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   background: var(--accent);
   color: var(--on-accent);
+  font-size: 14px;
 }
 
 .ticket.soon .ticket-stub {

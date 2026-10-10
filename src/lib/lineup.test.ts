@@ -43,6 +43,14 @@ describe('line-up', () => {
     expect(next).not.toContain(first[0]);
   });
 
+  it('draws anew right away when asked (pulled down)', () => {
+    const first = lineup(GAMES, 0);
+    const next = lineup(GAMES, 1, Math.random, true);
+    expect(GAMES.filter((id) => !first.includes(id)).every((id) => next.includes(id))).toBe(true);
+    // …and that's the line-up from now on.
+    expect(lineup(GAMES, 2)).toEqual(next);
+  });
+
   it('copes with fewer games than places', () => {
     expect(lineup(['a', 'b'], 0).sort()).toEqual(['a', 'b']);
   });
