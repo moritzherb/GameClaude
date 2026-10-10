@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/moritzherb/GameClaude#readme",
   "dependencies": {
-    "peerjs": "^1.5.5",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

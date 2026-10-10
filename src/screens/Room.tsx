@@ -34,8 +34,6 @@ function Start({ joinCode }: { joinCode: string | null }) {
   const [code, setCode] = useState(joinCode ? normalizeCode(joinCode) : '');
   const [nameMissing, setNameMissing] = useState(false);
   const fromLink = !!joinCode;
-  // Inside another page (like a preview frame) direct phone connections are usually blocked.
-  const embedded = window.self !== window.top;
 
   const ready = () => {
     if (profile.name.trim()) return true;
@@ -62,9 +60,6 @@ function Start({ joinCode }: { joinCode: string | null }) {
       <h1 className="large-title">{t('Play together')}</h1>
       <p className="lead">{t('Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.')}</p>
 
-      {embedded && (
-        <p className="notice">{t('This preview can’t connect phones. Open the prost! website (moritzherb.github.io/GameClaude) to play together.')}</p>
-      )}
       {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}
 
       <section className="me-card">
@@ -140,7 +135,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
       )}
 
       <p className="fine-print">
-        {t('Phones connect directly to each other. Works on the same Wi-Fi or on mobile data. Keep the app open on the host phone.')}
+        {t('Works on any network, Wi-Fi or mobile data, even when the phones are on different ones. Keep the app open on the host phone.')}
       </p>
     </main>
   );
