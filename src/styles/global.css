@@ -247,9 +247,23 @@ h3 {
   position: sticky;
   bottom: 0;
   margin-top: auto;
-  padding: 18px 0 calc(2px + env(safe-area-inset-bottom));
+  /* Its backdrop reaches the screen's edges, so nothing shows beside the button. */
+  margin-inline: calc(-1 * var(--gutter));
+  padding: 18px var(--gutter) calc(2px + env(safe-area-inset-bottom));
   background: linear-gradient(to top, var(--bg) 70%, transparent);
   z-index: 5;
+}
+
+.sticky-action.stack {
+  width: auto;
+}
+
+/*
+ * A screen with a button bar ends with it: no room below, so the bar sits on the bottom edge
+ * whether you're at the top or at the end of the page (it doesn't jump up when you get there).
+ */
+.screen:has(.sticky-action) {
+  padding-bottom: 0;
 }
 
 .center {
