@@ -191,6 +191,20 @@ export default function FiveThousand({ players, exit }: GameProps) {
         dead={g.phase === 'over' && !won}
         hint={g.phase === 'roll' && !known ? t('Tap the cup to roll') : null}
         onCup={() => g.phase === 'roll' && shake(roll)}
+        bank={
+          g.phase === 'choose' && !shaking
+            ? {
+                // Below 500 and not in yet: nothing to bank, the button says how far it is.
+                text: canStop(g, total) || gain == null ? t('Bank') : t('From 500'),
+                amount: canStop(g, total) || gain == null ? fmt(total) : t('{n} to go', { n: fmt(ENTRY - total) }),
+                disabled: gain == null || over || !canStop(g, total),
+                onClick: () => {
+                  setPicked([]);
+                  setG(setAside(g, picked, 'stop'));
+                },
+              }
+            : null
+        }
       />
 
       {turn.aside.length > 0 && (
@@ -232,24 +246,10 @@ export default function FiveThousand({ players, exit }: GameProps) {
               </button>
             )}
           </div>
-          <div className="sticky-action stack">
+          <div className="sticky-action">
             <BigButton size="xl" disabled={gain == null || over || shaking} onClick={() => shake((x) => setAside(x, picked, 'roll'))}>
               {exact ? t('Exactly 5000! 🏆') : gain != null && left === 0 ? t('All 5 back in the cup 🔥') : left === 1 ? t('Roll 1 die again') : t('Roll {n} again', { n: Math.max(left, 1) })}
             </BigButton>
-            {!exact && (
-              <BigButton
-                variant="glass"
-                disabled={gain == null || over || !canStop(g, total) || shaking}
-                onClick={() => {
-                  setPicked([]);
-                  setG(setAside(g, picked, 'stop'));
-                }}
-              >
-                {canStop(g, total) || gain == null
-                  ? t('Stop · bank {n}', { n: fmt(total) })
-                  : t('Stop from 500 · {n} to go', { n: fmt(ENTRY - total) })}
-              </BigButton>
-            )}
           </div>
         </>
       )}
@@ -400,6 +400,9 @@ function scatter(n: number, aspect: number): Spot[] {
   const spots: { x: number; y: number; rot: number }[] = [];
   for (let tries = 0; spots.length < n && tries < 600; tries++) {
     const s = { x: margin + Math.random() * (100 - 2 * margin), y: margin + Math.random() * (h - 2 * margin), rot: Math.random() * 60 - 30 };
+    // The bottom-right corner is kept free for the bank button.
+    const bank = Math.min(26, 0.36 * h) + 3;
+    if (s.x > 100 - bank - die * 0.6 && s.y > h - bank - die * 0.6) continue;
     if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > die * 1.45)) spots.push(s);
   }
   // Very unlucky? Fall back to a row.
@@ -418,6 +421,7 @@ function Table({
   dead,
   hint,
   onCup,
+  bank,
 }: {
   roll: Face[];
   picked: number[];
@@ -428,6 +432,8 @@ function Table({
   dead: boolean;
   hint: string | null;
   onCup: () => void;
+  /** The stop-and-bank button in the table's corner (while picking). */
+  bank: { text: string; amount: string; disabled: boolean; onClick: () => void } | null;
 }) {
   const dice = useRef<HTMLDivElement>(null);
   // The table takes whatever room the screen has, so the dice are spread out once its shape is known.
@@ -473,6 +479,15 @@ function Table({
           {t(FACE_LABEL[f])}
         </button>
       ))}
+      {bank && (
+        <Tap className="fk-bank" disabled={bank.disabled} onClick={bank.onClick} ariaLabel={`${bank.text} ${bank.amount}`}>
+          <span className="fk-bank-icon" aria-hidden>
+            💰
+          </span>
+          <span className="fk-bank-text">{bank.text}</span>
+          <span className="fk-bank-amount">{bank.amount}</span>
+        </Tap>
+      )}
       {cup && (
         <button type="button" className={`fk-cup${shaking ? ' shaking' : ''}`} aria-label={t('Roll the dice')} onClick={onCup}>
           <svg viewBox="0 0 100 110" aria-hidden>

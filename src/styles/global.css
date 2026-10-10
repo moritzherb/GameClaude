@@ -3647,6 +3647,69 @@ h3 {
   container-type: size;
 }
 
+/* Stop and bank: a round button in the table's bottom-right corner (dice never land there). */
+.fk-bank {
+  --bank: min(26cqw, 36cqh);
+  position: absolute;
+  right: 3cqw;
+  bottom: 3cqw;
+  z-index: 3;
+  width: var(--bank);
+  height: var(--bank);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--bank) * 0.02);
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow:
+    inset 0 calc(var(--bank) * -0.05) 0 rgba(0, 0, 0, 0.18),
+    0 calc(var(--bank) * 0.06) calc(var(--bank) * 0.14) rgba(0, 0, 0, 0.35);
+  line-height: 1;
+  animation: pop-in 0.35s var(--spring) both;
+  transition:
+    transform 0.15s var(--spring),
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.fk-bank:not(:disabled):active {
+  transform: scale(0.93);
+}
+
+.fk-bank:disabled {
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  cursor: default;
+}
+
+.fk-bank-icon {
+  font-size: calc(var(--bank) * 0.3);
+}
+
+.fk-bank:disabled .fk-bank-icon {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.fk-bank-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--bank) * 0.15);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.fk-bank-amount {
+  font-weight: 700;
+  font-size: calc(var(--bank) * 0.13);
+  text-align: center;
+  max-width: 90%;
+}
+
 .fk-die {
   --size: min(15cqw, 24cqh);
   position: absolute;
