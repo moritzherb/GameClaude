@@ -283,11 +283,15 @@ export function FiveThousandTable({
       )}
 
       {g.phase === 'roll' && mine && (
-        <div className="sticky-action">
-          <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
-            {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
-          </BigButton>
-        </div>
+        <>
+          {/* Same room as the row under the dice while picking, so the table doesn't change size. */}
+          <div className="fk-pick-row" aria-hidden />
+          <div className="sticky-action">
+            <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
+              {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
+            </BigButton>
+          </div>
+        </>
       )}
 
       {g.phase === 'choose' && mine && (

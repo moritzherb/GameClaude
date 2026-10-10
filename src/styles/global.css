@@ -3869,7 +3869,10 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 24px;
+  /* Always as tall as with the "Take all" button (or two lines of text), so the table above
+     keeps its size whatever the row shows. */
+  height: 44px;
+  flex-shrink: 0;
 }
 
 .fk-pick-info {
