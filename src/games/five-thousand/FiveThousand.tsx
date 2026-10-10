@@ -263,18 +263,21 @@ export function FiveThousandTable({
         }
       />
 
-      {turn.aside.length > 0 && (
-        <div className="fk-aside">
-          <span className="fk-aside-label">{t('Set aside')}</span>
-          <span className="fk-aside-dice">
-            {turn.aside.map((f, i) => (
-              <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
-                {t(FACE_LABEL[f])}
-              </span>
-            ))}
-          </span>
-        </div>
-      )}
+      {/* Always there (empty until something is set aside), so the table keeps its size. */}
+      <div className="fk-aside" aria-hidden={turn.aside.length === 0}>
+        {turn.aside.length > 0 && (
+          <>
+            <span className="fk-aside-label">{t('Set aside')}</span>
+            <span className="fk-aside-dice">
+              {turn.aside.map((f, i) => (
+                <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
+                  {t(FACE_LABEL[f])}
+                </span>
+              ))}
+            </span>
+          </>
+        )}
+      </div>
 
       {!mine && (g.phase === 'roll' || g.phase === 'choose') && (
         <div className="sticky-action">
