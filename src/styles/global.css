@@ -116,6 +116,17 @@ body {
 
 body {
   overflow-x: hidden;
+  /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* Opened from the iPhone home screen, 100vh/100dvh come up short by the status
@@ -3395,8 +3406,13 @@ h3 {
   position: static;
   transform: none;
   width: auto;
-  margin-top: 10px;
+  margin-top: 14px;
   font-size: 0.85rem;
+}
+
+/* The card on top is exactly as big as the deck underneath, so the deck never reaches the hint. */
+.ftd-deck.big .pcard {
+  --cw: var(--dw);
 }
 
 /* The table phone fills the screen: the piles grow with the room it has. */
@@ -3619,16 +3635,24 @@ h3 {
   z-index: 2;
 }
 
-.fk-die.dull {
-  opacity: 0.62;
+/* Dice that can't be set aside: grey from the moment they land (a colour, not a fade, so the
+   landing animation can't delay it). */
+.fk-die.dull,
+.fk-table.dead .fk-die {
+  background: linear-gradient(145deg, #cbc8bf 55%, #b6b2a8);
+  color: rgba(17, 18, 20, 0.5);
+  box-shadow:
+    inset 0 -0.6cqw 0 rgba(0, 0, 0, 0.1),
+    0 0.6cqw 1.2cqw rgba(0, 0, 0, 0.25);
+}
+
+.fk-die.dull.red,
+.fk-table.dead .fk-die.red {
+  color: color-mix(in srgb, var(--card-red) 55%, #b6b2a8);
 }
 
 .fk-die:disabled {
   cursor: default;
-}
-
-.fk-table.dead .fk-die {
-  opacity: 0.45;
 }
 
 /* Small dice in the set-aside tray. */
@@ -4639,6 +4663,28 @@ h3 {
   animation: sp-nope 0.3s ease;
 }
 
+.tr-discard-card {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  cursor: grab;
+  transition: transform 0.25s var(--spring);
+}
+
+.tr-discard-card.dragging {
+  z-index: 30;
+  cursor: grabbing;
+  transition: none;
+}
+
+.tr-discard-card.dragging .pcard-front {
+  box-shadow: 0 0 0 3px var(--accent), 0 18px 30px rgba(0, 0, 0, 0.45);
+}
+
 .tr-discard.drop-here {
   box-shadow: 0 0 0 3px var(--bad);
   animation: nudge 1.4s ease-in-out infinite;
@@ -4702,6 +4748,11 @@ h3 {
   min-width: 0;
 }
 
+/* Never squeeze the lines into each other: the middle row grows instead. */
+.tr-status > * {
+  flex-shrink: 0;
+}
+
 .tr-status-name {
   font-size: 1.2rem;
   line-height: 1;
@@ -4711,7 +4762,7 @@ h3 {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.15rem;
-  line-height: 1.05;
+  line-height: 1.1;
   text-transform: uppercase;
 }
 
@@ -4721,7 +4772,7 @@ h3 {
   line-height: 1.3;
 }
 
-.tr-status-hint.warn {
+.tr-status-hint.tr-warn {
   color: var(--bad);
   font-weight: 600;
   animation: pop-in 0.3s var(--spring);

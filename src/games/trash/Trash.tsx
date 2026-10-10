@@ -14,7 +14,18 @@ const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 /** How long the card in play takes to glide in. */
 const FLY_MS = 300;
 /** A card that's no use at all goes onto the discard pile by itself after this long. */
-const AUTO_TOSS_MS = 1100;
+const AUTO_TOSS_MS = 800;
+
+/**
+ * What the held card is good for: its own face-down slot, any face-down slot (a Jack), swapping out
+ * a Jack that lies in its slot, or nothing (onto the discard pile).
+ */
+function kindOf(g: Game | null) {
+  const hand = g?.hand;
+  if (!g || !hand || g.phase !== 'place') return null;
+  if (fitsDown(g, g.turn, hand)) return slotFor(hand) === 'wild' ? 'wild' : 'place';
+  return swapsJack(g, g.turn, hand) ? 'swap' : 'toss';
+}
 
 export default function Trash({ players, exit }: GameProps) {
   const known = useApp().knows('trash');
@@ -28,16 +39,7 @@ export default function Trash({ players, exit }: GameProps) {
   // a Jack that lies in its slot, or nothing (onto the discard pile). The player moves it there:
   // drag it (or tap the spot).
   const hand = g?.hand;
-  const kind =
-    g && hand && g.phase === 'place'
-      ? fitsDown(g, g.turn, hand)
-        ? slotFor(hand) === 'wild'
-          ? 'wild'
-          : 'place'
-        : swapsJack(g, g.turn, hand)
-          ? 'swap'
-          : 'toss'
-      : null;
+  const kind = kindOf(g);
   // Where the held card comes from, so it can glide from there into the hand spot.
   const [fly, setFly] = useState<{ x: number; y: number } | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -132,17 +134,22 @@ export default function Trash({ players, exit }: GameProps) {
     setMsg(text);
     return false;
   };
-  /** The held card dropped (or tapped) onto a slot. Returns whether it went in. */
-  const dropOnSlot = (who: Who, i: number, el: Element | null) => {
-    if (g.phase !== 'place' || !hand) return false;
-    if (who !== g.turn) return miss(t('That’s not your side'));
-    if (kind === 'toss') return miss(t('No use: drag it onto the discard pile'));
-    const slot = g.sides[who][i];
+  /**
+   * The held card dropped (or tapped) onto a slot. Returns whether it went in. `base` is the game to
+   * play on: a card dragged straight from the discard pile is taken first.
+   */
+  const dropOnSlot = (who: Who, i: number, el: Element | null, base: Game = g) => {
+    const card = base.hand;
+    const k = kindOf(base);
+    if (base.phase !== 'place' || !card) return false;
+    if (who !== base.turn) return miss(t('That’s not your side'));
+    if (k === 'toss') return miss(t('No use: drag it onto the discard pile'));
+    const slot = base.sides[who][i];
     if (!slot) return false;
-    if (kind !== 'wild' && i !== slotFor(hand)) return miss(t('Not there: this card goes into slot {slot}', { slot: SLOT_LABELS[slotFor(hand) as number] }));
-    if (slot.up && kind !== 'swap') return miss(t('That one is already face up'));
-    const next = kind === 'wild' ? place(g, i) : place(g);
-    if (next === g) return false;
+    if (k !== 'wild' && i !== slotFor(card)) return miss(t('Not there: this card goes into slot {slot}', { slot: SLOT_LABELS[slotFor(card) as number] }));
+    if (slot.up && k !== 'swap') return miss(t('That one is already face up'));
+    const next = k === 'wild' ? place(base, i) : place(base);
+    if (next === base) return false;
     sfx.pop();
     buzz(12);
     // The card that lay there comes up into the hand spot: turning over, or the swapped-out Jack.
@@ -150,6 +157,15 @@ export default function Trash({ players, exit }: GameProps) {
     setMsg(null);
     setG(next);
     return true;
+  };
+  /** The top of the discard pile dragged straight onto a slot: taken and played in one go. */
+  const dragDiscard = (target: Element | null) => {
+    const drop = target?.closest<HTMLElement>('[data-drop]');
+    if (g.phase !== 'draw' || !drop || drop.dataset.drop === 'discard') return false;
+    const taken = takeDiscard(g);
+    if (taken === g) return miss(t('You can only take it if you can use it'));
+    const [, who, i] = (drop.dataset.drop ?? '').split(':');
+    return dropOnSlot(Number(who) as Who, Number(i), drop, taken);
   };
   const dropOnDiscard = () => {
     if (g.phase !== 'place' || !hand) return false;
@@ -193,10 +209,25 @@ export default function Trash({ players, exit }: GameProps) {
           key={nope}
           data-drop="discard"
           className={`tr-discard${nope ? ' nope' : ''}${kind === 'toss' || kind === 'swap' ? ' drop-here' : ''}`}
-          onClick={(e) => tapDiscard(e.currentTarget)}
+          onClick={(e) => g.phase !== 'draw' && tapDiscard(e.currentTarget)}
           aria-label={g.phase === 'place' ? t('Discard pile') : t('Take the discard')}
         >
-          {g.discard.length ? <CardFace card={g.discard[g.discard.length - 1]} /> : <span className="tr-empty" />}
+          {g.discard.length ? (
+            g.phase === 'draw' ? (
+              <DragCard
+                key={`${g.discard.length}${g.turn}`}
+                className="tr-discard-card"
+                card={g.discard[g.discard.length - 1]}
+                rotated={g.turn === 1}
+                onTap={(el) => tapDiscard(el)}
+                onDrop={dragDiscard}
+              />
+            ) : (
+              <CardFace card={g.discard[g.discard.length - 1]} />
+            )
+          ) : (
+            <span className="tr-empty" />
+          )}
         </button>
         <span className="tr-hand">
           {hand ? (
@@ -225,7 +256,7 @@ export default function Trash({ players, exit }: GameProps) {
           </span>
           <span className="tr-status-text">{status}</span>
           {msg ? (
-            <span key={msg} className="tr-status-hint warn">
+            <span key={msg} className="tr-status-hint tr-warn">
               {msg}
             </span>
           ) : (
@@ -354,9 +385,8 @@ function HeldCard({
   /** Set for a card that's no use at all: after a moment it slides onto the discard pile by itself. */
   onAutoToss?: () => void;
 }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const start = useRef<{ x: number; y: number; id: number } | null>(null);
-  const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
+  const autoTimer = useRef<number | undefined>(undefined);
+  const { ref, drag, handlers } = useCardDrag({ rotated, onDrop, onStart: () => window.clearTimeout(autoTimer.current) });
   const sign = rotated ? -1 : 1;
 
   // Glide in from where the card came from, already showing its face.
@@ -376,7 +406,6 @@ function HeldCard({
   }, []);
 
   // No use at all: after a short look, off it goes onto the discard pile (unless you grab it first).
-  const autoTimer = useRef<number | undefined>(undefined);
   const tossRef = useRef(onAutoToss);
   tossRef.current = onAutoToss;
   const auto = !!onAutoToss;
@@ -401,43 +430,96 @@ function HeldCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto]);
 
-  const down = (e: ReactPointerEvent<HTMLSpanElement>) => {
-    if (e.button !== 0) return;
-    window.clearTimeout(autoTimer.current);
-    // No text selection or native drag-and-drop: either would cancel this drag.
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    start.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
-    setDrag({ dx: 0, dy: 0 });
-  };
-  const move = (e: ReactPointerEvent<HTMLSpanElement>) => {
-    const s = start.current;
-    if (!s || s.id !== e.pointerId) return;
-    setDrag({ dx: (e.clientX - s.x) * sign, dy: (e.clientY - s.y) * sign });
-  };
-  const up = (e: ReactPointerEvent<HTMLSpanElement>) => {
-    const s = start.current;
-    if (!s || s.id !== e.pointerId) return;
-    start.current = null;
-    const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y) > 12;
-    // Whatever lies under the finger, below the card itself.
-    const under = moved ? document.elementsFromPoint(e.clientX, e.clientY).find((el) => !ref.current?.contains(el)) ?? null : null;
-    if (!moved || !onDrop(under)) setDrag(null); // slides back
-  };
-
   return (
     <span
       ref={ref}
       className={`tr-hand-card${useless ? ' useless' : ''}${drag ? ' dragging' : ''}${fly ? ' gliding' : ''}`}
-      style={drag ? { transform: `translate(${drag.dx}px, ${drag.dy}px) scale(1.08) rotate(${drag.dx * 0.03}deg)` } : undefined}
-      onPointerDown={down}
-      onPointerMove={move}
-      onPointerUp={up}
-      onPointerCancel={() => {
-        start.current = null;
-        setDrag(null);
-      }}
+      style={dragStyle(drag)}
+      {...handlers}
     >
+      <CardFace card={card} />
+    </span>
+  );
+}
+
+const dragStyle = (drag: { dx: number; dy: number } | null) =>
+  drag ? { transform: `translate(${drag.dx}px, ${drag.dy}px) scale(1.08) rotate(${drag.dx * 0.03}deg)` } : undefined;
+
+/**
+ * Dragging a card with a finger (or the mouse). A short touch without moving is a tap. On release the
+ * card asks what lies under the finger; if that's no place for it, it slides back.
+ */
+function useCardDrag({
+  rotated,
+  onDrop,
+  onTap,
+  onStart,
+}: {
+  /** Inside the turned-around middle, screen moves are mirrored. */
+  rotated: boolean;
+  onDrop: (target: Element | null) => boolean;
+  onTap?: (el: HTMLElement) => void;
+  onStart?: () => void;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const start = useRef<{ x: number; y: number; id: number } | null>(null);
+  const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
+  const sign = rotated ? -1 : 1;
+  const handlers = {
+    onPointerDown: (e: ReactPointerEvent<HTMLSpanElement>) => {
+      if (e.button !== 0) return;
+      onStart?.();
+      // No text selection or native drag-and-drop: either would cancel this drag.
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      start.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      setDrag({ dx: 0, dy: 0 });
+    },
+    onPointerMove: (e: ReactPointerEvent<HTMLSpanElement>) => {
+      const s = start.current;
+      if (!s || s.id !== e.pointerId) return;
+      setDrag({ dx: (e.clientX - s.x) * sign, dy: (e.clientY - s.y) * sign });
+    },
+    onPointerUp: (e: ReactPointerEvent<HTMLSpanElement>) => {
+      const s = start.current;
+      if (!s || s.id !== e.pointerId) return;
+      start.current = null;
+      const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y) > 12;
+      if (!moved) {
+        setDrag(null);
+        if (ref.current) onTap?.(ref.current);
+        return;
+      }
+      // Whatever lies under the finger, below the card itself.
+      const under = document.elementsFromPoint(e.clientX, e.clientY).find((el) => !ref.current?.contains(el)) ?? null;
+      if (!onDrop(under)) setDrag(null); // slides back
+    },
+    onPointerCancel: () => {
+      start.current = null;
+      setDrag(null);
+    },
+  };
+  return { ref, drag, handlers };
+}
+
+/** A card that can be dragged straight to a slot, or tapped (the top of the discard pile). */
+function DragCard({
+  card,
+  className,
+  rotated,
+  onDrop,
+  onTap,
+}: {
+  card: Card;
+  className: string;
+  rotated: boolean;
+  onDrop: (target: Element | null) => boolean;
+  onTap: (el: HTMLElement) => void;
+}) {
+  const { ref, drag, handlers } = useCardDrag({ rotated, onDrop, onTap });
+  return (
+    <span ref={ref} className={`${className}${drag ? ' dragging' : ''}`} style={dragStyle(drag)} {...handlers}>
       <CardFace card={card} />
     </span>
   );

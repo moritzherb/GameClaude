@@ -46,12 +46,15 @@ export default function Players({ next }: { next: string | null }) {
         <input
           ref={input}
           className="add-player-input"
+          name="prost-player"
           value={name}
           maxLength={18}
           placeholder={full ? t('Party’s full') : t('Add a name')}
           disabled={full}
           enterKeyHint="done"
           autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           autoCapitalize="words"
           onChange={(e) => setName(e.target.value)}
         />
