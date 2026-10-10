@@ -5,8 +5,8 @@ import { buzz } from './fx';
 const TRIGGER = 72;
 /** Or flicked this fast (px per ms) over at least a little way. */
 const FLICK = 0.5;
-/** A finger starting this close to the left edge belongs to the phone's own swipe back. */
-const EDGE = 24;
+/** A finger starting this close to either edge belongs to the phone's own swipes (back, forward). */
+const EDGE = 28;
 
 /** Set when a screen opens by the swipe, so it can slide in from the right. */
 let swiped = false;
@@ -34,9 +34,20 @@ export function useSwipeLeft(onSwipe: () => void, enabled = true) {
     let off = 0;
     let armed = false;
 
+    // Back to rest: the page in place, nothing uncovered.
+    const reset = () => {
+      start = null;
+      horizontal = false;
+      off = 0;
+      setDragging(false);
+      setDx(0);
+    };
     const down = (e: TouchEvent) => {
-      if (e.touches.length !== 1 || e.touches[0].clientX < EDGE) return;
-      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: e.timeStamp };
+      // A swipe the phone took over never told us it ended: put the page back first.
+      if (off !== 0 || horizontal) reset();
+      const x = e.touches[0]?.clientX ?? 0;
+      if (e.touches.length !== 1 || x < EDGE || x > window.innerWidth - EDGE) return;
+      start = { x, y: e.touches[0].clientY, t: e.timeStamp };
       horizontal = false;
     };
     const move = (e: TouchEvent) => {
@@ -63,37 +74,45 @@ export function useSwipeLeft(onSwipe: () => void, enabled = true) {
       setDx(off);
     };
     const up = (e: TouchEvent) => {
-      if (!start) return;
       const s = start;
-      start = null;
-      if (!horizontal) return;
-      horizontal = false;
-      setDragging(false);
+      if (!s || !horizontal) {
+        if (off !== 0) reset();
+        start = null;
+        return;
+      }
       const speed = -off / Math.max(1, e.timeStamp - s.t);
-      if (-off >= TRIGGER || (speed > FLICK && -off > 30)) {
+      const open = -off >= TRIGGER || (speed > FLICK && -off > 30);
+      reset();
+      if (open) {
         swiped = true;
         go.current();
       }
-      setDx(0);
-      off = 0;
     };
-    const cancel = () => {
-      start = null;
-      horizontal = false;
-      off = 0;
-      setDragging(false);
-      setDx(0);
-    };
+    const cancel = reset;
+    // Whatever interrupts the swipe (the phone taking over, the app going to the background, another
+    // screen): never leave the page half moved.
+    const hidden = () => document.visibilityState === 'hidden' && reset();
 
     window.addEventListener('touchstart', down, { passive: true });
     window.addEventListener('touchmove', move, { passive: false });
     window.addEventListener('touchend', up);
     window.addEventListener('touchcancel', cancel);
+    window.addEventListener('blur', cancel);
+    window.addEventListener('popstate', cancel);
+    window.addEventListener('pagehide', cancel);
+    document.addEventListener('visibilitychange', hidden);
     return () => {
       window.removeEventListener('touchstart', down);
       window.removeEventListener('touchmove', move);
       window.removeEventListener('touchend', up);
       window.removeEventListener('touchcancel', cancel);
+      window.removeEventListener('blur', cancel);
+      window.removeEventListener('popstate', cancel);
+      window.removeEventListener('pagehide', cancel);
+      document.removeEventListener('visibilitychange', hidden);
+      // Switched off mid-swipe (e.g. a pull down took over): the page goes back too.
+      setDragging(false);
+      setDx(0);
     };
   }, [enabled]);
 
