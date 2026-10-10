@@ -3,6 +3,7 @@ import { GAMES } from '../games/registry';
 import { playerRange, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
+import { PhoneIcon } from './Icons';
 import Intensity from './Intensity';
 
 /** Running number of a game in the line-up: 01, 02, … */
@@ -44,7 +45,12 @@ export default function GameCard({
         <span className="ticket-meta">
           <span>{t('{n} players', { n: players })}</span>
           <Intensity level={game.intensity} showLabel />
-          {game.online && <span className="ticket-flag">{t(game.phones ?? 'Every phone')}</span>}
+          {/* Playable with several phones: the same small icon for every such game. */}
+          {game.online && (
+            <span className="ticket-phone" role="img" aria-label={t(game.phones ?? 'Every phone')} title={t(game.phones ?? 'Every phone')}>
+              <PhoneIcon />
+            </span>
+          )}
         </span>
       </span>
       {soon && <span className="stamp">{t('Soon')}</span>}

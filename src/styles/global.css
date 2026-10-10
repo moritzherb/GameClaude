@@ -965,11 +965,15 @@ h3 {
   color: var(--muted);
 }
 
-.ticket-flag {
-  padding: 2px 6px;
-  border-radius: 4px;
+.ticket-phone {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   background: var(--accent);
   color: var(--on-accent);
+  font-size: 14px;
 }
 
 .ticket.soon .ticket-stub {
