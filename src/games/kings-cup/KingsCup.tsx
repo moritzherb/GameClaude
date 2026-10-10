@@ -5,6 +5,7 @@ import DeckCount from '../../components/DeckCount';
 import { CardFace } from '../../components/PlayingCard';
 import { newDeck, rankLabel, type Card, type Suit } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
+import { unfill } from '../../lib/noAutofill';
 import { t, tx } from '../../i18n';
 import { shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
@@ -224,11 +225,12 @@ export default function KingsCup({ players, exit }: GameProps) {
           <div className="add-player">
             <input
               id="kc-rule"
+              type="search"
               name="prost-rule"
               className="add-player-input"
               value={ruleDraft}
               maxLength={80}
-              placeholder={t('e.g. No first names')}
+              placeholder={unfill(t('e.g. No first names'))}
               autoComplete="off"
               enterKeyHint="done"
               onChange={(e) => setRuleDraft(e.target.value)}

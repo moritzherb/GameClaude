@@ -11,8 +11,8 @@ import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
 
 const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-/** How long the card in play takes to glide in. */
-const FLY_MS = 300;
+/** How long the card in play takes to glide in: a little longer the further it comes from. */
+const flyMs = (distance: number) => Math.round(Math.min(650, 380 + distance * 0.45));
 /** A card that's no use at all goes onto the discard pile by itself after this long. */
 const AUTO_TOSS_MS = 800;
 
@@ -398,8 +398,8 @@ function HeldCard({
     const dy = (fly.y - (r.top + r.height / 2)) * sign;
     if (Math.abs(dx) + Math.abs(dy) < 4) return;
     el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(0.92)` }, { transform: 'none' }], {
-      duration: FLY_MS,
-      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+      duration: flyMs(Math.hypot(dx, dy)),
+      easing: 'cubic-bezier(0.25, 0.75, 0.25, 1)',
     });
     // Only when the card first shows up.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -7,6 +7,7 @@ import TopBar from '../components/TopBar';
 import { findGame, onlineGames } from '../games/registry';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
+import { unfill } from '../lib/noAutofill';
 import { navigate, paths } from '../lib/router';
 import { useProfile } from '../net/profile';
 import { normalizeCode } from '../net/protocol';
@@ -71,14 +72,15 @@ function Start({ joinCode }: { joinCode: string | null }) {
           {profile.avatar}
         </Tap>
         <label className="me-field" htmlFor="room-nick">
-          <span className="me-label">{t('Your name')}</span>
+          <span className="me-label">{unfill(t('Your name'))}</span>
           <input
             id="room-nick"
+            type="search"
             name="prost-nick"
             className={`me-input${nameMissing && !profile.name.trim() ? ' missing' : ''}`}
             value={profile.name}
             maxLength={18}
-            placeholder={t('Type your name')}
+            placeholder={unfill(t('Type your name'))}
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
@@ -117,6 +119,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
           >
             <input
               id="room-code"
+              type="search"
               name="prost-room"
               className="code-input"
               value={code}
