@@ -17,7 +17,7 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
   const range = playerRange(game);
 
   return (
-    <main className="screen">
+    <main className="screen game-detail">
       <TopBar onBack={() => navigate(paths.games())} />
 
       <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
