@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import AppDie from '../components/AppDie';
 import GameCard from '../components/GameCard';
 import { ChevronIcon, PlusIcon, SettingsIcon } from '../components/Icons';
 import Logo from '../components/Logo';
@@ -89,18 +90,15 @@ export default function Home() {
 
   return (
     <main className="screen home">
-      {/* Pull to refresh: the name, in lime, comes down with the finger and hops while it refreshes. */}
+      {/* Pull to refresh: the die from the app icon comes down with the finger, turning, and spins
+          while it refreshes. */}
       <div
         className={`ptr ${pull.phase}`}
         style={{ height: pull.offset, '--p': pull.progress } as CSSProperties}
         aria-hidden
       >
-        <span className="ptr-logo">
-          {'prost!'.split('').map((c, i) => (
-            <span key={i} style={{ '--i': i } as CSSProperties}>
-              {c}
-            </span>
-          ))}
+        <span className="ptr-die">
+          <AppDie size={22} />
         </span>
       </div>
       <header className="home-header">

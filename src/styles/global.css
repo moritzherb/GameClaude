@@ -540,7 +540,7 @@ h3 {
 
 /* ---------- Home ---------- */
 
-/* Pull to refresh on home: the name comes down with the finger, in lime, and hops while refreshing. */
+/* Pull to refresh on home: the die from the app icon comes down with the finger and spins while refreshing. */
 .ptr {
   flex: none;
   height: 0;
@@ -555,35 +555,24 @@ h3 {
   transition: height 0.34s var(--spring);
 }
 
-.ptr-logo {
-  display: inline-flex;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 1.6rem;
-  line-height: 1;
-  color: var(--accent-ink);
+.ptr-die {
+  display: grid;
   opacity: var(--p, 0);
-  transform: scale(calc(0.6 + 0.4 * var(--p, 0))) rotate(calc((1 - var(--p, 0)) * -14deg));
+  /* Turns with the pull, like the spinner on a page you pull to reload. */
+  transform: scale(calc(0.55 + 0.45 * var(--p, 0))) rotate(calc(var(--p, 0) * 300deg));
 }
 
-.ptr.refresh .ptr-logo {
+.ptr.refresh .ptr-die {
   opacity: 1;
-  transform: none;
-  transition: transform 0.2s var(--spring);
+  animation: ptr-spin 0.7s linear infinite;
 }
 
-.ptr-logo span {
-  display: inline-block;
-}
-
-.ptr.refresh .ptr-logo span {
-  animation: ptr-hop 0.42s ease-in-out infinite alternate;
-  animation-delay: calc(var(--i) * 60ms);
-}
-
-@keyframes ptr-hop {
+@keyframes ptr-spin {
+  from {
+    transform: rotate(300deg);
+  }
   to {
-    transform: translateY(-7px);
+    transform: rotate(660deg);
   }
 }
 
