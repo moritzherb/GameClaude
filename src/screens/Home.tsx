@@ -12,6 +12,7 @@ import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
 import { lineup } from '../lib/lineup';
+import { usePullToRefresh } from '../lib/pullToRefresh';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -61,12 +62,23 @@ export default function Home() {
   // The last three games played on this phone, newest first.
   const [recent] = useState(() => recentGames().map(findGame).filter((g): g is GameDefinition => !!g));
 
-  // A few playable games, drawn at random every few hours.
-  const [featured] = useState(() =>
-    lineup(GAMES.filter((g) => g.component || g.online).map((g) => g.id))
+  // A few playable games, drawn at random every few hours, or right away when home is pulled down.
+  const drawLineup = (fresh = false) =>
+    lineup(
+      GAMES.filter((g) => g.component || g.online).map((g) => g.id),
+      undefined,
+      undefined,
+      fresh,
+    )
       .map(findGame)
-      .filter((g): g is GameDefinition => !!g),
-  );
+      .filter((g): g is GameDefinition => !!g);
+  const [featured, setFeatured] = useState(() => drawLineup());
+  const [deal, setDeal] = useState(0);
+  const pull = usePullToRefresh(() => {
+    setFeatured(drawLineup(true));
+    setDeal((n) => n + 1);
+    sfx.pop();
+  }, !rolling);
 
   // "Fri 09.10" / "Fr. 09.10"
   const date = new Date()
@@ -77,6 +89,20 @@ export default function Home() {
 
   return (
     <main className="screen home">
+      {/* Pull to refresh: the name, in lime, comes down with the finger and hops while it refreshes. */}
+      <div
+        className={`ptr ${pull.phase}`}
+        style={{ height: pull.offset, '--p': pull.progress } as CSSProperties}
+        aria-hidden
+      >
+        <span className="ptr-logo">
+          {'prost!'.split('').map((c, i) => (
+            <span key={i} style={{ '--i': i } as CSSProperties}>
+              {c}
+            </span>
+          ))}
+        </span>
+      </div>
       <header className="home-header">
         <Logo />
         <span className="home-date">{date}</span>
@@ -159,7 +185,7 @@ export default function Home() {
             {t('All games')}
           </button>
         </div>
-        <div className="ticket-list">
+        <div className={`ticket-list${deal ? ' dealt' : ''}`} key={deal}>
           {featured.map((g) => (
             <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
           ))}
