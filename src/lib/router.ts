@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 //
 // The history is kept flat: the home screen, and at most one screen on top of it.
 // Swiping back (or the phone's back button) therefore always lands on the home
-// screen, never in an old game. Swiping forward on the home screen opens All games.
+// screen, never in an old game, and nothing ever lies ahead of home (All games opens with the
+// app's own swipe on the home screen, see Home).
 //
 // A running game has nothing underneath it at all: there's no swiping back out of it by
 // accident (that would just end it). The X in the corner is the way out.
@@ -39,23 +40,18 @@ export function useRoute(): Route {
 
 /** Marks the history entry that sits on top of the home screen. */
 const ABOVE_HOME = 'prost:above-home';
-/** Home in the top entry (from an earlier version of the app): treated like any screen on top. */
+/** Home again in the top entry (after leaving a screen): nothing lies ahead of it. */
 const HOME_TOP = 'prost:home-top';
 /** Marks a running game: nothing different lies behind or ahead of it. */
 const GAME_ROOT = 'prost:game';
 /** The same game in the entry above it (only there so that swiping forward goes nowhere new). */
 const GAME_TOP = 'prost:game-top';
-const ALL_GAMES = '#/games';
 const isHome = (hash: string) => hash === '' || hash === '#' || hash === '#/';
 const isGame = (hash: string) => /^#\/(play|online)\//.test(hash);
-/** All games, with or without a category picked (not a game's own page). */
-const isAllGames = (hash: string) => hash === ALL_GAMES || hash.startsWith(`${ALL_GAMES}?`);
 /** A game waiting to fill the bottom entry too, once the step back onto it has happened. */
 let pendingGame: string | null = null;
 /** Where to go once the step back from the top game entry onto the bottom one has happened. */
 let pendingNav: string | null = null;
-/** Steps back the app takes itself, whose popstate is no news. */
-let ownSteps = 0;
 
 function go(hash: string, how: 'push' | 'replace', state: string | null) {
   if (how === 'push') history.pushState(state, '', hash);
@@ -75,24 +71,12 @@ function afterPaint(fn: () => void) {
   window.setTimeout(once, 250);
 }
 
-/**
- * On the home screen (the bottom entry): put All games in the entry ahead, so swiping forward
- * opens it. Waits until home is on screen, and does nothing if something else happened meanwhile.
- */
-function allGamesAhead() {
-  afterPaint(() => {
-    if (history.state !== null || !isHome(window.location.hash)) return;
-    history.pushState(ABOVE_HOME, '', ALL_GAMES);
-    ownSteps++;
-    history.back();
-  });
-}
-
 /*
- * The history never holds more than two entries, so swiping can't bring back an old screen:
- *   home                 [home, all games]   standing on home: swiping forward opens All games
+ * The history never holds more than two entries, and never anything ahead of the one you're on,
+ * so swiping can't bring back an old screen (or show one the phone has no picture of):
+ *   home                 [home] or [home, home]
  *   any other screen     [home, screen]
- *   a running game       [game, game]        standing on the first: nothing to swipe back to
+ *   a running game       [game, game]      standing on the first: nothing to swipe back to
  */
 export function navigate(to: string) {
   const hash = `#${to}`;
@@ -126,19 +110,18 @@ export function navigate(to: string) {
     // Out of a game. iPhones show the last picture of an entry while you swipe back to it, and
     // the bottom entry last showed the game. So home goes on screen there first, then:
     go('#/', 'replace', null);
-    // home: All games ahead of it; anything else: on top of home.
-    if (isHome(hash)) allGamesAhead();
-    else
-      afterPaint(() => {
-        if (history.state === null && isHome(window.location.hash)) go(hash, 'push', ABOVE_HOME);
-      });
+    // …and the game's second entry (ahead) is replaced: by home again, or the next screen.
+    afterPaint(() => {
+      if (history.state !== null || !isHome(window.location.hash)) return;
+      if (isHome(hash)) history.pushState(HOME_TOP, '', '#/');
+      else go(hash, 'push', ABOVE_HOME);
+    });
     return;
   }
 
   if (isHome(hash)) {
-    // Back down to the home entry (the popstate puts All games ahead of it).
-    if (state === ABOVE_HOME || state === HOME_TOP) history.back();
-    else go(hash, 'replace', null);
+    // Home in the top entry, so the screen just left isn't waiting ahead.
+    go(hash, 'replace', state === ABOVE_HOME || state === HOME_TOP ? HOME_TOP : null);
     return;
   }
   // From the home entry: one entry on top. From the top one: swap it.
@@ -156,14 +139,8 @@ if (typeof window !== 'undefined') {
     history.replaceState(null, '', '#/');
     history.pushState(ABOVE_HOME, '', deep);
   }
-  // Opened on the home screen: All games ahead.
-  else if (isHome(window.location.hash) && history.state === null) allGamesAhead();
   let lastHash = window.location.hash;
   window.addEventListener('popstate', () => {
-    if (ownSteps > 0) {
-      ownSteps--;
-      return;
-    }
     // Stepped back onto the bottom entry to make it the game as well.
     if (pendingGame) {
       const hash = pendingGame;
@@ -184,13 +161,14 @@ if (typeof window !== 'undefined') {
       navigate(to);
       return;
     }
-    // Back on home from another screen: All games ahead again (unless that's where we came from).
-    if (history.state === null && isHome(window.location.hash)) {
-      if (!isAllGames(lastHash)) allGamesAhead();
+    // Swiped back from a screen onto home: drop the screen ahead, so swiping forward can't
+    // bring it back.
+    if (history.state === null && isHome(window.location.hash) && !isHome(lastHash) && !isGame(lastHash)) {
+      history.pushState(HOME_TOP, '', '#/');
       return;
     }
-    // Never step from a game onto a screen.
-    if (isGame(lastHash) && history.state === ABOVE_HOME) history.back();
+    // An old entry ahead (from an earlier version of the app): never step forward onto a screen.
+    if ((isHome(lastHash) || isGame(lastHash)) && history.state === ABOVE_HOME) history.back();
   });
   window.addEventListener('hashchange', () => {
     lastHash = window.location.hash;

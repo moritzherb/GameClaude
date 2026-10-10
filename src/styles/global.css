@@ -131,6 +131,12 @@ html::-webkit-scrollbar,
   background: transparent;
 }
 
+/* Nothing sticks out sideways (a screen sliding in, a page following the finger): the page never
+   gets wider than the screen, so no gap or zooming out at the side. */
+html {
+  overflow-x: clip;
+}
+
 body {
   overflow-x: hidden;
   /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
@@ -934,6 +940,77 @@ h3 {
 .recent-emoji {
   font-size: 2.3rem;
   line-height: 1;
+}
+
+/* Home follows the finger when swiped left, and springs back if let go early. */
+.screen.home {
+  transition: transform 0.3s var(--spring);
+}
+
+.screen.home.dragging {
+  transition: none;
+}
+
+/* What the swipe uncovers on the right of home: an arrow and "All games". */
+.swipe-peek {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.swipe-peek-arrow {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 22px;
+  opacity: calc(0.3 + 0.7 * var(--p));
+  transform: scale(calc(0.6 + 0.4 * var(--p)));
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+/* Far enough: let go to open. */
+.swipe-peek.armed .swipe-peek-arrow {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.swipe-peek-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--muted);
+  opacity: var(--p);
+}
+
+/* All games, opened by the swipe: comes in from the right. */
+.screen.library.slide-in {
+  animation: slide-in-right 0.34s var(--spring) both;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(45%);
+    opacity: 0;
+  }
 }
 
 /*
