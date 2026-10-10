@@ -9,7 +9,7 @@ import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useQueuedSend, useResync } from '../../net/sync';
 import { useApp } from '../../state/AppState';
-import { draw, HAND_MAX, markReady, newGame, overDrawn, play, putBack, stuck, targetFor, turnOver, type Game, type Who } from './logic';
+import { draw, HAND_MAX, markReady, newGame, overDrawn, play, putBack, sortHand, stuck, targetFor, turnOver, type Game, type Who } from './logic';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -28,7 +28,7 @@ interface Match {
   count: number;
 }
 
-type Act = { t: 'ready' } | { t: 'draw' } | { t: 'back' } | { t: 'play'; card: Card };
+type Act = { t: 'ready' } | { t: 'draw' } | { t: 'back' } | { t: 'sort' } | { t: 'play'; card: Card };
 
 type Msg = { g: 'sp'; type: 'state'; match: Match | null } | { g: 'sp'; type: 'act'; act: Act } | { g: 'sp'; type: 'sync' };
 
@@ -46,6 +46,7 @@ function apply(m: Match, fromId: string, act: Act): Match {
   if (act.t === 'ready') next = markReady(g, w);
   if (act.t === 'draw') next = draw(g, w);
   if (act.t === 'back') next = putBack(g, w);
+  if (act.t === 'sort') next = sortHand(g, w);
   if (act.t === 'play') {
     // By card, not position: the hand may have grown while the move was on its way.
     const i = g.sides[w].hand.findIndex((c) => c.value === act.card.value && c.suit === act.card.suit);
@@ -290,6 +291,7 @@ export default function Speed() {
           shake={shake}
           onCard={tapCard}
           onPile={tapPile}
+          onSort={() => act({ t: 'sort' })}
           onReady={() => act({ t: 'ready' })}
         />
       )}
@@ -345,6 +347,7 @@ function MyHalf({
   shake,
   onCard,
   onPile,
+  onSort,
   onReady,
 }: {
   g: Game;
@@ -354,6 +357,7 @@ function MyHalf({
   shake: string | null;
   onCard: (i: number) => void;
   onPile: () => void;
+  onSort: () => void;
   onReady: () => void;
 }) {
   const side = g.sides[who];
@@ -389,6 +393,23 @@ function MyHalf({
           <span className="sp-left">{left === 1 ? t('1 card left') : t('{n} cards left', { n: left })}</span>
           {!known && g.phase !== 'over' && <span className="sp-info-hint">{t('Tap your pile to draw. Never more than 5 in your hand.')}</span>}
         </span>
+        {g.phase !== 'over' && side.hand.length > 1 && (
+          <button
+            type="button"
+            className="sp-sort"
+            disabled={extra > 0}
+            onPointerDown={() => {
+              if (extra > 0) return;
+              sfx.tick();
+              buzz(10);
+              onSort();
+            }}
+            aria-label={t('Sort your cards from low to high')}
+          >
+            <span aria-hidden>↕</span>
+            {t('Sort')}
+          </button>
+        )}
       </div>
 
       {g.phase === 'ready' && (

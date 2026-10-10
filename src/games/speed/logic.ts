@@ -90,6 +90,15 @@ export function draw(g: Game, who: Who): Game {
   return { ...g, sides: setSide(g, who, { pile: s.pile.slice(1), hand: [...s.hand, s.pile[0]] }) };
 }
 
+/** Sort your hand from low to high (2 … Ace). Not while you hold too many: they go back in order first. */
+export function sortHand(g: Game, who: Who): Game {
+  const s = g.sides[who];
+  if (overDrawn(s)) return g;
+  const hand = [...s.hand].sort((a, b) => a.value - b.value || a.suit.localeCompare(b.suit));
+  if (hand.every((c, i) => c === s.hand[i])) return g;
+  return { ...g, sides: setSide(g, who, { ...s, hand }) };
+}
+
 /** Put the last drawn extra card back on top of your pile. */
 export function putBack(g: Game, who: Who): Game {
   const s = g.sides[who];

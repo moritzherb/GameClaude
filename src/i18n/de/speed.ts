@@ -49,6 +49,8 @@ const speed: Record<string, string> = {
   'You win! 🏆': 'Du gewinnst! 🏆',
   Rematch: 'Revanche',
   'Pick other players': 'Andere Spieler wählen',
+  Sort: 'Sortieren',
+  'Sort your cards from low to high': 'Karten von klein nach groß sortieren',
 };
 
 export default speed;
