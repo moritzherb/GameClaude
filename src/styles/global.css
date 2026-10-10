@@ -1812,8 +1812,12 @@ h3 {
 
 .result-fate {
   margin-top: 8px;
+  max-width: 100%;
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius);
+  text-align: center;
+  line-height: 1.3;
+  text-wrap: balance;
   background: var(--on-color);
   color: #fff;
   font-size: 1.1rem;
@@ -1828,11 +1832,14 @@ h3 {
 
 .spin-chip {
   --chip: var(--accent);
+  position: relative;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 12px 6px;
+  /* A little more room at the bottom, so the name ends above the drink counter. */
+  padding: 12px 6px 18px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -1854,8 +1861,57 @@ h3 {
   font-size: 1.9rem;
 }
 
+/* The drink counter on the chip's bottom-right corner, like a badge (it keeps the name free). */
+.spin-chip-count {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  box-shadow: 0 0 0 2px var(--bg);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.spin-chip-count.zero {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.spin-chip.lit .spin-chip-count {
+  background: var(--on-color);
+  color: #fff;
+}
+
+.spin-chip-count.bump {
+  animation: count-bump 0.35s var(--spring);
+}
+
+@keyframes count-bump {
+  40% {
+    transform: scale(1.45);
+  }
+}
+
+.spin-chip:disabled {
+  cursor: default;
+}
+
+.spin-chip:not(:disabled):active {
+  transform: scale(0.96);
+}
+
 .spin-chip-name {
-  max-width: 100%;
+  /* Clear of the drink counter on the right (and as much on the left, so it stays centred). */
+  max-width: calc(100% - 24px);
   font-size: 0.95rem;
   font-weight: 600;
   overflow: hidden;

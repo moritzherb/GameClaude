@@ -2,27 +2,18 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import { t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
-import { pick, randomInt } from '../../lib/random';
+import { randomInt } from '../../lib/random';
 import type { GameProps } from '../types';
-
-// Picked when the wheel stops (at runtime), so t() is fine here.
-const FATES = [
-  () => {
-    const n = randomInt(1, 3);
-    return n === 1 ? t('Drink {n} sip', { n }) : t('Drink {n} sips', { n });
-  },
-  () => t('Give out {n} sips', { n: randomInt(2, 4) }),
-  () => t('Finish your drink! 🫗'),
-  () => t('Everybody drinks! 🍻'),
-  () => t('Pick a drinking buddy 🤝'),
-  () => t('Safe! Drink water 💧'),
-  () => t('Drink with no hands 🙌'),
-  () => t('Waterfall – you start! 🌊'),
-];
+import { spinFate } from './fates';
 
 export default function WhoDrinks({ players }: GameProps) {
   const [highlight, setHighlight] = useState<number | null>(null);
   const [result, setResult] = useState<{ index: number; fate: string } | null>(null);
+  // Sips per player id, for the counter on each name.
+  const [drunk, setDrunk] = useState<Record<string, number>>({});
+  // The name just counted up, for a little bump.
+  const [bumped, setBumped] = useState<{ id: string; n: number } | null>(null);
+  const addSips = (sips: Record<string, number>) => setDrunk((d) => Object.fromEntries(players.map((p) => [p.id, (d[p.id] ?? 0) + (sips[p.id] ?? 0)])));
   const [spinning, setSpinning] = useState(false);
   const timer = useRef<number>(undefined);
 
@@ -42,7 +33,9 @@ export default function WhoDrinks({ players }: GameProps) {
       buzz(5);
       if (step >= steps) {
         setSpinning(false);
-        setResult({ index: winner, fate: pick(FATES)() });
+        const fate = spinFate(winner, players.length);
+        setResult({ index: winner, fate: fate.text });
+        addSips(Object.fromEntries(players.map((p, i) => [p.id, fate.sips[i]])));
         celebrate();
         return;
       }
@@ -71,17 +64,35 @@ export default function WhoDrinks({ players }: GameProps) {
       )}
 
       <div className="spin-grid">
-        {players.map((p, i) => (
-          <div
-            key={p.id}
-            className={`spin-chip${highlight === i ? ' lit' : ''}${result?.index === i ? ' chosen' : ''}`}
-            style={{ '--chip': p.color } as CSSProperties}
-          >
-            <span className="spin-chip-avatar">{p.avatar}</span>
-            <span className="spin-chip-name">{p.name}</span>
-          </div>
-        ))}
+        {players.map((p, i) => {
+          const n = drunk[p.id] ?? 0;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              className={`spin-chip${highlight === i ? ' lit' : ''}${result?.index === i ? ' chosen' : ''}`}
+              style={{ '--chip': p.color } as CSSProperties}
+              disabled={spinning}
+              aria-label={t('{name}: {n} sips so far. Tap to add one.', { name: p.name, n })}
+              onClick={() => {
+                // Sips the wheel can't know (handed out, lost a little game): tap the name.
+                sfx.tick();
+                buzz(8);
+                addSips({ [p.id]: 1 });
+                setBumped({ id: p.id, n: n + 1 });
+              }}
+            >
+              <span className="spin-chip-avatar">{p.avatar}</span>
+              <span className="spin-chip-name">{p.name}</span>
+              {/* The drink counter, bottom right. */}
+              <span key={bumped?.id === p.id ? bumped.n : 'n'} className={`spin-chip-count${n ? '' : ' zero'}${bumped?.id === p.id ? ' bump' : ''}`}>
+                {n}
+              </span>
+            </button>
+          );
+        })}
       </div>
+      <p className="fine-print center">{t('Tap a name to count a sip.')}</p>
 
       <div className="sticky-action">
         <BigButton size="xl" onClick={spin} disabled={spinning}>

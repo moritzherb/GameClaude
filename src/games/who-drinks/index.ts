@@ -15,7 +15,8 @@ const whoDrinks: GameDefinition = {
     tx('Hit SPIN.'),
     tx('The wheel lands on someone.'),
     tx('That person does whatever the screen says.'),
-    tx('No arguing with the machine. 🤖'),
+    tx('Tap a name to count a sip for the ones the wheel can’t know (handed out, lost a little game).'),
+    tx('No arguing with the machine.'),
   ],
   component: WhoDrinks,
 };
