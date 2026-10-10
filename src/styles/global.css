@@ -796,6 +796,59 @@ h3 {
 
 /* ---------- Tickets (game cards) ---------- */
 
+/* Home: the last three games played, as small colour tiles above the line-up. */
+.recent-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.recent-tile {
+  --card-bg: var(--c-yellow);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 92px;
+  padding: 12px 12px 10px;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--on-color);
+  box-shadow: var(--shadow);
+  text-align: left;
+  transition: transform 0.18s var(--spring);
+  animation: rise 0.45s var(--spring) backwards;
+}
+
+.recent-tile:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.recent-tile:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.recent-tile:active {
+  transform: scale(0.96);
+}
+
+.recent-emoji {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.recent-name {
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
 .ticket-list {
   display: flex;
   flex-direction: column;

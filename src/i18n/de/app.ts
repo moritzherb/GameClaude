@@ -30,6 +30,7 @@ const app: Record<string, string> = {
   '{n} phones live': 'Handys live: {n}',
   'Every phone joins': 'Jedes Handy spielt mit',
   'The line-up': 'Das Line-up',
+  'Last played': 'Zuletzt gespielt',
   'All games': 'Alle Spiele',
   'Picking your game…': 'Euer Spiel wird ausgewählt…',
 

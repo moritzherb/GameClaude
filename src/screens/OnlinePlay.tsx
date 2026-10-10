@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BigButton from '../components/BigButton';
 import { HelpIcon } from '../components/Icons';
 import RulesList from '../components/RulesList';
@@ -6,6 +6,7 @@ import Sheet from '../components/Sheet';
 import TopBar, { RoundButton } from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
+import { markPlayed } from '../lib/recent';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useRoom } from '../net/RoomProvider';
@@ -20,6 +21,9 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   const Game = game.online;
   const inRoom = room.status === 'open' || room.status === 'reconnecting' || room.status === 'connecting';
   const isHost = room.role === 'host';
+  useEffect(() => {
+    if (Game && inRoom) markPlayed(game.id);
+  }, [Game, inRoom, game.id]);
 
   if (!Game) return null;
 

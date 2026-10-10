@@ -6,6 +6,7 @@ import Sheet from '../components/Sheet';
 import TopBar, { RoundButton } from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
+import { markPlayed } from '../lib/recent';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useApp } from '../state/AppState';
@@ -24,6 +25,7 @@ export default function Play({ game }: { game: GameDefinition }) {
 
   useEffect(() => {
     if (!playable) navigate(paths.game(game.id));
+    else markPlayed(game.id);
   }, [playable, game.id]);
 
   if (!playable) return null;
