@@ -263,18 +263,49 @@ export function FiveThousandTable({
         }
       />
 
-      {/* Always there (empty until something is set aside), so the table keeps its size. */}
-      <div className="fk-aside" aria-hidden={turn.aside.length === 0}>
-        {turn.aside.length > 0 && (
+      {/*
+        * Below the table, always the same height, so the table keeps its size the whole game:
+        * what's set aside and the picking row, or at the end of a turn how it went (in their place).
+        */}
+      <div className="fk-below">
+        {g.phase === 'over' && g.end && !won ? (
+          <TurnVerdict g={g} name={me.name} />
+        ) : (
           <>
-            <span className="fk-aside-label">{t('Set aside')}</span>
-            <span className="fk-aside-dice">
-              {turn.aside.map((f, i) => (
-                <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
-                  {t(FACE_LABEL[f])}
+            <div className="fk-aside" aria-hidden={turn.aside.length === 0}>
+              {turn.aside.length > 0 && (
+                <>
+                  <span className="fk-aside-label">{t('Set aside')}</span>
+                  <span className="fk-aside-dice">
+                    {turn.aside.map((f, i) => (
+                      <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
+                        {t(FACE_LABEL[f])}
+                      </span>
+                    ))}
+                  </span>
+                </>
+              )}
+            </div>
+            {g.phase === 'choose' && mine ? (
+              <div className="fk-pick-row">
+                <span className="fk-pick-info">
+                  {gain == null
+                    ? known
+                      ? t('Pick your dice')
+                      : t('Tap Kings, Aces or a triple to set them aside.')
+                    : over
+                      ? t('That’s over 5000. Pick less.')
+                      : t('+{n} points', { n: fmt(gain) })}
                 </span>
-              ))}
-            </span>
+                {allGain != null && !tooMuch(g, allGain) && picked.length === 0 && (
+                  <button type="button" className="text-btn" onClick={pickAll}>
+                    {t('Take all')}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="fk-pick-row" aria-hidden />
+            )}
           </>
         )}
       </div>
@@ -286,41 +317,19 @@ export function FiveThousandTable({
       )}
 
       {g.phase === 'roll' && mine && (
-        <>
-          {/* Same room as the row under the dice while picking, so the table doesn't change size. */}
-          <div className="fk-pick-row" aria-hidden />
-          <div className="sticky-action">
-            <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
-              {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
-            </BigButton>
-          </div>
-        </>
+        <div className="sticky-action">
+          <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
+            {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
+          </BigButton>
+        </div>
       )}
 
       {g.phase === 'choose' && mine && (
-        <>
-          <div className="fk-pick-row">
-            <span className="fk-pick-info">
-              {gain == null
-                ? known
-                  ? t('Pick your dice')
-                  : t('Tap Kings, Aces or a triple to set them aside.')
-                : over
-                  ? t('That’s over 5000. Pick less.')
-                  : t('+{n} points', { n: fmt(gain) })}
-            </span>
-            {allGain != null && !tooMuch(g, allGain) && picked.length === 0 && (
-              <button type="button" className="text-btn" onClick={pickAll}>
-                {t('Take all')}
-              </button>
-            )}
-          </div>
-          <div className="sticky-action">
-            <BigButton size="xl" disabled={gain == null || over || shaking} onClick={() => shake((x) => setAside(x, picked, 'roll'))}>
-              {exact ? t('Exactly 5000! 🏆') : gain != null && left === 0 ? t('All 5 back in the cup 🔥') : left === 1 ? t('Roll 1 die again') : t('Roll {n} again', { n: Math.max(left, 1) })}
-            </BigButton>
-          </div>
-        </>
+        <div className="sticky-action">
+          <BigButton size="xl" disabled={gain == null || over || shaking} onClick={() => shake((x) => setAside(x, picked, 'roll'))}>
+            {exact ? t('Exactly 5000! 🏆') : gain != null && left === 0 ? t('All 5 back in the cup 🔥') : left === 1 ? t('Roll 1 die again') : t('Roll {n} again', { n: Math.max(left, 1) })}
+          </BigButton>
+        </div>
       )}
 
       {won && (
@@ -338,24 +347,19 @@ export function FiveThousandTable({
         </>
       )}
 
-      {g.phase === 'over' && g.end && !won && (
-        <>
-          <TurnVerdict g={g} name={me.name} />
-          {(local || seat != null) && (
-            <div className="sticky-action">
-              <BigButton
-                size="xl"
-                variant="light"
-                onClick={() => {
-                  setPicked([]);
-                  setG(nextTurn(g));
-                }}
-              >
-                <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
-              </BigButton>
-            </div>
-          )}
-        </>
+      {g.phase === 'over' && g.end && !won && (local || seat != null) && (
+        <div className="sticky-action">
+          <BigButton
+            size="xl"
+            variant="light"
+            onClick={() => {
+              setPicked([]);
+              setG(nextTurn(g));
+            }}
+          >
+            <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
+          </BigButton>
+        </div>
       )}
     </div>
   );
