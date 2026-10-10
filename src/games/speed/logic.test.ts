@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newDeck, type Card } from '../../lib/cards';
-import { allCards, blocked, draw, fits, markReady, newGame, overDrawn, play, putBack, stuck, turnOver, type Game } from './logic';
+import { allCards, blocked, draw, fits, markReady, newGame, overDrawn, play, putBack, sortHand, stuck, turnOver, type Game } from './logic';
 
 const c = (value: number, suit: Card['suit'] = 'spades'): Card => ({ value, suit });
 const started = (g: Game) => turnOver(markReady(markReady(g, 0), 1));
@@ -100,5 +100,17 @@ describe('Speed', () => {
     g = play(g, 1, 0);
     expect(g.phase).toBe('over');
     expect(g.winner).toBe(1);
+  });
+
+  it('sorts a hand from low to high, but not while holding too many', () => {
+    const g = newGame(newDeck());
+    const mixed = { ...g, sides: [{ ...g.sides[0], hand: [c(14), c(3), c(11, 'hearts'), c(3, 'clubs'), c(9)] }, g.sides[1]] as Game['sides'] };
+    const sorted = sortHand(mixed, 0);
+    expect(sorted.sides[0].hand.map((x) => x.value)).toEqual([3, 3, 9, 11, 14]);
+    expect(allCards(sorted)).toHaveLength(52);
+    expect(sortHand(sorted, 0)).toBe(sorted);
+    const over = draw(mixed, 0);
+    expect(overDrawn(over.sides[0])).toBe(true);
+    expect(sortHand(over, 0)).toBe(over);
   });
 });
