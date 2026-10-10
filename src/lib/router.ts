@@ -24,7 +24,8 @@ function parse(hash: string): Route {
 export function useRoute(): Route {
   const [hash, setHash] = useState(() => window.location.hash);
   useEffect(() => {
-    let shown = window.location.hash;
+    // What the first render showed (the address may have changed since, before this listened).
+    let shown = hash;
     const onChange = () => {
       // The app's own steps through the history can land on the screen already shown: stay put.
       if (window.location.hash === shown) return;
@@ -33,7 +34,10 @@ export function useRoute(): Route {
       window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', onChange);
+    onChange();
     return () => window.removeEventListener('hashchange', onChange);
+    // Only once: later changes come in through the listener.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return useMemo(() => parse(hash), [hash]);
 }
