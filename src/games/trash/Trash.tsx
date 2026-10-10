@@ -14,7 +14,7 @@ const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 /** How long the card in play takes to glide in. */
 const FLY_MS = 300;
 /** A card that's no use at all goes onto the discard pile by itself after this long. */
-const AUTO_TOSS_MS = 1100;
+const AUTO_TOSS_MS = 800;
 
 export default function Trash({ players, exit }: GameProps) {
   const known = useApp().knows('trash');
