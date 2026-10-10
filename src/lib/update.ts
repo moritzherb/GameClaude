@@ -61,7 +61,9 @@ async function check() {
   } catch {
     /* storage blocked: reload anyway */
   }
-  location.reload();
+  // A new address for the page, so no cache on the way can hand out the old copy again.
+  const build = online.replace(/^.*\/|\.js$/g, '');
+  location.replace(`${location.pathname}?build=${encodeURIComponent(build)}${location.hash}`);
 }
 
 export function watchForUpdates() {
