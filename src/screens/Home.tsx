@@ -130,11 +130,16 @@ export default function Home() {
           </div>
           <div className="recent-row">
             {recent.map((g) => (
-              <Tap key={g.id} className="recent-tile" style={{ '--card-bg': g.color } as CSSProperties} onClick={() => navigate(paths.game(g.id))}>
+              <Tap
+                key={g.id}
+                className="recent-tile"
+                style={{ '--card-bg': g.color } as CSSProperties}
+                ariaLabel={t(g.name)}
+                onClick={() => navigate(paths.game(g.id))}
+              >
                 <span className="recent-emoji" aria-hidden>
                   {g.emoji}
                 </span>
-                <span className="recent-name">{t(g.name)}</span>
               </Tap>
             ))}
           </div>
