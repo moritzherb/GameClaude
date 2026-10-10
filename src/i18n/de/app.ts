@@ -93,8 +93,6 @@ const app: Record<string, string> = {
   // Room: start
   'Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.':
     'Alle treten mit dem eigenen Handy demselben Raum bei. Ein Handy ist der Host, die anderen scannen den QR-Code oder tippen den Raumcode ein.',
-  'This preview can’t connect phones. Open the prost! website (moritzherb.github.io/GameClaude) to play together.':
-    'In dieser Vorschau können sich keine Handys verbinden. Öffne die prost!-Website (moritzherb.github.io/GameClaude), um zusammen zu spielen.',
   'New avatar': 'Neuer Avatar',
   'Your name': 'Dein Name',
   'Type your name': 'Gib deinen Namen ein',
@@ -105,8 +103,8 @@ const app: Record<string, string> = {
   CODE: 'CODE',
   'Room code': 'Raumcode',
   Join: 'Beitreten',
-  'Phones connect directly to each other. Works on the same Wi-Fi or on mobile data. Keep the app open on the host phone.':
-    'Die Handys verbinden sich direkt miteinander. Klappt im selben WLAN oder mit mobilen Daten. Lass die App auf dem Host-Handy offen.',
+  'Works on any network, Wi-Fi or mobile data, even when the phones are on different ones. Keep the app open on the host phone.':
+    'Klappt in jedem Netz, WLAN oder mobile Daten, auch wenn die Handys in verschiedenen sind. Lass die App auf dem Host-Handy offen.',
 
   // Room: lobby
   'Opening the room…': 'Raum wird geöffnet…',
@@ -212,8 +210,8 @@ const app: Record<string, string> = {
   'Back to the start': 'Zurück zum Start',
   'Waiting for the host to start a new game…': 'Warte, bis der Host ein neues Spiel startet…',
   '📱 Each on their own phone': '📱 Jeder auf seinem Handy',
-  'Couldn’t reach the host’s phone. Put both phones on the same Wi-Fi (or both on mobile data) and try again.':
-    'Keine Verbindung zum Handy des Hosts. Verbinde beide Handys mit demselben WLAN (oder beide mit mobilen Daten) und versuch es nochmal.',
+  'Couldn’t reach the host’s phone. Make sure the app is open on it, then try again.':
+    'Keine Verbindung zum Handy des Hosts. Schau, dass die App dort offen ist, und versuch es nochmal.',
 };
 
 export default app;

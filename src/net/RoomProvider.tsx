@@ -1,9 +1,9 @@
-import Peer, { type DataConnection, type PeerError, type PeerOptions } from 'peerjs';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { load } from '../lib/storage';
 import { newRoomCode, peerIdFor, type Member, type Profile, type ToGuest, type ToHost } from './protocol';
+import { DataConnection, Peer, type PeerError } from './relay';
 import { forgetSavedGames } from './saved';
 
 export type RoomStatus = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'error' | 'closed';
@@ -77,47 +77,14 @@ function savedRoom(): SavedRoom | null {
   }
 }
 
-/**
- * Optional own signalling server (used for local testing). Without it, PeerJS uses its
- * free public cloud server. Phones then talk to each other directly over WebRTC.
- */
-function peerOptions(): PeerOptions {
-  const env = import.meta.env;
-  // Ways for two phones to find each other across different networks (STUN), and relays for
-  // when they can't talk directly, e.g. one on Wi-Fi and one on mobile data (TURN).
-  const config: RTCConfiguration = {
-    iceServers: [
-      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
-      { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
-      {
-        urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'],
-        username: 'openrelayproject',
-        credential: 'openrelayproject',
-      },
-    ],
-  };
-  if (!env.VITE_PEER_HOST) return { debug: 0, config };
-  return {
-    host: env.VITE_PEER_HOST,
-    port: Number(env.VITE_PEER_PORT || 443),
-    path: env.VITE_PEER_PATH || '/',
-    secure: env.VITE_PEER_SECURE !== 'false',
-    debug: 0,
-    config,
-  };
-}
+/** Optional own message servers (used for local testing); otherwise the public ones in relay.ts. */
+const servers = (import.meta.env.VITE_RELAY_SERVERS as string | undefined)?.split(',').filter(Boolean);
 
-function friendlyError(err: PeerError<string>, code: string | null) {
+function friendlyError(err: PeerError, code: string | null) {
   switch (err.type) {
     case 'peer-unavailable':
       return t('No room with code {code}. Check the code or ask the host to open the room again.', { code: code ?? '' });
-    case 'browser-incompatible':
-    case 'webrtc':
-      return t('This browser can’t connect phones. Open the app in Safari or Chrome (not inside another app).');
     case 'network':
-    case 'server-error':
-    case 'socket-error':
-    case 'socket-closed':
       return t('No connection to the room server. Check your internet and try again.');
     default:
       return t('Something went wrong with the connection. Try again.');
@@ -207,7 +174,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       }
       codeRef.current = roomCode;
       setCode(roomCode);
-      const p = new Peer(peerIdFor(roomCode), peerOptions());
+      const p = new Peer({ id: peerIdFor(roomCode), owner: profile.clientId, servers });
       peer.current = p;
 
       // 'open' comes again after every reconnect to the signalling server (the guests' links stay
@@ -272,7 +239,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
           } else host(profile);
           return;
         }
-        if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error') {
+        if (err.type === 'network') {
           if (membersRef.current.length) return; // room already running; 'disconnected' handles it
         }
         saveRoom(null);
@@ -295,7 +262,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     if (p.disconnected) p.reconnect();
     // A try that never got through is dropped before the next one.
     if (toHost.current && !toHost.current.open) toHost.current.close();
-    const conn = p.connect(peerIdFor(roomCode), { reliable: true });
+    const conn = p.connect(peerIdFor(roomCode));
     toHost.current = conn;
 
     conn.on('open', () => {
@@ -357,7 +324,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setStatus('connecting');
       setMessage(null);
       setAllMembers([]);
-      const p = new Peer(peerOptions());
+      const p = new Peer({ servers });
       peer.current = p;
       p.on('open', connectToHost);
       // No answer from the host for a while: try again a couple of times, then say what's wrong
@@ -378,7 +345,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (late) {
-          fail(t('Couldn’t reach the host’s phone. Put both phones on the same Wi-Fi (or both on mobile data) and try again.'));
+          fail(t('Couldn’t reach the host’s phone. Make sure the app is open on it, then try again.'));
           return;
         }
         connectToHost();
@@ -394,7 +361,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
           scheduleRetry(); // host is briefly gone (phone locked): keep trying
           return;
         }
-        if (everConnected.current && (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error')) {
+        if (everConnected.current && (err.type === 'network')) {
           scheduleRetry();
           return;
         }

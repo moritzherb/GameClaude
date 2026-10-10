@@ -26,8 +26,9 @@ Source: GitHub Actions*. Pull requests run the tests and the build (`.github/wor
 ## Play together (phones connected)
 
 One phone hosts a room and shows a 4-letter code and a QR code; the others scan it or type the code.
-Phones talk directly to each other over WebRTC ([PeerJS](https://peerjs.com)); the free public PeerJS server
-only helps them find each other. The host phone is in charge: guests send to the host, the host sends to
+Phones pass their messages through free public MQTT servers over WebSocket (`src/net/relay.ts`, a tiny
+client in `src/net/mqtt.ts`), so it works whatever network each phone is on. Every phone connects to two
+servers, so one being down doesn't stop the room. The host phone is in charge: guests send to the host, the host sends to
 one or all guests (`src/net/RoomProvider.tsx`, `useRoom()`).
 
 - Guests that drop out (phone locked, Wi-Fi switch) reconnect automatically; a reloaded tab rejoins its room.
@@ -37,10 +38,11 @@ one or all guests (`src/net/RoomProvider.tsx`, `useRoom()`).
   from the room (`room.startGame(id)`) and every phone opens it. See `hose-runter/` for the pattern: the host
   keeps the real state and sends each phone only its own view.
 
-To test locally without internet, run your own PeerJS server and build against it:
+To test locally without internet, run your own MQTT server with WebSocket support (e.g. Mosquitto or
+`aedes` + `ws`) and build against it (comma-separated, any number):
 
 ```bash
-VITE_PEER_HOST=127.0.0.1 VITE_PEER_PORT=9000 VITE_PEER_PATH=/myapp VITE_PEER_SECURE=false npm run build
+VITE_RELAY_SERVERS=ws://127.0.0.1:9001,ws://127.0.0.1:9002 npm run build
 ```
 
 ## How it's organised
