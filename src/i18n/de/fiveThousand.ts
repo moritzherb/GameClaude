@@ -49,8 +49,6 @@ const fiveThousand: Record<string, string> = {
   'All 5 back in the cup 🔥': 'Alle 5 nochmal 🔥',
   'Roll 1 die again': 'Mit 1 Würfel weiter',
   'Roll {n} again': 'Mit {n} Würfeln weiter',
-  'Stop · bank {n}': 'Stopp · {n} gutschreiben',
-  'Stop from 500 · {n} to go': 'Stopp ab 500 · noch {n}',
 
   // End of a turn
   '+{n} banked': '+{n} gutgeschrieben',
@@ -73,6 +71,9 @@ const fiveThousand: Record<string, string> = {
   'If a roll brings exactly what you need, you’ve won, without picking anything.': 'Bringt ein Wurf genau die fehlenden Punkte, hast du gewonnen – ohne etwas auszuwählen.',
   'The roll is worth {value}, you needed {need}.': 'Der Wurf bringt {value}, dir fehlten {need}.',
   'Show the standings': 'Zum Endstand',
+  Bank: 'Sichern',
+  'From 500': 'Ab 500',
+  '{n} to go': 'noch {n}',
 };
 
 export default fiveThousand;
