@@ -20,8 +20,16 @@ export function save<T>(key: string, value: T) {
 }
 
 /** useState that survives a page reload (and a drunk thumb closing the tab). */
-export function usePersistentState<T>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => load(key, fallback));
+export function usePersistentState<T>(key: string, fallback: T, clean?: (raw: unknown) => T) {
+  // `clean` turns whatever is stored (maybe damaged, maybe from an old version) into a usable value.
+  const [value, setValue] = useState<T>(() => {
+    const raw = load<unknown>(key, fallback);
+    try {
+      return clean ? clean(raw) : (raw as T);
+    } catch {
+      return fallback;
+    }
+  });
   useEffect(() => save(key, value), [key, value]);
   return [value, setValue] as const;
 }

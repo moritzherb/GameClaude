@@ -369,7 +369,7 @@ function TurnVerdict({ g, name }: { g: Game; name: string }) {
   const end = g.end!;
   const score = fmt(g.scores[g.current]);
   if (end.kind === 'banked') {
-    const firstIn = g.scores[g.current] === end.gained;
+    const firstIn = !!end.first;
     return (
       <div className="bd-result correct">
         <span className="bd-result-emoji">💰</span>

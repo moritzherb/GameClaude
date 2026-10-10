@@ -8,6 +8,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useQueuedSend, useResync } from '../../net/sync';
+import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { draw, HAND_MAX, markReady, newGame, overDrawn, play, putBack, sortHand, stuck, targetFor, turnOver, type Game, type Who } from './logic';
 
@@ -64,9 +65,10 @@ function useSpeed() {
   const isHost = room.role === 'host';
   const myId = room.myId ?? '';
   const { onGame, sendTo, sendToHost, members, code } = room;
-  const [hostMatch, setHostMatch] = useState<Match | null>(null);
+  const [hostMatch, setHostMatch] = useState<Match | null>(() => savedFor<Match>(STORE_KEY, 'match', isHost, code));
   const [guestMatch, setGuestMatch] = useState<Match | null>(null);
-  const restored = useRef(false);
+  // Already read above when the room code is known; otherwise once it is.
+  const restored = useRef(isHost && !!code);
 
   useEffect(() => {
     if (!isHost || !code || restored.current) return;

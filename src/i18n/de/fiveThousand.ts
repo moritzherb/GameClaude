@@ -65,7 +65,7 @@ const fiveThousand: Record<string, string> = {
   'Exactly 5000!': 'Genau 5000!',
   'Final scores': 'Endstand',
   'A triple is exactly three of a kind: four or five of a kind are none (four Kings are just four Kings). A triple only goes aside as a whole.':
-    'Ein Drilling sind genau drei Gleiche: Vier oder fünf Gleiche sind keiner (vier Könige sind einfach vier Könige). Ein Drilling kommt nur komplett zur Seite.',
+    'Ein Drilling sind genau drei gleiche Würfel – vier oder fünf gleiche zählen nicht als Drilling (vier Könige sind einfach vier Könige). Ein Drilling kommt nur komplett zur Seite.',
   'First to exactly 5000 wins. If a roll brings more than you still need, the turn is over and its points are gone: you can’t take just part of it.':
     'Wer zuerst genau 5000 hat, gewinnt. Bringt ein Wurf mehr, als dir noch fehlt, ist der Zug vorbei und seine Punkte sind weg – du kannst nicht nur einen Teil davon nehmen.',
   'If a roll brings exactly what you need, you’ve won, without picking anything.': 'Bringt ein Wurf genau die fehlenden Punkte, hast du gewonnen – ohne etwas auszuwählen.',

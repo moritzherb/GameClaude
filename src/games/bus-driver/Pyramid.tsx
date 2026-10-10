@@ -83,7 +83,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           {!known && (
             <p className="lead">
               {t(
-                'We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end drives the bus.',
+                'We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Whoever has the most cards left at the end drives the bus.',
               )}
             </p>
           )}

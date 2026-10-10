@@ -3,7 +3,7 @@ const busDriver: Record<string, string> = {
   /* ---------- Game info and rules (index.ts) ---------- */
   'Bus Driver': 'Busfahrer',
   'Guess your cards. Pray you don’t drive the bus.': 'Rate deine Karten. Und bete, dass du nicht Bus fahren musst.',
-  'Pick a dealer. Play starts left of them, the dealer goes last.': 'Bestimmt einen Geber. Links von ihm geht’s los, der Geber ist als Letztes dran.',
+  'Pick a dealer. Play starts left of them, the dealer goes last.': 'Bestimmt einen Geber. Links von ihm geht’s los, der Geber ist als Letzter dran.',
   'Each round, everyone answers one question about the next card, then keeps that card.':
     'Jede Runde beantwortet jeder eine Frage zur nächsten Karte und behält sie danach.',
   'Round 1 · Red or black?': 'Runde 1 · Rot oder Schwarz?',
@@ -12,14 +12,14 @@ const busDriver: Record<string, string> = {
   'Round 3 · Inside or outside your first two cards? Hitting one of their values: drink double.':
     'Runde 3 · Innerhalb oder außerhalb deiner ersten beiden Karten? Triffst du genau einen ihrer Werte: doppelt trinken.',
   'Round 4 · Will the suit be one you already have?': 'Runde 4 · Hast du die Farbe schon auf der Hand?',
-  'Risky mode adds Round 5 · Guess the exact suit.': 'Der Risiko-Modus legt Runde 5 drauf · Tipp die genaue Farbe.',
+  'Risky mode adds Round 5 · Guess the exact suit.': 'Der Risiko-Modus legt Runde 5 drauf · Rate die genaue Farbe.',
   'Right: give out as many sips as the round number. Wrong: drink them yourself.':
     'Richtig: Verteil so viele Schlucke wie die Rundennummer. Falsch: Trink sie selbst.',
   'Part 2 · The rest of the deck becomes a pyramid (5-4-3-2-1 by default), flipped from the bottom row up.':
     'Teil 2 · Der Rest vom Deck wird zur Pyramide (standardmäßig 5-4-3-2-1) und wird von der untersten Reihe nach oben aufgedeckt.',
   'Hold the same value as the flipped card? Lay it down and give out that row’s sips: 1-2-3-4-5, Tipsy ×2 (1-2-4-8-16) or Tipsy +2 (2-4-6-8-10). Two matching cards = give out twice.':
     'Du hast den Wert der aufgedeckten Karte? Leg deine Karte drauf und verteil die Schlucke der Reihe: 1-2-3-4-5, Beschwipst ×2 (1-2-4-8-16) oder Beschwipst +2 (2-4-6-8-10). Zwei passende Karten = doppelt verteilen.',
-  'Most cards left at the end drives the bus. A tie goes to a tiebreaker: everyone gets a new card, the deck is flipped, and whoever’s value shows up last drives.':
+  'Whoever has the most cards left at the end drives the bus. A tie goes to a tiebreaker: everyone gets a new card, the deck is flipped, and whoever’s value shows up last drives.':
     'Wer am Ende die meisten Karten hat, fährt Bus. Bei Gleichstand gibt’s ein Stechen: Jeder bekommt eine neue Karte, der Stapel wird aufgedeckt, und wessen Wert zuletzt kommt, der fährt.',
   'Part 3 · The bus ride, three roads to pick from:': 'Teil 3 · Die Busfahrt, drei Strecken zur Wahl:',
   'Classic: all five questions (including Which suit?) on a fresh deck, all in a row.':
@@ -43,7 +43,7 @@ const busDriver: Record<string, string> = {
   'Got it already?': 'Hast du die Farbe schon?',
   'Will the next card have a suit you already hold?': 'Hat die nächste Karte eine Farbe, die du schon auf der Hand hast?',
   'Which suit?': 'Welche Farbe?',
-  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant! Tipp die genaue Farbe der nächsten Karte. Chance: eins zu vier.',
+  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant! Rate die genaue Farbe der nächsten Karte. Chance: eins zu vier.',
 
   /* ---------- Answer buttons ---------- */
   Red: 'Rot',
@@ -62,11 +62,11 @@ const busDriver: Record<string, string> = {
   /* ---------- Part 1 ---------- */
   'Part 1 · Collect your cards': 'Teil 1 · Karten sammeln',
   'Who’s dealing?': 'Wer gibt?',
-  'Play starts left of the dealer. The dealer plays too and goes last.': 'Links vom Geber geht’s los. Der Geber spielt mit und ist als Letztes dran.',
+  'Play starts left of the dealer. The dealer plays too and goes last.': 'Links vom Geber geht’s los. Der Geber spielt mit und ist als Letzter dran.',
   Dealer: 'Geber',
   'Pick a random dealer': 'Zufälligen Geber wählen',
   'Risky mode': 'Risiko-Modus',
-  'Adds a 5th question: guess the exact suit.': 'Mit 5. Frage: Tipp die genaue Farbe.',
+  'Adds a 5th question: guess the exact suit.': 'Mit 5. Frage: Rate die genaue Farbe.',
   'Deal the cards': 'Karten austeilen',
   'Part 1 done': 'Teil 1 geschafft',
   'Everyone’s got their cards.': 'Alle haben ihre Karten.',
@@ -97,7 +97,7 @@ const busDriver: Record<string, string> = {
   /* ---------- Part 2: pyramid ---------- */
   'Part 2 · The pyramid': 'Teil 2 · Die Pyramide',
   'Get rid of your cards.': 'Werd deine Karten los.',
-  'We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Most cards left at the end drives the bus.':
+  'We flip the pyramid from the bottom row up. Got the same value? Your card goes on it and you give out sips. Whoever has the most cards left at the end drives the bus.':
     'Wir decken die Pyramide von unten nach oben auf. Gleicher Wert? Deine Karte kommt drauf und du verteilst Schlucke. Wer am Ende die meisten Karten hat, fährt Bus.',
   'Pyramid size': 'Größe der Pyramide',
   '{rows} rows, {cards} cards': '{rows} Reihen, {cards} Karten',
@@ -125,8 +125,8 @@ const busDriver: Record<string, string> = {
   'Row {row} · {n} sips per card': 'Reihe {row} · {n} Schlucke pro Karte',
   'lays {cards}': 'legt {cards}',
   'gives out': 'verteilt',
-  'Nobody has an {rank}.': 'Keiner hat {rank}.',
-  'Nobody has a {rank}.': 'Keiner hat {rank}.',
+  'Nobody has an {rank}.': '{rank} hat keiner.',
+  'Nobody has a {rank}.': '{rank} hat keiner.',
   'Flip the first card. Bottom row, left to right.': 'Deck die erste Karte auf. Unterste Reihe, von links nach rechts.',
   Hands: 'Karten auf der Hand',
   'All gone 🎉': 'Alle weg 🎉',
@@ -139,14 +139,14 @@ const busDriver: Record<string, string> = {
   'Tiebreaker · round {n}': 'Stechen · Runde {n}',
   'Whose card shows up first?': 'Wessen Karte kommt zuerst?',
   'Everyone got a new card. We flip the deck: when your value shows up, you’re safe. The last one left drives the bus.':
-    'Jeder hat eine neue Karte. Wir decken den Stapel auf: Kommt dein Wert, bist du raus. Wer als Letztes übrig bleibt, fährt Bus.',
+    'Jeder hat eine neue Karte. Wir decken den Stapel auf: Kommt dein Wert, bist du raus. Wer als Letzter übrig bleibt, fährt Bus.',
   '{name} drives the bus!': '{name} fährt Bus!',
   'Still tied!': 'Immer noch Gleichstand!',
   '{names} go again with new cards.': '{names} müssen nochmal ran – mit neuen Karten.',
-  'Safe ✓': 'Raus ✓',
+  'Safe ✓': 'Sicher ✓',
   'Waiting…': 'Wartet…',
-  '{rank}! {names} are safe.': '{rank}! {names} sind raus.',
-  '{rank}! {names} is safe.': '{rank}! {names} ist raus.',
+  '{rank}! {names} are safe.': '{rank}! {names} sind sicher.',
+  '{rank}! {names} is safe.': '{rank}! {names} ist sicher.',
   '{rank}. Nobody’s safe.': '{rank}. Keiner kommt davon.',
   'Ready?': 'Bereit?',
   '{n} flipped': '{n} aufgedeckt',

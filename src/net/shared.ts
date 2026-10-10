@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { load, save } from '../lib/storage';
 import { useRoom } from './RoomProvider';
+import { savedFor } from './saved';
 import { useFreshMoves, useMoveNumbers, useQueuedSend, useResync } from './sync';
 
 /*
@@ -34,7 +35,9 @@ export function useShared<S>(key: string, initial: S) {
   const { onGame, sendTo, sendToHost, members, code } = room;
   const isMsg = (d: unknown): d is Msg<S> => typeof d === 'object' && d !== null && (d as Msg<S>).g === key;
 
-  const [box, setBoxState] = useState<Box<S>>({ s: initial, v: 0 });
+  const storeKey = `${key}:shared`;
+  // The host's saved copy (after a reload, or coming back to the game), read right away.
+  const [box, setBoxState] = useState<Box<S>>(() => savedFor<Box<S>>(storeKey, 'box', isHost, code) ?? { s: initial, v: 0 });
   // Messages can arrive faster than React renders: always build on the latest state.
   const boxRef = useRef(box);
   const setBox = useCallback((b: Box<S>) => {
@@ -45,8 +48,7 @@ export function useShared<S>(key: string, initial: S) {
   /* ---------- Host ---------- */
   const acks = useRef(new Map<string, number>());
   const fresh = useFreshMoves();
-  const storeKey = `${key}:shared`;
-  const restored = useRef(false);
+  const restored = useRef(isHost && !!code);
   useEffect(() => {
     if (!isHost || !code || restored.current) return;
     restored.current = true;
@@ -87,13 +89,18 @@ export function useShared<S>(key: string, initial: S) {
   /* ---------- Guest ---------- */
   const nextMove = useMoveNumbers();
   const lastSent = useRef(0);
+  // The latest move the host hasn't confirmed yet: sent again with every resync, so a move made
+  // while the host was away (reloading, on another screen) still gets there.
+  const pending = useRef<Msg<S> | null>(null);
   const queued = useQueuedSend(sendToHost);
   useEffect(() => {
     if (isHost) return;
     return onGame((data) => {
       if (!isMsg(data) || data.type !== 'state') return;
-      // Still waiting for the host to hear this phone's latest move: keep showing it.
+      // Still waiting for the host to hear this phone's latest move: keep showing it (it's sent
+      // again with the next resync).
       if (data.ack < lastSent.current) return;
+      pending.current = null;
       const cur = boxRef.current;
       if (data.v === cur.v && JSON.stringify(data.s) === JSON.stringify(cur.s)) return;
       setBox({ s: data.s, v: data.v });
@@ -101,7 +108,10 @@ export function useShared<S>(key: string, initial: S) {
     // isMsg only depends on key.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHost, onGame, setBox]);
-  const ask = useCallback(() => sendToHost({ g: key, type: 'sync' } satisfies Msg<S>), [sendToHost, key]);
+  const ask = useCallback(() => {
+    if (pending.current) sendToHost(pending.current);
+    sendToHost({ g: key, type: 'sync' } satisfies Msg<S>);
+  }, [sendToHost, key]);
   useResync(!isHost, ask);
 
   const set: SetShared<S> = useCallback(
@@ -113,7 +123,9 @@ export function useShared<S>(key: string, initial: S) {
       if (isHost) return;
       const n = nextMove();
       lastSent.current = n;
-      queued({ g: key, type: 'set', s, base: cur.v, n } satisfies Msg<S>);
+      const msg: Msg<S> = { g: key, type: 'set', s, base: cur.v, n };
+      pending.current = msg;
+      queued(msg);
     },
     [isHost, key, nextMove, queued, setBox],
   );

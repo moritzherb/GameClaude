@@ -25,8 +25,15 @@ export default function Home() {
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   const [rolling, setRolling] = useState<GameDefinition | null>(null);
   const timer = useRef<number>(undefined);
+  const landing = useRef<number>(undefined);
 
-  useEffect(() => () => window.clearInterval(timer.current), []);
+  useEffect(
+    () => () => {
+      window.clearInterval(timer.current);
+      window.clearTimeout(landing.current);
+    },
+    [],
+  );
 
   // The headline follows the night, so check the clock every minute while home is open.
   const [hour, setHour] = useState(() => new Date().getHours());
@@ -51,7 +58,8 @@ export default function Home() {
       if (n >= 14) {
         window.clearInterval(timer.current);
         setRolling(target);
-        setTimeout(() => {
+        // Cleared if home goes away meanwhile (e.g. the host starts a game for the room).
+        landing.current = window.setTimeout(() => {
           setRolling(null);
           navigate(paths.game(target.id));
         }, 650);

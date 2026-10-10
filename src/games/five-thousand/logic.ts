@@ -79,7 +79,7 @@ export type Phase = 'roll' | 'choose' | 'over';
 export type TurnEnd =
   | { kind: 'nothing'; lost: number; penalty: number }
   | { kind: 'too-much'; lost: number; /** What the roll was worth, and what was still needed. */ value: number; need: number }
-  | { kind: 'banked'; gained: number }
+  | { kind: 'banked'; gained: number; /** This bank got the player in (their first 500+). */ first?: boolean }
   | { kind: 'won' };
 
 export interface Game {
@@ -181,7 +181,7 @@ export function setAside(g: Game, picked: number[], then: 'roll' | 'stop', rand:
       phase: 'over',
       scores: g.scores.map((s, i) => (i === me ? s + points : s)),
       opened: g.opened.map((o, i) => o || i === me),
-      end: { kind: 'banked', gained: points },
+      end: { kind: 'banked', gained: points, first: !g.opened[me] },
     };
   }
   return roll({ ...g, turn, phase: 'roll' }, rand);

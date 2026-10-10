@@ -120,7 +120,7 @@ describe('5000 turns', () => {
     g = setAside(g, [0, 1], 'roll', dice(14, 9, 10, 11, 12));
     expect(g.turn.points).toBe(450);
     g = setAside(g, [0], 'stop');
-    expect(g.end).toEqual({ kind: 'banked', gained: 550 });
+    expect(g.end).toEqual({ kind: 'banked', gained: 550, first: true });
     expect(g.opened[0]).toBe(true);
     expect(g.scores[0]).toBe(550);
   });

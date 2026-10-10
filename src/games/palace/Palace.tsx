@@ -9,6 +9,7 @@ import { randomInt } from '../../lib/random';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/sync';
+import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { apply, deal, fits, MAX_PLAYERS, MIN_PLAYERS, same, TABLE, viewFor, type Act, type Entry, type Game, type Need, type View } from './logic';
 
@@ -59,11 +60,12 @@ function usePalace() {
   const isHost = room.role === 'host';
   const myId = room.myId ?? '';
   const { onGame, sendTo, sendToHost, members, code } = room;
-  const [match, setMatch] = useState<Match | null>(null);
+  const [match, setMatch] = useState<Match | null>(() => savedFor<Match>(STORE_KEY, 'match', isHost, code));
   const [guestView, setGuestView] = useState<PhoneView | null>(null);
   const matchRef = useRef(match);
   matchRef.current = match;
-  const restored = useRef(false);
+  // Already read above when the room code is known; otherwise once it is.
+  const restored = useRef(isHost && !!code);
 
   useEffect(() => {
     if (!isHost || !code || restored.current) return;
@@ -84,6 +86,8 @@ function usePalace() {
     window.clearTimeout(pending.current?.timer);
     pending.current = null;
   };
+  // Leaving the game: no more resending.
+  useEffect(() => () => clearPending(), []);
   const sendPending = useCallback(() => {
     const p = pending.current;
     if (!p) return;

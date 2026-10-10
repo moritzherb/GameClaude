@@ -8,6 +8,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/sync';
+import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import {
   applyAction,
@@ -48,11 +49,12 @@ function useHoseRunter() {
   const myId = room.myId ?? '';
   const { onGame, sendTo, sendToHost, members, code } = room;
 
-  const [state, setState] = useState<GameState | null>(null);
+  const [state, setState] = useState<GameState | null>(() => savedFor<GameState>(STORE_KEY, 'state', isHost, code));
   const [guestView, setGuestView] = useState<PlayerView | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
-  const restored = useRef(false);
+  // Already read above when the room code is known; otherwise once it is.
+  const restored = useRef(isHost && !!code);
 
   // Host: the game survives a reload of the host phone (the room reopens with the same code).
   useEffect(() => {
@@ -74,6 +76,8 @@ function useHoseRunter() {
     window.clearTimeout(pending.current?.timer);
     pending.current = null;
   };
+  // Leaving the game: no more resending.
+  useEffect(() => () => clearPending(), []);
   const sendPending = useCallback(() => {
     const p = pending.current;
     if (!p) return;
@@ -167,7 +171,7 @@ export default function HoseRunter() {
         <div className="hr">
           <div className="connecting">
             <div className="connecting-emoji">👖</div>
-            <h2 className="bd-title">{t('Pants down')}</h2>
+            <h2 className="bd-title">{t('Pants Down')}</h2>
             <p className="lead">{host ? t('Waiting for {name} to deal…', { name: host.name }) : t('Waiting for the host to deal…')}</p>
           </div>
         </div>
@@ -179,7 +183,7 @@ export default function HoseRunter() {
       <div className="hr">
         <div className="bd-head">
           <span className="kicker">{t('This phone is the table')}</span>
-          <h2 className="bd-title big">{t('Pants down')}</h2>
+          <h2 className="bd-title big">{t('Pants Down')}</h2>
           {!known && (
             <p className="lead">
               {t('Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {lives} lives each.', { lives: START_LIVES })}
@@ -456,7 +460,7 @@ function CardButton({ card, selected, disabled, onClick }: { card: Card; selecte
 }
 
 function ScoreBadge({ score }: { score: Score }) {
-  const label = { feuer: `🔥 ${t('Fire')}`, hose: `👖 ${t('Pants down')}`, triple: '30½', suit: '' }[score.kind];
+  const label = { feuer: `🔥 ${t('Fire')}`, hose: `👖 ${t('Pants Down')}`, triple: '30½', suit: '' }[score.kind];
   return label ? <span className={`hr-badge ${score.kind}`}>{label}</span> : null;
 }
 

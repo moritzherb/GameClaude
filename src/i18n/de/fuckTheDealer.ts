@@ -38,7 +38,7 @@ const fuckTheDealer: Record<string, string> = {
   // Table phone
   'Pass the deck phone to {name}.': 'Gib das Deck-Handy an {name}.',
   'First guess: {rank}. Last try!': 'Erster Tipp: {rank}. Letzter Versuch!',
-  '{name} has the deck and types in the guess.': '{name} hat das Deck und tippt den Tipp ein.',
+  '{name} has the deck and types in the guess.': '{name} hat das Deck und gibt den Tipp ein.',
 
   // Deck phone
   'Game over. The table shows who drank what.': 'Spiel vorbei. Der Tisch zeigt, wer wie viel getrunken hat.',
@@ -58,8 +58,8 @@ const fuckTheDealer: Record<string, string> = {
   'Dealer · 1 sip so far': 'Dealer · bisher 1 Schluck',
   'Dealer: hold to peek': 'Dealer: halten zum Spicken',
   'Which card?': 'Welche Karte?',
-  'It’s higher ⬆': 'Darüber ⬆',
-  'It’s lower ⬇': 'Darunter ⬇',
+  'It’s higher ⬆': 'Höher ⬆',
+  'It’s lower ⬇': 'Tiefer ⬇',
   'Your guess: {rank}. Last try!': 'Dein Tipp: {rank}. Letzter Versuch!',
   'Guess the value, the suit doesn’t matter.': 'Rate den Wert, die Farbe ist egal.',
   '{n} of 3 misses in a row': '{n} von 3 Fehlversuchen in Folge',
@@ -76,7 +76,7 @@ const fuckTheDealer: Record<string, string> = {
 
   // Dealer change and game over
   'Dealer change': 'Dealerwechsel',
-  '{name} drinks up': '{name} trinkt aus',
+  '{name} drinks up': '{name} muss trinken',
   '{name} gets away': '{name} kommt davon',
   sip: 'Schluck',
   sips: 'Schlucke',
