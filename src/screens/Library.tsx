@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import GameCard from '../components/GameCard';
 import TopBar from '../components/TopBar';
 import { GAMES } from '../games/registry';
@@ -6,6 +6,7 @@ import { CATEGORIES, type CategoryId } from '../games/types';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
+import { arrivedBySwipe } from '../lib/swipeLeft';
 
 export default function Library({ category }: { category: CategoryId | null }) {
   // Playable games first, "coming soon" ones after.
@@ -13,6 +14,8 @@ export default function Library({ category }: { category: CategoryId | null }) {
     (a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online),
   );
   const current = CATEGORIES.find((c) => c.id === category);
+  // Opened by swiping left on home: slide in from the right.
+  const [slideIn] = useState(arrivedBySwipe);
 
   // Bring the picked category into view. Only the strip scrolls: scrollIntoView would also move
   // the whole page on iPhones.
@@ -48,7 +51,7 @@ export default function Library({ category }: { category: CategoryId | null }) {
   );
 
   return (
-    <main className="screen library">
+    <main className={`screen library${slideIn ? ' slide-in' : ''}`}>
       <TopBar onBack={() => navigate(paths.home)} />
       <h1 className="large-title">{current ? t(current.label) : t('All games')}</h1>
 

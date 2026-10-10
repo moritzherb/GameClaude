@@ -196,7 +196,7 @@ const app: Record<string, string> = {
   'Hit SPIN.': 'Drück auf DREHEN.',
   'The wheel lands on someone.': 'Das Rad bleibt bei jemandem stehen.',
   'That person does whatever the screen says.': 'Wen’s trifft, macht, was auf dem Bildschirm steht.',
-  'No arguing with the machine. 🤖': 'Mit der Maschine wird nicht diskutiert. 🤖',
+  'No arguing with the machine.': 'Mit der Maschine wird nicht diskutiert.',
   'Rolling…': 'Es dreht sich…',
   'Who’s gonna drink?': 'Wer muss trinken?',
   'Spin again': 'Nochmal drehen',
@@ -204,12 +204,6 @@ const app: Record<string, string> = {
   'Drink {n} sip': 'Trink {n} Schluck',
   'Drink {n} sips': 'Trink {n} Schlucke',
   'Give out {n} sips': 'Verteil {n} Schlucke',
-  'Finish your drink! 🫗': 'Trink aus! 🫗',
-  'Everybody drinks! 🍻': 'Alle trinken! 🍻',
-  'Pick a drinking buddy 🤝': 'Such dir einen Trinkpartner 🤝',
-  'Safe! Drink water 💧': 'Glück gehabt! Trink Wasser 💧',
-  'Drink with no hands 🙌': 'Trink ohne Hände 🙌',
-  'Waterfall – you start! 🌊': 'Wasserfall – du fängst an! 🌊',
 
   // A screen crashed (ErrorBoundary)
   'Oops, something spilled.': 'Hoppla, da ist was verschüttet.',
