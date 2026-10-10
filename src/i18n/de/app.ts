@@ -212,6 +212,8 @@ const app: Record<string, string> = {
   'Back to the start': 'Zurück zum Start',
   'Waiting for the host to start a new game…': 'Warte, bis der Host ein neues Spiel startet…',
   '📱 Each on their own phone': '📱 Jeder auf seinem Handy',
+  'Couldn’t reach the host’s phone. Put both phones on the same Wi-Fi (or both on mobile data) and try again.':
+    'Keine Verbindung zum Handy des Hosts. Verbinde beide Handys mit demselben WLAN (oder beide mit mobilen Daten) und versuch es nochmal.',
 };
 
 export default app;
