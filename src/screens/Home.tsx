@@ -4,12 +4,13 @@ import { ChevronIcon, PlusIcon, SettingsIcon } from '../components/Icons';
 import Logo from '../components/Logo';
 import Tap from '../components/Tap';
 import { RoundButton } from '../components/TopBar';
-import { GAMES, playableGames } from '../games/registry';
+import { findGame, GAMES, playableGames } from '../games/registry';
 import type { GameDefinition } from '../games/types';
 import { buzz, sfx } from '../lib/fx';
 import { getLang, t } from '../i18n';
 import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
+import { recentGames } from '../lib/recent';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -55,6 +56,9 @@ export default function Home() {
       }
     }, 90);
   };
+
+  // The last three games played on this phone, newest first.
+  const [recent] = useState(() => recentGames().map(findGame).filter((g): g is GameDefinition => !!g));
 
   const featured = [...GAMES].sort((a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online)).slice(0, 8);
 
@@ -118,6 +122,24 @@ export default function Home() {
           </span>
         </Tap>
       </div>
+
+      {recent.length > 0 && (
+        <section className="section fade-up">
+          <div className="section-head">
+            <h2 className="section-title">{t('Last played')}</h2>
+          </div>
+          <div className="recent-row">
+            {recent.map((g) => (
+              <Tap key={g.id} className="recent-tile" style={{ '--card-bg': g.color } as CSSProperties} onClick={() => navigate(paths.game(g.id))}>
+                <span className="recent-emoji" aria-hidden>
+                  {g.emoji}
+                </span>
+                <span className="recent-name">{t(g.name)}</span>
+              </Tap>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-head">

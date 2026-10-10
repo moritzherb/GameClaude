@@ -4,6 +4,7 @@ import { CloseIcon, PlusIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
+import { unfill } from '../lib/noAutofill';
 import { navigate, paths } from '../lib/router';
 import { MAX_PLAYERS, useApp } from '../state/AppState';
 
@@ -46,10 +47,11 @@ export default function Players({ next }: { next: string | null }) {
         <input
           ref={input}
           className="add-player-input"
+          type="search"
           name="prost-player"
           value={name}
           maxLength={18}
-          placeholder={full ? t('Party’s full') : t('Add a name')}
+          placeholder={full ? t('Party’s full') : unfill(t('Add a name'))}
           disabled={full}
           enterKeyHint="done"
           autoComplete="off"
