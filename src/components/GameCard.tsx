@@ -11,7 +11,16 @@ export function gameNumber(game: GameDefinition) {
 }
 
 /** A game as a ticket: coloured stub with its number, perforation, then the details. */
-export default function GameCard({ game, onOpen }: { game: GameDefinition; onOpen: () => void }) {
+export default function GameCard({
+  game,
+  onOpen,
+  tagline = true,
+}: {
+  game: GameDefinition;
+  onOpen: () => void;
+  /** The one-line description under the name (the home screen leaves it out). */
+  tagline?: boolean;
+}) {
   const soon = !game.component && !game.online;
   const players = playerRange(game);
   return (
@@ -31,7 +40,7 @@ export default function GameCard({ game, onOpen }: { game: GameDefinition; onOpe
       </span>
       <span className="ticket-body">
         <span className="ticket-name">{t(game.name)}</span>
-        <span className="ticket-tagline">{t(game.tagline)}</span>
+        {tagline && <span className="ticket-tagline">{t(game.tagline)}</span>}
         <span className="ticket-meta">
           <span>{t('{n} players', { n: players })}</span>
           <Intensity level={game.intensity} showLabel />

@@ -161,7 +161,7 @@ export default function Home() {
         </div>
         <div className="ticket-list">
           {featured.map((g) => (
-            <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
+            <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
           ))}
         </div>
       </section>
