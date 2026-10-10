@@ -224,6 +224,7 @@ export default function KingsCup({ players, exit }: GameProps) {
           <div className="add-player">
             <input
               id="kc-rule"
+              name="prost-rule"
               className="add-player-input"
               value={ruleDraft}
               maxLength={80}

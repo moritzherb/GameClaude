@@ -41,7 +41,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
     setNameMissing(true);
     sfx.boo();
     buzz([30, 40, 30]);
-    document.getElementById('room-name')?.focus();
+    document.getElementById('room-nick')?.focus();
     return false;
   };
 
@@ -70,15 +70,18 @@ function Start({ joinCode }: { joinCode: string | null }) {
         <Tap className="player-avatar me-avatar" style={{ '--chip': profile.color } as CSSProperties} onClick={rerollAvatar} ariaLabel={t('New avatar')}>
           {profile.avatar}
         </Tap>
-        <label className="me-field" htmlFor="room-name">
+        <label className="me-field" htmlFor="room-nick">
           <span className="me-label">{t('Your name')}</span>
           <input
-            id="room-name"
+            id="room-nick"
+            name="prost-nick"
             className={`me-input${nameMissing && !profile.name.trim() ? ' missing' : ''}`}
             value={profile.name}
             maxLength={18}
             placeholder={t('Type your name')}
             autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
             autoCapitalize="words"
             enterKeyHint="done"
             onChange={(e) => setName(e.target.value)}
@@ -114,6 +117,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
           >
             <input
               id="room-code"
+              name="prost-room"
               className="code-input"
               value={code}
               placeholder={t('CODE')}

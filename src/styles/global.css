@@ -116,6 +116,17 @@ body {
 
 body {
   overflow-x: hidden;
+  /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* Opened from the iPhone home screen, 100vh/100dvh come up short by the status
