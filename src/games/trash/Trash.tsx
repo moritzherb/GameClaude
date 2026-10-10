@@ -225,7 +225,7 @@ export default function Trash({ players, exit }: GameProps) {
           </span>
           <span className="tr-status-text">{status}</span>
           {msg ? (
-            <span key={msg} className="tr-status-hint warn">
+            <span key={msg} className="tr-status-hint tr-warn">
               {msg}
             </span>
           ) : (

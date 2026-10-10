@@ -3395,8 +3395,13 @@ h3 {
   position: static;
   transform: none;
   width: auto;
-  margin-top: 10px;
+  margin-top: 14px;
   font-size: 0.85rem;
+}
+
+/* The card on top is exactly as big as the deck underneath, so the deck never reaches the hint. */
+.ftd-deck.big .pcard {
+  --cw: var(--dw);
 }
 
 /* The table phone fills the screen: the piles grow with the room it has. */
@@ -4710,6 +4715,11 @@ h3 {
   min-width: 0;
 }
 
+/* Never squeeze the lines into each other: the middle row grows instead. */
+.tr-status > * {
+  flex-shrink: 0;
+}
+
 .tr-status-name {
   font-size: 1.2rem;
   line-height: 1;
@@ -4719,7 +4729,7 @@ h3 {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.15rem;
-  line-height: 1.05;
+  line-height: 1.1;
   text-transform: uppercase;
 }
 
@@ -4729,7 +4739,7 @@ h3 {
   line-height: 1.3;
 }
 
-.tr-status-hint.warn {
+.tr-status-hint.tr-warn {
   color: var(--bad);
   font-weight: 600;
   animation: pop-in 0.3s var(--spring);
