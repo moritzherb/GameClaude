@@ -8,6 +8,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/sync';
+import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import {
   applyAction,
@@ -48,11 +49,12 @@ function useHoseRunter() {
   const myId = room.myId ?? '';
   const { onGame, sendTo, sendToHost, members, code } = room;
 
-  const [state, setState] = useState<GameState | null>(null);
+  const [state, setState] = useState<GameState | null>(() => savedFor<GameState>(STORE_KEY, 'state', isHost, code));
   const [guestView, setGuestView] = useState<PlayerView | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
-  const restored = useRef(false);
+  // Already read above when the room code is known; otherwise once it is.
+  const restored = useRef(isHost && !!code);
 
   // Host: the game survives a reload of the host phone (the room reopens with the same code).
   useEffect(() => {
@@ -74,6 +76,8 @@ function useHoseRunter() {
     window.clearTimeout(pending.current?.timer);
     pending.current = null;
   };
+  // Leaving the game: no more resending.
+  useEffect(() => () => clearPending(), []);
   const sendPending = useCallback(() => {
     const p = pending.current;
     if (!p) return;

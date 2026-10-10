@@ -49,6 +49,7 @@ export default function Players({ next }: { next: string | null }) {
           className="add-player-input"
           type="search"
           name="prost-player"
+          aria-label={t('Add player')}
           value={name}
           maxLength={18}
           placeholder={full ? t('Party’s full') : unfill(t('Add a name'))}

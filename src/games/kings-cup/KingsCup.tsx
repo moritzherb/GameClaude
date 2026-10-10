@@ -84,6 +84,9 @@ export default function KingsCup({ players, exit }: GameProps) {
       current: card,
       kings,
       questionMasterId: card.value === 12 ? player.id : s.questionMasterId,
+      // A new 8 or Jack ends the old mates or rule (the drawer may set new ones, or not).
+      mate: card.value === 8 ? null : s.mate,
+      rule: card.value === 11 ? null : s.rule,
       cupBy: isKing(card) && kings === 4 ? player.id : s.cupBy,
     });
     timer.current = window.setTimeout(() => {

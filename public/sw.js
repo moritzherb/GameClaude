@@ -1,5 +1,5 @@
 // Tiny offline cache: party basements rarely have good Wi-Fi.
-const CACHE = 'prost-v6';
+const CACHE = 'prost-v7';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -10,6 +10,16 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.claim()),
   );
 });
+
+/** Drop cached build files the current page no longer uses (each deploy brings new ones). */
+function pruneOldAssets(html) {
+  const used = new Set([...html.matchAll(/(?:src|href)="([^"]*\/assets\/[^"]+)"/g)].map((m) => new URL(m[1], self.location.href).href));
+  if (!used.size) return;
+  caches.open(CACHE).then((c) =>
+    // Only the page's own script and styles (fonts are loaded by the styles and rarely change).
+    c.keys().then((reqs) => Promise.all(reqs.filter((r) => /\/assets\/[^/]+\.(js|css)$/.test(r.url) && !used.has(r.url)).map((r) => c.delete(r)))),
+  );
+}
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -23,8 +33,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(request, copy));
+          // Only a good page replaces the offline copy (never an error page).
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(request, copy));
+            res.clone().text().then(pruneOldAssets, () => {});
+          }
           return res;
         })
         .catch(() => caches.match(request).then((r) => r || caches.match('./'))),

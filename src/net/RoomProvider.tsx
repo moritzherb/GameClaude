@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { load } from '../lib/storage';
 import { newRoomCode, peerIdFor, type Member, type Profile, type ToGuest, type ToHost } from './protocol';
+import { forgetSavedGames } from './saved';
 
 export type RoomStatus = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'error' | 'closed';
 
@@ -143,6 +144,8 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const listeners = useRef(new Set<GameListener>());
   const retry = useRef<{ timer?: number; since?: number }>({});
   const joinTimer = useRef<number | undefined>(undefined);
+  /** Reopening our own room after a reload: the next try (cancelled when leaving). */
+  const hostTimer = useRef<number | undefined>(undefined);
   const everConnected = useRef(false);
   const cheersKey = useRef(0);
 
@@ -162,13 +165,18 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const teardown = useCallback(() => {
     window.clearTimeout(retry.current.timer);
     window.clearTimeout(joinTimer.current);
+    window.clearTimeout(hostTimer.current);
     retry.current = {};
-    toHost.current?.close();
+    // Forget them before closing: a closing link reports 'close' at once, and that must not look
+    // like a lost connection to reconnect.
+    const conn = toHost.current;
+    const p = peer.current;
     toHost.current = null;
+    peer.current = null;
+    conn?.close();
     guests.current.forEach((c) => c.close());
     guests.current.clear();
-    peer.current?.destroy();
-    peer.current = null;
+    p?.destroy();
   }, []);
 
   /* ---------------- Host ---------------- */
@@ -192,6 +200,8 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setMessage(null);
       const roomCode = preferredCode ?? newRoomCode();
       if (!preferredCode) {
+        // A new room: nobody in it yet (the host joins on 'open').
+        setAllMembers([]);
         gameRef.current = null;
         setGame(null);
       }
@@ -200,10 +210,14 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       const p = new Peer(peerIdFor(roomCode), peerOptions());
       peer.current = p;
 
+      // 'open' comes again after every reconnect to the signalling server (the guests' links stay
+      // up meanwhile): only the first one starts the member list.
       p.on('open', () => {
         setStatus('open');
         saveRoom({ role: 'host', code: roomCode, game: gameRef.current });
-        setAllMembers([{ id: profile.clientId, name: profile.name, avatar: profile.avatar, color: profile.color, host: true, online: true }]);
+        if (!membersRef.current.some((m) => m.host)) {
+          setAllMembers([{ id: profile.clientId, name: profile.name, avatar: profile.avatar, color: profile.color, host: true, online: true }]);
+        }
       });
 
       p.on('connection', (conn) => {
@@ -254,7 +268,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
           // on it). Otherwise someone else has this code: pick another one.
           if (preferredCode && attempt < HOST_SAME_CODE_TRIES) {
             p.destroy();
-            window.setTimeout(() => host(profile, preferredCode, attempt + 1), 2000);
+            hostTimer.current = window.setTimeout(() => host(profile, preferredCode, attempt + 1), 2000);
           } else host(profile);
           return;
         }
@@ -276,6 +290,8 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     const roomCode = codeRef.current;
     const profile = profileRef.current;
     if (!p || p.destroyed || !roomCode || !profile) return;
+    // Already linked to the host ('open' comes again after a reconnect to the signalling server).
+    if (toHost.current?.open) return;
     if (p.disconnected) p.reconnect();
     // A try that never got through is dropped before the next one.
     if (toHost.current && !toHost.current.open) toHost.current.close();
@@ -456,6 +472,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       },
       endGame: () => {
         if (role !== 'host') return;
+        forgetSavedGames();
         gameRef.current = null;
         setGame(null);
         saveRoom({ role: 'host', code: codeRef.current ?? '' });

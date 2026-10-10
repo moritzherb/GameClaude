@@ -39,6 +39,7 @@
   --c-teal: #36d1c4;
   --good: #34c76a;
   --bad: #ff4f45;
+  --bad-ink: #c42b22; /* red that reads as text on the light background */
   --card-red: #e3263a;
   --card-black: #16171a;
 
@@ -67,6 +68,7 @@
     --muted: #a29f93;
     --line: #2f302a;
     --accent-ink: #c5f235;
+    --bad-ink: #ff4f45;
     --accent-soft: rgba(197, 242, 53, 0.14);
     --hero-bg: #f3efe4;
     --hero-fg: #10110e;
@@ -84,6 +86,7 @@
   --muted: #a29f93;
   --line: #2f302a;
   --accent-ink: #c5f235;
+  --bad-ink: #ff4f45;
   --accent-soft: rgba(197, 242, 53, 0.14);
   --hero-bg: #f3efe4;
   --hero-fg: #10110e;
@@ -1191,7 +1194,7 @@ h3 {
   padding: 2px 6px 0;
   border: 2px solid currentColor;
   border-radius: 4px;
-  color: var(--bad);
+  color: var(--bad-ink);
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 0.95rem;
@@ -1516,7 +1519,7 @@ h3 {
 .warn {
   margin-top: -8px;
   padding-left: 4px;
-  color: var(--bad);
+  color: var(--bad-ink);
   font-size: 0.875rem;
 }
 
@@ -1586,7 +1589,7 @@ h3 {
 
 .player-remove:active {
   background: var(--surface-2);
-  color: var(--bad);
+  color: var(--bad-ink);
 }
 
 .text-btn {
@@ -1594,7 +1597,7 @@ h3 {
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
-  color: var(--bad);
+  color: var(--bad-ink);
   font-size: 0.9375rem;
 }
 
@@ -3577,6 +3580,11 @@ h3 {
   cursor: default;
 }
 
+/* Can't be the card (all four out, or the wrong side after a miss), but can still be entered. */
+.ftd-rank.unlikely {
+  opacity: 0.35;
+}
+
 .ftd-rank.crossed {
   opacity: 0.5;
   color: var(--card-red);
@@ -5198,7 +5206,7 @@ h3 {
 }
 
 .tr-status-hint.tr-warn {
-  color: var(--bad);
+  color: var(--bad-ink);
   font-weight: 600;
   animation: pop-in 0.3s var(--spring);
 }
@@ -5827,7 +5835,7 @@ h3 {
 }
 
 .hr-lives {
-  color: var(--bad);
+  color: var(--bad-ink);
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -6311,7 +6319,7 @@ h3 {
 .hr-result-note {
   margin-left: auto;
   font-weight: 700;
-  color: var(--bad);
+  color: var(--bad-ink);
 }
 
 .hr-result.winner .hr-result-note {

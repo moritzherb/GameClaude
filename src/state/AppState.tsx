@@ -45,9 +45,28 @@ interface AppState {
 
 const Ctx = createContext<AppState | null>(null);
 
+const DEFAULT_SETTINGS: Settings = { sound: true, haptics: true, bigMode: false };
+const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+
+/** Stored players, keeping only complete entries (damaged storage must never break the app). */
+function cleanPlayers(raw: unknown): Player[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (p): p is Player =>
+      isObject(p) && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.avatar === 'string' && typeof p.color === 'string',
+  );
+}
+
+/** Stored settings over the defaults (missing or damaged values fall back to them). */
+function cleanSettings(raw: unknown): Settings {
+  if (!isObject(raw)) return DEFAULT_SETTINGS;
+  const s = { ...DEFAULT_SETTINGS, ...raw } as Settings;
+  return { ...s, known: Array.isArray(s.known) ? s.known.filter((k) => typeof k === 'string') : undefined };
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [players, setPlayers] = usePersistentState<Player[]>('players', []);
-  const [settings, setSettings] = usePersistentState<Settings>('settings', { sound: true, haptics: true, bigMode: false });
+  const [players, setPlayers] = usePersistentState<Player[]>('players', [], cleanPlayers);
+  const [settings, setSettings] = usePersistentState<Settings>('settings', DEFAULT_SETTINGS, cleanSettings);
   const [ageConfirmed, setAgeConfirmed] = usePersistentState('age-ok', false);
   // Set before the children render, so every t() call below uses the chosen language.
   setLang(settings.lang ?? 'en');

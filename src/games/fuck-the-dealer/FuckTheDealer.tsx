@@ -13,6 +13,7 @@ import { navigate, paths } from '../../lib/router';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useQueuedSend, useResync } from '../../net/sync';
+import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { direction, guess, MISSES_TO_PASS, newGame, next, nextGuesser, possible, takeOver, VALUES, type Game } from './logic';
 
@@ -38,11 +39,16 @@ interface Session {
   game: Game;
 }
 
-type Act = { t: 'guess'; value: number } | { t: 'next' } | { t: 'take' };
+/** `at`: the state the move was made on (see stamp), so a double tap or a tap made on an old state is dropped. */
+type Act = ({ t: 'guess'; value: number } | { t: 'next' } | { t: 'take' }) & { at?: string };
+
+/** Where the game stands: a move made on another state than this one is stale. */
+const stamp = (g: Game) => [g.deck.length, g.firstGuess ?? '-', g.result ? 'r' : '-', g.handover ? 'h' : '-', g.dealer, g.guesser].join('|');
 type Msg = { g: 'ftd'; type: 'state'; session: Session | null } | { g: 'ftd'; type: 'act'; act: Act } | { g: 'ftd'; type: 'sync' };
 const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (d as Msg).g === 'ftd';
 
 function apply(s: Session, act: Act): Session {
+  if (act.at && act.at !== stamp(s.game)) return s;
   const g = act.t === 'guess' ? guess(s.game, act.value) : act.t === 'next' ? next(s.game, s.seats.length) : takeOver(s.game);
   return g === s.game ? s : { ...s, game: g };
 }
@@ -53,9 +59,10 @@ function useFtd() {
   const isHost = room.role === 'host';
   const myId = room.myId ?? '';
   const { onGame, sendTo, sendToHost, members, code } = room;
-  const [hostSession, setHostSession] = useState<Session | null>(null);
+  const [hostSession, setHostSession] = useState<Session | null>(() => savedFor<Session>(STORE_KEY, 'session', isHost, code));
   const [guestSession, setGuestSession] = useState<Session | null>(null);
-  const restored = useRef(false);
+  // Already read above when the room code is known; otherwise once it is.
+  const restored = useRef(isHost && !!code);
 
   useEffect(() => {
     if (!isHost || !code || restored.current) return;
@@ -390,7 +397,7 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
         ) : (
           <div className="sticky-action">
             <p className="ftd-pass">{t('Pass this phone to {name}.', { name: dealer.name })}</p>
-            <BigButton size="xl" onClick={() => act({ t: 'take' })}>
+            <BigButton size="xl" onClick={() => act({ t: 'take', at: stamp(g) })}>
               {t('{name} takes the deck', { name: dealer.name })}
             </BigButton>
           </div>
@@ -443,13 +450,15 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
               <button
                 key={v}
                 type="button"
-                className={`ftd-rank${v === g.firstGuess ? ' crossed' : ''}`}
-                disabled={!possible(g, v)}
+                className={`ftd-rank${v === g.firstGuess ? ' crossed' : ''}${possible(g, v) ? '' : ' unlikely'}`}
+                // Whatever the guesser says can be entered (a wrong-side second guess is a miss);
+                // values that can't be the card are only dimmed.
+                disabled={v === g.firstGuess}
                 onClick={() => {
                   sfx.tick();
                   buzz(15);
                   setPeek(false);
-                  act({ t: 'guess', value: v });
+                  act({ t: 'guess', value: v, at: stamp(g) });
                 }}
               >
                 {rankLabel(v)}
@@ -461,7 +470,7 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
         <>
           <Verdict result={r} dealer={dealer.name} lastOfThree={lastOfThree} />
           <div className="sticky-action">
-            <BigButton size="xl" variant={lastOfThree || !g.deck.length ? 'primary' : 'light'} onClick={() => act({ t: 'next' })}>
+            <BigButton size="xl" variant={lastOfThree || !g.deck.length ? 'primary' : 'light'} onClick={() => act({ t: 'next', at: stamp(g) })}>
               {!g.deck.length ? (
                 t('Finish game')
               ) : lastOfThree ? (
