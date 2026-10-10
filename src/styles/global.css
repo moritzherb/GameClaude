@@ -114,6 +114,23 @@ body {
   overscroll-behavior-y: none;
 }
 
+/*
+ * No scroll bars anywhere in the app: not for the page, not inside a game. Hidden bars take no
+ * room either, so the page stays centred (and 100vw is the whole width).
+ */
+html,
+* {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 body {
   overflow-x: hidden;
   /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
