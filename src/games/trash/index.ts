@@ -1,6 +1,7 @@
 import { tx } from '../../i18n';
 import type { GameDefinition } from '../types';
 import Trash from './Trash';
+import TrashOnline from './TrashOnline';
 
 const trash: GameDefinition = {
   id: 'trash',
@@ -26,6 +27,8 @@ const trash: GameDefinition = {
     tx('Win a round with just one card and you win the game.'),
   ],
   component: Trash,
+  online: TrashOnline,
+  phones: tx('Also on 2 phones'),
 };
 
 export default trash;

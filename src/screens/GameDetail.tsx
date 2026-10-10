@@ -53,8 +53,8 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
         <RulesList rules={game.rules} />
       </section>
 
-      <div className="sticky-action">
-        {game.online ? (
+      <div className={`sticky-action${game.online && game.component ? ' stack' : ''}`}>
+        {game.online && !game.component ? (
           <OnlineStart game={game} />
         ) : !game.component ? (
           <BigButton variant="glass" disabled>
@@ -73,17 +73,23 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
             {t('Start game')}
           </BigButton>
         )}
+        {/* Also playable with every player on their own phone. */}
+        {game.online && game.component && <OnlineStart game={game} second />}
       </div>
     </main>
   );
 }
 
 /** Games for every phone start from a room: the host starts them for everyone. */
-function OnlineStart({ game }: { game: GameDefinition }) {
+function OnlineStart({ game, second }: { game: GameDefinition; /** Next to the one-phone start: smaller. */ second?: boolean }) {
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   if (!inRoom) {
-    return (
+    return second ? (
+      <BigButton variant="glass" onClick={() => navigate(paths.room)}>
+        {t('📱 Each on their own phone')}
+      </BigButton>
+    ) : (
       <BigButton size="xl" onClick={() => navigate(paths.room)}>
         {t('Play together')}
       </BigButton>
@@ -105,7 +111,8 @@ function OnlineStart({ game }: { game: GameDefinition }) {
   }
   return (
     <BigButton
-      size="xl"
+      size={second ? undefined : 'xl'}
+      variant={second ? 'glass' : undefined}
       onClick={() => {
         room.startGame(game.id);
         navigate(paths.online(game.id));

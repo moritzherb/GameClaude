@@ -3649,7 +3649,8 @@ h3 {
 
 /* Stop and bank: a round button in the table's bottom-right corner (dice never land there). */
 .fk-bank {
-  --bank: min(26cqw, 36cqh);
+  /* Small, but never too small to read (BANK in FiveThousand.tsx keeps the dice clear of it). */
+  --bank: max(58px, min(19cqw, 27cqh));
   position: absolute;
   right: 3cqw;
   bottom: 3cqw;
@@ -3687,7 +3688,7 @@ h3 {
 }
 
 .fk-bank-icon {
-  font-size: calc(var(--bank) * 0.3);
+  font-size: calc(var(--bank) * 0.28);
 }
 
 .fk-bank:disabled .fk-bank-icon {
@@ -3698,14 +3699,14 @@ h3 {
 .fk-bank-text {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: calc(var(--bank) * 0.15);
+  font-size: max(10px, calc(var(--bank) * 0.15));
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 .fk-bank-amount {
   font-weight: 700;
-  font-size: calc(var(--bank) * 0.13);
+  font-size: max(10px, calc(var(--bank) * 0.13));
   text-align: center;
   max-width: 90%;
 }
@@ -3875,6 +3876,14 @@ h3 {
   font-weight: 600;
   font-size: 1rem;
   line-height: 1.35;
+}
+
+.fk-wait {
+  margin: 0;
+  padding: 14px 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 .fk-pick-row .text-btn {

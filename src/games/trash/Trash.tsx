@@ -32,27 +32,7 @@ export default function Trash({ players, exit }: GameProps) {
   const [pair, setPair] = useState<string[]>(() => players.slice(0, 2).map((p) => p.id));
   const [dealer, setDealer] = useState<Who>(() => pick([0, 1] as Who[]));
   const [g, setG] = useState<Game | null>(null);
-  const [nope, setNope] = useState(0);
   const two = pair.map((id) => players.find((p) => p.id === id)).filter((p): p is Player => !!p);
-
-  // What the held card is good for: its own face-down slot, any face-down slot (a Jack), swapping out
-  // a Jack that lies in its slot, or nothing (onto the discard pile). The player moves it there:
-  // drag it (or tap the spot).
-  const hand = g?.hand;
-  const kind = kindOf(g);
-  // Where the held card comes from, so it can glide from there into the hand spot.
-  const [fly, setFly] = useState<{ x: number; y: number } | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-  useEffect(() => {
-    if (!msg) return;
-    const id = window.setTimeout(() => setMsg(null), 1800);
-    return () => window.clearTimeout(id);
-  }, [msg]);
-
-  const phase = g?.phase;
-  useEffect(() => {
-    if (phase === 'round-over' || phase === 'game-over') celebrate();
-  }, [phase]);
 
   /* ---------- Setup ---------- */
   if (!g || two.length < 2) {
@@ -100,19 +80,90 @@ export default function Trash({ players, exit }: GameProps) {
     );
   }
 
-  const me = two[g.turn];
+  return <TrashTable g={g} setG={setG} two={two} known={known} onAgain={() => setG(null)} exit={exit} />;
+}
+
+/**
+ * The table. On one phone (`me` left out) both players share it and the middle turns to whoever's
+ * turn it is. In a room every phone shows its own player at the bottom (`me`, null for phones that
+ * only watch) and only lets that player move on their turn.
+ */
+export function TrashTable({
+  g,
+  setG,
+  two,
+  me,
+  known,
+  onAgain,
+  exit,
+}: {
+  g: Game;
+  setG: (g: Game) => void;
+  two: Player[];
+  me?: Who | null;
+  known: boolean;
+  /** Back to the start for a new game; left out on phones that can't start one. */
+  onAgain?: () => void;
+  exit?: () => void;
+}) {
+  const [nope, setNope] = useState(0);
+  const local = me === undefined;
+  const mine = local || me === g.turn;
+  const bottom: Who = local ? 0 : (me ?? 0);
+  const top: Who = bottom === 0 ? 1 : 0;
+  // On one phone the middle turns to the player opposite; on their own phone nobody needs that.
+  const rotated = local && g.turn === 1;
+
+  // What the held card is good for: its own face-down slot, any face-down slot (a Jack), swapping out
+  // a Jack that lies in its slot, or nothing (onto the discard pile). The player moves it there:
+  // drag it (or tap the spot).
+  const hand = g.hand;
+  const kind = kindOf(g);
+  // Where the held card comes from, so it can glide from there into the hand spot.
+  const [fly, setFly] = useState<{ x: number; y: number } | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    if (!msg) return;
+    const id = window.setTimeout(() => setMsg(null), 1800);
+    return () => window.clearTimeout(id);
+  }, [msg]);
+
+  // Confetti, except on the phone of the one who lost.
+  const phase = g.phase;
+  const lost = !local && me != null && g.winner != null && g.winner !== me;
+  useEffect(() => {
+    if (phase !== 'round-over' && phase !== 'game-over') return;
+    if (lost) sfx.boo();
+    else celebrate();
+  }, [phase, lost]);
+
+  const player = two[g.turn];
+  // A move on this phone: the card glides from where it was touched. A move from the other phone:
+  // work out where the card in play came from (the stock, the discard pile or a slot).
+  const own = useRef(false);
+  const play = (next: Game) => {
+    own.current = true;
+    setG(next);
+  };
+  const [seen, setSeen] = useState(g);
+  if (seen !== g) {
+    setSeen(g);
+    if (!own.current) setFly(remoteFly(seen, g));
+    own.current = false;
+  }
   const from = (el: Element | null) => {
     const r = el?.getBoundingClientRect();
     setFly(r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null);
   };
   const tapStock = (el: Element) => {
-    if (g.phase !== 'draw') return;
+    if (g.phase !== 'draw' || !mine) return;
     sfx.tick();
     buzz(10);
     from(el);
-    setG(draw(g));
+    play(draw(g));
   };
   const tapDiscard = (el: Element) => {
+    if (!mine) return;
     if (g.phase === 'place') {
       dropOnDiscard();
       return;
@@ -127,7 +178,7 @@ export default function Trash({ players, exit }: GameProps) {
     }
     sfx.tick();
     from(el);
-    setG(next);
+    play(next);
   };
   const miss = (text: string) => {
     buzz([30, 30, 30]);
@@ -141,7 +192,7 @@ export default function Trash({ players, exit }: GameProps) {
   const dropOnSlot = (who: Who, i: number, el: Element | null, base: Game = g) => {
     const card = base.hand;
     const k = kindOf(base);
-    if (base.phase !== 'place' || !card) return false;
+    if (base.phase !== 'place' || !card || !mine) return false;
     if (who !== base.turn) return miss(t('That’s not your side'));
     if (k === 'toss') return miss(t('No use: drag it onto the discard pile'));
     const slot = base.sides[who][i];
@@ -155,32 +206,33 @@ export default function Trash({ players, exit }: GameProps) {
     // The card that lay there comes up into the hand spot: turning over, or the swapped-out Jack.
     from(el);
     setMsg(null);
-    setG(next);
+    play(next);
     return true;
   };
   /** The top of the discard pile dragged straight onto a slot: taken and played in one go. */
   const dragDiscard = (target: Element | null) => {
     const drop = target?.closest<HTMLElement>('[data-drop]');
-    if (g.phase !== 'draw' || !drop || drop.dataset.drop === 'discard') return false;
+    if (g.phase !== 'draw' || !mine || !drop || drop.dataset.drop === 'discard') return false;
     const taken = takeDiscard(g);
     if (taken === g) return miss(t('You can only take it if you can use it'));
     const [, who, i] = (drop.dataset.drop ?? '').split(':');
     return dropOnSlot(Number(who) as Who, Number(i), drop, taken);
   };
   const dropOnDiscard = () => {
-    if (g.phase !== 'place' || !hand) return false;
+    if (g.phase !== 'place' || !hand || !mine) return false;
     if (kind !== 'toss' && kind !== 'swap') return miss(t('You can still use this card'));
     sfx.boo();
     buzz([40, 30, 40]);
     setFly(null);
     setMsg(null);
-    setG(toss(g));
+    play(toss(g));
     return true;
   };
 
-  const status =
-    g.phase === 'draw'
-      ? t('{name}: draw a card', { name: me.name })
+  const status = !mine
+    ? t('{name}’s turn', { name: player.name })
+    : g.phase === 'draw'
+      ? t('{name}: draw a card', { name: player.name })
       : kind === 'toss'
         ? t('No use: onto the discard pile')
         : kind === 'swap'
@@ -193,12 +245,12 @@ export default function Trash({ players, exit }: GameProps) {
 
   return (
     <div className="tr fill">
-      <Board g={g} who={1} player={two[1]} flipped hint={!known} onSlot={(i, el) => dropOnSlot(1, i, el)} />
+      <Board g={g} who={top} player={two[top]} flipped={local} hint={!known && mine} onSlot={(i, el) => dropOnSlot(top, i, el)} />
 
-      <div className={`tr-middle${g.turn === 1 ? ' flipped' : ''}`}>
+      <div className={`tr-middle${rotated ? ' flipped' : ''}`}>
         <button
           type="button"
-          className={`tr-stock${g.phase === 'draw' ? ' ready' : ''}`}
+          className={`tr-stock${g.phase === 'draw' && mine ? ' ready' : ''}`}
           onClick={(e) => tapStock(e.currentTarget)}
           aria-label={t('Draw a card')}
         >
@@ -208,17 +260,17 @@ export default function Trash({ players, exit }: GameProps) {
           type="button"
           key={nope}
           data-drop="discard"
-          className={`tr-discard${nope ? ' nope' : ''}${kind === 'toss' || kind === 'swap' ? ' drop-here' : ''}`}
+          className={`tr-discard${nope ? ' nope' : ''}${mine && (kind === 'toss' || kind === 'swap') ? ' drop-here' : ''}`}
           onClick={(e) => g.phase !== 'draw' && tapDiscard(e.currentTarget)}
           aria-label={g.phase === 'place' ? t('Discard pile') : t('Take the discard')}
         >
           {g.discard.length ? (
-            g.phase === 'draw' ? (
+            g.phase === 'draw' && mine ? (
               <DragCard
                 key={`${g.discard.length}${g.turn}`}
                 className="tr-discard-card"
                 card={g.discard[g.discard.length - 1]}
-                rotated={g.turn === 1}
+                rotated={rotated}
                 onTap={(el) => tapDiscard(el)}
                 onDrop={dragDiscard}
               />
@@ -235,9 +287,9 @@ export default function Trash({ players, exit }: GameProps) {
               key={`${g.turn}${hand.value}${hand.suit}${g.discard.length}${g.stock.length}`}
               card={hand}
               useless={kind === 'toss'}
-              rotated={g.turn === 1}
+              rotated={rotated}
               fly={fly}
-              onAutoToss={kind === 'toss' ? dropOnDiscard : undefined}
+              onAutoToss={kind === 'toss' && mine ? dropOnDiscard : undefined}
               onDrop={(target) => {
                 const drop = target?.closest<HTMLElement>('[data-drop]');
                 if (!drop) return false;
@@ -251,8 +303,8 @@ export default function Trash({ players, exit }: GameProps) {
           )}
         </span>
         <span className="tr-status">
-          <span className="tr-status-name" style={{ color: me.color }}>
-            {me.avatar}
+          <span className="tr-status-name" style={{ color: player.color }}>
+            {player.avatar}
           </span>
           <span className="tr-status-text">{status}</span>
           {msg ? (
@@ -261,6 +313,7 @@ export default function Trash({ players, exit }: GameProps) {
             </span>
           ) : (
             !known &&
+            mine &&
             g.phase === 'draw' &&
             g.round === 1 &&
             g.discard.length === 0 && <span className="tr-status-hint">{t('Tap the stock. Or the discard pile, if you can use its card.')}</span>
@@ -268,7 +321,7 @@ export default function Trash({ players, exit }: GameProps) {
         </span>
       </div>
 
-      <Board g={g} who={0} player={two[0]} hint={!known} onSlot={(i, el) => dropOnSlot(0, i, el)} />
+      <Board g={g} who={bottom} player={two[bottom]} hint={!known && mine} onSlot={(i, el) => dropOnSlot(bottom, i, el)} />
 
       {over && g.winner != null && (
         <div className="tr-over">
@@ -288,15 +341,19 @@ export default function Trash({ players, exit }: GameProps) {
               </p>
             )}
             {g.phase === 'round-over' ? (
-              <BigButton size="xl" onClick={() => setG(nextRound(g))}>
-                {t('Next round')}
-              </BigButton>
+              local || me != null ? (
+                <BigButton size="xl" onClick={() => play(nextRound(g))}>
+                  {t('Next round')}
+                </BigButton>
+              ) : null
             ) : (
               <>
-                <BigButton onClick={() => setG(null)}>{t('Play again')}</BigButton>
-                <BigButton variant="glass" onClick={exit}>
-                  {t('Back to games')}
-                </BigButton>
+                {onAgain && <BigButton onClick={onAgain}>{t('Play again')}</BigButton>}
+                {exit && (
+                  <BigButton variant="glass" onClick={exit}>
+                    {t('Back to games')}
+                  </BigButton>
+                )}
               </>
             )}
           </div>
@@ -304,6 +361,20 @@ export default function Trash({ players, exit }: GameProps) {
       )}
     </div>
   );
+}
+
+/** Where on screen the card now in play came from, worked out from the move (made on another phone). */
+function remoteFly(prev: Game, g: Game) {
+  if (!g.hand || g.phase !== 'place') return null;
+  let el: Element | null = null;
+  if (prev.phase === 'draw') el = document.querySelector(g.stock.length === prev.stock.length ? '.tr-discard' : '.tr-stock');
+  else {
+    const before = prev.sides[g.turn];
+    const i = g.sides[g.turn].findIndex((s, j) => JSON.stringify(s) !== JSON.stringify(before[j]));
+    if (i >= 0) el = document.querySelector(`[data-drop="slot:${g.turn}:${i}"]`);
+  }
+  const r = el?.getBoundingClientRect();
+  return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
 }
 
 /** One player's ten slots, A–5 on top and 6–10 below; the player opposite sees theirs upside down. */

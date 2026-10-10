@@ -1,11 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from 'react';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { useApp } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import {
   canStop,
@@ -34,16 +34,6 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const [starterId, setStarterId] = useState(() => pick(players).id);
   const [g, setG] = useState<Game | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
-  const [shaking, setShaking] = useState(false);
-  // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
-  const [podium, setPodium] = useState(false);
-  const timer = useRef<number>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  const won = g?.end?.kind === 'won';
-  useEffect(() => {
-    if (won) celebrate();
-  }, [won]);
 
   /* ---------- Setup: who starts ---------- */
   if (!g) {
@@ -79,6 +69,67 @@ export default function FiveThousand({ players, exit }: GameProps) {
     );
   }
 
+  return (
+    <FiveThousandTable
+      g={g}
+      setG={setG}
+      picked={picked}
+      setPicked={setPicked}
+      players={players}
+      known={known}
+      onAgain={() => setG(null)}
+      exit={exit}
+    />
+  );
+}
+
+/**
+ * The game once it runs. On one phone (`me` left out) the phone goes round. In a room every phone
+ * shows the same table and only the player whose turn it is (`me`) rolls and picks.
+ */
+export function FiveThousandTable({
+  g,
+  setG,
+  picked,
+  setPicked,
+  players,
+  me: seat,
+  known,
+  onAgain,
+  exit,
+}: {
+  g: Game;
+  setG: (g: Game) => void;
+  picked: number[];
+  setPicked: Dispatch<SetStateAction<number[]>>;
+  players: Player[];
+  me?: number | null;
+  known: boolean;
+  /** Back to the start for a new game; left out on phones that can't start one. */
+  onAgain?: () => void;
+  exit?: () => void;
+}) {
+  const local = seat === undefined;
+  const mine = local || seat === g.current;
+  const [shaking, setShaking] = useState(false);
+  // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
+  const [podium, setPodium] = useState(false);
+  const timer = useRef<number>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const won = g.end?.kind === 'won';
+  // Confetti, except on the phones of the ones who lost.
+  const lost = won && !local && seat != null && seat !== g.current;
+  useEffect(() => {
+    if (!won) return;
+    if (lost) sfx.boo();
+    else celebrate();
+  }, [won, lost]);
+  // A new game (started on another phone) starts without the standings.
+  useEffect(() => {
+    if (!won) setPodium(false);
+  }, [won]);
+
   const me = players[g.current];
   const score = g.scores[g.current];
   const opened = g.opened[g.current];
@@ -97,17 +148,22 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
         <Standings g={g} players={players} />
         <div className="sticky-action stack">
-          <BigButton
-            onClick={() => {
-              setPodium(false);
-              setG(null);
-            }}
-          >
-            {t('Play again')}
-          </BigButton>
-          <BigButton variant="glass" onClick={exit}>
-            {t('Back to games')}
-          </BigButton>
+          {onAgain && (
+            <BigButton
+              onClick={() => {
+                setPodium(false);
+                onAgain();
+              }}
+            >
+              {t('Play again')}
+            </BigButton>
+          )}
+          {exit && (
+            <BigButton variant="glass" onClick={exit}>
+              {t('Back to games')}
+            </BigButton>
+          )}
+          {!onAgain && !exit && <p className="lead center">{t('Waiting for the host to start a new game…')}</p>}
         </div>
       </div>
     );
@@ -115,7 +171,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
 
   /** Shake the cup for a moment, then run the move (which rolls). */
   const shake = (move: (g: Game) => Game) => {
-    if (shaking) return;
+    if (shaking || !mine) return;
     setShaking(true);
     sfx.tick();
     buzz([20, 30, 20, 30, 20]);
@@ -135,7 +191,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const counts = (f: Face) => turn.roll.filter((x) => x === f).length;
   // A triple is exactly three of a face; it only goes as a whole. Other Kings and Aces count alone.
   const inTriple = (i: number) => counts(turn.roll[i]) === 3;
-  const pickable = (i: number) => g.phase === 'choose' && (turn.roll[i] >= 13 || inTriple(i));
+  const pickable = (i: number) => mine && g.phase === 'choose' && (turn.roll[i] >= 13 || inTriple(i));
   const toggle = (i: number) => {
     if (!pickable(i)) return;
     const f = turn.roll[i];
@@ -189,10 +245,10 @@ export default function FiveThousand({ players, exit }: GameProps) {
         cup={g.phase === 'roll' || shaking}
         shaking={shaking}
         dead={g.phase === 'over' && !won}
-        hint={g.phase === 'roll' && !known ? t('Tap the cup to roll') : null}
+        hint={g.phase === 'roll' && !known && mine ? t('Tap the cup to roll') : null}
         onCup={() => g.phase === 'roll' && shake(roll)}
         bank={
-          g.phase === 'choose' && !shaking
+          g.phase === 'choose' && !shaking && mine
             ? {
                 // Below 500 and not in yet: nothing to bank, the button says how far it is.
                 text: canStop(g, total) || gain == null ? t('Bank') : t('From 500'),
@@ -220,7 +276,13 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
       )}
 
-      {g.phase === 'roll' && (
+      {!mine && (g.phase === 'roll' || g.phase === 'choose') && (
+        <div className="sticky-action">
+          <p className="fk-wait">{t('{name}’s turn', { name: me.name })}</p>
+        </div>
+      )}
+
+      {g.phase === 'roll' && mine && (
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
             {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
@@ -228,7 +290,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
       )}
 
-      {g.phase === 'choose' && (
+      {g.phase === 'choose' && mine && (
         <>
           <div className="fk-pick-row">
             <span className="fk-pick-info">
@@ -272,18 +334,20 @@ export default function FiveThousand({ players, exit }: GameProps) {
       {g.phase === 'over' && g.end && !won && (
         <>
           <TurnVerdict g={g} name={me.name} />
-          <div className="sticky-action">
-            <BigButton
-              size="xl"
-              variant="light"
-              onClick={() => {
-                setPicked([]);
-                setG(nextTurn(g));
-              }}
-            >
-              <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
-            </BigButton>
-          </div>
+          {(local || seat != null) && (
+            <div className="sticky-action">
+              <BigButton
+                size="xl"
+                variant="light"
+                onClick={() => {
+                  setPicked([]);
+                  setG(nextTurn(g));
+                }}
+              >
+                <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
+              </BigButton>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -387,28 +451,46 @@ interface Spot {
   rot: number;
 }
 
-/** Where the dice land: spread over the table without touching, each turned a little. */
+/** The bank button in the table's bottom-right corner (as in the CSS): its size and distance from the edges. */
+const BANK = { size: 19, ofAspect: 0.27, edge: 3, minPx: 58 };
+/** The die size (as in the CSS: min(15cqw, 24cqh)), in % of the table's width. */
+const dieSize = (h: number) => Math.min(15, 0.24 * h);
+
+/**
+ * Does a die at (x, y) touch the bank button? Everything in % of the table's width; h is the
+ * table's height in the same units, px the table's width in pixels.
+ */
+function onBank(x: number, y: number, h: number, px: number) {
+  const r = Math.max((BANK.minPx / Math.max(1, px)) * 100, Math.min(BANK.size, BANK.ofAspect * h)) / 2;
+  const cx = 100 - BANK.edge - r;
+  const cy = h - BANK.edge - r;
+  // Turned a little, a die reaches up to ~0.71 of its size from its middle; plus a small gap.
+  return Math.hypot(x - cx, y - cy) < r + dieSize(h) * 0.75 + 3;
+}
+
 /**
  * Where the dice land on a table of the given shape (height / width): spread out without
- * touching, each turned a little. x and y are percentages of the table's width and height.
+ * touching, each turned a little, never under the bank button. x and y are percentages of the
+ * table's width and height.
  */
-function scatter(n: number, aspect: number): Spot[] {
-  // Work in units of 1% of the width; the die is as big as the CSS makes it (min(15cqw, 24cqh)).
+function scatter(n: number, aspect: number, px: number): Spot[] {
+  // Work in units of 1% of the width.
   const h = 100 * aspect;
-  const die = Math.min(15, 0.24 * h);
+  const die = dieSize(h);
   const margin = die * 0.85;
   const spots: { x: number; y: number; rot: number }[] = [];
-  for (let tries = 0; spots.length < n && tries < 600; tries++) {
+  for (let tries = 0; spots.length < n && tries < 2000; tries++) {
     const s = { x: margin + Math.random() * (100 - 2 * margin), y: margin + Math.random() * (h - 2 * margin), rot: Math.random() * 60 - 30 };
-    // The bottom-right corner is kept free for the bank button.
-    const bank = Math.min(26, 0.36 * h) + 3;
-    if (s.x > 100 - bank - die * 0.6 && s.y > h - bank - die * 0.6) continue;
+    if (onBank(s.x, s.y, h, px)) continue;
     if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > die * 1.45)) spots.push(s);
   }
-  // Very unlucky? Fall back to a row.
-  while (spots.length < n) spots.push({ x: 12 + spots.length * 19, y: h / 2, rot: 0 });
+  // Very unlucky? Fall back to a row along the top.
+  while (spots.length < n) spots.push({ x: 12 + spots.length * 19, y: margin, rot: 0 });
   return spots.map((s) => ({ x: s.x, y: (s.y / h) * 100, rot: s.rot }));
 }
+
+/** Would any of these dice lie under the bank button on a table of this shape? */
+const anyOnBank = (spots: Spot[], aspect: number, px: number) => spots.some((s) => onBank(s.x, s.y * aspect, 100 * aspect, px));
 
 /** The table: the cup before a roll, the rolled dice after. Tap dice to set them aside. */
 function Table({
@@ -438,13 +520,34 @@ function Table({
   const dice = useRef<HTMLDivElement>(null);
   // The table takes whatever room the screen has, so the dice are spread out once its shape is known.
   const [spots, setSpots] = useState<Spot[]>([]);
+  const aspectOf = (box: HTMLElement) => box.offsetHeight / Math.max(1, box.offsetWidth);
   useLayoutEffect(() => {
     const box = dice.current;
-    if (box) setSpots(scatter(roll.length, box.offsetHeight / Math.max(1, box.offsetWidth)));
+    if (box) setSpots(scatter(roll.length, aspectOf(box), box.offsetWidth));
+  }, [roll]);
+  // The table can change shape after the roll (a row appearing below it). If that brings a die
+  // under the bank button, the dice move (without tumbling again), so every die stays tappable.
+  const settled = useRef(false);
+  useEffect(() => {
+    const box = dice.current;
+    if (!box || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      setSpots((cur) => {
+        if (cur.length !== roll.length || !anyOnBank(cur, aspectOf(box), box.offsetWidth)) return cur;
+        settled.current = true;
+        return scatter(roll.length, aspectOf(box), box.offsetWidth);
+      });
+    });
+    ro.observe(box);
+    return () => ro.disconnect();
   }, [roll]);
   // Dice tumble out of the cup (in the middle) to where they land.
   useLayoutEffect(() => {
     const box = dice.current;
+    if (settled.current) {
+      settled.current = false;
+      return;
+    }
     if (!box || !roll.length || spots.length !== roll.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const w = box.offsetWidth;
     const h = box.offsetHeight;
