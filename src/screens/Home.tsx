@@ -11,6 +11,7 @@ import { getLang, t } from '../i18n';
 import { headlineFor } from '../lib/headline';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
+import { lineup } from '../lib/lineup';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -60,7 +61,12 @@ export default function Home() {
   // The last three games played on this phone, newest first.
   const [recent] = useState(() => recentGames().map(findGame).filter((g): g is GameDefinition => !!g));
 
-  const featured = [...GAMES].sort((a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online)).slice(0, 8);
+  // A few playable games, drawn at random every few hours.
+  const [featured] = useState(() =>
+    lineup(GAMES.filter((g) => g.component || g.online).map((g) => g.id))
+      .map(findGame)
+      .filter((g): g is GameDefinition => !!g),
+  );
 
   // "Fri 09.10" / "Fr. 09.10"
   const date = new Date()
@@ -155,7 +161,7 @@ export default function Home() {
         </div>
         <div className="ticket-list">
           {featured.map((g) => (
-            <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
+            <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
           ))}
         </div>
       </section>

@@ -39,10 +39,26 @@ const ABOVE_HOME = 'prost:above-home';
 const HOME_TOP = 'prost:home-top';
 /** Marks a running game: nothing different lies behind or ahead of it. */
 const GAME_ROOT = 'prost:game';
+/** The same game in the entry above it (only there so that swiping forward goes nowhere new). */
+const GAME_TOP = 'prost:game-top';
 const isHome = (hash: string) => hash === '' || hash === '#' || hash === '#/';
 const isGame = (hash: string) => /^#\/(play|online)\//.test(hash);
 /** A game waiting to fill the bottom entry too, once the step back onto it has happened. */
 let pendingGame: string | null = null;
+/** Where to go once the step back from the top game entry onto the bottom one has happened. */
+let pendingNav: string | null = null;
+
+/** Runs once the screen has been drawn (two frames later; a timer in case frames don't come). */
+function afterPaint(fn: () => void) {
+  let done = false;
+  const once = () => {
+    if (done) return;
+    done = true;
+    fn();
+  };
+  requestAnimationFrame(() => requestAnimationFrame(once));
+  window.setTimeout(once, 250);
+}
 
 function go(hash: string, how: 'push' | 'replace', state: string | null) {
   if (how === 'push') history.pushState(state, '', hash);
@@ -56,33 +72,50 @@ function go(hash: string, how: 'push' | 'replace', state: string | null) {
  *   home                 [home]            or [home, home]
  *   any other screen     [home, screen]
  *   a running game       [game, game]      standing on the first: nothing to swipe back to
+ *   home after a game    [home, home]      standing on the first: nothing to swipe back to either
  */
 export function navigate(to: string) {
   const hash = `#${to}`;
   if (hash === window.location.hash) return;
   const state = history.state;
 
+  // On the top game entry (swiped forward a moment ago): step onto the bottom one first.
+  if (state === GAME_TOP) {
+    pendingNav = to;
+    history.back();
+    return;
+  }
+
   if (isGame(hash)) {
     if (state === GAME_ROOT) go(hash, 'replace', GAME_ROOT);
     else if (state === ABOVE_HOME || state === HOME_TOP) {
       // Top entry becomes the game, then step back and make the bottom one the game too.
-      go(hash, 'replace', GAME_ROOT);
+      go(hash, 'replace', GAME_TOP);
       pendingGame = hash;
       history.back();
     } else {
       // On the bottom entry: the game takes it and the one above, and we stand on the bottom one.
       go(hash, 'replace', GAME_ROOT);
-      history.pushState(GAME_ROOT, '', hash);
+      history.pushState(GAME_TOP, '', hash);
       history.back();
     }
     return;
   }
 
   if (state === GAME_ROOT) {
-    // Out of a game: home at the bottom again, and whatever comes next on top of it.
-    history.replaceState(null, '', '#/');
-    if (isHome(hash)) go(hash, 'push', HOME_TOP);
-    else go(hash, 'push', ABOVE_HOME);
+    // Out of a game. iPhones show the last picture of an entry while you swipe back to it, and
+    // the bottom entry last showed the game. So home goes on screen there first, then:
+    go('#/', 'replace', null);
+    afterPaint(() => {
+      // Something else happened meanwhile (a tap, a swipe): leave it.
+      if (history.state !== null || !isHome(window.location.hash)) return;
+      if (isHome(hash)) {
+        // Home: stay on the bottom entry (nothing to swipe back to), with home ahead in place of
+        // the game.
+        history.pushState(HOME_TOP, '', '#/');
+        history.back();
+      } else go(hash, 'push', ABOVE_HOME);
+    });
     return;
   }
 
@@ -97,7 +130,9 @@ export function navigate(to: string) {
 
 if (typeof window !== 'undefined') {
   // Reloaded mid-game: it stays a game entry.
-  if (isGame(window.location.hash)) history.replaceState(GAME_ROOT, '', window.location.hash);
+  if (isGame(window.location.hash)) {
+    if (history.state !== GAME_TOP) history.replaceState(GAME_ROOT, '', window.location.hash);
+  }
   // Opened straight on a deeper screen (a join link): put home underneath.
   else if (!isHome(window.location.hash) && history.state !== ABOVE_HOME) {
     const deep = window.location.hash;
@@ -112,6 +147,18 @@ if (typeof window !== 'undefined') {
       pendingGame = null;
       history.replaceState(GAME_ROOT, '', hash);
       window.dispatchEvent(new HashChangeEvent('hashchange'));
+      return;
+    }
+    // Swiped forward onto the top game entry: back onto the bottom one (it's the same game, so
+    // nothing changes on screen), so there's still nothing to swipe back to.
+    if (history.state === GAME_TOP) {
+      history.back();
+      return;
+    }
+    if (pendingNav) {
+      const to = pendingNav;
+      pendingNav = null;
+      navigate(to);
       return;
     }
     // Swiped back from a screen onto home: drop the screen ahead, so swiping forward can't

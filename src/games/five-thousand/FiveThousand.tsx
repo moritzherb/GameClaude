@@ -263,18 +263,21 @@ export function FiveThousandTable({
         }
       />
 
-      {turn.aside.length > 0 && (
-        <div className="fk-aside">
-          <span className="fk-aside-label">{t('Set aside')}</span>
-          <span className="fk-aside-dice">
-            {turn.aside.map((f, i) => (
-              <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
-                {t(FACE_LABEL[f])}
-              </span>
-            ))}
-          </span>
-        </div>
-      )}
+      {/* Always there (empty until something is set aside), so the table keeps its size. */}
+      <div className="fk-aside" aria-hidden={turn.aside.length === 0}>
+        {turn.aside.length > 0 && (
+          <>
+            <span className="fk-aside-label">{t('Set aside')}</span>
+            <span className="fk-aside-dice">
+              {turn.aside.map((f, i) => (
+                <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
+                  {t(FACE_LABEL[f])}
+                </span>
+              ))}
+            </span>
+          </>
+        )}
+      </div>
 
       {!mine && (g.phase === 'roll' || g.phase === 'choose') && (
         <div className="sticky-action">
@@ -283,11 +286,15 @@ export function FiveThousandTable({
       )}
 
       {g.phase === 'roll' && mine && (
-        <div className="sticky-action">
-          <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
-            {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
-          </BigButton>
-        </div>
+        <>
+          {/* Same room as the row under the dice while picking, so the table doesn't change size. */}
+          <div className="fk-pick-row" aria-hidden />
+          <div className="sticky-action">
+            <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
+              {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
+            </BigButton>
+          </div>
+        </>
       )}
 
       {g.phase === 'choose' && mine && (
