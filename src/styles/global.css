@@ -119,12 +119,12 @@ body {
  * room either, so the page stays centred (and 100vw is the whole width).
  */
 html,
-* {
+*:not(.library-scroll) {
   scrollbar-width: none;
 }
 
 html::-webkit-scrollbar,
-*::-webkit-scrollbar {
+*:not(.library-scroll)::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
@@ -927,6 +927,27 @@ h3 {
 .recent-emoji {
   font-size: 2.3rem;
   line-height: 1;
+}
+
+/*
+ * All games: one screen tall. Title and categories stay; only the games scroll, in their own box
+ * (the one place in the app with a scroll bar, beside the games only). The box reaches the screen's
+ * edges, so the bar sits at the edge.
+ */
+.screen.library {
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.library-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: -8px calc(-1 * var(--gutter)) 0;
+  padding: 8px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+  scrollbar-width: thin;
 }
 
 .ticket-list {

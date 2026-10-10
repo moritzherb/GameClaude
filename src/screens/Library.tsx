@@ -17,6 +17,11 @@ export default function Library({ category }: { category: CategoryId | null }) {
   // Bring the picked category into view. Only the strip scrolls: scrollIntoView would also move
   // the whole page on iPhones.
   const strip = useRef<HTMLDivElement>(null);
+  // Another category: its games from the top.
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    list.current?.scrollTo(0, 0);
+  }, [category]);
   useEffect(() => {
     const box = strip.current;
     const on = box?.querySelector<HTMLElement>('.chip.active');
@@ -43,7 +48,7 @@ export default function Library({ category }: { category: CategoryId | null }) {
   );
 
   return (
-    <main className="screen">
+    <main className="screen library">
       <TopBar onBack={() => navigate(paths.home)} />
       <h1 className="large-title">{current ? t(current.label) : t('All games')}</h1>
 
@@ -52,11 +57,14 @@ export default function Library({ category }: { category: CategoryId | null }) {
         {CATEGORIES.map((c) => chip(c.id, t(c.label)))}
       </div>
 
-      <div className="ticket-list">
-        {games.map((g) => (
-          <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
-        ))}
-        <div className="ticket-more">{t('More games on the way')}</div>
+      {/* Only the games scroll (title and categories stay put), with a scroll bar beside them. */}
+      <div className="library-scroll" ref={list}>
+        <div className="ticket-list">
+          {games.map((g) => (
+            <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
+          ))}
+          <div className="ticket-more">{t('More games on the way')}</div>
+        </div>
       </div>
     </main>
   );
