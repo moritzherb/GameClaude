@@ -797,8 +797,8 @@ h3 {
 }
 
 .chip.active {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--on-accent);
   box-shadow: none;
 }
 
