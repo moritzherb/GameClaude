@@ -451,28 +451,46 @@ interface Spot {
   rot: number;
 }
 
-/** Where the dice land: spread over the table without touching, each turned a little. */
+/** The bank button in the table's bottom-right corner (as in the CSS): its size and distance from the edges. */
+const BANK = { size: 19, ofAspect: 0.27, edge: 3, minPx: 58 };
+/** The die size (as in the CSS: min(15cqw, 24cqh)), in % of the table's width. */
+const dieSize = (h: number) => Math.min(15, 0.24 * h);
+
+/**
+ * Does a die at (x, y) touch the bank button? Everything in % of the table's width; h is the
+ * table's height in the same units, px the table's width in pixels.
+ */
+function onBank(x: number, y: number, h: number, px: number) {
+  const r = Math.max((BANK.minPx / Math.max(1, px)) * 100, Math.min(BANK.size, BANK.ofAspect * h)) / 2;
+  const cx = 100 - BANK.edge - r;
+  const cy = h - BANK.edge - r;
+  // Turned a little, a die reaches up to ~0.71 of its size from its middle; plus a small gap.
+  return Math.hypot(x - cx, y - cy) < r + dieSize(h) * 0.75 + 3;
+}
+
 /**
  * Where the dice land on a table of the given shape (height / width): spread out without
- * touching, each turned a little. x and y are percentages of the table's width and height.
+ * touching, each turned a little, never under the bank button. x and y are percentages of the
+ * table's width and height.
  */
-function scatter(n: number, aspect: number): Spot[] {
-  // Work in units of 1% of the width; the die is as big as the CSS makes it (min(15cqw, 24cqh)).
+function scatter(n: number, aspect: number, px: number): Spot[] {
+  // Work in units of 1% of the width.
   const h = 100 * aspect;
-  const die = Math.min(15, 0.24 * h);
+  const die = dieSize(h);
   const margin = die * 0.85;
   const spots: { x: number; y: number; rot: number }[] = [];
-  for (let tries = 0; spots.length < n && tries < 600; tries++) {
+  for (let tries = 0; spots.length < n && tries < 2000; tries++) {
     const s = { x: margin + Math.random() * (100 - 2 * margin), y: margin + Math.random() * (h - 2 * margin), rot: Math.random() * 60 - 30 };
-    // The bottom-right corner is kept free for the bank button.
-    const bank = Math.min(26, 0.36 * h) + 3;
-    if (s.x > 100 - bank - die * 0.6 && s.y > h - bank - die * 0.6) continue;
+    if (onBank(s.x, s.y, h, px)) continue;
     if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > die * 1.45)) spots.push(s);
   }
-  // Very unlucky? Fall back to a row.
-  while (spots.length < n) spots.push({ x: 12 + spots.length * 19, y: h / 2, rot: 0 });
+  // Very unlucky? Fall back to a row along the top.
+  while (spots.length < n) spots.push({ x: 12 + spots.length * 19, y: margin, rot: 0 });
   return spots.map((s) => ({ x: s.x, y: (s.y / h) * 100, rot: s.rot }));
 }
+
+/** Would any of these dice lie under the bank button on a table of this shape? */
+const anyOnBank = (spots: Spot[], aspect: number, px: number) => spots.some((s) => onBank(s.x, s.y * aspect, 100 * aspect, px));
 
 /** The table: the cup before a roll, the rolled dice after. Tap dice to set them aside. */
 function Table({
@@ -502,13 +520,34 @@ function Table({
   const dice = useRef<HTMLDivElement>(null);
   // The table takes whatever room the screen has, so the dice are spread out once its shape is known.
   const [spots, setSpots] = useState<Spot[]>([]);
+  const aspectOf = (box: HTMLElement) => box.offsetHeight / Math.max(1, box.offsetWidth);
   useLayoutEffect(() => {
     const box = dice.current;
-    if (box) setSpots(scatter(roll.length, box.offsetHeight / Math.max(1, box.offsetWidth)));
+    if (box) setSpots(scatter(roll.length, aspectOf(box), box.offsetWidth));
+  }, [roll]);
+  // The table can change shape after the roll (a row appearing below it). If that brings a die
+  // under the bank button, the dice move (without tumbling again), so every die stays tappable.
+  const settled = useRef(false);
+  useEffect(() => {
+    const box = dice.current;
+    if (!box || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      setSpots((cur) => {
+        if (cur.length !== roll.length || !anyOnBank(cur, aspectOf(box), box.offsetWidth)) return cur;
+        settled.current = true;
+        return scatter(roll.length, aspectOf(box), box.offsetWidth);
+      });
+    });
+    ro.observe(box);
+    return () => ro.disconnect();
   }, [roll]);
   // Dice tumble out of the cup (in the middle) to where they land.
   useLayoutEffect(() => {
     const box = dice.current;
+    if (settled.current) {
+      settled.current = false;
+      return;
+    }
     if (!box || !roll.length || spots.length !== roll.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const w = box.offsetWidth;
     const h = box.offsetHeight;
