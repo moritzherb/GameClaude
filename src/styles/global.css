@@ -3619,16 +3619,24 @@ h3 {
   z-index: 2;
 }
 
-.fk-die.dull {
-  opacity: 0.62;
+/* Dice that can't be set aside: grey from the moment they land (a colour, not a fade, so the
+   landing animation can't delay it). */
+.fk-die.dull,
+.fk-table.dead .fk-die {
+  background: linear-gradient(145deg, #cbc8bf 55%, #b6b2a8);
+  color: rgba(17, 18, 20, 0.5);
+  box-shadow:
+    inset 0 -0.6cqw 0 rgba(0, 0, 0, 0.1),
+    0 0.6cqw 1.2cqw rgba(0, 0, 0, 0.25);
+}
+
+.fk-die.dull.red,
+.fk-table.dead .fk-die.red {
+  color: color-mix(in srgb, var(--card-red) 55%, #b6b2a8);
 }
 
 .fk-die:disabled {
   cursor: default;
-}
-
-.fk-table.dead .fk-die {
-  opacity: 0.45;
 }
 
 /* Small dice in the set-aside tray. */
