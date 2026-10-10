@@ -51,6 +51,9 @@ const Ctx = createContext<RoomState | null>(null);
 
 const GUEST_RETRY_MS = 2500;
 const GUEST_GIVE_UP_MS = 90_000;
+/** Joining: try again after this long without an answer from the host, and give up after this long. */
+const JOIN_RETRY_MS = 8000;
+const JOIN_GIVE_UP_MS = 24_000;
 const HOST_SAME_CODE_TRIES = 8;
 
 // The room this tab is in, so a reload (phones do that in the background) rejoins it.
@@ -79,13 +82,27 @@ function savedRoom(): SavedRoom | null {
  */
 function peerOptions(): PeerOptions {
   const env = import.meta.env;
-  if (!env.VITE_PEER_HOST) return { debug: 0 };
+  // Ways for two phones to find each other across different networks (STUN), and relays for
+  // when they can't talk directly, e.g. one on Wi-Fi and one on mobile data (TURN).
+  const config: RTCConfiguration = {
+    iceServers: [
+      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+      { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+      {
+        urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'],
+        username: 'openrelayproject',
+        credential: 'openrelayproject',
+      },
+    ],
+  };
+  if (!env.VITE_PEER_HOST) return { debug: 0, config };
   return {
     host: env.VITE_PEER_HOST,
     port: Number(env.VITE_PEER_PORT || 443),
     path: env.VITE_PEER_PATH || '/',
     secure: env.VITE_PEER_SECURE !== 'false',
     debug: 0,
+    config,
   };
 }
 
@@ -125,6 +142,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const profileRef = useRef<Profile | null>(null);
   const listeners = useRef(new Set<GameListener>());
   const retry = useRef<{ timer?: number; since?: number }>({});
+  const joinTimer = useRef<number | undefined>(undefined);
   const everConnected = useRef(false);
   const cheersKey = useRef(0);
 
@@ -143,6 +161,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
 
   const teardown = useCallback(() => {
     window.clearTimeout(retry.current.timer);
+    window.clearTimeout(joinTimer.current);
     retry.current = {};
     toHost.current?.close();
     toHost.current = null;
@@ -258,10 +277,13 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     const profile = profileRef.current;
     if (!p || p.destroyed || !roomCode || !profile) return;
     if (p.disconnected) p.reconnect();
+    // A try that never got through is dropped before the next one.
+    if (toHost.current && !toHost.current.open) toHost.current.close();
     const conn = p.connect(peerIdFor(roomCode), { reliable: true });
     toHost.current = conn;
 
     conn.on('open', () => {
+      window.clearTimeout(joinTimer.current);
       everConnected.current = true;
       saveRoom({ role: 'guest', code: roomCode });
       retry.current.since = undefined;
@@ -322,6 +344,32 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       const p = new Peer(peerOptions());
       peer.current = p;
       p.on('open', connectToHost);
+      // No answer from the host for a while: try again a couple of times, then say what's wrong
+      // instead of waiting forever.
+      const started = Date.now();
+      const fail = (text: string) => {
+        teardown();
+        saveRoom(null);
+        setStatus('error');
+        setMessage(text);
+      };
+      const check = () => {
+        if (everConnected.current || peer.current !== p) return;
+        const late = Date.now() - started >= JOIN_GIVE_UP_MS;
+        if (!p.open) {
+          if (late) fail(t('No connection to the room server. Check your internet and try again.'));
+          else joinTimer.current = window.setTimeout(check, JOIN_RETRY_MS);
+          return;
+        }
+        if (late) {
+          fail(t('Couldn’t reach the host’s phone. Put both phones on the same Wi-Fi (or both on mobile data) and try again.'));
+          return;
+        }
+        connectToHost();
+        joinTimer.current = window.setTimeout(check, JOIN_RETRY_MS);
+      };
+      window.clearTimeout(joinTimer.current);
+      joinTimer.current = window.setTimeout(check, JOIN_RETRY_MS);
       p.on('disconnected', () => {
         if (!p.destroyed) window.setTimeout(() => !p.destroyed && p.disconnected && p.reconnect(), 1500);
       });
