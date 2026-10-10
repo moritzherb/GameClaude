@@ -216,6 +216,8 @@ const app: Record<string, string> = {
   'This screen crashed. Your players and settings are safe.': 'Dieser Bildschirm ist abgestürzt. Deine Spieler und Einstellungen sind sicher.',
   'Try again': 'Nochmal versuchen',
   'Back to the start': 'Zurück zum Start',
+  'Waiting for the host to start a new game…': 'Warte, bis der Host ein neues Spiel startet…',
+  '📱 Each on their own phone': '📱 Jeder auf seinem Handy',
 };
 
 export default app;

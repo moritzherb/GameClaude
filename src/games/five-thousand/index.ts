@@ -1,6 +1,7 @@
 import { tx } from '../../i18n';
 import type { GameDefinition } from '../types';
 import FiveThousand from './FiveThousand';
+import FiveThousandOnline from './FiveThousandOnline';
 
 const fiveThousand: GameDefinition = {
   id: 'five-thousand',
@@ -25,6 +26,8 @@ const fiveThousand: GameDefinition = {
     tx('If a roll brings exactly what you need, you’ve won, without picking anything.'),
   ],
   component: FiveThousand,
+  online: FiveThousandOnline,
+  phones: tx('Also on every phone'),
 };
 
 export default fiveThousand;

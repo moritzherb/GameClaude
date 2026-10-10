@@ -1,11 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from 'react';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { useApp } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import {
   canStop,
@@ -34,16 +34,6 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const [starterId, setStarterId] = useState(() => pick(players).id);
   const [g, setG] = useState<Game | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
-  const [shaking, setShaking] = useState(false);
-  // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
-  const [podium, setPodium] = useState(false);
-  const timer = useRef<number>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  const won = g?.end?.kind === 'won';
-  useEffect(() => {
-    if (won) celebrate();
-  }, [won]);
 
   /* ---------- Setup: who starts ---------- */
   if (!g) {
@@ -79,6 +69,67 @@ export default function FiveThousand({ players, exit }: GameProps) {
     );
   }
 
+  return (
+    <FiveThousandTable
+      g={g}
+      setG={setG}
+      picked={picked}
+      setPicked={setPicked}
+      players={players}
+      known={known}
+      onAgain={() => setG(null)}
+      exit={exit}
+    />
+  );
+}
+
+/**
+ * The game once it runs. On one phone (`me` left out) the phone goes round. In a room every phone
+ * shows the same table and only the player whose turn it is (`me`) rolls and picks.
+ */
+export function FiveThousandTable({
+  g,
+  setG,
+  picked,
+  setPicked,
+  players,
+  me: seat,
+  known,
+  onAgain,
+  exit,
+}: {
+  g: Game;
+  setG: (g: Game) => void;
+  picked: number[];
+  setPicked: Dispatch<SetStateAction<number[]>>;
+  players: Player[];
+  me?: number | null;
+  known: boolean;
+  /** Back to the start for a new game; left out on phones that can't start one. */
+  onAgain?: () => void;
+  exit?: () => void;
+}) {
+  const local = seat === undefined;
+  const mine = local || seat === g.current;
+  const [shaking, setShaking] = useState(false);
+  // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
+  const [podium, setPodium] = useState(false);
+  const timer = useRef<number>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const won = g.end?.kind === 'won';
+  // Confetti, except on the phones of the ones who lost.
+  const lost = won && !local && seat != null && seat !== g.current;
+  useEffect(() => {
+    if (!won) return;
+    if (lost) sfx.boo();
+    else celebrate();
+  }, [won, lost]);
+  // A new game (started on another phone) starts without the standings.
+  useEffect(() => {
+    if (!won) setPodium(false);
+  }, [won]);
+
   const me = players[g.current];
   const score = g.scores[g.current];
   const opened = g.opened[g.current];
@@ -97,17 +148,22 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
         <Standings g={g} players={players} />
         <div className="sticky-action stack">
-          <BigButton
-            onClick={() => {
-              setPodium(false);
-              setG(null);
-            }}
-          >
-            {t('Play again')}
-          </BigButton>
-          <BigButton variant="glass" onClick={exit}>
-            {t('Back to games')}
-          </BigButton>
+          {onAgain && (
+            <BigButton
+              onClick={() => {
+                setPodium(false);
+                onAgain();
+              }}
+            >
+              {t('Play again')}
+            </BigButton>
+          )}
+          {exit && (
+            <BigButton variant="glass" onClick={exit}>
+              {t('Back to games')}
+            </BigButton>
+          )}
+          {!onAgain && !exit && <p className="lead center">{t('Waiting for the host to start a new game…')}</p>}
         </div>
       </div>
     );
@@ -115,7 +171,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
 
   /** Shake the cup for a moment, then run the move (which rolls). */
   const shake = (move: (g: Game) => Game) => {
-    if (shaking) return;
+    if (shaking || !mine) return;
     setShaking(true);
     sfx.tick();
     buzz([20, 30, 20, 30, 20]);
@@ -135,7 +191,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const counts = (f: Face) => turn.roll.filter((x) => x === f).length;
   // A triple is exactly three of a face; it only goes as a whole. Other Kings and Aces count alone.
   const inTriple = (i: number) => counts(turn.roll[i]) === 3;
-  const pickable = (i: number) => g.phase === 'choose' && (turn.roll[i] >= 13 || inTriple(i));
+  const pickable = (i: number) => mine && g.phase === 'choose' && (turn.roll[i] >= 13 || inTriple(i));
   const toggle = (i: number) => {
     if (!pickable(i)) return;
     const f = turn.roll[i];
@@ -189,10 +245,10 @@ export default function FiveThousand({ players, exit }: GameProps) {
         cup={g.phase === 'roll' || shaking}
         shaking={shaking}
         dead={g.phase === 'over' && !won}
-        hint={g.phase === 'roll' && !known ? t('Tap the cup to roll') : null}
+        hint={g.phase === 'roll' && !known && mine ? t('Tap the cup to roll') : null}
         onCup={() => g.phase === 'roll' && shake(roll)}
         bank={
-          g.phase === 'choose' && !shaking
+          g.phase === 'choose' && !shaking && mine
             ? {
                 // Below 500 and not in yet: nothing to bank, the button says how far it is.
                 text: canStop(g, total) || gain == null ? t('Bank') : t('From 500'),
@@ -220,7 +276,13 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
       )}
 
-      {g.phase === 'roll' && (
+      {!mine && (g.phase === 'roll' || g.phase === 'choose') && (
+        <div className="sticky-action">
+          <p className="fk-wait">{t('{name}’s turn', { name: me.name })}</p>
+        </div>
+      )}
+
+      {g.phase === 'roll' && mine && (
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
             {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
@@ -228,7 +290,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
         </div>
       )}
 
-      {g.phase === 'choose' && (
+      {g.phase === 'choose' && mine && (
         <>
           <div className="fk-pick-row">
             <span className="fk-pick-info">
@@ -272,18 +334,20 @@ export default function FiveThousand({ players, exit }: GameProps) {
       {g.phase === 'over' && g.end && !won && (
         <>
           <TurnVerdict g={g} name={me.name} />
-          <div className="sticky-action">
-            <BigButton
-              size="xl"
-              variant="light"
-              onClick={() => {
-                setPicked([]);
-                setG(nextTurn(g));
-              }}
-            >
-              <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
-            </BigButton>
-          </div>
+          {(local || seat != null) && (
+            <div className="sticky-action">
+              <BigButton
+                size="xl"
+                variant="light"
+                onClick={() => {
+                  setPicked([]);
+                  setG(nextTurn(g));
+                }}
+              >
+                <NextName text={t('Next: {name} →')} name={players[(g.current + 1) % players.length].name} />
+              </BigButton>
+            </div>
+          )}
         </>
       )}
     </div>

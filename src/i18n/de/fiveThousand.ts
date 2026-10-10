@@ -74,6 +74,8 @@ const fiveThousand: Record<string, string> = {
   Bank: 'Sichern',
   'From 500': 'Ab 500',
   '{n} to go': 'noch {n}',
+  'Everyone rolls on their own phone, the others watch. First to exactly 5000 wins.': 'Jeder würfelt auf seinem eigenen Handy, die anderen schauen zu. Wer zuerst genau 5000 hat, gewinnt.',
+  'Also on every phone': 'Auch auf jedem Handy',
 };
 
 export default fiveThousand;
