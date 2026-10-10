@@ -4663,6 +4663,28 @@ h3 {
   animation: sp-nope 0.3s ease;
 }
 
+.tr-discard-card {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  cursor: grab;
+  transition: transform 0.25s var(--spring);
+}
+
+.tr-discard-card.dragging {
+  z-index: 30;
+  cursor: grabbing;
+  transition: none;
+}
+
+.tr-discard-card.dragging .pcard-front {
+  box-shadow: 0 0 0 3px var(--accent), 0 18px 30px rgba(0, 0, 0, 0.45);
+}
+
 .tr-discard.drop-here {
   box-shadow: 0 0 0 3px var(--bad);
   animation: nudge 1.4s ease-in-out infinite;
