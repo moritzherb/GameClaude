@@ -22,7 +22,7 @@ const app: Record<string, string> = {
 
   // Home
   'The crew': 'Die Crew',
-  'Tap to edit': 'Antippen & ändern',
+  'Tap to edit': 'Zum Bearbeiten tippen',
   'Who’s playing tonight?': 'Wer spielt heute mit?',
   Shuffle: 'Zufall',
   'We pick, you play': 'Wir wählen, ihr spielt',
@@ -119,7 +119,7 @@ const app: Record<string, string> = {
   Room: 'Raum',
   'Connection lost. Reconnecting to the host…': 'Verbindung weg. Verbinde neu mit dem Host…',
   'Room code {code}': 'Raumcode {code}',
-  'QR code to join room {code}': 'QR-Code zum Beitreten in Raum {code}',
+  'QR code to join room {code}': 'QR-Code, um Raum {code} beizutreten',
   'Scan with the camera to join': 'Mit der Kamera scannen und beitreten',
   'Link copied ✓': 'Link kopiert ✓',
   'Share link': 'Link teilen',
@@ -139,7 +139,7 @@ const app: Record<string, string> = {
     'Oder nimm alle im Raum als Spielerliste für die Ein-Handy-Spiele:',
   'Use as player list': 'Als Spielerliste nehmen',
   'Waiting for the host to start a game…': 'Warte, bis der Host ein Spiel startet…',
-  'Tap again to close the room for everyone': 'Nochmal tippen, um den Raum für alle zu schließen',
+  'Tap again to close the room for everyone': 'Nochmal tippen: Raum für alle schließen',
   'Tap again to leave': 'Nochmal tippen zum Verlassen',
   'Close room': 'Raum schließen',
   'Leave room': 'Raum verlassen',
@@ -173,7 +173,7 @@ const app: Record<string, string> = {
   'Play nice': 'Fair bleiben',
   'Every sip can be water or a soft drink. No pressure, ever.': 'Jeder Schluck darf auch Wasser oder Softdrink sein. Kein Druck, niemals.',
   'Eat something before you start.': 'Iss was, bevor’s losgeht.',
-  'Never drink and drive – plan your ride home.': 'Nie betrunken fahren – plan deinen Heimweg.',
+  'Never drink and drive – plan your ride home.': 'Wer trinkt, fährt nicht – plan deinen Heimweg.',
   'Look out for your mates.': 'Pass auf deine Leute auf.',
 
   // Shared components

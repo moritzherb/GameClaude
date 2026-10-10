@@ -167,7 +167,7 @@ export default function HoseRunter() {
         <div className="hr">
           <div className="connecting">
             <div className="connecting-emoji">👖</div>
-            <h2 className="bd-title">{t('Pants down')}</h2>
+            <h2 className="bd-title">{t('Pants Down')}</h2>
             <p className="lead">{host ? t('Waiting for {name} to deal…', { name: host.name }) : t('Waiting for the host to deal…')}</p>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function HoseRunter() {
       <div className="hr">
         <div className="bd-head">
           <span className="kicker">{t('This phone is the table')}</span>
-          <h2 className="bd-title big">{t('Pants down')}</h2>
+          <h2 className="bd-title big">{t('Pants Down')}</h2>
           {!known && (
             <p className="lead">
               {t('Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {lives} lives each.', { lives: START_LIVES })}
@@ -456,7 +456,7 @@ function CardButton({ card, selected, disabled, onClick }: { card: Card; selecte
 }
 
 function ScoreBadge({ score }: { score: Score }) {
-  const label = { feuer: `🔥 ${t('Fire')}`, hose: `👖 ${t('Pants down')}`, triple: '30½', suit: '' }[score.kind];
+  const label = { feuer: `🔥 ${t('Fire')}`, hose: `👖 ${t('Pants Down')}`, triple: '30½', suit: '' }[score.kind];
   return label ? <span className={`hr-badge ${score.kind}`}>{label}</span> : null;
 }
 

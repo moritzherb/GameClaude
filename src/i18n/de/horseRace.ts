@@ -5,7 +5,7 @@ const horseRace: Record<string, string> = {
   'Bet on an Ace. Pray it gallops.': 'Setz auf ein Ass. Und bete, dass es galoppiert.',
   'The four Aces are the horses, side by side at the start. Next to the track lies one face-down card per row (you pick how many rows).':
     'Die vier Asse sind die Pferde, nebeneinander am Start. Neben der Bahn liegt pro Reihe eine verdeckte Karte (wie viele Reihen, stellt ihr ein).',
-  'Everyone bets on a suit: its Ace is your horse.': 'Jeder setzt auf eine Farbe: Ihr Ass ist dein Pferd.',
+  'Everyone bets on a suit: its Ace is your horse.': 'Jeder setzt auf eine Farbe: Das Ass dieser Farbe ist dein Pferd.',
   'Turn over the rest of the deck card by card. Each card moves the Ace of its suit up one row.':
     'Der Rest vom Stapel wird Karte für Karte aufgedeckt. Jede Karte bringt das Ass ihrer Farbe eine Reihe nach vorne.',
   'The first Ace into a row turns that row’s side card over, and the Ace of its suit moves up too, before the next card from the deck.':
@@ -16,9 +16,9 @@ const horseRace: Record<string, string> = {
     'Das erste Ass über die oberste Reihe hinaus gewinnt. Wer darauf gesetzt hat, trinkt nichts. Alle anderen trinken einen Schluck pro Reihe, die ihr Pferd zurückliegt.',
 
   // Bets
-  'Place your bets': 'Setzt eure Wetten',
+  'Place your bets': 'Macht eure Einsätze',
   'Everyone picks a suit. Its Ace is your horse. If it doesn’t win, you drink.':
-    'Jeder wählt eine Farbe. Ihr Ass ist dein Pferd. Gewinnt es nicht, trinkst du.',
+    'Jeder wählt eine Farbe. Das Ass dieser Farbe ist dein Pferd. Gewinnt es nicht, trinkst du.',
   'Random for the rest': 'Zufällig für den Rest',
   'Track length': 'Länge der Bahn',
   rows: 'Reihen',
@@ -30,6 +30,7 @@ const horseRace: Record<string, string> = {
   'Row {row}: side card!': 'Reihe {row}: Seitenkarte!',
   '{suit} moves up': '{suit} zieht vor',
   '{names} give out {n} sips': '{n} Schlucke verteilen: {names}',
+  '{names} give out {n} sip': '{n} Schluck verteilen: {names}',
   'The first Ace into a row turns its side card over.': 'Das erste Ass in einer Reihe deckt ihre Seitenkarte auf.',
   'On your marks…': 'Auf die Plätze…',
   'Turn the side card': 'Seitenkarte aufdecken',
@@ -45,7 +46,7 @@ const horseRace: Record<string, string> = {
   'Nobody bet on it. Everyone drinks!': 'Keiner hat darauf gesetzt. Alle trinken!',
   'Drink up': 'Trinken',
   'One sip for every row your horse is behind.': 'Ein Schluck pro Reihe, die dein Pferd zurückliegt.',
-  'Race again': 'Nochmal rennen',
+  'Race again': 'Neues Rennen',
 };
 
 export default horseRace;

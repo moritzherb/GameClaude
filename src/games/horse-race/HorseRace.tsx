@@ -197,7 +197,7 @@ export default function HorseRace({ players, exit }: GameProps) {
               <span className="hs-now-sub">
                 {s.kind === 'side'
                   ? sideBackers.length
-                    ? t('{names} give out {n} sips', { names: sideBackers.map((p) => p.name).join(' & '), n: sipsForRow(s.row) })
+                    ? (sipsForRow(s.row) === 1 ? t('{names} give out {n} sip', { names: sideBackers.map((p) => p.name).join(' & '), n: 1 }) : t('{names} give out {n} sips', { names: sideBackers.map((p) => p.name).join(' & '), n: sipsForRow(s.row) }))
                     : t('{suit} moves up', { suit: t(SUIT_NAME[s.card.suit]) })
                   : !known && race.log.length < 3
                     ? t('The first Ace into a row turns its side card over.')

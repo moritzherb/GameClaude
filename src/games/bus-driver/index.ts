@@ -23,7 +23,7 @@ const busDriver: GameDefinition = {
     tx('Right: give out as many sips as the round number. Wrong: drink them yourself.'),
     tx('Part 2 · The rest of the deck becomes a pyramid (5-4-3-2-1 by default), flipped from the bottom row up.'),
     tx('Hold the same value as the flipped card? Lay it down and give out that row’s sips: 1-2-3-4-5, Tipsy ×2 (1-2-4-8-16) or Tipsy +2 (2-4-6-8-10). Two matching cards = give out twice.'),
-    tx('Most cards left at the end drives the bus. A tie goes to a tiebreaker: everyone gets a new card, the deck is flipped, and whoever’s value shows up last drives.'),
+    tx('Whoever has the most cards left at the end drives the bus. A tie goes to a tiebreaker: everyone gets a new card, the deck is flipped, and whoever’s value shows up last drives.'),
     tx('Part 3 · The bus ride, three roads to pick from:'),
     tx('Classic: all five questions (including Which suit?) on a fresh deck, all in a row.'),
     tx('Diamond 1-2-3-2-1: red or black on the bottom card, then higher or lower row by row. Follow the road: only cards touching the one you picked below.'),

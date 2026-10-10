@@ -5,7 +5,7 @@ import { MAX_PLAYERS, MIN_PLAYERS } from './logic';
 
 const hoseRunter: GameDefinition = {
   id: 'hose-runter',
-  name: tx('Pants down'),
+  name: tx('Pants Down'),
   emoji: '👖',
   tagline: tx('Three cards, one suit, don’t be lowest.'),
   color: 'var(--c-blue)',

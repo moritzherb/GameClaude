@@ -1,7 +1,7 @@
 // German translations for this game. Keys are the exact English text.
 const pantsDown: Record<string, string> = {
   // Game info (index.ts)
-  'Pants down': 'Hose runter',
+  'Pants Down': 'Hose runter',
   'Three cards, one suit, don’t be lowest.': 'Drei Karten, eine Farbe – bloß nicht Letzter werden.',
   'Every player’s phone': 'Ein Handy pro Spieler',
   'Everyone joins the same room on their own phone. The host’s phone lies in the middle as the table. Cards 7 to Ace, three each.':
@@ -22,7 +22,7 @@ const pantsDown: Record<string, string> = {
   'Lowest points loses a life (ties all lose). 5 lives each.':
     'Wer die wenigsten Punkte hat, verliert ein Leben (bei Gleichstand alle). Jeder hat 5 Leben.',
   'The first to hit zero gets one extra life (everyone who hits zero in that same round does). After that, zero means you’re out.':
-    'Wer als Erstes auf null fällt, bekommt ein Extraleben (alle, die in derselben Runde auf null fallen). Danach heißt null: Du bist raus.',
+    'Wer als Erster auf null fällt, bekommt ein Extraleben (alle, die in derselben Runde auf null fallen). Danach heißt null: Du bist raus.',
   'If the last players would all go out at once, nobody does: they play a decider round. Last one standing wins.':
     'Würden die letzten Spieler alle gleichzeitig rausfliegen, fliegt keiner: Sie spielen eine Entscheidungsrunde. Wer übrig bleibt, gewinnt.',
 
@@ -34,7 +34,7 @@ const pantsDown: Record<string, string> = {
     'Leg dieses Handy in die Mitte: Es zeigt die Karten in der Mitte. Alle anderen spielen auf ihrem eigenen Handy.',
   '{name}’s turn': '{name} ist dran',
   'Tap your cards to pick them up.': 'Tipp auf deine Karten, um sie aufzunehmen.',
-  'Put them down': 'Weglegen',
+  'Put them down': 'Zuklappen',
   'Everyone sees only their own cards. Collect points in one suit, don’t end up lowest. {lives} lives each.':
     'Jeder sieht nur seine eigenen Karten. Sammle Punkte in einer Farbe und werd bloß nicht Letzter. {lives} Leben pro Person.',
   'Max {max} players. The first {max} play.': 'Maximal {max} Spieler. Die ersten {max} spielen mit.',

@@ -5,7 +5,7 @@ const trash: Record<string, string> = {
   'Turn your ten cards over first. Then do it with nine.': 'Deck als Erster deine zehn Karten auf. Dann das Ganze mit neun.',
   'A duel for two. Each player gets 10 face-down cards in two rows: slots Ace to 5 on top, 6 to 10 below. The rest is the stock.':
     'Ein Duell zu zweit. Jeder bekommt 10 verdeckte Karten in zwei Reihen: oben die Plätze Ass bis 5, unten 6 bis 10. Der Rest ist der Stapel.',
-  'The dealer deals the other player first, and that player starts.': 'Der Dealer teilt beim anderen Spieler zuerst aus, und der fängt an.',
+  'The dealer deals the other player first, and that player starts.': 'Der Geber teilt zuerst dem anderen aus, und der fängt an.',
   'On your turn, take the top card of the stock, or the top of the discard pile if you can use it.':
     'Wenn du dran bist, nimm die oberste Karte vom Stapel, oder die oberste vom Ablagestapel, wenn du sie brauchen kannst.',
   'A Jack is wild: put it into any face-down slot. Queens and Kings are useless.':
@@ -34,11 +34,11 @@ const trash: Record<string, string> = {
   'Got the real card for a slot where a Jack lies? Swap them: the card goes in, and you play the Jack again.':
     'Du hast die echte Karte für einen Platz, auf dem ein Bube liegt? Tausch sie aus: Die Karte kommt auf den Platz, und du spielst den Buben nochmal.',
   'Drag a card face up into its own slot if that slot is still face down. The card that lay there turns over: play it the same way, and so on.':
-    'Zieh eine Karte aufgedeckt auf ihren Platz, wenn er noch verdeckt ist. Die Karte, die dort lag, wird umgedreht: Spiel sie genauso, und so weiter.',
-  'Drag the card onto its slot': 'Zieh die Karte auf ihren Platz',
-  'Jack! Drag it onto any face-down slot': 'Bube! Zieh ihn auf einen beliebigen verdeckten Platz',
-  'No use: drag it onto the discard pile': 'Bringt nichts: Zieh sie auf den Ablagestapel',
-  'Swap it for your Jack, or drag it onto the discard pile': 'Tausch sie gegen deinen Buben oder zieh sie auf den Ablagestapel',
+    'Schieb eine Karte aufgedeckt auf ihren Platz, wenn er noch verdeckt ist. Die Karte, die dort lag, wird umgedreht: Spiel sie genauso, und so weiter.',
+  'Drag the card onto its slot': 'Schieb die Karte auf ihren Platz',
+  'Jack! Drag it onto any face-down slot': 'Bube! Schieb ihn auf einen beliebigen verdeckten Platz',
+  'No use: drag it onto the discard pile': 'Bringt nichts: Schieb sie auf den Ablagestapel',
+  'Swap it for your Jack, or drag it onto the discard pile': 'Tausch sie gegen deinen Buben oder schieb sie auf den Ablagestapel',
   'Not there: this card goes into slot {slot}': 'Nicht dort: Die Karte gehört auf Platz {slot}',
   'That one is already face up': 'Die liegt schon offen',
   'That’s not your side': 'Das ist nicht deine Seite',
