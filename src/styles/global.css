@@ -3893,6 +3893,49 @@ h3 {
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
 }
 
+/*
+ * Below the 5000 table: always the same height (what's set aside + the picking row, or how the
+ * turn went in their place), so the table never changes size during the game.
+ */
+.fk-below {
+  flex-shrink: 0;
+  /* Set aside (34) + gap + picking row (44), and a little more so the longest turn result fits. */
+  height: calc(34px + 18px + 44px + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* How the turn went, made to fit that space. */
+.fk-below .bd-result {
+  height: 100%;
+  padding: 7px 14px;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.fk-below .bd-result {
+  gap: 12px;
+}
+
+.fk-below .bd-result-emoji {
+  font-size: 1.6rem;
+}
+
+/* The score after the turn is on the scoreboard and next to the name already. */
+.fk-below .bd-result-card {
+  display: none;
+}
+
+.fk-below .bd-result-title {
+  font-size: 1.2rem;
+}
+
+.fk-below .bd-result-sub {
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
 .fk-aside {
   display: flex;
   align-items: center;
