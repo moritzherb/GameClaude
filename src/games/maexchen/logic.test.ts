@@ -57,9 +57,9 @@ describe('maexchen', () => {
     expect(reveal(announce(shake(newRound(2), seq(4, 5)), 54), 3).verdict).toEqual({ truth: true, loser: 0, sips: 1 });
   });
 
-  it('a Mäxchen: believing costs 1, lifting costs 2 for whoever is wrong', () => {
+  it('a Mäxchen has to be lifted: 2 sips for whoever is wrong', () => {
     const claim = announce(shake(newRound(1), seq(3, 2)), MAEXCHEN);
-    expect(believe(claim, 3).verdict).toEqual({ truth: true, loser: 2, sips: 1, believed: true });
+    expect(believe(claim, 3)).toBe(claim);
     expect(reveal(claim, 3).verdict).toEqual({ truth: false, loser: 1, sips: 2 });
     const real = announce(shake(newRound(1), seq(1, 2)), MAEXCHEN);
     expect(reveal(real, 3).verdict).toEqual({ truth: true, loser: 2, sips: 2 });

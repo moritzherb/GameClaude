@@ -77,7 +77,8 @@ function MaexchenTable({
   const next = (r.turn + 1) % n;
   // Whoever decides now: in 'pass' the next player (believe or lift), otherwise the one at turn.
   const who = players[r.phase === 'pass' ? next : r.verdict ? r.verdict.loser : r.turn];
-  const open = r.phase === 'reveal' && !r.verdict?.believed;
+  const open = r.phase === 'reveal';
+  const mustLift = r.phase === 'pass' && claim?.value === MAEXCHEN;
 
   /** Shake cup and coaster together for a moment, then the dice are rolled. */
   const doShake = () => {
@@ -104,6 +105,8 @@ function MaexchenTable({
     if (!r.peeked) setR(peek(r));
   };
   const lookUp = () => setLifted(false);
+
+  const allowed = allowedAfter(claim?.value ?? null);
 
   const doAnnounce = () => {
     if (choice == null) return;
@@ -141,7 +144,9 @@ function MaexchenTable({
             ? t('announce, or shake once more blind')
             : t('look under the cup (or don’t)')
         : r.phase === 'pass'
-          ? t('believe it or lift the cup?')
+          ? mustLift
+            ? t('Mäxchen: you have to lift the cup')
+            : t('believe it or lift the cup?')
           : r.verdict
             ? r.verdict.sips === 1
               ? t('drinks 1 sip')
@@ -219,18 +224,12 @@ function MaexchenTable({
             </span>
           </div>
         )}
-        {r.verdict?.believed && (
-          <div className="mx-verdict truth" role="status">
-            <span className="mx-verdict-title">{t('Mäxchen!')}</span>
-            <span className="mx-verdict-sub">{t('Nothing beats it. Believed and drunk.')}</span>
-          </div>
-        )}
       </div>
 
       <div className="sticky-action stack mx-actions">
         {r.phase === 'shake' && (
           <>
-            <BigButton size="xl" onClick={doShake} disabled={shaking}>
+            <BigButton onClick={doShake} disabled={shaking}>
               {t('Shake')}
             </BigButton>
             <span className="mx-slot" />
@@ -238,7 +237,7 @@ function MaexchenTable({
         )}
         {r.phase === 'look' && (
           <>
-            <BigButton size="xl" onClick={() => setPicking(true)}>
+            <BigButton onClick={() => setPicking(true)}>
               {t('Announce…')}
             </BigButton>
             <BigButton variant="light" onClick={doShake} disabled={!r.peeked || r.blind || shaking}>
@@ -248,17 +247,19 @@ function MaexchenTable({
         )}
         {r.phase === 'pass' && claim && (
           <>
-            <BigButton size="xl" onClick={doReveal}>
+            {mustLift ? (
+              <span className="mx-slot mx-must">{t('Mäxchen! Nothing beats it: lift the cup.')}</span>
+            ) : (
+              <BigButton onClick={doBelieve}>{t('Believe it and shake')}</BigButton>
+            )}
+            <BigButton variant="danger" onClick={doReveal}>
               {t('Lift the cup!')}
-            </BigButton>
-            <BigButton variant="light" onClick={doBelieve}>
-              {claim.value === MAEXCHEN ? t('Believe it (1 sip)') : t('Believe it and shake')}
             </BigButton>
           </>
         )}
         {r.phase === 'reveal' && r.verdict && (
           <>
-            <BigButton size="xl" onClick={() => setR(newRound(r.verdict!.loser))}>
+            <BigButton onClick={() => setR(newRound(r.verdict!.loser))}>
               {t('New round: {name} starts', { name: players[r.verdict.loser].name })}
             </BigButton>
             <span className="mx-slot" />
@@ -269,7 +270,7 @@ function MaexchenTable({
       <Sheet open={picking} onClose={() => setPicking(false)} title={t('What do you announce?')} closeLabel={t('Cancel')}>
         <div className="mx-values">
           {VALUES.map((v) => {
-            const ok = allowedAfter(claim?.value ?? null).includes(v);
+            const ok = allowed.includes(v);
             return (
               <button
                 key={v}
@@ -285,7 +286,7 @@ function MaexchenTable({
                 }}
               >
                 <span className="mx-value-num">{v}</span>
-                {(isDouble(v) || v === MAEXCHEN) && <span className="mx-value-tag">{v === MAEXCHEN ? t('Mäxchen') : t('Double')}</span>}
+                {v === MAEXCHEN ? <span className="mx-value-name">{t('Mäxchen')}</span> : isDouble(v) && <span className="mx-value-tag">{t('Double')}</span>}
               </button>
             );
           })}
@@ -377,15 +378,15 @@ function Coaster() {
   );
 }
 
-/** The leather dice cup, upside down on the mat. */
+/** The leather dice cup (like the one in 5000), upside down on the mat: its closed bottom on top. */
 function Cup() {
   return (
     <svg viewBox="0 0 100 110" aria-hidden>
-      <path className="mx-cup-body" d="M27 9h46l13 87H14z" />
-      <ellipse className="mx-cup-top" cx="50" cy="9" rx="23" ry="6" />
-      <path className="mx-cup-stitch" d="M25 22h50M17 84h66" />
-      <path className="mx-cup-shine" d="M33 16l-8 72" />
-      <ellipse className="mx-cup-rim" cx="50" cy="96" rx="36" ry="8.5" />
+      <path className="mx-cup-body" d="M23 10h54l10 86Q50 108 13 96z" />
+      <path className="mx-cup-band" d="M14.6 82Q50 94 85.4 82L87 96Q50 108 13 96z" />
+      <ellipse className="mx-cup-top" cx="50" cy="10" rx="27" ry="7" />
+      <path className="mx-cup-stitch" d="M21 24Q50 33 79 24M16 78Q50 90 84 78" />
+      <path className="mx-cup-shine" d="M30 18l-7 70" />
     </svg>
   );
 }
