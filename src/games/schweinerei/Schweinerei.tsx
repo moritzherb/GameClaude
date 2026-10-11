@@ -89,41 +89,73 @@ interface PigAt {
 
 /** At the start the pigs lie at the bottom, ready to be picked up. */
 const HAND: [PigAt, PigAt] = [
-  { x: 40, y: 80, rot: -10 },
-  { x: 60, y: 81, rot: 12 },
+  { x: 27, y: 78, rot: -10 },
+  { x: 73, y: 79, rot: 12 },
 ];
 
-/** The bank button sits in the bottom-right corner: pigs never land under it. */
-const clampSpot = (x: number, y: number): [number, number] => {
-  let cx = Math.min(77, Math.max(23, x));
-  // Not under the slip with the result at the top.
-  const cy = Math.min(80, Math.max(38, y));
-  if (cx > 64 && cy > 64) cx = 64;
-  return [cx, cy];
+/** How big a pig is on a table this size (px): the picture is 44% of the table wide at most. */
+const pigSize = (w: number, h: number) => {
+  const pw = Math.min(0.44 * w, 0.34 * h) * 0.9;
+  return { pw, ph: pw * 0.8 };
 };
 
-/** Where the pigs land: further the harder they were thrown, in the direction they flew. */
+/** Keep a pig on the table: not off the edges, not under the result slip at the top, not under the pen button. */
+function clampSpot(x: number, y: number, w: number, pw: number): [number, number] {
+  // The whole picture (a little wider than the pig) stays on the table.
+  const half = (pw / 0.9 / 2 / w) * 100 + 1;
+  let cx = Math.min(100 - half, Math.max(half, x));
+  const cy = Math.min(80, Math.max(40, y));
+  if (cx > 62 && cy > 64) cx = 62;
+  return [cx, cy];
+}
+
+/** Where the pigs land: further the harder they were thrown, in the direction they flew, apart unless they touch. */
 function landing(th: Throw, from: { x: number; y: number }, v: { x: number; y: number }, w: number, h: number): [PigAt, PigAt] {
+  const { pw, ph } = pigSize(w, h);
   const speed = Math.hypot(v.x, v.y) || 1;
   // A harder throw goes further (and the pigs roll on a bit), never off the table.
   const dist = h * (0.18 + Math.min(speed, 3) * 0.1) * (0.85 + Math.random() * 0.3);
   const lx = ((from.x + (v.x / speed) * dist * 0.6) / w) * 100 + (Math.random() * 2 - 1) * 8;
   const ly = ((from.y + (v.y / speed) * dist) / h) * 100;
-  const [x, y] = clampSpot(lx, ly);
+  const [x, y] = clampSpot(lx, ly, w, pw);
   const j = () => Math.random() * 2 - 1;
-  if (th.kind === 'touch') return [
-    { x: x - 9, y, rot: -8 + j() * 10 },
-    { x: x + 9, y: y + 1, rot: 172 + j() * 10 },
-  ];
+  // Touching: snout to snout, overlapping a little. Piggyback: one on top of the other.
+  if (th.kind === 'touch') {
+    const off = ((pw * 0.42) / w) * 100;
+    return [
+      { x: x - off, y, rot: -6 + j() * 8 },
+      { x: x + off, y: y + 1.5, rot: 174 + j() * 8 },
+    ];
+  }
   if (th.kind === 'piggyback') return [
-    { x, y: y + 4, rot: j() * 8 },
-    { x: x + 2, y: y - 7, rot: -6 + j() * 8 },
+    { x, y: y + 3, rot: j() * 8 },
+    { x: x + 3, y: y - ((ph * 0.35) / h) * 100, rot: -6 + j() * 8 },
   ];
-  const a = clampSpot(x - 21 + j() * 5, y + j() * 8);
-  const b = clampSpot(x + 21 + j() * 5, y + j() * 8);
+  // Otherwise they never overlap: try spots round the landing point until the two lie apart.
+  // A pig tipped onto its snout sticks its legs out sideways: it needs more room.
+  const tipped = (th.kind === 'score' || th.kind === 'pig-out') && th.pigs.some((p) => p === 'snout' || p === 'jowl');
+  const room = tipped ? 1.25 : 1;
+  for (let i = 0; i < 40; i++) {
+    const sideBySide = Math.random() < 0.65;
+    const dx = sideBySide ? pw * room + 12 + Math.random() * 40 : Math.random() * pw * 0.6;
+    const dy = sideBySide ? j() * ph * 0.4 : ph * room + 12 + Math.random() * 30;
+    const sx = Math.random() < 0.5 ? 1 : -1;
+    const ax = clampSpot(x - ((sx * dx) / 2 / w) * 100, y - (dy / 2 / h) * 100, w, pw);
+    const bx = clampSpot(x + ((sx * dx) / 2 / w) * 100, y + (dy / 2 / h) * 100, w, pw);
+    const apartX = (Math.abs(ax[0] - bx[0]) / 100) * w >= pw * room * 0.98;
+    const apartY = (Math.abs(ax[1] - bx[1]) / 100) * h >= ph * room * 0.98;
+    if (apartX || apartY)
+      return [
+        { x: ax[0], y: ax[1], rot: j() * 25 },
+        { x: bx[0], y: bx[1], rot: j() * 25 },
+      ];
+  }
+  // A tight table: one top left, one bottom right.
+  const a = clampSpot(0, 40, w, pw);
+  const b2 = clampSpot(100, 40 + ((ph + 10) / h) * 100, w, pw);
   return [
-    { x: a[0], y: a[1], rot: j() * 30 },
-    { x: b[0], y: b[1], rot: j() * 30 },
+    { x: a[0], y: a[1], rot: j() * 20 },
+    { x: Math.min(b2[0], 62), y: b2[1], rot: j() * 20 },
   ];
 }
 
@@ -147,20 +179,39 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   // Picked up and put down again without a real throw.
   const [dropped, setDropped] = useState(false);
   const [flight, setFlight] = useState<Flight | null>(null);
-  const drag = useRef<{ id: number; samples: { x: number; y: number; t: number }[]; last: number } | null>(null);
+  /** A finger holding the pigs: where it has been, and what's needed to move them without asking the page for layout. */
+  const drag = useRef<{
+    id: number;
+    samples: { x: number; y: number; t: number }[];
+    last: number;
+    rect: DOMRect;
+    /** Where each pig lies (px), so the hand moves them with a transform only. */
+    base: { x: number; y: number }[];
+    frame: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const timer = useRef<number>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const canPick = !g.ended && mode === 'rest';
   const box = () => table.current!.getBoundingClientRect();
 
-  /** Both pigs in the hand, at the finger (in px from the table's corner). */
+  /** Both pigs in the hand, at the finger (px from the table's corner): moved once per frame, by transform only. */
   const holdAt = (x: number, y: number) => {
-    const r = box();
-    pigEls.current.forEach((el, i) => {
-      if (!el) return;
-      el.style.left = `${((x + (i ? 22 : -22)) / r.width) * 100}%`;
-      el.style.top = `${((y + (i ? 6 : -4)) / r.height) * 100}%`;
+    const d = drag.current;
+    if (!d) return;
+    d.x = x;
+    d.y = y;
+    if (d.frame) return;
+    d.frame = requestAnimationFrame(() => {
+      d.frame = 0;
+      pigEls.current.forEach((el, i) => {
+        if (!el) return;
+        const dx = d.x + (i ? 22 : -22) - d.base[i].x;
+        const dy = d.y + (i ? 6 : -4) - d.base[i].y;
+        el.style.transform = `translate(-50%, -50%) translate3d(${dx}px, ${dy}px, 0) rotate(${at[i].rot}deg) scale(1.22)`;
+      });
     });
   };
 
@@ -171,7 +222,16 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     const r = box();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
-    drag.current = { id: e.pointerId, samples: [{ x, y, t: e.timeStamp }], last: 0 };
+    drag.current = {
+      id: e.pointerId,
+      samples: [{ x, y, t: e.timeStamp }],
+      last: 0,
+      rect: r,
+      base: at.map((a) => ({ x: (a.x / 100) * r.width, y: (a.y / 100) * r.height })),
+      frame: 0,
+      x,
+      y,
+    };
     setMode('held');
     setDropped(false);
     holdAt(x, y);
@@ -182,9 +242,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   const move = (e: React.PointerEvent) => {
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
-    const r = box();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
+    const x = e.clientX - d.rect.left;
+    const y = e.clientY - d.rect.top;
     d.samples.push({ x, y, t: e.timeStamp });
     if (d.samples.length > 12) d.samples.shift();
     holdAt(x, y);
@@ -199,7 +258,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
     drag.current = null;
-    const r = box();
+    cancelAnimationFrame(d.frame);
+    const r = d.rect;
     const end = d.samples[d.samples.length - 1];
     // Speed over the last moment before letting go (px per ms).
     const recent = d.samples.filter((p) => end.t - p.t <= 90);
@@ -207,7 +267,17 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     const dt = Math.max(1, end.t - first.t);
     const v = { x: (end.x - first.x) / dt, y: (end.y - first.y) / dt };
     const speed = Math.hypot(v.x, v.y);
-    const here = (i: number): PigAt => ({ x: ((end.x + (i ? 22 : -22)) / r.width) * 100, y: ((end.y + (i ? 6 : -4)) / r.height) * 100, rot: at[i].rot });
+    // Put down side by side where the finger let go (not on top of each other, even at an edge).
+    const { pw } = pigSize(r.width, r.height);
+    const gap = ((pw * 1.06) / r.width) * 100;
+    const ey = (end.y / r.height) * 100;
+    let a = clampSpot((end.x / r.width) * 100 - gap / 2, ey, r.width, pw);
+    const b = clampSpot(a[0] + gap, ey, r.width, pw);
+    if (b[0] - a[0] < gap * 0.98) a = clampSpot(b[0] - gap, ey, r.width, pw);
+    const here = (i: number): PigAt => {
+      const [x, y] = i ? b : a;
+      return { x, y, rot: at[i].rot };
+    };
     if (speed < 0.45 || v.y > 0.3) {
       // Not a throw: they're just put down where the finger let go.
       setAt([here(0), here(1)]);
@@ -234,6 +304,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     });
     setAt(land);
     setMode('flying');
+    setDropped(false);
     sfx.pop();
     buzz(15);
   };
@@ -246,13 +317,14 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     launch({ x: r.width / 2, y: r.height * 0.8 }, { x: 0.1, y: -1.2 }, 1.2);
   };
 
-  // Where the pigs lie, written straight to the page: while held they followed the finger
-  // directly, so React's idea of where they are may be out of date.
+  // Where the pigs lie. While held they follow the finger by an inline transform: once they're
+  // put down or thrown, that goes and they lie where the state says.
   useLayoutEffect(() => {
     pigEls.current.forEach((el, i) => {
       if (!el) return;
       el.style.left = `${at[i].x}%`;
       el.style.top = `${at[i].y}%`;
+      if (mode !== 'held') el.style.transform = '';
     });
   }, [at, mode]);
 
@@ -310,7 +382,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   };
 
   const bad = th && th.kind !== 'score';
-  const showResult = th && mode === 'rest';
+  // Not after picking them up and putting them down again: that throw is over.
+  const showResult = th && mode === 'rest' && !dropped;
   const hint =
     mode === 'held'
       ? t('And throw!')
@@ -379,7 +452,9 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
               style={{ left: `${at[i].x}%`, top: `${at[i].y}%`, '--rot': `${at[i].rot}deg` } as CSSProperties}
               onPointerDown={pickUp}
             >
-              <Pig pose={mode === 'rest' ? poses[i] : i ? 'side' : 'side-dot'} />
+              <span className="sw-wiggle">
+                <Pig pose={mode === 'rest' ? poses[i] : i ? 'side' : 'side-dot'} />
+              </span>
               {showResult && <span className="sw-pose">{t(POSE_NAME[poses[i]])}</span>}
             </span>
           ))}

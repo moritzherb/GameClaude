@@ -4066,7 +4066,8 @@ h3 {
 
 .sw-spot {
   position: absolute;
-  width: min(35cqw, 30cqh);
+  /* pigSize() in Schweinerei.tsx uses the same numbers. */
+  width: min(44cqw, 34cqh);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4079,12 +4080,20 @@ h3 {
   cursor: grab;
 }
 
+/* The pig's own little movements (a nudge, the rattle in the hand) on a layer of their own, so
+   the pig with its shadow is drawn once and only moved. */
+.sw-wiggle {
+  display: block;
+  width: 100%;
+  will-change: transform;
+}
+
 /* Waiting to be picked up: a little nudge now and then. */
-.sw-pigs.ready .sw-pig {
+.sw-pigs.ready .sw-wiggle {
   animation: sw-nudge 2.6s ease-in-out infinite;
 }
 
-.sw-pigs.ready .sw-spot + .sw-spot .sw-pig {
+.sw-pigs.ready .sw-spot + .sw-spot .sw-wiggle {
   animation-delay: 0.3s;
 }
 
@@ -4102,19 +4111,16 @@ h3 {
   }
 }
 
-/* In the hand: bigger (closer to the eye), following the finger, rattling. */
+/* In the hand: bigger (closer to the eye), following the finger (moved by transform from the
+   script), rattling. */
 .sw-spot.held {
   z-index: 4;
-  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.22);
-  transition:
-    left 0.07s linear,
-    top 0.07s linear;
+  will-change: transform;
   cursor: grabbing;
 }
 
-.sw-spot.held .sw-pig {
+.sw-spot.held .sw-wiggle {
   animation: sw-rattle 0.09s ease-in-out infinite alternate;
-  filter: drop-shadow(0 4cqw 3cqw rgba(0, 0, 0, 0.35));
 }
 
 @keyframes sw-rattle {
@@ -4129,12 +4135,16 @@ h3 {
 .sw-pig {
   display: block;
   width: 100%;
-  overflow: visible;
+  height: auto;
+  -webkit-user-drag: none;
+  pointer-events: none;
   filter: drop-shadow(0 1.2cqw 1.4cqw rgba(0, 0, 0, 0.4));
 }
 
 .sw-pose {
-  margin-top: 4px;
+  /* Just below the pig (the pictures leave room round it for the tipped-over poses). */
+  position: absolute;
+  top: 80%;
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(30, 14, 4, 0.55);
