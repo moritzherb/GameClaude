@@ -124,11 +124,27 @@ export function useSwipeLeft(
       const speed = -off / Math.max(1, e.timeStamp - s.t);
       const open = -off >= TRIGGER || (speed > FLICK && -off > 30);
       const uncovered = Math.max(1, -off * 0.5);
-      reset();
-      if (open) {
-        swiped = uncovered;
+      if (!open) return reset();
+      swiped = uncovered;
+      // Home back in place at once (no sliding back)…
+      start = null;
+      horizontal = false;
+      off = 0;
+      window.clearTimeout(watchdog);
+      cancelAnimationFrame(frame);
+      paint();
+      // …and on to All games only once that's on screen: an iPhone keeps a picture of the screen it
+      // leaves for swiping back to it, and shows it until the page changes. A picture of home half
+      // moved would stay on top of the real home (taps going to what's underneath).
+      let done = false;
+      const on = () => {
+        if (done) return;
+        done = true;
+        dragging(false);
         go.current();
-      }
+      };
+      requestAnimationFrame(() => requestAnimationFrame(on));
+      window.setTimeout(on, 250);
     };
     const cancel = reset;
     // Whatever interrupts the swipe (the phone taking over, the app going to the background, another
