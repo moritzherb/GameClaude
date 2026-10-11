@@ -7,6 +7,7 @@ import { buzz, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
+import mat from './mat.webp';
 import { allowedAfter, announce, believe, isDouble, MAEXCHEN, newRound, peek, reveal, shake, valueOf, VALUES, type Round, type Value } from './logic';
 
 const SHAKE_MS = 650;
@@ -361,23 +362,12 @@ function Die({ n }: { n: number }) {
   );
 }
 
-/** A beer mat seen at an angle: cardboard, a red ring and the house print. */
+/** The beer mat under the cup, lying on the table at an angle. */
 function Coaster() {
   return (
-    <svg className="mx-coaster" viewBox="0 0 200 96" aria-hidden>
-      <defs>
-        <path id="mx-mat-ring" d="M100 18 a76 28 0 1 1 -0.1 0" />
-      </defs>
-      <ellipse cx="100" cy="51" rx="98" ry="42" className="mx-coaster-edge" />
-      <ellipse cx="100" cy="46" rx="98" ry="42" className="mx-coaster-top" />
-      <ellipse cx="100" cy="46" rx="90" ry="37" className="mx-coaster-ring" />
-      <ellipse cx="100" cy="46" rx="62" ry="22" className="mx-coaster-ring thin" />
-      <text className="mx-coaster-print">
-        <textPath href="#mx-mat-ring" startOffset="0">
-          PROST! ✦ MÄXCHEN ✦ HEURIGER ✦ PROST! ✦ MÄXCHEN ✦ HEURIGER ✦
-        </textPath>
-      </text>
-    </svg>
+    <span className="mx-coaster" aria-hidden>
+      <span className="mx-mat" style={{ backgroundImage: `url(${mat})` }} />
+    </span>
   );
 }
 

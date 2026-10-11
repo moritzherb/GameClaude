@@ -3603,41 +3603,31 @@ h3 {
   left: 0;
   bottom: 2%;
   width: 100%;
-  filter: drop-shadow(0 1.2cqw 1.6cqw rgba(0, 0, 0, 0.4));
+  aspect-ratio: 200 / 96;
+  perspective: calc(var(--w) * 2.4);
+  filter: drop-shadow(0 1.4cqw 1.6cqw rgba(0, 0, 0, 0.45));
 }
 
-.mx-coaster-edge {
-  fill: #cdbb93;
-}
-
-.mx-coaster-top {
-  fill: #f2e8d2;
-}
-
-.mx-coaster-ring {
-  fill: none;
-  stroke: #c3352b;
-  stroke-width: 3;
-}
-
-.mx-coaster-ring.thin {
-  stroke-width: 1.2;
-  opacity: 0.7;
-}
-
-.mx-coaster-print {
-  fill: #c3352b;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 9.5px;
-  letter-spacing: 1.4px;
+/* A square cardboard mat, tipped back onto the table: the shadow below is its edge. */
+.mx-mat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 80%;
+  aspect-ratio: 1;
+  border-radius: 6.6%;
+  background-size: cover;
+  box-shadow:
+    0 0.9cqw 0 #ddd2ba,
+    0 1.5cqw 0 #c9bc9f;
+  transform: translate(-50%, -50%) rotateX(54deg) rotateZ(-6deg);
 }
 
 /* The two dice on the mat, under the cup. */
 .mx-dice {
   position: absolute;
   left: 50%;
-  bottom: 23%;
+  bottom: 24.5%;
   display: flex;
   gap: 3%;
   width: 38%;
@@ -3718,7 +3708,8 @@ h3 {
 }
 
 .mx-cup-rim {
-  fill: none;
+  /* Filled: the lip of the cup hides the dice completely. */
+  fill: #6e4126;
   stroke: #5c3520;
   stroke-width: 3;
 }
