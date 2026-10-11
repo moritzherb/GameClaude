@@ -4050,6 +4050,45 @@ h3 {
   font-size: 1.15rem;
 }
 
+/* This turn's bonus throw, at the end of the row: what to get, how far, how much. */
+.sw-bonus {
+  flex: none;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sun) 22%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sun) 60%, transparent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: mx-fade-in 0.3s ease both;
+}
+
+.sw-bonus-pts {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.sw-bonus-plus {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.sw-bonus.won {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.sw-bonus.won .sw-bonus-pts {
+  color: inherit;
+}
+
 /* The pigs on the table: pick them up with a finger, swing and let go. */
 .sw-table {
   touch-action: none;
@@ -4083,9 +4122,16 @@ h3 {
 /* The pig's own little movements (a nudge, the rattle in the hand) on a layer of their own, so
    the pig with its shadow is drawn once and only moved. */
 .sw-wiggle {
+  position: relative;
   display: block;
   width: 100%;
   will-change: transform;
+}
+
+/* In the air: the tumbling pig on top of the way it will lie, fading over to it as it rolls out. */
+.sw-air {
+  position: absolute;
+  inset: 0;
 }
 
 /* Waiting to be picked up: a little nudge now and then. */
@@ -4202,6 +4248,16 @@ h3 {
 
 .sw-result.bad .sw-result-name {
   color: #d3241b;
+}
+
+.sw-result-bonus {
+  margin: 2px 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.85rem;
+  font-weight: 800;
 }
 
 .sw-result-sub {
