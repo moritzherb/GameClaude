@@ -29,6 +29,7 @@ const palace: GameDefinition = {
     tx('10 or four of a kind: the pile is cleared away. Draw up and play again.'),
     tx('2: start again from 2. The pile stays, and you play again without drawing first.'),
     tx('3: copies the card it lies on, specials too. On a 7 the next player plays 7 or lower, on a 2 you play again.'),
+    tx('Going round in circles: if taking the pile would bring back exactly the same cards for everyone for the third time, the pile is cleared away instead.'),
     tx('The first player with no cards left wins.'),
   ],
   online: Palace,
