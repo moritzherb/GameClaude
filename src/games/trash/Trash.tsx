@@ -289,6 +289,7 @@ export function TrashTable({
               useless={kind === 'toss'}
               rotated={rotated}
               fly={fly}
+              locked={!mine}
               onAutoToss={kind === 'toss' && mine ? dropOnDiscard : undefined}
               onDrop={(target) => {
                 const drop = target?.closest<HTMLElement>('[data-drop]');
@@ -444,11 +445,14 @@ function HeldCard({
   useless,
   rotated,
   fly,
+  locked,
   onDrop,
   onAutoToss,
 }: {
   card: Card;
   useless: boolean;
+  /** The other player's card (on your own phone): only to look at. */
+  locked: boolean;
   /** The middle is turned around for the player opposite: screen moves are mirrored inside it. */
   rotated: boolean;
   fly: { x: number; y: number } | null;
@@ -506,7 +510,7 @@ function HeldCard({
       ref={ref}
       className={`tr-hand-card${useless ? ' useless' : ''}${drag ? ' dragging' : ''}${fly ? ' gliding' : ''}`}
       style={dragStyle(drag)}
-      {...handlers}
+      {...(locked ? {} : handlers)}
     >
       <CardFace card={card} />
     </span>
