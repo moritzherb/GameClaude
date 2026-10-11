@@ -23,7 +23,6 @@ const maexchen: Record<string, string> = {
   'Then the cup goes round to the left. Lie well, doubt better.': 'Dann geht der Becher reihum nach links. Gut lügen, besser zweifeln.',
 
   // The table
-  'Your turn': 'Am Zug',
   'Believed it: now beat {value}': 'Geglaubt: jetzt {value} toppen',
   'Shaken blind: no more looking, announce something': 'Blind geschüttelt: nicht mehr reinschauen, sag was an',
   'Announce, or shake once more blind': 'Ansagen, oder nochmal blind schütteln',

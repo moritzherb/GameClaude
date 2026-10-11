@@ -325,13 +325,13 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   return (
     <div className="mx fill sw">
       <div className="mx-status">
-        <div className="mx-turn" key={who.id} style={{ '--who': who.color } as CSSProperties}>
+        <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
             {who.avatar}
           </span>
-          <span className="mx-turn-text">
-            <span className="mx-turn-label">{t('Your turn')}</span>
-            <span className="mx-turn-name">{who.name}</span>
+          <span className="bd-player-text">
+            <span className="bd-player-name">{who.name}</span>
+            <span className="bd-player-sub">{t('your turn')}</span>
           </span>
         </div>
         <div className="mx-claim" aria-live="polite">

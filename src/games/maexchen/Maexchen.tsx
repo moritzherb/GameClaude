@@ -160,19 +160,19 @@ function MaexchenTable({
   return (
     <div className="mx fill">
       <div className="mx-status">
-        <div className={`mx-turn${r.phase === 'reveal' ? ' drinks' : ''}`} key={`${who.id}-${r.phase === 'reveal'}`} style={{ '--who': who.color } as CSSProperties}>
+        <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
             {who.avatar}
           </span>
-          <span className="mx-turn-text">
-            <span className="mx-turn-label">
+          <span className="bd-player-text">
+            <span className="bd-player-name">{who.name}</span>
+            <span className="bd-player-sub">
               {r.phase === 'reveal' && r.verdict
                 ? r.verdict.sips === 1
                   ? t('drinks 1 sip')
                   : t('drinks {n} sips', { n: r.verdict.sips })
-                : t('Your turn')}
+                : t('your turn')}
             </span>
-            <span className="mx-turn-name">{who.name}</span>
           </span>
         </div>
         <div className="mx-claim" aria-live="polite">

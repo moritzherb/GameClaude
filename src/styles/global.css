@@ -3480,81 +3480,12 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  /* Always the same height (the hint below the name may take two lines), so the table never moves. */
-  height: 64px;
+  /* The same row as in the other games, always the same height, so the table never moves. */
+  height: 48px;
 }
 
-.mx-status .bd-player-sub {
-  font-size: 0.875rem;
-  line-height: 1.2;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-/* Whose turn it is: a pill in their colour, with a ring that pulses round the avatar. */
-.mx-turn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.mx-status .bd-player {
   min-width: 0;
-  height: 100%;
-  padding: 0 16px 0 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--who) 22%, var(--surface));
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--who) 70%, transparent);
-  animation: mx-turn-in 0.35s var(--spring) both;
-}
-
-.mx-turn .bd-avatar {
-  flex: none;
-  animation: mx-turn-ring 1.6s ease-out infinite;
-}
-
-.mx-turn-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.mx-turn-label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.mx-turn.drinks .mx-turn-label {
-  color: var(--bad-ink);
-}
-
-.mx-turn-name {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.6rem;
-  line-height: 1.05;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@keyframes mx-turn-in {
-  from {
-    opacity: 0;
-    transform: translateX(-14px) scale(0.96);
-  }
-}
-
-@keyframes mx-turn-ring {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--who) 70%, transparent);
-  }
-  70%,
-  100% {
-    box-shadow: 0 0 0 9px transparent;
-  }
 }
 
 /* What has to be beaten (or what was just announced), top right. */
