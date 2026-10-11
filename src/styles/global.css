@@ -4119,14 +4119,80 @@ h3 {
   font-size: 1.15rem;
 }
 
-/* The pigs on the table. */
+/* The pigs on the table: pick them up with a finger, swing and let go. */
+.sw-table {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.sw-pigs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .sw-spot {
   position: absolute;
-  width: min(42cqw, 36cqh);
+  width: min(30cqw, 26cqh);
   display: flex;
   flex-direction: column;
   align-items: center;
   transform: translate(-50%, -50%) rotate(var(--rot));
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.sw-pigs.ready .sw-spot {
+  cursor: grab;
+}
+
+/* Waiting to be picked up: a little nudge now and then. */
+.sw-pigs.ready .sw-pig {
+  animation: sw-nudge 2.6s ease-in-out infinite;
+}
+
+.sw-pigs.ready .sw-spot + .sw-spot .sw-pig {
+  animation-delay: 0.3s;
+}
+
+@keyframes sw-nudge {
+  0%,
+  86%,
+  100% {
+    transform: none;
+  }
+  90% {
+    transform: rotate(-7deg) translateY(-4%);
+  }
+  95% {
+    transform: rotate(5deg);
+  }
+}
+
+/* In the hand: bigger (closer to the eye), following the finger, rattling. */
+.sw-spot.held {
+  z-index: 4;
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.22);
+  transition:
+    left 0.07s linear,
+    top 0.07s linear;
+  cursor: grabbing;
+}
+
+.sw-spot.held .sw-pig {
+  animation: sw-rattle 0.09s ease-in-out infinite alternate;
+  filter: drop-shadow(0 4cqw 3cqw rgba(0, 0, 0, 0.35));
+}
+
+@keyframes sw-rattle {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
 }
 
 .sw-pig {
@@ -4146,28 +4212,12 @@ h3 {
   font-weight: 700;
   white-space: nowrap;
   transform: rotate(calc(-1 * var(--rot)));
+  animation: mx-fade-in 0.25s ease both;
 }
 
-/* Being thrown: both pigs shaking in the hand, in the middle. */
-.sw-hand {
-  position: absolute;
-  left: 50%;
-  top: 55%;
-  display: flex;
-  justify-content: center;
-  width: min(64cqw, 56cqh);
-  transform: translate(-50%, -50%);
-  animation: mx-shake 0.11s ease-in-out infinite alternate;
-}
-
-.sw-hand .sw-pig {
-  width: 56%;
-  min-width: 0;
-}
-
-.sw-hand .sw-pig + .sw-pig {
-  margin-left: -12%;
-  transform: scaleX(-1) rotate(12deg);
+/* The small pen button in the table's corner: bank this turn's points. */
+.sw-bank {
+  --bank: max(58px, min(18cqw, 22cqh));
 }
 
 /* What the throw was: a slip at the top of the table. */
