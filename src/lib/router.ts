@@ -55,6 +55,14 @@ export function useRoute(): Route {
     }
     const back = document.documentElement.classList.contains('nav-back');
     window.scrollTo(0, back ? (scrolls.get(screenKey(hash)) ?? 0) : 0);
+    // iPhones show their picture of the screen while swiping back and drop it once the page paints
+    // something new: make sure that happens (an invisible change, for one frame).
+    if (back) {
+      requestAnimationFrame(() => {
+        document.body.style.opacity = '0.999';
+        requestAnimationFrame(() => (document.body.style.opacity = ''));
+      });
+    }
   }, [hash]);
   return useMemo(() => parse(hash), [hash]);
 }
