@@ -11,6 +11,8 @@ import mat from './mat.webp';
 import { allowedAfter, announce, believe, isDouble, MAEXCHEN, newRound, peek, reveal, shake, valueOf, VALUES, type Round, type Value } from './logic';
 
 const SHAKE_MS = 650;
+/** When the verdict lands after the cup is lifted (matches the CSS). */
+const STAMP_MS = 450;
 
 export default function Maexchen({ players }: GameProps) {
   const known = useApp().knows('maexchen');
@@ -81,7 +83,7 @@ function MaexchenTable({
   const mustLift = r.phase === 'pass' && claim?.value === MAEXCHEN;
 
   /** Shake cup and coaster together for a moment, then the dice are rolled. */
-  const doShake = () => {
+  const doShake = (base: Round = r) => {
     if (shaking) return;
     setLifted(false);
     setShaking(true);
@@ -89,7 +91,7 @@ function MaexchenTable({
     [0, 110, 230, 340, 450].forEach((d) => window.setTimeout(() => sfx.tick(), d));
     timer.current = window.setTimeout(() => {
       setShaking(false);
-      setR(shake(r));
+      setR(shake(base));
       sfx.pop();
     }, SHAKE_MS);
   };
@@ -118,62 +120,59 @@ function MaexchenTable({
     setChoice(null);
   };
 
+  /** Believed: the cup goes to the next player and shakes right away. */
   const doBelieve = () => {
-    sfx.tick();
-    buzz();
-    setR(believe(r, n));
+    const next = believe(r, n);
+    if (next === r) return;
+    setR(next);
+    doShake(next);
   };
 
   const doReveal = () => {
     const out = reveal(r, n);
     setR(out);
-    if (out.verdict?.truth) sfx.boo();
-    else sfx.tada();
-    buzz([40, 40, 80]);
+    // The cup flies off first, then the verdict lands like a stamp.
+    timer.current = window.setTimeout(() => {
+      if (out.verdict?.truth) sfx.boo();
+      else sfx.tada();
+      buzz([60, 40, 120]);
+    }, STAMP_MS);
   };
 
-  const sub =
-    r.phase === 'shake'
-      ? claim
-        ? t('believed it: now beat it')
-        : t('your roll')
-      : r.phase === 'look'
-        ? r.blind
-          ? t('shaken blind: announce something')
-          : r.peeked
-            ? t('announce, or shake once more blind')
-            : t('look under the cup (or don’t)')
-        : r.phase === 'pass'
-          ? mustLift
-            ? t('Mäxchen: you have to lift the cup')
-            : t('believe it or lift the cup?')
-          : r.verdict
-            ? r.verdict.sips === 1
-              ? t('drinks 1 sip')
-              : t('drinks {n} sips', { n: r.verdict.sips })
-            : '';
-
+  // What to do now, on the table (the player row only says who).
   const hint =
     r.phase === 'shake'
-      ? !known && t('Tap the cup to shake')
+      ? shaking
+        ? null
+        : claim
+          ? t('Believed it: now beat {value}', { value: label(claim.value) })
+          : t('Tap the cup to shake')
       : r.phase === 'look'
         ? r.blind
-          ? t('No more looking!')
-          : !known && !lifted && t('Hold the cup to look under it')
-        : r.phase === 'pass'
-          ? t('Hand the phone to {name}', { name: who.name })
-          : null;
+          ? t('Shaken blind: no more looking, announce something')
+          : lifted
+            ? null
+            : r.peeked
+              ? t('Announce, or shake once more blind')
+              : t('Hold the cup to look under it')
+        : null;
 
   return (
     <div className="mx fill">
       <div className="mx-status">
-        <div className="bd-player">
+        <div className={`mx-turn${r.phase === 'reveal' ? ' drinks' : ''}`} key={`${who.id}-${r.phase === 'reveal'}`} style={{ '--who': who.color } as CSSProperties}>
           <span className="bd-avatar" style={{ background: who.color }}>
             {who.avatar}
           </span>
-          <span className="bd-player-text">
-            <span className="bd-player-name">{who.name}</span>
-            <span className="bd-player-sub">{sub}</span>
+          <span className="mx-turn-text">
+            <span className="mx-turn-label">
+              {r.phase === 'reveal' && r.verdict
+                ? r.verdict.sips === 1
+                  ? t('drinks 1 sip')
+                  : t('drinks {n} sips', { n: r.verdict.sips })
+                : t('Your turn')}
+            </span>
+            <span className="mx-turn-name">{who.name}</span>
           </span>
         </div>
         <div className="mx-claim" aria-live="polite">
@@ -182,8 +181,21 @@ function MaexchenTable({
         </div>
       </div>
 
-      <div className="mx-table">
-        {hint && <span className={`mx-hint${r.blind && r.phase === 'look' ? ' warn' : ''}`}>{hint}</span>}
+      <div className={`mx-table${open && r.verdict ? (r.verdict.truth ? ' truth' : ' lie') : ''}`}>
+        {hint && (
+          <span key={hint} className={`mx-hint${r.blind && r.phase === 'look' ? ' warn' : ''}`}>
+            {hint}
+          </span>
+        )}
+        {r.phase === 'pass' && (
+          <span className="mx-handoff" key={next} style={{ '--who': who.color } as CSSProperties}>
+            <span className="mx-handoff-avatar" style={{ background: who.color }}>
+              {who.avatar}
+            </span>
+            <span className="mx-handoff-text">{t('Hand the phone to {name}', { name: who.name })}</span>
+            <span className="mx-handoff-sub">{mustLift ? t('Mäxchen: you have to lift the cup') : t('believe it or lift the cup?')}</span>
+          </span>
+        )}
         <div className={`mx-rig${shaking ? ' shaking' : ''}`}>
           <Coaster />
           <span className="mx-dice">
@@ -218,7 +230,7 @@ function MaexchenTable({
         </div>
         {open && r.verdict && claim && (
           <div className={`mx-verdict${r.verdict.truth ? ' truth' : ' lie'}`} role="status">
-            <span className="mx-verdict-title">{r.verdict.truth ? t('It’s true!') : t('Lie!')}</span>
+            <span className="mx-stamp">{r.verdict.truth ? t('It’s true!') : t('Lie!')}</span>
             <span className="mx-verdict-sub">
               {t('{actual} under the cup, {claim} announced', { actual: label(valueOf(r.dice)), claim: label(claim.value) })}
             </span>
@@ -229,7 +241,7 @@ function MaexchenTable({
       <div className="sticky-action stack mx-actions">
         {r.phase === 'shake' && (
           <>
-            <BigButton onClick={doShake} disabled={shaking}>
+            <BigButton onClick={() => doShake()} disabled={shaking}>
               {t('Shake')}
             </BigButton>
             <span className="mx-slot" />
@@ -240,7 +252,7 @@ function MaexchenTable({
             <BigButton onClick={() => setPicking(true)}>
               {t('Announce…')}
             </BigButton>
-            <BigButton variant="light" onClick={doShake} disabled={!r.peeked || r.blind || shaking}>
+            <BigButton variant="light" onClick={() => doShake()} disabled={!r.peeked || r.blind || shaking}>
               {r.blind ? t('Shaken blind 🙈') : t('Shake once more, blind')}
             </BigButton>
           </>
