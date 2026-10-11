@@ -2142,6 +2142,37 @@ h3 {
   animation: nudge 1.6s ease-in-out infinite;
 }
 
+/* At rest a card is flat: only the side that shows, no 3D (PlayingCard adds .turning while it
+   flips). A table full of 3D cards is hundreds of layers for the phone on every frame. */
+.pcard:not(.turning) {
+  perspective: none;
+}
+
+.pcard:not(.turning) .pcard-inner {
+  transform: none;
+  transform-style: flat;
+  transition: none;
+}
+
+.pcard:not(.turning) .pcard-face {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.pcard:not(.turning) .pcard-back {
+  transform: none;
+}
+
+.pcard:not(.turning):not(.up) .pcard-front,
+.pcard.up:not(.turning) .pcard-back {
+  visibility: hidden;
+}
+
+/* Getting ready to turn: already 3D, but nothing moves until it turns. */
+.pcard.ready .pcard-inner {
+  transition: none;
+}
+
 /* ---------- Bus Driver ---------- */
 
 .bd,

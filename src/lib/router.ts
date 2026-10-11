@@ -23,6 +23,8 @@ function parse(hash: string): Route {
 
 /** Where each screen was scrolled to when it was left, for swiping back to it. */
 const scrolls = new Map<string, number>();
+/** Home has more than one address ('', '#', '#/'). */
+const screenKey = (hash: string) => (hash === '' || hash === '#' ? '#/' : hash);
 
 export function useRoute(): Route {
   const [hash, setHash] = useState(() => window.location.hash);
@@ -33,7 +35,7 @@ export function useRoute(): Route {
       // The app's own steps through the history can land on the screen already shown: stay put.
       if (window.location.hash === shown) return;
       // Still the old screen on display: remember how far down it was.
-      scrolls.set(shown, window.scrollY);
+      scrolls.set(screenKey(shown), window.scrollY);
       shown = window.location.hash;
       setHash(shown);
     };
@@ -52,7 +54,7 @@ export function useRoute(): Route {
       return;
     }
     const back = document.documentElement.classList.contains('nav-back');
-    window.scrollTo(0, back ? (scrolls.get(hash) ?? 0) : 0);
+    window.scrollTo(0, back ? (scrolls.get(screenKey(hash)) ?? 0) : 0);
   }, [hash]);
   return useMemo(() => parse(hash), [hash]);
 }
