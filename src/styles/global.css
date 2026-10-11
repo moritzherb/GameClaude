@@ -3074,9 +3074,9 @@ h3 {
 /* The table: face-down cards in a messy circle around the King's Cup. */
 .kc-ring {
   position: relative;
-  /* As big as the free space allows, in both directions. */
-  width: min(100cqw, 100cqh, 560px);
-  margin: 0 auto;
+  /* As big as the free space allows, in both directions (not counting the button's room). */
+  width: min(100cqw, calc(100cqh - var(--kc-under, 0px) - 6px), 560px);
+  flex: none;
   aspect-ratio: 1;
   container-type: inline-size;
 }
@@ -3327,9 +3327,33 @@ h3 {
   flex: 1 1 0;
   min-height: 220px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   container-type: size;
+}
+
+/* The circle sits in the middle of the free space: spacers above and below. */
+.kc-stage::before,
+.kc-stage::after {
+  content: '';
+  flex: 1 1 0;
+}
+
+/* Nothing else under the circle but the Next button (hidden while picking): the table reaches
+   down to the bottom of the screen, so the circle is centred on all of it, while the spacer below
+   never gets shorter than the button's room (the circle never slides under it). */
+.kc-stage:has(+ .sticky-action) {
+  --kc-under: calc(98px + 20px + env(safe-area-inset-bottom));
+  margin-bottom: calc(-1 * var(--kc-under));
+}
+
+.kc-stage:has(+ .sticky-action)::after {
+  min-height: calc(var(--kc-under) + 6px);
+}
+
+.kc-stage + .sticky-action {
+  position: relative;
+  z-index: 2;
 }
 
 .kc-idle {
