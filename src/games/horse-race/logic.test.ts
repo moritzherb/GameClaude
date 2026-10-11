@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newDeck, type Card, type Suit } from '../../lib/cards';
-import { behind, newRace, step, type Race } from './logic';
+import { newRace, step, winnings, type Race } from './logic';
 
 const c = (suit: Suit, value = 5): Card => ({ value, suit });
 
@@ -48,15 +48,18 @@ describe('Horse race', () => {
     expect(r.log.map((s) => s.kind)).toEqual(['draw', 'side', 'side']);
   });
 
-  it('the first Ace past the top row wins; the others are behind by their distance', () => {
+  it('the first Ace past the top row wins', () => {
     let r = race([c('clubs', 2)], [c('hearts'), c('hearts'), c('hearts')]);
     r = step(r); // hearts row 1
     r = step(r); // side: clubs row 1
     r = step(r); // hearts past the finish (2 rows: 1 + finish)
     expect(r.winner).toBe('hearts');
-    expect(behind(r, 'clubs')).toBe(1);
-    expect(behind(r, 'spades')).toBe(2);
     expect(step(r)).toBe(r);
+  });
+
+  it('a winning bet gives out twice the stake', () => {
+    expect(winnings(4)).toBe(8);
+    expect(winnings(1)).toBe(2);
   });
 
   it('a whole race always ends with a winner', () => {

@@ -10,7 +10,8 @@ import { shuffle } from '../../lib/random';
  * - The first Ace to reach a row whose side card is still face down turns it over, and the
  *   Ace of that card's suit moves up too (before the next card from the deck). Whoever bet on
  *   the Ace that reached the row gives out sips: as many as the row number.
- * - The first Ace past the top row wins. Everyone who bet on another suit drinks.
+ * - The first Ace past the top row wins. Its backers give out twice the sips they staked;
+ *   everyone who bet on another suit drinks their stake.
  */
 
 export const ROW_OPTIONS = [5, 6, 7, 8];
@@ -81,8 +82,13 @@ export function step(r: Race): Race {
 /** Sips the backers of an Ace give out when it turns over the side card in this row. */
 export const sipsForRow = (row: number) => row;
 
-/** Losers drink as many sips as their Ace is behind the finish line. */
-export const behind = (r: Race, suit: Suit) => r.rows + 1 - r.pos[suit];
+/** Everyone stakes sips on their horse before the race. */
+export const STAKE_MIN = 1;
+export const STAKE_MAX = 10;
+export const DEFAULT_STAKE = 2;
+
+/** A winning bet gives out twice its stake (a losing one drinks the stake). */
+export const winnings = (stake: number) => stake * 2;
 
 /** The leading Aces, for the commentary. */
 export const leaders = (r: Race) => {

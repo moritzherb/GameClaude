@@ -14,11 +14,11 @@ const horseRace: GameDefinition = {
   explains: true,
   rules: [
     tx('The four Aces are the horses, side by side at the start. Next to the track lies one face-down card per row (you pick how many rows).'),
-    tx('Everyone bets on a suit: its Ace is your horse.'),
+    tx('Everyone bets on a suit (its Ace is your horse) and stakes a number of sips on it.'),
     tx('Turn over the rest of the deck card by card. Each card moves the Ace of its suit up one row.'),
     tx('The first Ace into a row turns that row’s side card over, and the Ace of its suit moves up too, before the next card from the deck.'),
     tx('Whoever bet on the Ace that turned the side card over gives out sips: as many as the row number.'),
-    tx('The first Ace past the top row wins. Its backers drink nothing; everyone else drinks one sip for every row their horse is behind.'),
+    tx('The first Ace past the top row wins. Its backers give out twice the sips they staked; everyone else drinks their stake.'),
   ],
   component: HorseRace,
 };
