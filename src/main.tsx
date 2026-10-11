@@ -32,14 +32,27 @@ const fingersUp = (e: TouchEvent) => {
 document.addEventListener('touchend', fingersUp, { passive: true });
 document.addEventListener('touchcancel', fingersUp, { passive: true });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AppProvider>
-      <RoomProvider>
-        <App />
-      </RoomProvider>
-    </AppProvider>
-  </StrictMode>,
+/**
+ * Wait for the two fonts before the first picture (they're on their way already, see
+ * vite.config.ts): drawn first in a stand-in font, every headline would jump a moment later.
+ * Never longer than a second, though: on a slow first visit the app shows up anyway.
+ */
+function fontsReady() {
+  if (!document.fonts?.load) return Promise.resolve();
+  const fonts = Promise.all([document.fonts.load('1em "Big Shoulders Display Variable"'), document.fonts.load('1em "Archivo Variable"')]);
+  return Promise.race([fonts, new Promise((done) => window.setTimeout(done, 1000))]).catch(() => {});
+}
+
+void fontsReady().then(() =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <AppProvider>
+        <RoomProvider>
+          <App />
+        </RoomProvider>
+      </AppProvider>
+    </StrictMode>,
+  ),
 );
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

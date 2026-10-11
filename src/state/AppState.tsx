@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { setLang, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
@@ -75,7 +75,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Set before the children render, so every t() call below uses the chosen language.
   setLang(settings.lang ?? 'en');
 
-  useEffect(() => {
+  // Before the screen is drawn: with big text on, the first picture mustn't show it small.
+  useLayoutEffect(() => {
     fxSettings.sound = settings.sound;
     fxSettings.haptics = settings.haptics;
     document.documentElement.classList.toggle('big-mode', settings.bigMode);

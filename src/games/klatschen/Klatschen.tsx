@@ -228,11 +228,16 @@ function Table({
         {burst > 0 && (
           <span className="kl-burst" key={burst} aria-hidden>
               <svg viewBox="0 0 200 140">
-                <path d="M100 6l14 34 36-22-12 36 42 2-34 22 32 26-42-6 6 38-30-26-14 30-12-32-32 22 8-38-42 4 32-26L14 54l42-2-12-36 36 22z" />
-              </svg>
+              <path d="M100 6l14 34 36-22-12 36 42 2-34 22 32 26-42-6 6 38-30-26-14 30-12-32-32 22 8-38-42 4 32-26L14 54l42-2-12-36 36 22z" />
+            </svg>
             <span>{t('SLAP!')}</span>
           </span>
         )}
+        {/* The glass in the middle of the table. A clap glass card's splash goes in once the card is put away. */}
+        <span className="kl-table-glass" aria-hidden>
+          <Glass level={card?.id === GLASS_ID ? s.glass - 1 : s.glass} pour />
+          <span className="kl-table-glass-count">{card?.id === GLASS_ID ? s.glass - 1 : s.glass}/4</span>
+        </span>
         {card && <Reveal key={s.drawn} card={card} finale={lastGlass} glass={s.glass} />}
       </div>
 
@@ -284,11 +289,13 @@ function Reveal({ card, finale, glass }: { card: TaskCard; finale: boolean; glas
   );
 }
 
-/** The glass in the middle, filling up with every clap glass card. */
-function Glass({ level }: { level: number }) {
+/** The glass in the middle, filling up with every clap glass card. With pour, a stream of beer runs in as it rises. */
+function Glass({ level, pour = false }: { level: number; pour?: boolean }) {
   const clip = `kl-in-${useId().replace(/:/g, '')}`;
-  const fill = Math.min(4, level) / 4;
+  const fill = Math.max(0, Math.min(4, level)) / 4;
   const top = 92 - fill * 62;
+  // The beer rises by moving (CSS transforms glide on every phone; the rect's y attribute doesn't everywhere).
+  const rise = { transform: `translateY(${top}px)` };
   return (
     <svg className="kl-glass" viewBox="0 0 60 100">
       <defs>
@@ -297,10 +304,12 @@ function Glass({ level }: { level: number }) {
         </clipPath>
       </defs>
       <path d="M8 18h44l-5 76H13z" className="kl-glass-body" />
+      {pour && fill > 0 && <rect key={level} x="27" y="-14" width="6" height="106" rx="3" className="kl-glass-stream" />}
       <g clipPath={`url(#${clip})`}>
-        <rect x="0" y={top} width="60" height="100" className="kl-glass-beer" />
-        {fill > 0 && <rect x="0" y={top - 5} width="60" height="6" rx="3" className="kl-glass-foam" />}
+        <rect x="0" y="0" width="60" height="100" className="kl-glass-beer" style={rise} />
+        {fill > 0 && <rect x="0" y="-5" width="60" height="6" rx="3" className="kl-glass-foam" style={rise} />}
       </g>
+      <path d="M15 26l3 56" className="kl-glass-shine" />
       <path d="M8 18h44l-5 76H13z" className="kl-glass-rim" />
     </svg>
   );
