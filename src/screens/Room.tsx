@@ -151,6 +151,8 @@ function Lobby() {
   const [copied, setCopied] = useState(false);
   const isHost = room.role === 'host';
   const code = room.code ?? '';
+  // Only a phone that joins now pops in; the ones already in the room just show.
+  const [listed] = useState(() => new Set(room.members.map((m) => m.id)));
 
   useEffect(() => {
     if (!armLeave) return;
@@ -221,7 +223,7 @@ function Lobby() {
         </div>
         <ul className="member-list">
           {room.members.map((m) => (
-            <li key={m.id} className={`member-row pop-in${m.online ? '' : ' offline'}`}>
+            <li key={m.id} className={`member-row${listed.has(m.id) ? '' : ' pop-in'}${m.online ? '' : ' offline'}`}>
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
                 {m.avatar}
               </span>

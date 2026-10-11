@@ -826,9 +826,8 @@ function HandSpread({
             style={
               {
                 '--cw': `${cw}px`,
-                left,
-                top: top0 + row * shift,
-                transform: gone ? `translateY(${-ch * 0.9}px) scale(0.85)` : `translateY(${sel ? -LIFT : drop}px) rotate(${angle}deg)`,
+                // Placed with transform only (not left/top): moving cards slide without laying out the hand again.
+                transform: `translate(${left}px, ${top0 + row * shift}px) ${gone ? `translateY(${-ch * 0.9}px) scale(0.85)` : `translateY(${sel ? -LIFT : drop}px) rotate(${angle}deg)`}`,
                 opacity: gone ? 0 : undefined,
                 zIndex: i + 1,
               } as CSSProperties

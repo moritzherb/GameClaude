@@ -10,17 +10,27 @@ import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
 
 // An app, not a page: no pinching it bigger or smaller. iPhones ignore user-scalable=no, but not
-// these gesture events (Safari only), and two-finger moves are kept from zooming as well.
+// these gesture events (Safari only); and two-finger moves are kept from zooming as well. That last
+// one only listens while two fingers are down: a listener that may stop touch moves makes the phone
+// wait for the app before every bit of scrolling.
 for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
   document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
 }
+const noPinch = (e: TouchEvent) => {
+  if (e.touches.length > 1 && e.cancelable) e.preventDefault();
+};
 document.addEventListener(
-  'touchmove',
+  'touchstart',
   (e) => {
-    if (e.touches.length > 1 && e.cancelable) e.preventDefault();
+    if (e.touches.length > 1) document.addEventListener('touchmove', noPinch, { passive: false });
   },
-  { passive: false },
+  { passive: true },
 );
+const fingersUp = (e: TouchEvent) => {
+  if (e.touches.length < 2) document.removeEventListener('touchmove', noPinch);
+};
+document.addEventListener('touchend', fingersUp, { passive: true });
+document.addEventListener('touchcancel', fingersUp, { passive: true });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

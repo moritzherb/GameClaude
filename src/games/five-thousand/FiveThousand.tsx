@@ -426,7 +426,7 @@ function Scoreboard({ g, players }: { g: Game; players: GameProps['players'] }) 
           </span>
           <span className="fk-chip-name">{p.name}</span>
           <span className="fk-chip-bar">
-            <i style={{ width: `${(g.scores[i] / TARGET) * 100}%` }} />
+            <i style={{ transform: `scaleX(${Math.min(1, g.scores[i] / TARGET)})` }} />
           </span>
         </div>
       ))}

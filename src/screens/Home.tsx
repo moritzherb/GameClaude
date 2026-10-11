@@ -84,14 +84,21 @@ export default function Home() {
       .filter((g): g is GameDefinition => !!g);
   const [featured, setFeatured] = useState(() => drawLineup());
   const [deal, setDeal] = useState(0);
-  const pull = usePullToRefresh(() => {
-    setFeatured(drawLineup(true));
-    setDeal((n) => n + 1);
-    sfx.pop();
-  }, !rolling);
+  const page = useRef<HTMLElement>(null);
+  const ptr = useRef<HTMLDivElement>(null);
+  const peek = useRef<HTMLDivElement>(null);
+  const { refreshing } = usePullToRefresh(
+    () => {
+      setFeatured(drawLineup(true));
+      setDeal((n) => n + 1);
+      sfx.pop();
+    },
+    !rolling,
+    page,
+    ptr,
+  );
   // Swipe left anywhere on home: All games comes in from the right.
-  const swipe = useSwipeLeft(() => navigate(paths.games()), !rolling && pull.phase === 'idle');
-  const shift = swipe.dx * 0.5;
+  useSwipeLeft(() => navigate(paths.games()), !rolling && !refreshing, page, peek);
 
   // "Fri 09.10" / "Fr. 09.10"
   const date = new Date()
@@ -103,29 +110,21 @@ export default function Home() {
   return (
     <>
       {/* What the swipe uncovers on the right: where it leads. */}
-      {shift < 0 && (
-        <div className={`swipe-peek${swipe.progress >= 1 ? ' armed' : ''}`} style={{ width: -shift, '--p': swipe.progress } as CSSProperties} aria-hidden>
-          <span className="swipe-peek-arrow">
-            <ChevronIcon />
-          </span>
-          <span className="swipe-peek-label">{t('All games')}</span>
-        </div>
-      )}
-      <main
-        className={`screen home${swipe.dragging ? ' dragging' : ''}`}
-        style={shift ? { transform: `translateX(${shift}px)` } : undefined}
-      >
-        {/* Pull to refresh: the die from the app icon comes down with the finger, turning, and spins
-            while it refreshes. */}
-        <div
-          className={`ptr ${pull.phase}`}
-          style={{ height: pull.offset, '--p': pull.progress } as CSSProperties}
-          aria-hidden
-        >
-          <span className="ptr-die">
-            <AppDie size={22} />
-          </span>
-        </div>
+      <div ref={peek} className="swipe-peek" aria-hidden>
+        <span className="swipe-peek-arrow">
+          <ChevronIcon />
+        </span>
+        {/* As drawn text only: the page always has this, out of sight, and it isn't a second "All games" link. */}
+        <span className="swipe-peek-label" data-label={t('All games')} />
+      </div>
+      {/* Pull to refresh: the die from the app icon comes down with the finger into the gap above the
+          page, turning, and spins while it refreshes. */}
+      <div ref={ptr} className="ptr" aria-hidden>
+        <span className="ptr-die">
+          <AppDie size={22} />
+        </span>
+      </div>
+      <main ref={page} className="screen home">
         <header className="home-header">
           <Logo />
           <span className="home-date">{date}</span>
