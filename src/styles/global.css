@@ -3625,11 +3625,16 @@ h3 {
   background: var(--mat) center / cover;
 }
 
-/* Copies of the print just below the top one, darker: the edge of the cardboard, in the colour of
-   the print at that spot (blue along the bottom). */
+/* The cardboard's white edge: the mat's outline a few times over, just below the print, a little
+   greyer towards the table (a solid extrusion, corners included). */
 .mx-mat-layer.edge {
+  background: hsl(42 22% calc(93% - var(--i) * 3.5%));
   transform: translateY(calc(var(--i) * 0.38cqw));
-  filter: brightness(0.62) saturate(1.1);
+}
+
+/* The lowest one touches the table: a fine dark line there. */
+.mx-mat-layer.edge:first-child {
+  box-shadow: 0 0.25cqw 0.3cqw rgba(40, 20, 6, 0.45);
 }
 
 /* The two dice on the mat, under the cup. */

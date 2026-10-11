@@ -367,7 +367,7 @@ function Coaster() {
   return (
     <span className="mx-coaster" aria-hidden>
       <span className="mx-mat" style={{ '--mat': `url(${mat})` } as CSSProperties}>
-        {/* The cardboard's edge: the same print, a little lower and darker, a few times over. */}
+        {/* The cardboard's white edge: the outline a few times over, just below the print. */}
         {[4, 3, 2, 1].map((i) => (
           <span key={i} className="mx-mat-layer edge" style={{ '--i': i } as CSSProperties} />
         ))}
