@@ -147,20 +147,39 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   // Picked up and put down again without a real throw.
   const [dropped, setDropped] = useState(false);
   const [flight, setFlight] = useState<Flight | null>(null);
-  const drag = useRef<{ id: number; samples: { x: number; y: number; t: number }[]; last: number } | null>(null);
+  /** A finger holding the pigs: where it has been, and what's needed to move them without asking the page for layout. */
+  const drag = useRef<{
+    id: number;
+    samples: { x: number; y: number; t: number }[];
+    last: number;
+    rect: DOMRect;
+    /** Where each pig lies (px), so the hand moves them with a transform only. */
+    base: { x: number; y: number }[];
+    frame: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const timer = useRef<number>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const canPick = !g.ended && mode === 'rest';
   const box = () => table.current!.getBoundingClientRect();
 
-  /** Both pigs in the hand, at the finger (in px from the table's corner). */
+  /** Both pigs in the hand, at the finger (px from the table's corner): moved once per frame, by transform only. */
   const holdAt = (x: number, y: number) => {
-    const r = box();
-    pigEls.current.forEach((el, i) => {
-      if (!el) return;
-      el.style.left = `${((x + (i ? 22 : -22)) / r.width) * 100}%`;
-      el.style.top = `${((y + (i ? 6 : -4)) / r.height) * 100}%`;
+    const d = drag.current;
+    if (!d) return;
+    d.x = x;
+    d.y = y;
+    if (d.frame) return;
+    d.frame = requestAnimationFrame(() => {
+      d.frame = 0;
+      pigEls.current.forEach((el, i) => {
+        if (!el) return;
+        const dx = d.x + (i ? 22 : -22) - d.base[i].x;
+        const dy = d.y + (i ? 6 : -4) - d.base[i].y;
+        el.style.transform = `translate(-50%, -50%) translate3d(${dx}px, ${dy}px, 0) rotate(${at[i].rot}deg) scale(1.22)`;
+      });
     });
   };
 
@@ -171,7 +190,16 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     const r = box();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
-    drag.current = { id: e.pointerId, samples: [{ x, y, t: e.timeStamp }], last: 0 };
+    drag.current = {
+      id: e.pointerId,
+      samples: [{ x, y, t: e.timeStamp }],
+      last: 0,
+      rect: r,
+      base: at.map((a) => ({ x: (a.x / 100) * r.width, y: (a.y / 100) * r.height })),
+      frame: 0,
+      x,
+      y,
+    };
     setMode('held');
     setDropped(false);
     holdAt(x, y);
@@ -182,9 +210,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   const move = (e: React.PointerEvent) => {
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
-    const r = box();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
+    const x = e.clientX - d.rect.left;
+    const y = e.clientY - d.rect.top;
     d.samples.push({ x, y, t: e.timeStamp });
     if (d.samples.length > 12) d.samples.shift();
     holdAt(x, y);
@@ -199,7 +226,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
     drag.current = null;
-    const r = box();
+    cancelAnimationFrame(d.frame);
+    const r = d.rect;
     const end = d.samples[d.samples.length - 1];
     // Speed over the last moment before letting go (px per ms).
     const recent = d.samples.filter((p) => end.t - p.t <= 90);
@@ -246,13 +274,14 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     launch({ x: r.width / 2, y: r.height * 0.8 }, { x: 0.1, y: -1.2 }, 1.2);
   };
 
-  // Where the pigs lie, written straight to the page: while held they followed the finger
-  // directly, so React's idea of where they are may be out of date.
+  // Where the pigs lie. While held they follow the finger by an inline transform: once they're
+  // put down or thrown, that goes and they lie where the state says.
   useLayoutEffect(() => {
     pigEls.current.forEach((el, i) => {
       if (!el) return;
       el.style.left = `${at[i].x}%`;
       el.style.top = `${at[i].y}%`;
+      if (mode !== 'held') el.style.transform = '';
     });
   }, [at, mode]);
 
@@ -379,7 +408,9 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
               style={{ left: `${at[i].x}%`, top: `${at[i].y}%`, '--rot': `${at[i].rot}deg` } as CSSProperties}
               onPointerDown={pickUp}
             >
-              <Pig pose={mode === 'rest' ? poses[i] : i ? 'side' : 'side-dot'} />
+              <span className="sw-wiggle">
+                <Pig pose={mode === 'rest' ? poses[i] : i ? 'side' : 'side-dot'} />
+              </span>
               {showResult && <span className="sw-pose">{t(POSE_NAME[poses[i]])}</span>}
             </span>
           ))}

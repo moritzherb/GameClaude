@@ -5,7 +5,7 @@
  * - Both on the same side: 1 point. On different sides ("Pig out"): the turn's points are gone.
  * - One pig on its side counts the other one: on its back 5, standing 5, on its snout 10,
  *   on snout and ear 15. Both the same: a double (20, 20, 40, 60). Two different ones: added up.
- * - The pigs touch: all points gone. One on top of the other (piggyback): all points gone, drink up.
+ * - The pigs touch in any way (1 throw in 100): every point you ever collected is gone. One on top of the other (piggyback): all points gone, drink up.
  * Drinks: a pig out costs a sip, touching pigs 2, a double gives sips out.
  */
 import { randomInt } from '../../lib/random';
@@ -22,8 +22,8 @@ export const POSE_ODDS: [Pose, number][] = [
   ['jowl', 0.0061],
 ];
 
-/** Both pigs touching, and one on top of the other, per throw. */
-export const TOUCH_ODDS = 0.006;
+/** Both pigs touching (1 in 100 throws), and one on top of the other, per throw. */
+export const TOUCH_ODDS = 0.01;
 export const PIGGYBACK_ODDS = 0.002;
 
 export const TARGET = 100;

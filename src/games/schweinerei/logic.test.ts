@@ -27,6 +27,13 @@ describe('schweinerei', () => {
     for (const [pose, p] of POSE_ODDS) expect(Math.abs(counts[pose] / N - p)).toBeLessThan(0.01);
   });
 
+  it('the pigs touch in about 1 throw in 100', () => {
+    const N = 100000;
+    let touch = 0;
+    for (let i = 0; i < N; i++) if (throwPigs().kind === 'touch') touch++;
+    expect(Math.abs(touch / N - 0.01)).toBeLessThan(0.002);
+  });
+
   it('touching and piggyback are rare', () => {
     expect(throwPigs(() => 0.001).kind).toBe('piggyback');
     expect(throwPigs(() => 0.005).kind).toBe('touch');
