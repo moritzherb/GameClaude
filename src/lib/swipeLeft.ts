@@ -25,9 +25,8 @@ export function arrivedBySwipe() {
  * the finger and `peek` uncovers on the right; a mostly vertical move (scrolling, pulling down) is
  * left alone.
  *
- * Smooth on slow phones too: the listeners never hold up scrolling (passive; the page has
- * `touch-action: pan-y`, so the phone doesn't move it sideways by itself), and the finger moves the
- * page directly, once per frame, without React drawing the screen again.
+ * Smooth on slow phones too: the finger moves the page directly, once per frame, without React
+ * drawing the screen again.
  */
 export function useSwipeLeft(
   onSwipe: () => void,
@@ -45,6 +44,8 @@ export function useSwipeLeft(
     let off = 0;
     let armed = false;
     let frame = 0;
+    /** Last word from the finger: a swipe that hears nothing for a while puts the page back. */
+    let watchdog = 0;
 
     const paint = () => {
       frame = 0;
@@ -69,6 +70,7 @@ export function useSwipeLeft(
       start = null;
       horizontal = false;
       off = 0;
+      window.clearTimeout(watchdog);
       if (!moved) return;
       cancelAnimationFrame(frame);
       dragging(false);
@@ -100,12 +102,17 @@ export function useSwipeLeft(
       }
       // The phone started scrolling after all (it decides by itself now): then it's a scroll.
       if (Math.abs(window.scrollY - start.scroll) > 12) return reset();
+      // Sideways is ours: the phone mustn't take the move over (iPhones would, and then never say
+      // when the finger let go, leaving the page half moved).
+      if (e.cancelable) e.preventDefault();
       off = Math.min(0, x);
       if (-off >= TRIGGER !== armed) {
         armed = -off >= TRIGGER;
         if (armed) buzz(8);
       }
       if (!frame) frame = requestAnimationFrame(paint);
+      window.clearTimeout(watchdog);
+      watchdog = window.setTimeout(reset, 1500);
     };
     const up = (e: TouchEvent) => {
       const s = start;
@@ -129,8 +136,11 @@ export function useSwipeLeft(
     const hidden = () => document.visibilityState === 'hidden' && reset();
 
     const passive = { passive: true } as const;
+    // Only home's own moves can be held up by this (not the whole app's), and only briefly: it does
+    // next to nothing per move.
+    const area: EventTarget = page.current ?? window;
     window.addEventListener('touchstart', down, passive);
-    window.addEventListener('touchmove', move, passive);
+    area.addEventListener('touchmove', move as EventListener, { passive: false });
     window.addEventListener('touchend', up, passive);
     window.addEventListener('touchcancel', cancel, passive);
     window.addEventListener('blur', cancel);
@@ -139,7 +149,7 @@ export function useSwipeLeft(
     document.addEventListener('visibilitychange', hidden);
     return () => {
       window.removeEventListener('touchstart', down);
-      window.removeEventListener('touchmove', move);
+      area.removeEventListener('touchmove', move as EventListener);
       window.removeEventListener('touchend', up);
       window.removeEventListener('touchcancel', cancel);
       window.removeEventListener('blur', cancel);
