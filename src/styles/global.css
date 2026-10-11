@@ -4346,14 +4346,46 @@ h3 {
   stroke-linejoin: round;
 }
 
+.kl-glass-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
 .kl-glass-beer {
   fill: #f2b233;
-  transition: y 0.6s var(--ease);
+  transition: transform 0.6s var(--ease);
 }
 
 .kl-glass-foam {
   fill: #fff6df;
-  transition: y 0.6s var(--ease);
+  transition: transform 0.6s var(--ease);
+}
+
+/* The splash going in: a stream from above, as long as the beer rises. */
+.kl-glass-stream {
+  fill: #f2b233;
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: kl-stream 0.9s ease-in-out both;
+}
+
+@keyframes kl-stream {
+  from {
+    transform: scaleY(0);
+  }
+  35% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  to {
+    transform: scaleY(1) translateY(30px);
+    opacity: 0;
+  }
 }
 
 .kl-glass-count {
@@ -4421,10 +4453,14 @@ h3 {
   }
 }
 
-/* The stack in the middle, slapped to draw. */
+/* The stack on the left, slapped to draw (the glass stands on the right). */
+.kl-table {
+  --kl-stack-x: 30%;
+}
+
 .kl-stack {
   position: absolute;
-  left: 50%;
+  left: var(--kl-stack-x);
   top: 50%;
   width: min(40cqw, 30cqh);
   aspect-ratio: 5 / 7;
@@ -4503,7 +4539,7 @@ h3 {
 
 .kl-slap-hint {
   position: absolute;
-  left: 50%;
+  left: var(--kl-stack-x);
   top: 7cqh;
   transform: translateX(-50%) rotate(-4deg);
   padding: 4px 14px 2px;
@@ -4513,7 +4549,7 @@ h3 {
   color: #151612;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(18px, 6cqw, 26px);
+  font-size: clamp(16px, 5.4cqw, 24px);
   text-transform: uppercase;
   white-space: nowrap;
   box-shadow: 4px 4px 0 #151612;
@@ -4533,7 +4569,7 @@ h3 {
 /* The slap: a hand comes down on the stack, and a comic burst. */
 .kl-hand {
   position: absolute;
-  left: 50%;
+  left: var(--kl-stack-x);
   top: 50%;
   z-index: 3;
   font-size: min(30cqw, 22cqh);
@@ -4554,11 +4590,11 @@ h3 {
 
 .kl-burst {
   position: absolute;
-  left: 50%;
   /* Right on the stack (and the card flying off it). */
+  left: var(--kl-stack-x);
   top: 50%;
   z-index: 4;
-  width: min(70cqw, 52cqh);
+  width: min(58cqw, 46cqh);
   display: grid;
   place-items: center;
   transform: translate(-50%, -50%) rotate(-8deg);
@@ -4591,7 +4627,7 @@ h3 {
   color: #e3263a;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: min(9.5cqw, 7cqh);
+  font-size: min(8cqw, 6.2cqh);
   letter-spacing: 0.02em;
   -webkit-text-stroke: 1.5px #151612;
 }
@@ -4616,8 +4652,9 @@ h3 {
 }
 
 @keyframes kl-fly {
+  /* Off the stack on the left. */
   from {
-    transform: translate(-50%, -50%) rotate(-30deg) scale(0.5);
+    transform: translate(calc(-50% - 20cqw), -50%) rotate(-30deg) scale(0.5);
     opacity: 0;
   }
   30% {
@@ -4667,6 +4704,52 @@ h3 {
   font-size: min(4.6cqw, 3.4cqh);
   font-weight: 600;
   line-height: 1.3;
+}
+
+/* The glass on the right of the table, filling up with every clap glass card. */
+.kl-table-glass {
+  position: absolute;
+  left: 75%;
+  top: 50%;
+  /* As high as the stack, the glass standing on its bottom: both counts sit on one line. */
+  height: min(56cqw, 42cqh);
+  display: flex;
+  align-items: flex-end;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.kl-table-glass .kl-glass {
+  width: min(31cqw, 25cqh);
+  filter: drop-shadow(5px 5px 0 rgba(21, 22, 18, 0.55));
+}
+
+.kl-table-glass .kl-glass-body {
+  fill: rgba(255, 255, 255, 0.5);
+}
+
+.kl-table-glass .kl-glass-rim {
+  stroke: #151612;
+  stroke-width: 3.5;
+}
+
+.kl-table-glass-count {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2.5cqh);
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #151612;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kl-table.revealed .kl-table-glass {
+  opacity: 0.35;
 }
 
 .kl-end-glass {
