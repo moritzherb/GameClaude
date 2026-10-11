@@ -14,7 +14,6 @@ import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
 import { lineup } from '../lib/lineup';
 import { usePullToRefresh } from '../lib/pullToRefresh';
-import { useSwipeLeft } from '../lib/swipeLeft';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -86,8 +85,7 @@ export default function Home() {
   const [deal, setDeal] = useState(0);
   const page = useRef<HTMLElement>(null);
   const ptr = useRef<HTMLDivElement>(null);
-  const peek = useRef<HTMLDivElement>(null);
-  const { refreshing } = usePullToRefresh(
+  usePullToRefresh(
     () => {
       setFeatured(drawLineup(true));
       setDeal((n) => n + 1);
@@ -97,8 +95,6 @@ export default function Home() {
     page,
     ptr,
   );
-  // Swipe left anywhere on home: All games comes in from the right.
-  useSwipeLeft(() => navigate(paths.games()), !rolling && !refreshing, page, peek);
 
   // "Fri 09.10" / "Fr. 09.10"
   const date = new Date()
@@ -109,14 +105,6 @@ export default function Home() {
 
   return (
     <>
-      {/* What the swipe uncovers on the right: where it leads. */}
-      <div ref={peek} className="swipe-peek" aria-hidden>
-        <span className="swipe-peek-arrow">
-          <ChevronIcon />
-        </span>
-        {/* As drawn text only: the page always has this, out of sight, and it isn't a second "All games" link. */}
-        <span className="swipe-peek-label" data-label={t('All games')} />
-      </div>
       {/* Pull to refresh: the die from the app icon comes down with the finger into the gap above the
           page, turning, and spins while it refreshes. */}
       <div ref={ptr} className="ptr" aria-hidden>
@@ -203,15 +191,24 @@ export default function Home() {
         <section className="section">
           <div className="section-head">
             <h2 className="section-title">{t('The line-up')}</h2>
-            <button type="button" className="link-btn" onClick={() => navigate(paths.games())}>
+            <Tap className="all-games-pill" onClick={() => navigate(paths.games())}>
               {t('All games')}
-            </button>
+              <ChevronIcon />
+            </Tap>
           </div>
           <div className={`ticket-list${deal ? ' dealt' : ''}`} key={deal}>
             {featured.map((g) => (
               <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
             ))}
           </div>
+          {/* The way to every game, right where the line-up ends. */}
+          <Tap className="all-games-bar" onClick={() => navigate(paths.games())}>
+            <span className="all-games-count">{GAMES.length}</span>
+            <span className="all-games-text">{t('See all games')}</span>
+            <span className="all-games-arrow">
+              <ChevronIcon />
+            </span>
+          </Tap>
         </section>
 
         {rolling && (

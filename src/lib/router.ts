@@ -4,8 +4,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 //
 // The history is kept flat: the home screen, and at most one screen on top of it.
 // Swiping back (or the phone's back button) therefore always lands on the home
-// screen, never in an old game, and nothing ever lies ahead of home (All games opens with the
-// app's own swipe on the home screen, see Home).
+// screen, never in an old game, and nothing ever lies ahead: there's no swiping forward (to the
+// left) anywhere. All games opens with its button.
 //
 // A running game has nothing underneath it at all: there's no swiping back out of it by
 // accident (that would just end it). The X in the corner is the way out.
@@ -199,9 +199,9 @@ if (typeof window !== 'undefined') {
       navigate(to);
       return;
     }
-    // Swiped back from a screen onto home: drop the screen ahead, so swiping forward can't
-    // bring it back.
-    if (history.state === null && isHome(window.location.hash) && !isHome(lastHash) && !isGame(lastHash)) {
+    // Swiped back onto home (from a screen, or home onto the home below it): drop what's ahead, so
+    // there's never anything to swipe forward (left) to.
+    if (history.state === null && isHome(window.location.hash) && !isGame(lastHash)) {
       history.pushState(HOME_TOP, '', '#/');
       return;
     }
