@@ -3083,11 +3083,11 @@ h3 {
 
 .kc-slot {
   position: absolute;
-  width: 9.2cqw;
-  height: 12.9cqw;
-  border-radius: 1cqw;
+  width: 11.4cqw;
+  height: 16cqw;
+  border-radius: 1.2cqw;
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
-  box-shadow: inset 0 0 0 0.55cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 0.65cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
   transform: translate(-50%, -50%) rotate(var(--rot));
   transition: transform 0.18s var(--spring);
 }
@@ -3219,13 +3219,13 @@ h3 {
 
 /* The drawn card, big in the middle so everyone can see it. Tap turns it to the rule. */
 .kc-reveal {
-  --cw: 52cqw;
+  --cw: 60cqw;
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 52cqw;
-  height: 72.8cqw;
-  margin: -36.4cqw 0 0 -26cqw;
+  width: 60cqw;
+  height: 84cqw;
+  margin: -42cqw 0 0 -30cqw;
   z-index: 3;
   will-change: transform;
 }
