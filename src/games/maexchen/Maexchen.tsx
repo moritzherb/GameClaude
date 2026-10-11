@@ -362,11 +362,17 @@ function Die({ n }: { n: number }) {
   );
 }
 
-/** The beer mat under the cup, lying on the table at an angle. */
+/** The beer mat under the cup, lying on the table at an angle, with its edge showing. */
 function Coaster() {
   return (
     <span className="mx-coaster" aria-hidden>
-      <span className="mx-mat" style={{ backgroundImage: `url(${mat})` }} />
+      <span className="mx-mat" style={{ '--mat': `url(${mat})` } as CSSProperties}>
+        {/* The cardboard's edge: the same print, a little lower and darker, a few times over. */}
+        {[4, 3, 2, 1].map((i) => (
+          <span key={i} className="mx-mat-layer edge" style={{ '--i': i } as CSSProperties} />
+        ))}
+        <span className="mx-mat-layer" />
+      </span>
     </span>
   );
 }
