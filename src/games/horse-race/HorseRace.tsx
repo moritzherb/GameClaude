@@ -9,15 +9,26 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
-import { behind, DEFAULT_ROWS, newRace, ROW_OPTIONS, sipsForRow, step, type Race } from './logic';
+import { DEFAULT_ROWS, DEFAULT_STAKE, newRace, ROW_OPTIONS, sipsForRow, STAKE_MAX, STAKE_MIN, step, winnings, type Race } from './logic';
 
 const SUIT_NAME: Record<Suit, string> = { hearts: tx('Hearts'), diamonds: tx('Diamonds'), spades: tx('Spades'), clubs: tx('Clubs') };
 const RED = (s: Suit) => s === 'hearts' || s === 'diamonds';
 const AUTO_MS = 1300;
+const sips = (n: number) => (n === 1 ? t('1 sip') : t('{n} sips', { n }));
 
 export default function HorseRace({ players, exit }: GameProps) {
   const known = useApp().knows('horse-race');
   const [bets, setBets] = useState<Record<string, Suit>>({});
+  // The sips everyone stakes on their horse.
+  const [stakes, setStakes] = useState<Record<string, number>>({});
+  const stake = (p: Player) => stakes[p.id] ?? DEFAULT_STAKE;
+  const changeStake = (p: Player, by: number) => {
+    const n = Math.min(STAKE_MAX, Math.max(STAKE_MIN, stake(p) + by));
+    if (n === stake(p)) return;
+    sfx.tick();
+    buzz(6);
+    setStakes({ ...stakes, [p.id]: n });
+  };
   const [rows, setRows] = useState(DEFAULT_ROWS);
   const [race, setRace] = useState<Race | null>(null);
   const [auto, setAuto] = useState(false);
@@ -51,7 +62,9 @@ export default function HorseRace({ players, exit }: GameProps) {
       <div className="bd">
         <div className="bd-head">
           <h2 className="bd-title">{t('Place your bets')}</h2>
-          {!known && <p className="lead">{t('Everyone picks a suit. Its Ace is your horse. If it doesn’t win, you drink.')}</p>}
+          {!known && (
+            <p className="lead">{t('Everyone picks a suit and stakes sips on it. If its Ace wins, you give out double. If not, you drink your stake.')}</p>
+          )}
         </div>
 
         <div className="hs-bets">
@@ -61,6 +74,18 @@ export default function HorseRace({ players, exit }: GameProps) {
                 {p.avatar}
               </span>
               <span className="hs-bet-name">{p.name}</span>
+              <span className="hs-stake" role="group" aria-label={t('Stake of {name}', { name: p.name })}>
+                <button type="button" className="hs-stake-btn" aria-label={t('Fewer sips')} disabled={stake(p) <= STAKE_MIN} onClick={() => changeStake(p, -1)}>
+                  −
+                </button>
+                <span className="hs-stake-num" aria-live="polite" aria-label={sips(stake(p))}>
+                  {stake(p)}
+                  <span aria-hidden="true"> 🍺</span>
+                </span>
+                <button type="button" className="hs-stake-btn" aria-label={t('More sips')} disabled={stake(p) >= STAKE_MAX} onClick={() => changeStake(p, 1)}>
+                  +
+                </button>
+              </span>
               <span className="hs-bet-suits">
                 {SUITS.map((s) => (
                   <button
@@ -129,6 +154,28 @@ export default function HorseRace({ players, exit }: GameProps) {
     const win = race.winner;
     const winners = backers(win);
     const losers = players.filter((p) => bets[p.id] !== win);
+    const tally = (title: string, list: Player[], n: (p: Player) => number) => (
+      <section className="panel">
+        <h3 className="section-title">{title}</h3>
+        <div className="ftd-tally">
+          {list
+            .map((p) => ({ p, n: n(p) }))
+            .sort((a, b) => b.n - a.n)
+            .map(({ p, n }) => (
+              <div key={p.id} className="ftd-tally-row">
+                <span className="bd-avatar xs" style={{ background: p.color }}>
+                  {p.avatar}
+                </span>
+                <span className="ftd-tally-name">{p.name}</span>
+                <span className={`hs-tally-suit${RED(bets[p.id]) ? ' red' : ''}`}>
+                  <SuitIcon suit={bets[p.id]} />
+                </span>
+                <span className="ftd-tally-num">{sips(n)}</span>
+              </div>
+            ))}
+        </div>
+      </section>
+    );
     return (
       <div className="bd hs-finish">
         <div className="bd-head center">
@@ -138,32 +185,14 @@ export default function HorseRace({ players, exit }: GameProps) {
           </span>
           <h2 className="bd-title big">{t('{suit} wins!', { suit: t(SUIT_NAME[win]) })}</h2>
           <p className="lead">
-            {winners.length ? t('{names} bet right and drink nothing.', { names: winners.map((p) => p.name).join(' & ') }) : t('Nobody bet on it. Everyone drinks!')}
+            {winners.length
+              ? t('{names} bet right and give out double.', { names: winners.map((p) => p.name).join(' & ') })
+              : t('Nobody bet on it. Everyone drinks!')}
           </p>
         </div>
-        {losers.length > 0 && (
-          <section className="panel">
-            <h3 className="section-title">{t('Drink up')}</h3>
-            <div className="ftd-tally">
-              {losers
-                .map((p) => ({ p, n: behind(race, bets[p.id]) }))
-                .sort((a, b) => b.n - a.n)
-                .map(({ p, n }) => (
-                  <div key={p.id} className="ftd-tally-row">
-                    <span className="bd-avatar xs" style={{ background: p.color }}>
-                      {p.avatar}
-                    </span>
-                    <span className="ftd-tally-name">{p.name}</span>
-                    <span className={`hs-tally-suit${RED(bets[p.id]) ? ' red' : ''}`}>
-                      <SuitIcon suit={bets[p.id]} />
-                    </span>
-                    <span className="ftd-tally-num">{n === 1 ? t('1 sip') : t('{n} sips', { n })}</span>
-                  </div>
-                ))}
-            </div>
-            {!known && <p className="fine-print">{t('One sip for every row your horse is behind.')}</p>}
-          </section>
-        )}
+        {winners.length > 0 && tally(t('Give out'), winners, (p) => winnings(stake(p)))}
+        {losers.length > 0 && tally(t('Drink up'), losers, stake)}
+        {!known && <p className="fine-print">{t('Winners give out twice their stake, everyone else drinks theirs.')}</p>}
         <div className="sticky-action stack">
           <BigButton onClick={() => setRace(null)}>{t('Race again')}</BigButton>
           <BigButton variant="glass" onClick={exit}>

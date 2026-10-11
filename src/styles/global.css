@@ -4759,8 +4759,9 @@ h3 {
 
 /* ---------- Horse race ---------- */
 
-/* Bets: one row per player, the four suits to tap. */
+/* Bets: one row per player: name and stake on the left, the four suits to tap on the right. */
 .hs-bets {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   border-radius: var(--radius);
@@ -4768,10 +4769,86 @@ h3 {
 }
 
 .hs-bet-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'avatar name suits'
+    'avatar stake suits';
   align-items: center;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: 3px;
   padding: 8px 10px;
+}
+
+.hs-bet-row > .bd-avatar {
+  grid-area: avatar;
+}
+
+/* The stake: − 2 🍺 + */
+.hs-stake {
+  grid-area: stake;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hs-stake-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 700;
+  transition: transform 0.15s var(--spring), opacity 0.15s ease;
+}
+
+.hs-stake-btn:not(:disabled):active {
+  transform: scale(0.85);
+}
+
+.hs-stake-btn:disabled {
+  opacity: 0.25;
+}
+
+.hs-stake-num {
+  min-width: 38px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hs-stake-num span {
+  font-size: 0.8rem;
+}
+
+/* Too narrow for all of it in one line: name and stake on top, the suits below. */
+@container (max-width: 345px) {
+  .hs-bet-row {
+    grid-template-areas:
+      'avatar name stake'
+      'suits suits suits';
+    row-gap: 8px;
+  }
+
+  .hs-bet-row .hs-bet-name {
+    align-self: center;
+  }
+
+  .hs-bet-row .hs-stake {
+    justify-self: end;
+  }
+
+  .hs-bet-suits .hs-suit {
+    flex: 1;
+  }
 }
 
 .hs-bet-row + .hs-bet-row {
@@ -4779,7 +4856,8 @@ h3 {
 }
 
 .hs-bet-name {
-  flex: 1;
+  grid-area: name;
+  align-self: end;
   min-width: 0;
   font-weight: 600;
   overflow: hidden;
@@ -4788,14 +4866,15 @@ h3 {
 }
 
 .hs-bet-suits {
+  grid-area: suits;
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .hs-suit {
   display: grid;
   place-items: center;
-  width: 40px;
+  width: 38px;
   height: 40px;
   border-radius: 10px;
   background: #fff;
