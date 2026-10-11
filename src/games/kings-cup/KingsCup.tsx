@@ -2,6 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSPropert
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import DeckCount from '../../components/DeckCount';
+import Sheet from '../../components/Sheet';
 import { CardFace } from '../../components/PlayingCard';
 import { newDeck, rankLabel, type Card, type Suit } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -59,6 +60,8 @@ export default function KingsCup({ players, exit }: GameProps) {
   const known = useApp().knows('kings-cup');
   const [s, setS] = useState<State>(fresh);
   const [ruleDraft, setRuleDraft] = useState('');
+  // The sheet open over the table: everything in play, picking a mate (8) or writing a rule (Jack).
+  const [sheet, setSheet] = useState<'effects' | 'mate' | 'rule' | null>(null);
   const drawing = useRef(false);
   const timer = useRef<number>(undefined);
   // Where the tapped card lay, so the big card can fly out from there.
@@ -101,6 +104,7 @@ export default function KingsCup({ players, exit }: GameProps) {
   const next = () => {
     drawing.current = false;
     setRuleDraft('');
+    setSheet(null);
     // The 4th King only empties the cup: the game goes on until every card is drawn.
     if (left === 0) return setS({ ...s, over: true });
     setS({ ...s, current: null, turn: (s.turn + 1) % players.length });
@@ -113,16 +117,25 @@ export default function KingsCup({ players, exit }: GameProps) {
     buzz();
     setS({ ...s, rule: text });
     setRuleDraft('');
+    setSheet(null);
   };
 
-  const pickMate = (mate: Player) => setS({ ...s, mate: [player.id, mate.id] });
+  const pickMate = (mate: Player) => {
+    setS({ ...s, mate: [player.id, mate.id] });
+    setSheet(null);
+  };
 
-  const effects = (
-    <ActiveEffects
-      questionMaster={s.questionMasterId ? byId(s.questionMasterId) : undefined}
-      mate={s.mate ? [byId(s.mate[0]), byId(s.mate[1])] : null}
-      rule={s.rule}
-    />
+  const questionMaster = s.questionMasterId ? byId(s.questionMasterId) : undefined;
+  const [mateA, mateB] = s.mate ? [byId(s.mate[0]), byId(s.mate[1])] : [];
+  const mates = mateA && mateB ? ([mateA, mateB] as const) : null;
+  // The 8 and the Jack ask the drawer for a mate or a rule (both optional).
+  const asking = s.current?.value === 8 ? 'mate' : s.current?.value === 11 ? 'rule' : null;
+  const effectLines = <EffectLines questionMaster={questionMaster} mates={mates} rule={s.rule} />;
+  const effects = (questionMaster || mates || s.rule) && (
+    <section className="panel kc-effects">
+      <h3 className="section-title">{t('In play')}</h3>
+      {effectLines}
+    </section>
   );
 
   if (s.over) {
@@ -162,6 +175,51 @@ export default function KingsCup({ players, exit }: GameProps) {
       </div>
 
       <div className="kc-stage">
+        {/* Small pills in a strip that is always kept free above the circle: nothing ever moves. */}
+        <div className="kc-chips">
+          {questionMaster && (
+            <button type="button" className="kc-chip" aria-label={t('{name} is Question Master', { name: questionMaster.name })} onClick={() => setSheet('effects')}>
+              <span aria-hidden="true">❓</span>
+              <span className="kc-chip-text">{questionMaster.name}</span>
+            </button>
+          )}
+          {asking === 'mate' && !mates ? (
+            <button type="button" className="kc-chip ask" onClick={() => setSheet('mate')}>
+              <span aria-hidden="true">🤝</span>
+              <span className="kc-chip-text">{t('Pick your mate')}</span>
+            </button>
+          ) : (
+            mates && (
+              <button
+                type="button"
+                className="kc-chip"
+                aria-label={t('{a} is mates with {b}', { a: mates[0].name, b: mates[1].name })}
+                onClick={() => setSheet(asking === 'mate' ? 'mate' : 'effects')}
+              >
+                <span aria-hidden="true">🤝</span>
+                <span className="kc-chip-text">
+                  {mates[0].name} &amp; {mates[1].name}
+                </span>
+              </button>
+            )
+          )}
+          {asking === 'rule' && !s.rule ? (
+            <button type="button" className="kc-chip ask" onClick={() => setSheet('rule')}>
+              <span aria-hidden="true">📜</span>
+              <span className="kc-chip-text">{t('Set a rule')}</span>
+            </button>
+          ) : (
+            s.rule && (
+              <button type="button" className="kc-chip rule" aria-label={s.rule} onClick={() => {
+                  if (asking === 'rule') setRuleDraft(s.rule ?? '');
+                  setSheet(asking === 'rule' ? 'rule' : 'effects');
+                }}>
+                <span aria-hidden="true">📜</span>
+                <span className="kc-chip-text">{s.rule}</span>
+              </button>
+            )
+          )}
+        </div>
         <div className={`kc-ring${s.current ? ' revealing' : ''}`}>
           <div className="kc-slots">
             {s.slots.map((slot, i) =>
@@ -188,9 +246,8 @@ export default function KingsCup({ players, exit }: GameProps) {
         </div>
       </div>
 
-      {s.current?.value === 8 && (
+      <Sheet open={sheet === 'mate'} onClose={() => setSheet(null)} title={t('Who’s your mate?')} closeLabel={t('Cancel')}>
         <div className="kc-action">
-          <span className="kc-action-label">{t('Who’s your mate?')}</span>
           <div className="pick-grid">
             {players
               .filter((p) => p.id !== player.id)
@@ -212,9 +269,9 @@ export default function KingsCup({ players, exit }: GameProps) {
               ))}
           </div>
         </div>
-      )}
+      </Sheet>
 
-      {s.current?.value === 11 && (
+      <Sheet open={sheet === 'rule'} onClose={() => setSheet(null)} title={t('Set a rule')} closeLabel={t('Cancel')}>
         <form
           className="kc-action"
           onSubmit={(e) => {
@@ -243,9 +300,11 @@ export default function KingsCup({ players, exit }: GameProps) {
             </button>
           </div>
         </form>
-      )}
+      </Sheet>
 
-      {effects}
+      <Sheet open={sheet === 'effects'} onClose={() => setSheet(null)} title={t('In play')}>
+        <div className="kc-effects">{effectLines}</div>
+      </Sheet>
 
       {/* Always there (hidden while picking) so the circle doesn't jump when a card is drawn. */}
       <div className={`sticky-action${s.current ? '' : ' kc-idle'}`}>
@@ -362,30 +421,28 @@ function KingCrown({ kings }: { kings: number }) {
   );
 }
 
-function ActiveEffects({
+/** What is in play right now, one line each, written out in full. */
+function EffectLines({
   questionMaster,
-  mate,
+  mates,
   rule,
 }: {
   questionMaster?: Player;
-  mate: [Player | undefined, Player | undefined] | null;
+  mates: readonly [Player, Player] | null;
   rule: string | null;
 }) {
-  const [a, b] = mate ?? [];
-  if (!questionMaster && !(a && b) && !rule) return null;
   return (
-    <section className="panel kc-effects">
-      <h3 className="section-title">{t('In play')}</h3>
+    <>
       {questionMaster && (
         <div className="kc-effect">
           <span className="kc-effect-icon">❓</span>
           <span>{rich(t('{name} is Question Master'), { name: <strong>{questionMaster.name}</strong> })}</span>
         </div>
       )}
-      {a && b && (
+      {mates && (
         <div className="kc-effect">
           <span className="kc-effect-icon">🤝</span>
-          <span>{rich(t('{a} is mates with {b}'), { a: <strong>{a.name}</strong>, b: <strong>{b.name}</strong> })}</span>
+          <span>{rich(t('{a} is mates with {b}'), { a: <strong>{mates[0].name}</strong>, b: <strong>{mates[1].name}</strong> })}</span>
         </div>
       )}
       {rule && (
@@ -394,6 +451,6 @@ function ActiveEffects({
           <span>{rule}</span>
         </div>
       )}
-    </section>
+    </>
   );
 }

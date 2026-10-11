@@ -72,6 +72,8 @@ const kingsCup: Record<string, string> = {
   'Tap for the rule': 'Tippen für die Regel',
   '{n} of 4 Kings drawn': '{n} von 4 Königen gezogen',
   'In play': 'Im Spiel',
+  'Pick your mate': 'Partner wählen',
+  'Set a rule': 'Regel festlegen',
   '{name} is Question Master': '{name} ist Fragenmeister',
   '{a} is mates with {b}': '{a} ist Trinkpartner von {b}',
 };
