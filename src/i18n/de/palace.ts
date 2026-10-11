@@ -20,7 +20,12 @@ const palace: Record<string, string> = {
     '2: Es geht wieder ab 2 los. Der Ablagestapel bleibt liegen, und du legst nochmal, ohne vorher zu ziehen.',
   '3: copies the card it lies on, specials too. On a 7 the next player plays 7 or lower, on a 2 you play again.':
     '3: spiegelt die Karte, auf der sie liegt – auch Spezialkarten. Auf einer 7 muss der Nächste 7 oder niedriger legen, auf einer 2 legst du nochmal.',
+  'Going round in circles: if taking the pile would bring back exactly the same cards for everyone for the third time, the pile is cleared away instead.':
+    'Im Kreis gedreht: Würde das Aufnehmen zum dritten Mal genau dieselben Karten bei allen ergeben, wird der Ablagestapel stattdessen verbrannt.',
   'The first player with no cards left wins.': 'Wer zuerst keine Karten mehr hat, gewinnt.',
+  '{name} can’t play, and it’s the same cards going round again: the pile is cleared away.':
+    '{name} kann nicht legen, und es sind wieder dieselben Karten im Kreis: Der Ablagestapel wird verbrannt.',
+  'Same cards going round again: the pile is cleared away': 'Wieder dieselben Karten im Kreis: Der Ablagestapel wird verbrannt',
 
   'Get rid of all your cards: first your hand, then the three face-up cards, then the three face-down ones, blind.':
     'Werde alle Karten los: erst deine Hand, dann die drei aufgedeckten, dann die drei verdeckten Karten – blind.',

@@ -20,6 +20,9 @@ import { shuffle } from '../../lib/random';
  *   other; a 3 copying them doesn't count): the pile is cleared away, draw up, play again.
  *   2: start again from 2 (the pile stays), play again without drawing first.
  *   3: copies the card it lies on, specials included (on a 7: 7 or lower; on a 2: play again).
+ * - Going round in circles: a pile taken up that would bring back the very same cards in every
+ *   hand, on the table and in the stock, with the same player up, for the third time is cleared
+ *   away instead (some hands can otherwise only hand the same few cards back and forth for ever).
  */
 
 export const MIN_PLAYERS = 2;
@@ -43,7 +46,7 @@ export interface Side {
 
 export type Entry =
   | { k: 'play'; by: number; cards: Card[]; from: Zone | 'risk'; burn: boolean; again: boolean }
-  | { k: 'take'; by: number; n: number; failed?: Card; how?: 'risk' | 'blind' };
+  | { k: 'take'; by: number; n: number; failed?: Card; how?: 'risk' | 'blind'; cleared?: boolean };
 
 export interface Game {
   phase: 'setup' | 'play' | 'over';
@@ -63,6 +66,8 @@ export interface Game {
   again: boolean;
   log: Entry[];
   winner: number | null;
+  /** How often each position came up right after taking the pile (see positionKey). */
+  seen?: Record<string, number>;
 }
 
 export const same = (a: Card, b: Card) => a.value === b.value && a.suit === b.suit;
@@ -253,12 +258,22 @@ function lay(g: Game, who: number, cards: Card[], from: Zone | 'risk'): Game {
   };
 }
 
-/** The whole pile goes into the player's hand (plus the card that didn't fit), and the turn passes. */
+/** Everything that decides how the game goes on: every card where it is, and who's up. */
+function positionKey(g: Game) {
+  const id = (c: Card | null) => (c ? `${c.value}${c.suit[0]}` : '-');
+  const sides = g.sides.map((s) => [[...s.hand].map(id).sort().join(','), s.up.map(id).join(','), s.down.map(id).join(',')].join('/'));
+  return `${g.turn}|${g.stock.length}|${sides.join('|')}`;
+}
+
+/**
+ * The whole pile goes into the player's hand (plus the card that didn't fit), and the turn passes.
+ * Unless that brings back the same position for the third time: then the pile is cleared away.
+ */
 function takePile(g: Game, who: number, failed?: Card, how?: 'risk' | 'blind'): Game {
   const pile = failed ? [...g.pile, failed] : g.pile;
   const s = g.sides[who];
   const side = { ...s, hand: [...s.hand, ...pile] };
-  return {
+  const taken: Game = {
     ...g,
     sides: g.sides.map((x, i) => (i === who ? side : x)),
     pile: [],
@@ -267,6 +282,15 @@ function takePile(g: Game, who: number, failed?: Card, how?: 'risk' | 'blind'): 
     again: false,
     log: [...g.log, { k: 'take' as const, by: who, n: pile.length, failed, how }].slice(-12),
     turn: next(g, who),
+  };
+  const key = positionKey(taken);
+  const times = (g.seen?.[key] ?? 0) + 1;
+  if (times < 3) return { ...taken, seen: { ...g.seen, [key]: times } };
+  return {
+    ...taken,
+    sides: g.sides,
+    burned: [...g.burned, ...pile],
+    log: [...g.log, { k: 'take' as const, by: who, n: pile.length, failed, how, cleared: true }].slice(-12),
   };
 }
 

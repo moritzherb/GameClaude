@@ -268,6 +268,7 @@ const group = (cards: Card[]) => (cards.length > 1 ? `${cards.length}× ${rankLa
 function entryText(e: Entry, view: PhoneView) {
   const name = nameOf(view, e.by);
   if (e.k === 'take') {
+    if (e.cleared) return t('{name} can’t play, and it’s the same cards going round again: the pile is cleared away.', { name });
     if (e.how === 'risk' && e.failed) return t('{name} risked it: {card} doesn’t fit. Takes the pile ({n} cards).', { name, card: cardName(e.failed), n: e.n });
     if (e.how === 'blind' && e.failed) return t('{name} turned over {card}: no luck. Takes the pile ({n} cards).', { name, card: cardName(e.failed), n: e.n });
     return t('{name} takes the pile ({n} cards).', { name, n: e.n });
@@ -365,6 +366,7 @@ function usePileFx(view: PhoneView) {
     const e = view.log.at(-1);
     if (!e || JSON.stringify(e) === JSON.stringify(before.log.at(-1))) return;
     if (view.burned > before.burned && e.k === 'play') setGhost({ cards: [...before.pile, ...e.cards].slice(-4), kind: 'burn', id: JSON.stringify(e) });
+    else if (e.k === 'take' && e.cleared) setGhost({ cards: [...before.pile, ...(e.failed ? [e.failed] : [])].slice(-4), kind: 'burn', id: JSON.stringify(e) });
     else if (e.k === 'take') setGhost({ cards: [...before.pile, ...(e.failed ? [e.failed] : [])].slice(-4), kind: 'take', id: JSON.stringify(e) });
   }, [view]);
   useEffect(() => {
@@ -671,7 +673,10 @@ function useReveal(view: PhoneView): RevealInfo | null {
     seen.current = id;
     if (!e || e.by !== view.me) return;
     if (e.k === 'take') {
-      if (e.failed && e.how) setInfo({ id, card: e.failed, flip: true, good: false, text: t('Doesn’t fit: you take the pile') });
+      // Going round in circles: the pile is cleared away (the line under the pile says so).
+      if (e.cleared) {
+        if (e.failed && e.how) setInfo({ id, card: e.failed, flip: true, good: true, text: t('Same cards going round again: the pile is cleared away') });
+      } else if (e.failed && e.how) setInfo({ id, card: e.failed, flip: true, good: false, text: t('Doesn’t fit: you take the pile') });
       return;
     }
     const flip = e.from === 'down' || e.from === 'risk';
@@ -894,7 +899,10 @@ function useFeedback(view: PhoneView | null) {
     }
     const last = view.log.at(-1);
     if (last && JSON.stringify(last) !== JSON.stringify(before.log.at(-1))) {
-      if (last.k === 'take') {
+      if (last.k === 'take' && last.cleared) {
+        sfx.pop();
+        buzz(40);
+      } else if (last.k === 'take') {
         if (view.me < 0 || last.by === view.me) {
           sfx.boo();
           buzz([80, 60, 160]);

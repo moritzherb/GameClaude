@@ -225,6 +225,51 @@ describe('Palace', () => {
     expect(apply(g, 1, { t: 'play', cards: [c(5, 'hearts')] })).toBe(g);
   });
 
+  it('clears the pile instead of taking it when the same position comes back for the third time', () => {
+    // Every move forced, for ever: seat 0 plays K, seat 1 a 3 on it, seat 0 takes both; seat 1
+    // plays 7, seat 0 the 3 on it, seat 1 takes both; and round again.
+    const side = (s: Partial<Side>): Side => ({ hand: [], up: [null, null, null], down: [null, null, null], ready: true, ...s });
+    let g: Game = {
+      ...deal(2, 1, newDeck()),
+      phase: 'play',
+      sides: [
+        side({ up: [c(4, 'clubs'), c(5, 'clubs'), null], down: [c(6, 'clubs'), null, null] }),
+        side({ hand: [c(7, 'hearts')], up: [c(8, 'diamonds'), c(9, 'diamonds'), null], down: [c(6, 'diamonds'), null, null] }),
+      ],
+      stock: [],
+      pile: [c(13), c(3)],
+      need: { kind: 'min', v: 13 },
+      top: 13,
+      turn: 0,
+    };
+    // The rest of the deck is out of the game, so every card is still somewhere.
+    const inPlay = allCards(g).map(key);
+    g = { ...g, burned: newDeck().filter((x) => !inPlay.includes(key(x))) };
+    expect(complete(g)).toBe(true);
+    const cleared: number[] = [];
+    let moves = 0;
+    while (g.phase === 'play' && moves < 200) {
+      const who = g.turn;
+      const s = g.sides[who];
+      const from = choosable(s);
+      let act: Act;
+      if (zone(s) === 'down') act = { t: 'blind', i: s.down.findIndex(Boolean) };
+      else if (canPlay(g, who)) {
+        // The lowest card that fits: here that's the only one.
+        const card = from.filter((x) => fits(g.need, x.value)).sort((a, b) => a.value - b.value)[0];
+        act = { t: 'play', cards: [card] };
+      } else act = { t: 'take' };
+      g = apply(g, who, act);
+      expect(complete(g)).toBe(true);
+      const e = g.log.at(-1);
+      if (e?.k === 'take' && e.cleared) cleared.push(moves);
+      moves++;
+    }
+    // Seat 0's take comes back every 6 moves: the third one, move 12, clears the pile away.
+    expect(cleared[0]).toBe(12);
+    expect(g.phase).toBe('over');
+  });
+
   it('random games always hold all 52 cards, each once, and end', () => {
     for (let run = 0; run < 300; run++) {
       const players = 2 + (run % 4);
