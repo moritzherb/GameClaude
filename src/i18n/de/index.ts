@@ -5,12 +5,13 @@ import fiveThousand from './fiveThousand';
 import fuckTheDealer from './fuckTheDealer';
 import horseRace from './horseRace';
 import kingsCup from './kingsCup';
+import maexchen from './maexchen';
 import palace from './palace';
 import pantsDown from './pantsDown';
 import speed from './speed';
 import trash from './trash';
 import whoDrinks from './whoDrinks';
 
-const de: Record<string, string> = { ...app, ...busDriver, ...horseRace, ...kingsCup, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...speed, ...trash, ...whoDrinks };
+const de: Record<string, string> = { ...app, ...busDriver, ...horseRace, ...kingsCup, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...speed, ...trash, ...whoDrinks };
 
 export default de;
