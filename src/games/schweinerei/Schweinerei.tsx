@@ -8,7 +8,7 @@ import { pick } from '../../lib/random';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Pig from './Pigs';
-import { bank, loserSips, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
+import { bank, BONUSES, loserSips, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
 
 const POSE_NAME: Record<Pose, string> = {
   side: tx('Side'),
@@ -26,16 +26,21 @@ const DOUBLE_NAME: Partial<Record<Pose, string>> = {
   jowl: tx('Double Leaning Jowler'),
 };
 
-/** The name of a throw, e.g. "Double Snouter" or "Razorback + Snouter". */
+/** The name of a throw, e.g. "Double Snouter" or "Mixed double". */
 function throwName(th: Throw): string {
   if (th.kind === 'pig-out') return t('Pig out!');
-  if (th.kind === 'touch') return t('Schweinerei!');
+  if (th.kind === 'touch') return t('Makin’ Bacon!');
   if (th.kind === 'piggyback') return t('Piggyback!');
-  const [a, b] = th.pigs;
   if (th.points === 1) return t('Sider');
-  if (th.double) return t(DOUBLE_NAME[a]!);
-  const scoring = [a, b].filter((p) => p !== 'side' && p !== 'side-dot');
-  return scoring.map((p) => t(POSE_NAME[p])).join(' + ');
+  if (th.double) return t(DOUBLE_NAME[th.pigs[0]]!);
+  return t('Mixed double');
+}
+
+/** "3 × Razorback", "4 × Trotter/Razorback": a bonus target. */
+function bonusLabel(target: number) {
+  const b = BONUSES[target];
+  const names = [...new Set(b.poses.map((p) => t(POSE_NAME[p === 'side-dot' ? 'side' : p])))];
+  return `${b.count} × ${names.join('/')}`;
 }
 
 export default function Schweinerei({ players, exit }: GameProps) {
@@ -303,6 +308,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
       th: out,
     });
     setAt(land);
+    // They land the way the throw fell: under the tumbling pig, that picture fades in as it rolls out.
+    setPoses(shownPoses(out));
     setMode('flying');
     setDropped(false);
     sfx.pop();
@@ -328,49 +335,65 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     });
   }, [at, mode]);
 
-  // The flight: from the hand up in an arc, tumbling, a little bounce, then lying still.
+  // The flight: up from the hand in an arc, tumbling, down onto the table, a little bounce,
+  // then rolling on in the same direction and slowing down until it lies still.
   useLayoutEffect(() => {
     if (!flight || !table.current) return;
     const r = box();
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const dur = reduce ? 1 : Math.min(1100, 700 + flight.speed * 120);
+    const dur = reduce ? 1 : Math.min(1500, 1050 + flight.speed * 120);
+    const { pw } = pigSize(r.width, r.height);
     pigEls.current.forEach((el, i) => {
       if (!el) return;
       const tx = (at[i].x / 100) * r.width;
       const ty = (at[i].y / 100) * r.height;
       const sx = flight.from[i].x - tx;
       const sy = flight.from[i].y - ty;
-      const spin = (i ? 1 : -1) * (360 + Math.round(flight.speed * 300));
-      const lift = Math.min(r.height * 0.35, 80 + flight.speed * 60);
+      // Where it first touches the table: a little short of where it ends up, along its way.
+      const len = Math.hypot(sx, sy) || 1;
+      const roll = Math.min(pw * 0.55, 30 + flight.speed * 18);
+      const lx = (sx / len) * roll;
+      const ly = (sy / len) * roll;
+      const dir = i ? 1 : -1;
+      const spin = dir * (360 + Math.round(flight.speed * 260));
+      // Rolling over the table turns it on: about a quarter turn per half a pig.
+      const rollTurn = dir * Math.round((roll / (pw * 0.5)) * 90);
+      const lift = Math.min(r.height * 0.32, 70 + flight.speed * 55);
+      const rot = at[i].rot;
       el.animate(
         [
-          { transform: `translate(-50%, -50%) translate(${sx}px, ${sy}px) rotate(${at[i].rot - spin}deg) scale(1.2)` },
-          { transform: `translate(-50%, -50%) translate(${sx * 0.45}px, ${sy * 0.45 - lift}px) rotate(${at[i].rot - spin * 0.45}deg) scale(1.35)`, offset: 0.45 },
-          { transform: `translate(-50%, -50%) rotate(${at[i].rot - 30 * (i ? 1 : -1)}deg) scale(1)`, offset: 0.78 },
-          { transform: `translate(-50%, -50%) translateY(-14px) rotate(${at[i].rot - 8 * (i ? 1 : -1)}deg) scale(1.04)`, offset: 0.88 },
-          { transform: `translate(-50%, -50%) rotate(${at[i].rot}deg) scale(1)` },
+          { transform: `translate(-50%, -50%) translate(${sx}px, ${sy}px) rotate(${rot - spin}deg) scale(1.2)`, easing: 'cubic-bezier(0.3, 0.7, 0.6, 1)' },
+          { transform: `translate(-50%, -50%) translate(${(sx + lx) / 2}px, ${(sy + ly) / 2 - lift}px) rotate(${rot - rollTurn - spin * 0.4}deg) scale(1.32)`, offset: 0.36, easing: 'cubic-bezier(0.5, 0, 0.9, 0.6)' },
+          { transform: `translate(-50%, -50%) translate(${lx}px, ${ly}px) rotate(${rot - rollTurn}deg) scale(1)`, offset: 0.58, easing: 'ease-out' },
+          { transform: `translate(-50%, -50%) translate(${lx * 0.7}px, ${ly * 0.7 - 12}px) rotate(${rot - rollTurn * 0.7}deg) scale(1.03)`, offset: 0.66, easing: 'cubic-bezier(0.2, 0.6, 0.25, 1)' },
+          { transform: `translate(-50%, -50%) rotate(${rot}deg) scale(1)` },
         ],
-        { duration: dur, delay: i * 50, easing: 'cubic-bezier(0.3, 0.6, 0.4, 1)', fill: 'backwards' },
+        { duration: dur, delay: i * 60, fill: 'backwards' },
       );
+      // From the tumbling pig to the way it lies, while it rolls out.
+      const fade = { duration: dur, delay: i * 60, fill: 'both' as const };
+      // The final pig appears underneath the moment it touches down (hidden by the tumbling one on
+      // top), then the tumbling one fades away: never two see-through pigs.
+      el.querySelector('.sw-air')?.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0, offset: 0.84 }, { opacity: 0 }], fade);
+      el.querySelector('.sw-final')?.animate([{ opacity: 0 }, { opacity: 0, offset: 0.579 }, { opacity: 1, offset: 0.58 }, { opacity: 1 }], fade);
     });
-    // Landed: now they show how they lie, and the throw counts.
+    // Lying still: the throw counts.
     timer.current = window.setTimeout(() => {
       const out = flight.th;
-      setPoses(shownPoses(out));
       setMode('rest');
       setFlight(null);
       const next = play(g, out);
       setG(next);
       if (next.winner != null) celebrate();
       else if (out.kind === 'score') {
-        if (out.double) sfx.tada();
+        if (out.double || next.bonusNow) sfx.tada();
         else sfx.pop();
-        buzz(out.double ? [40, 40, 80] : 20);
+        buzz(out.double || next.bonusNow ? [40, 40, 80] : 20);
       } else {
         sfx.boo();
         buzz([80, 40, 80]);
       }
-    }, dur * 0.8);
+    }, dur + 80);
     // Runs once per throw.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flight]);
@@ -420,6 +443,16 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             <span className="sw-score-num">{g.scores[i]}</span>
           </span>
         ))}
+        <span
+          className={`sw-bonus${g.bonus.won ? ' won' : ''}`}
+          key={`bonus-${g.turn}-${g.bonus.target}`}
+          aria-label={t('Bonus throw: {what} for +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}
+        >
+          <span aria-hidden>🎯</span>
+          <span className="sw-bonus-what">{bonusLabel(g.bonus.target)}</span>
+          <span className="sw-bonus-pts">{g.bonus.won ? '✓' : `${Math.min(g.bonus.count, BONUSES[g.bonus.target].count)}/${BONUSES[g.bonus.target].count}`}</span>
+          <span className="sw-bonus-plus">+{BONUSES[g.bonus.target].points}</span>
+        </span>
       </div>
 
       <div
@@ -453,7 +486,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
               onPointerDown={pickUp}
             >
               <span className="sw-wiggle">
-                <Pig pose={mode === 'rest' ? poses[i] : i ? 'side' : 'side-dot'} />
+                <Pig pose={poses[i]} className={mode === 'flying' ? 'sw-final' : ''} />
+                {mode === 'flying' && <Pig pose={i ? 'side' : 'side-dot'} className="sw-air" />}
               </span>
               {showResult && <span className="sw-pose">{t(POSE_NAME[poses[i]])}</span>}
             </span>
@@ -462,6 +496,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         {showResult && (
           <div className={`sw-result${bad ? ' bad' : th.kind === 'score' && th.double ? ' double' : ''}`} key={`${g.scores.join()}-${g.turnPts}-${g.turn}`} role="status">
             <span className="sw-result-name">{throwName(th)}</span>
+            {g.bonusNow && <span className="sw-result-bonus">{t('Bonus throw! {what}: +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}</span>}
             <span className="sw-result-sub">
               {th.kind === 'score'
                 ? th.gives

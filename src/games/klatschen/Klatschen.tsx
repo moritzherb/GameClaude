@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import Sheet from '../../components/Sheet';
@@ -6,15 +6,13 @@ import { t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
 import { useApp } from '../../state/AppState';
-import { layRing, SLOT_WIDTH, type Slot } from '../kings-cup/ring';
 import type { GameProps } from '../types';
 import { byId, DECK, GLASS_ID, STANDING_RULES, type TaskCard } from './cards';
 
 interface State {
-  /** Card ids, face down in a circle: cards[i] lies at slots[i]. */
+  /** Card ids, a face-down stack: the next one drawn is cards[drawn]. */
   cards: string[];
-  slots: Slot[];
-  taken: boolean[];
+  drawn: number;
   turn: number;
   current: string | null;
   /** Clap glass cards drawn so far (the 4th ends the game). */
@@ -28,8 +26,7 @@ interface State {
 
 const fresh = (): State => ({
   cards: shuffle(DECK),
-  slots: layRing(DECK.length),
-  taken: Array<boolean>(DECK.length).fill(false),
+  drawn: 0,
   turn: 0,
   current: null,
   glass: 0,
@@ -96,6 +93,9 @@ export default function Klatschen({ players, exit }: GameProps) {
   return <Table s={s} setS={setS} players={players} known={known} rulesOpen={rulesOpen} setRulesOpen={setRulesOpen} byPlayer={byPlayer} />;
 }
 
+/** How long the slap takes before the card comes off the stack (the CSS animations match). */
+const SLAP_MS = 230;
+
 function Table({
   s,
   setS,
@@ -114,40 +114,53 @@ function Table({
   byPlayer: (id: string | null) => GameProps['players'][number] | undefined;
 }) {
   const player = players[s.turn % players.length];
-  const left = s.taken.filter((x) => !x).length;
-  const from = useRef<Slot | null>(null);
-  const drawing = useRef(false);
+  const left = s.cards.length - s.drawn;
+  const [slapping, setSlapping] = useState(false);
+  // The KLATSCH! burst stays a moment longer than the slap itself (it pops over the flying card).
+  const [burst, setBurst] = useState(0);
   const timer = useRef<number>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const burstTimer = useRef<number>(undefined);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+      window.clearTimeout(burstTimer.current);
+    },
+    [],
+  );
   const card = s.current ? byId(s.current) : null;
   const lastGlass = card?.id === GLASS_ID && s.glass === 4;
 
-  const draw = (i: number) => {
-    if (s.current || drawing.current || s.taken[i]) return;
-    drawing.current = true;
-    from.current = s.slots[i];
-    const id = s.cards[i];
-    const c = byId(id);
-    const glass = s.glass + (id === GLASS_ID ? 1 : 0);
-    setS({
-      ...s,
-      taken: s.taken.map((x, j) => x || j === i),
-      current: id,
-      glass,
-      roles: c.role ? { ...s.roles, [c.role]: player.id } : s.roles,
-      loser: glass === 4 && id === GLASS_ID ? player.id : s.loser,
-    });
+  /** Slap the stack: a hand comes down, KLATSCH!, and the top card flies off. */
+  const slap = () => {
+    if (s.current || slapping || left === 0) return;
+    setSlapping(true);
+    setBurst((n) => n + 1);
+    window.clearTimeout(burstTimer.current);
+    burstTimer.current = window.setTimeout(() => setBurst(0), 900);
+    buzz([30, 20, 50]);
+    sfx.pop();
     timer.current = window.setTimeout(() => {
+      setSlapping(false);
+      const id = s.cards[s.drawn];
+      const c = byId(id);
+      const glass = s.glass + (id === GLASS_ID ? 1 : 0);
+      setS({
+        ...s,
+        drawn: s.drawn + 1,
+        current: id,
+        glass,
+        roles: c.role ? { ...s.roles, [c.role]: player.id } : s.roles,
+        loser: glass === 4 && id === GLASS_ID ? player.id : s.loser,
+      });
       if (glass === 4 && id === GLASS_ID) celebrate();
       else {
         sfx.tick();
-        buzz(id === GLASS_ID ? [40, 40, 80] : 20);
+        buzz(id === GLASS_ID ? [40, 40, 80] : 15);
       }
-    }, 650);
+    }, SLAP_MS);
   };
 
   const next = () => {
-    drawing.current = false;
     if (lastGlass || left === 0) return setS({ ...s, over: true });
     setS({ ...s, current: null, turn: (s.turn + 1) % players.length });
   };
@@ -156,7 +169,7 @@ function Table({
   const thumb = byPlayer(s.roles.thumb);
 
   return (
-    <div className="kc fill">
+    <div className="kl fill">
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: player.color }}>
@@ -173,52 +186,54 @@ function Table({
         </span>
       </div>
 
-      <div className="kc-stage">
-        {/* The standing rules and who holds a role: small pills in the strip kept free above the circle. */}
-        <div className="kc-chips">
-          <button type="button" className="kc-chip" onClick={() => setRulesOpen(true)}>
-            <span aria-hidden="true">📏</span>
-            <span className="kc-chip-text">{t('3 rules')}</span>
+      {/* The standing rules and who holds a role, in one row of small pills. */}
+      <div className="kl-pills">
+        <button type="button" className="kc-chip" onClick={() => setRulesOpen(true)}>
+          <span aria-hidden="true">📏</span>
+          <span className="kc-chip-text">{t('3 rules')}</span>
+        </button>
+        {qm && (
+          <button type="button" className="kc-chip" aria-label={t('{name} is Question Master', { name: qm.name })} onClick={() => setRulesOpen(true)}>
+            <span aria-hidden="true">❓</span>
+            <span className="kc-chip-text">{qm.name}</span>
           </button>
-          {qm && (
-            <button type="button" className="kc-chip" aria-label={t('{name} is Question Master', { name: qm.name })} onClick={() => setRulesOpen(true)}>
-              <span aria-hidden="true">❓</span>
-              <span className="kc-chip-text">{qm.name}</span>
-            </button>
+        )}
+        {thumb && (
+          <button type="button" className="kc-chip" aria-label={t('{name} is Thumb Master', { name: thumb.name })} onClick={() => setRulesOpen(true)}>
+            <span aria-hidden="true">👍</span>
+            <span className="kc-chip-text">{thumb.name}</span>
+          </button>
+        )}
+      </div>
+
+      {/* A pop-art table: the stack in the middle. Slap it! */}
+      <div className={`kl-table${slapping ? ' slapping' : ''}${card ? ' revealed' : ''}`}>
+        <button type="button" className="kl-stack" onClick={slap} disabled={!!s.current || slapping} aria-label={t('Slap the stack')}>
+          {left > 2 && <span className="kl-stack-card under2" />}
+          {left > 1 && <span className="kl-stack-card under1" />}
+          {left > 0 && (
+            <span className="kl-stack-card top">
+              <span className="kl-back-logo">👏</span>
+              <span className="kl-back-word">{t('Klatschen')}</span>
+            </span>
           )}
-          {thumb && (
-            <button type="button" className="kc-chip" aria-label={t('{name} is Thumb Master', { name: thumb.name })} onClick={() => setRulesOpen(true)}>
-              <span aria-hidden="true">👍</span>
-              <span className="kc-chip-text">{thumb.name}</span>
-            </button>
-          )}
-        </div>
-        <div className={`kc-ring${s.current ? ' revealing' : ''}`}>
-          <div className="kc-slots">
-            {s.slots.map((slot, i) =>
-              s.taken[i] ? null : (
-                <button
-                  key={i}
-                  type="button"
-                  className="kc-slot kl-slot"
-                  style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
-                  disabled={!!s.current}
-                  aria-label={t('Face-down card')}
-                  onClick={() => {
-                    sfx.pop();
-                    buzz(12);
-                    draw(i);
-                  }}
-                />
-              ),
-            )}
-          </div>
-          <span className="kl-center" aria-hidden>
-            <Glass level={s.glass} />
+          <span className="kl-stack-left">{t('{n} left', { n: left })}</span>
+        </button>
+        {!s.current && !slapping && <span className="kl-slap-hint">{known ? t('Slap it!') : t('Slap the stack!')}</span>}
+        {slapping && (
+          <span className="kl-hand" aria-hidden>
+            ✋
           </span>
-          {!s.current && !known && <span className="kc-ring-hint">{t('Pick any card')}</span>}
-          {card && <Reveal key={left} card={card} finale={lastGlass} glass={s.glass} from={from.current} />}
-        </div>
+        )}
+        {burst > 0 && (
+          <span className="kl-burst" key={burst} aria-hidden>
+              <svg viewBox="0 0 200 140">
+                <path d="M100 6l14 34 36-22-12 36 42 2-34 22 32 26-42-6 6 38-30-26-14 30-12-32-32 22 8-38-42 4 32-26L14 54l42-2-12-36 36 22z" />
+              </svg>
+            <span>{t('SLAP!')}</span>
+          </span>
+        )}
+        {card && <Reveal key={s.drawn} card={card} finale={lastGlass} glass={s.glass} />}
       </div>
 
       <div className={`sticky-action${s.current ? '' : ' kc-idle'}`}>
@@ -253,47 +268,16 @@ function Table({
   );
 }
 
-/** The drawn card: flies out of the circle into the middle and turns face up. */
-function Reveal({ card, finale, glass, from }: { card: TaskCard; finale: boolean; glass: number; from: Slot | null }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inner = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    const face = inner.current;
-    const ring = el?.parentElement;
-    if (!el || !face || !ring || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (from) {
-      const size = ring.offsetWidth;
-      const dx = ((from.x - 50) / 100) * size;
-      const dy = ((from.y - 50) / 100) * size;
-      const scale = ((SLOT_WIDTH / 100) * size) / el.offsetWidth;
-      el.animate(
-        [{ transform: `translate(${dx}px, ${dy}px) rotate(${from.rot}deg) scale(${scale})` }, { transform: 'translate(0, 0) rotate(0deg) scale(1)' }],
-        { duration: 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-      );
-    }
-    const flip = face.animate([{ transform: 'rotateY(180deg)' }, { transform: 'rotateY(360deg)' }], {
-      duration: 650,
-      delay: 90,
-      easing: 'cubic-bezier(0.45, 0, 0.25, 1)',
-      fill: 'backwards',
-    });
-    return () => flip.cancel();
-  }, [from]);
-
+/** The slapped card: shoots off the stack, spins and lands face up, comic style. */
+function Reveal({ card, finale, glass }: { card: TaskCard; finale: boolean; glass: number }) {
   const isGlass = card.id === GLASS_ID;
   return (
-    <div ref={ref} className="kc-reveal">
-      <span className="kc-big" role="img" aria-label={`${t(card.title)}: ${t(card.text)}`}>
-        <span ref={inner} className="kc-big-inner">
-          <span className={`pcard-face kl-face${finale ? ' finale' : ''}`} style={{ '--card': card.color } as CSSProperties}>
-            <span className="kl-face-emoji">{card.emoji}</span>
-            <span className="kl-face-title">{finale ? t('The 4th clap glass!') : t(card.title)}</span>
-            <span className="kl-face-text">
-              {finale ? t('You clap the whole glass in the middle. Down in one!') : isGlass ? `${t(card.text)} (${glass}/4)` : t(card.text)}
-            </span>
-          </span>
-          <span className="pcard-face pcard-back kl-back" />
+    <div className="kl-reveal" role="status" aria-label={`${t(card.title)}: ${t(card.text)}`}>
+      <span className={`kl-card${finale ? ' finale' : ''}`} style={{ '--card': card.color } as CSSProperties}>
+        <span className="kl-card-emoji">{card.emoji}</span>
+        <span className="kl-card-title">{finale ? t('The 4th clap glass!') : t(card.title)}</span>
+        <span className="kl-card-text">
+          {finale ? t('You clap the whole glass in the middle. Down in one!') : isGlass ? `${t(card.text)} (${glass}/4)` : t(card.text)}
         </span>
       </span>
     </div>
