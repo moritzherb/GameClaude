@@ -4307,20 +4307,6 @@ h3 {
   font-size: 1.7rem;
 }
 
-/* The glass in the middle of the circle, filling up with every clap glass. */
-.kl-center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 17cqw;
-  transform: translate(-50%, -62%);
-  transition: opacity 0.3s ease;
-}
-
-.kc-ring.revealing .kl-center {
-  opacity: 0;
-}
-
 .kl-glass {
   display: block;
   width: 100%;
@@ -4362,46 +4348,302 @@ h3 {
   width: 20px;
 }
 
-/* A drawn task card: big, in its colour. */
-.kl-face {
+/* The game: player row, the pills, the pop-art table, the button. */
+.kl {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.kl > * {
+  flex-shrink: 0;
+}
+
+.kl-pills {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+}
+
+/* The table: pop art, bright with halftone dots. */
+.kl-table {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 300px;
+  container-type: size;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle, rgba(21, 22, 18, 0.16) 1.3px, transparent 1.8px) 0 0 / 11px 11px,
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(255, 255, 255, 0.28), transparent 70%),
+    linear-gradient(135deg, #ffb03a, #ff6a4a 60%, #ff4f7b);
+  box-shadow:
+    inset 0 0 0 4px #151612,
+    inset 0 -40px 60px rgba(0, 0, 0, 0.12);
+}
+
+.kl-table.slapping {
+  animation: kl-shake 0.25s steps(2) 0.16s;
+}
+
+@keyframes kl-shake {
+  25% {
+    transform: translate(-3px, 2px);
+  }
+  50% {
+    transform: translate(3px, -2px);
+  }
+  75% {
+    transform: translate(-2px, -1px);
+  }
+}
+
+/* The stack in the middle, slapped to draw. */
+.kl-stack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(40cqw, 30cqh);
+  aspect-ratio: 5 / 7;
+  transform: translate(-50%, -50%);
+  transition:
+    transform 0.15s var(--spring),
+    opacity 0.3s ease;
+}
+
+.kl-stack:not(:disabled):active {
+  transform: translate(-50%, -50%) scale(0.94);
+}
+
+.kl-table.revealed .kl-stack {
+  opacity: 0.35;
+}
+
+.kl-stack-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 7%;
+  background:
+    radial-gradient(circle, rgba(255, 210, 63, 0.28) 1.3px, transparent 1.8px) 0 0 / 8px 8px,
+    #151612;
+  box-shadow:
+    inset 0 0 0 3px #ffd23f,
+    inset 0 0 0 7px #151612,
+    inset 0 0 0 9px #ffd23f,
+    5px 5px 0 rgba(21, 22, 18, 0.55);
+}
+
+.kl-stack-card.under2 {
+  transform: rotate(-7deg) translate(-4%, 2%);
+}
+
+.kl-stack-card.under1 {
+  transform: rotate(4deg) translate(3%, 1%);
+}
+
+.kl-stack-card.top {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3cqw;
-  padding: 6cqw 5cqw;
-  background: var(--card);
-  color: var(--on-color);
-  text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 16px 30px -12px rgba(0, 0, 0, 0.55);
+  gap: 2cqw;
 }
 
-.kl-face.finale {
-  background: var(--c-yellow);
-  box-shadow: inset 0 0 0 1.4cqw #fff, 0 16px 30px -12px rgba(0, 0, 0, 0.55);
-}
-
-.kl-face-emoji {
-  font-size: 14cqw;
+.kl-back-logo {
+  font-size: min(14cqw, 10cqh);
   line-height: 1;
 }
 
-.kl-face-title {
+.kl-back-word {
+  color: #ffd23f;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 7.6cqw;
+  font-size: min(6cqw, 4.6cqh);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transform: rotate(-6deg);
+}
+
+.kl-stack-left {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2.5cqh);
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #151612;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kl-slap-hint {
+  position: absolute;
+  left: 50%;
+  top: 7cqh;
+  transform: translateX(-50%) rotate(-4deg);
+  padding: 4px 14px 2px;
+  border: 3px solid #151612;
+  border-radius: 10px;
+  background: #fff;
+  color: #151612;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(18px, 6cqw, 26px);
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 4px 4px 0 #151612;
+  animation: kl-wobble 1.6s ease-in-out infinite;
+}
+
+@keyframes kl-wobble {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(-4deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(-1deg) scale(1.04);
+  }
+}
+
+/* The slap: a hand comes down on the stack, and a comic burst. */
+.kl-hand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  font-size: min(30cqw, 22cqh);
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  animation: kl-slam 0.2s cubic-bezier(0.5, 0, 0.9, 0.5) both;
+}
+
+@keyframes kl-slam {
+  from {
+    transform: translate(-50%, -160%) scale(1.5) rotate(-20deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.kl-burst {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  z-index: 4;
+  width: min(70cqw, 52cqh);
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%) rotate(-8deg);
+  animation:
+    kl-pop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) 0.14s both,
+    kl-gone 0.25s ease-in 0.65s forwards;
+  pointer-events: none;
+}
+
+@keyframes kl-gone {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1.15);
+  }
+}
+
+.kl-burst > * {
+  grid-area: 1 / 1;
+}
+
+.kl-burst svg {
+  width: 100%;
+  fill: #ffd23f;
+  stroke: #151612;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.kl-burst span {
+  color: #e3263a;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: min(9.5cqw, 7cqh);
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 1.5px #151612;
+}
+
+@keyframes kl-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(0.2);
+  }
+}
+
+/* The slapped card: shoots off the stack and lands big, face up, slightly crooked. */
+.kl-reveal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: min(72cqw, 54cqh);
+  aspect-ratio: 5 / 7;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  animation: kl-fly 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes kl-fly {
+  from {
+    transform: translate(-50%, -50%) rotate(-30deg) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+.kl-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqh;
+  padding: 6cqh 5cqw;
+  border: 4px solid #151612;
+  border-radius: 7%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.35) 1.3px, transparent 1.8px) 0 0 / 9px 9px,
+    var(--card);
+  color: #151612;
+  text-align: center;
+  box-shadow: 8px 8px 0 #151612;
+}
+
+.kl-card.finale {
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.4) 1.3px, transparent 1.8px) 0 0 / 9px 9px,
+    var(--c-yellow);
+}
+
+.kl-card-emoji {
+  font-size: min(15cqw, 11cqh);
+  line-height: 1;
+}
+
+.kl-card-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: min(8cqw, 6cqh);
   line-height: 0.95;
   text-transform: uppercase;
 }
 
-.kl-face-text {
-  font-size: 4.4cqw;
+.kl-card-text {
+  font-size: min(4.6cqw, 3.4cqh);
   font-weight: 600;
   line-height: 1.3;
-}
-
-.kl-back {
-  transform: rotateY(180deg);
 }
 
 .kl-end-glass {

@@ -13,7 +13,7 @@ const klatschen: GameDefinition = {
   intensity: 3,
   explains: true,
   rules: [
-    tx('60 task cards lie face down in a circle round an empty glass. Draw one each, round the table, and do what it says.'),
+    tx('60 task cards lie face down in a stack, an empty glass next to it. Round the table, everyone slaps the stack in turn: the top card flies off, do what it says.'),
     tx('Three rules hold all game long: never say “drink” (say “clap” instead), only hold your glass in your left hand, no swearing. Whoever breaks one claps 1.'),
     tx('“Clap” means drink: “clap 2” is two sips.'),
     tx('There are 4 clap glass cards. Each one: pour a splash from your glass into the one in the middle.'),

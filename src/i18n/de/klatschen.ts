@@ -4,8 +4,8 @@ const klatschen: Record<string, string> = {
   // Game info (index.ts)
   Klatschen: 'Klatschen',
   'Never say drink. Clap.': 'Sag nie trinken. Klatsch.',
-  '60 task cards lie face down in a circle round an empty glass. Draw one each, round the table, and do what it says.':
-    '60 Aufgabenkarten liegen verdeckt im Kreis um ein leeres Glas. Reihum zieht jeder eine und macht, was draufsteht.',
+  '60 task cards lie face down in a stack, an empty glass next to it. Round the table, everyone slaps the stack in turn: the top card flies off, do what it says.':
+    '60 Aufgabenkarten liegen verdeckt auf einem Stapel, daneben ein leeres Glas. Reihum haut jeder auf den Stapel: Die oberste Karte fliegt raus, und man macht, was draufsteht.',
   'Three rules hold all game long: never say “drink” (say “clap” instead), only hold your glass in your left hand, no swearing. Whoever breaks one claps 1.':
     'Drei Regeln gelten das ganze Spiel: Sag nie „trinken“ (sondern „klatschen“), halt dein Glas nur mit links, nicht fluchen. Wer eine bricht, klatscht 1.',
   '“Clap” means drink: “clap 2” is two sips.': '„Klatschen“ heißt trinken: „Klatsch 2“ sind zwei Schlucke.',
@@ -26,6 +26,11 @@ const klatschen: Record<string, string> = {
   // The table
   '{n} of 4 clap glasses drawn': '{n} von 4 Klatschgläsern gezogen',
   '3 rules': '3 Regeln',
+  'Slap the stack': 'Auf den Stapel hauen',
+  '{n} left': 'noch {n}',
+  'Slap it!': 'Hau drauf!',
+  'Slap the stack!': 'Hau auf den Stapel!',
+  'SLAP!': 'KLATSCH!',
   '{name} is Thumb Master': '{name} ist Daumenmeister',
   'The 4th clap glass!': 'Das 4. Klatschglas!',
   'You clap the whole glass in the middle. Down in one!': 'Du klatschst das ganze Glas in der Mitte. Ex!',
@@ -83,7 +88,7 @@ const klatschen: Record<string, string> = {
   Compliment: 'Kompliment',
   'Pay someone an honest compliment. If nobody buys it, you clap 2.': 'Mach jemandem ein ehrliches Kompliment. Glaubt es keiner, klatschst du 2.',
   'Hand out': 'Verteilen',
-  'Hand out 3 claps however you like.': 'Verteil 3 Schlucke Klatschen, wie du willst.',
+  'Hand out 3 claps however you like.': 'Verteil 3 Klatscher, wie du willst.',
   'Swap seats': 'Platztausch',
   'Swap seats with someone of your choice.': 'Tausch den Platz mit jemandem deiner Wahl.',
   Truth: 'Wahrheit',
