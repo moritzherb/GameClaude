@@ -10,6 +10,22 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // A running game has nothing underneath it at all: there's no swiping back out of it by
 // accident (that would just end it). The X in the corner is the way out.
 
+/**
+ * A real repaint (a dot nobody can see, drawn for two frames), not just a layer change: iPhones
+ * show their picture of the screen during a swipe and drop it once the page paints something new.
+ * Now and once more after the swipe has surely ended.
+ */
+function repaint() {
+  const nudge = () => {
+    const dot = document.createElement('i');
+    dot.style.cssText = 'position:absolute;left:0;top:0;width:2px;height:2px;background:rgba(128,128,128,0.02);pointer-events:none';
+    document.body.appendChild(dot);
+    requestAnimationFrame(() => requestAnimationFrame(() => dot.remove()));
+  };
+  nudge();
+  window.setTimeout(nudge, 400);
+}
+
 export interface Route {
   segments: string[];
   query: URLSearchParams;
@@ -57,18 +73,7 @@ export function useRoute(): Route {
     window.scrollTo(0, back ? (scrolls.get(screenKey(hash)) ?? 0) : 0);
     // iPhones show their picture of the screen while swiping back and drop it once the page paints
     // something new: make sure that happens.
-    if (back) {
-      // A real repaint (a dot nobody can see, drawn for two frames), not just a layer change.
-      const nudge = () => {
-        const dot = document.createElement('i');
-        dot.style.cssText = 'position:absolute;left:0;top:0;width:2px;height:2px;background:rgba(128,128,128,0.02);pointer-events:none';
-        document.body.appendChild(dot);
-        requestAnimationFrame(() => requestAnimationFrame(() => dot.remove()));
-      };
-      nudge();
-      // Once more after the swipe has surely ended.
-      window.setTimeout(nudge, 400);
-    }
+    if (back) repaint();
   }, [hash]);
   return useMemo(() => parse(hash), [hash]);
 }
@@ -133,18 +138,26 @@ export function navigate(to: string) {
     return;
   }
 
+  // The phone keeps a picture of each entry from when it was last left, and shows it while you swipe
+  // onto that entry. So the entry ahead is only left once the game is on screen: its picture is the
+  // game too (not the rules page you started from), and swiping forward shows nothing new.
   if (isGame(hash)) {
     if (state === GAME_ROOT) go(hash, 'replace', GAME_ROOT);
     else if (state === ABOVE_HOME || state === HOME_TOP) {
-      // Top entry becomes the game, then step back and make the bottom one the game too.
+      // Top entry becomes the game, then (once it's drawn) step back and make the bottom one the game too.
       go(hash, 'replace', GAME_TOP);
       pendingGame = hash;
-      history.back();
+      afterPaint(() => {
+        if (pendingGame === hash && history.state === GAME_TOP) history.back();
+      });
     } else {
-      // On the bottom entry: the game takes it and the one above, and we stand on the bottom one.
+      // On the bottom entry: the game takes it and (once it's drawn) the one above, and we stand on the bottom one.
       go(hash, 'replace', GAME_ROOT);
-      history.pushState(GAME_TOP, '', hash);
-      history.back();
+      afterPaint(() => {
+        if (history.state !== GAME_ROOT || window.location.hash !== hash) return;
+        history.pushState(GAME_TOP, '', hash);
+        history.back();
+      });
     }
     return;
   }
@@ -197,6 +210,8 @@ if (typeof window !== 'undefined') {
     // nothing changes on screen), so there's still nothing to swipe back to.
     if (history.state === GAME_TOP) {
       history.back();
+      // Make sure the phone drops its picture of the swipe.
+      repaint();
       return;
     }
     if (pendingNav) {
