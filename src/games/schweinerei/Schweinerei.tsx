@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
+import Sheet from '../../components/Sheet';
 import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -184,6 +185,16 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
   // Picked up and put down again without a real throw.
   const [dropped, setDropped] = useState(false);
   const [flight, setFlight] = useState<Flight | null>(null);
+  const [bonusInfo, setBonusInfo] = useState(false);
+  // With many players the row of points scrolls: keep whoever's turn it is in view.
+  const board = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = board.current;
+    const chip = row?.children[g.turn] as HTMLElement | undefined;
+    if (!row || !chip) return;
+    if (chip.offsetLeft < row.scrollLeft || chip.offsetLeft + chip.offsetWidth > row.scrollLeft + row.clientWidth)
+      row.scrollTo({ left: chip.offsetLeft - 6, behavior: 'smooth' });
+  }, [g.turn]);
   /** A finger holding the pigs: where it has been, and what's needed to move them without asking the page for layout. */
   const drag = useRef<{
     id: number;
@@ -436,23 +447,29 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         </div>
       </div>
 
-      <div className="sw-board" aria-label={t('Scores')}>
-        {players.map((p, i) => (
-          <span key={p.id} className={`sw-score${i === g.turn ? ' on' : ''}`} style={{ '--who': p.color } as CSSProperties}>
-            <span className="sw-score-avatar">{p.avatar}</span>
-            <span className="sw-score-num">{g.scores[i]}</span>
-          </span>
-        ))}
-        <span
+      <div className="sw-board">
+        {/* Everyone's points (scrolls sideways when there are many), the bonus throw always in view. */}
+        <div className="sw-board-players" ref={board} aria-label={t('Scores')}>
+          {players.map((p, i) => (
+            <span key={p.id} className={`sw-score${i === g.turn ? ' on' : ''}`} style={{ '--who': p.color } as CSSProperties}>
+              <span className="sw-score-avatar">{p.avatar}</span>
+              <span className="sw-score-num">{g.scores[i]}</span>
+            </span>
+          ))}
+        </div>
+        <button
+          type="button"
           className={`sw-bonus${g.bonus.won ? ' won' : ''}`}
           key={`bonus-${g.turn}-${g.bonus.target}`}
           aria-label={t('Bonus throw: {what} for +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}
+          onClick={() => setBonusInfo(true)}
         >
           <span aria-hidden>🎯</span>
+          <span className="sw-bonus-label">{t('Bonus')}</span>
           <span className="sw-bonus-what">{bonusLabel(g.bonus.target)}</span>
           <span className="sw-bonus-pts">{g.bonus.won ? '✓' : `${Math.min(g.bonus.count, BONUSES[g.bonus.target].count)}/${BONUSES[g.bonus.target].count}`}</span>
           <span className="sw-bonus-plus">+{BONUSES[g.bonus.target].points}</span>
-        </span>
+        </button>
       </div>
 
       <div
@@ -530,6 +547,16 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
           <span className="mx-slot mx-must">{g.turnPts > 0 ? t('Throw again, or put your points in the pen (bottom right)') : t('Grab the pigs and throw them up the table')}</span>
         )}
       </div>
+
+      <Sheet open={bonusInfo} onClose={() => setBonusInfo(false)} title={t('Bonus throw')}>
+        <p className="lead">
+          {t('Get {what} within this turn: every pig counts, over all your throws until you put the points in the pen. Then +{n} points on top, once. Every turn has a new target.', {
+            what: bonusLabel(g.bonus.target),
+            n: BONUSES[g.bonus.target].points,
+          })}
+        </p>
+        <p className="fine-print">{t('So far this turn: {count} of {target}.', { count: Math.min(g.bonus.count, BONUSES[g.bonus.target].count), target: BONUSES[g.bonus.target].count })}</p>
+      </Sheet>
     </div>
   );
 }
