@@ -191,15 +191,24 @@ export default function Home() {
         <section className="section">
           <div className="section-head">
             <h2 className="section-title">{t('The line-up')}</h2>
-            <button type="button" className="link-btn" onClick={() => navigate(paths.games())}>
+            <Tap className="all-games-pill" onClick={() => navigate(paths.games())}>
               {t('All games')}
-            </button>
+              <ChevronIcon />
+            </Tap>
           </div>
           <div className={`ticket-list${deal ? ' dealt' : ''}`} key={deal}>
             {featured.map((g) => (
               <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
             ))}
           </div>
+          {/* The way to every game, right where the line-up ends. */}
+          <Tap className="all-games-bar" onClick={() => navigate(paths.games())}>
+            <span className="all-games-count">{GAMES.length}</span>
+            <span className="all-games-text">{t('See all games')}</span>
+            <span className="all-games-arrow">
+              <ChevronIcon />
+            </span>
+          </Tap>
         </section>
 
         {rolling && (

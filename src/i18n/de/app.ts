@@ -32,6 +32,7 @@ const app: Record<string, string> = {
   'The line-up': 'Das Line-up',
   'Last played': 'Zuletzt gespielt',
   'All games': 'Alle Spiele',
+  'See all games': 'Alle Spiele ansehen',
   'Picking your game…': 'Euer Spiel wird ausgewählt…',
 
   // Library
