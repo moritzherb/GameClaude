@@ -563,6 +563,8 @@ h3 {
   letter-spacing: 0.02em;
   text-align: center;
   line-height: 1.1;
+  /* Room above the capitals, so the dots of Ä, Ö, Ü aren't cut off. */
+  padding-top: 0.12em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3458,6 +3460,409 @@ h3 {
   flex: none;
   width: 28px;
   text-align: center;
+}
+
+/* ---------- Mäxchen ---------- */
+
+/* Like at a Heuriger: a wooden table, a beer mat, and the leather dice cup upside down on it. */
+.mx {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mx > * {
+  flex-shrink: 0;
+}
+
+.mx-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+}
+
+.mx-status .bd-player {
+  min-width: 0;
+}
+
+/* What has to be beaten (or what was just announced), top right. */
+.mx-claim {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  max-width: 45%;
+}
+
+.mx-claim-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mx-claim-value,
+.mx-claim-any {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-claim-any {
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.mx-claim-tag {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  text-transform: uppercase;
+}
+
+/* The wooden table: planks with seams and a little grain. */
+.mx-table {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 280px;
+  container-type: size;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 62%, rgba(255, 214, 150, 0.22), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(40, 20, 6, 0.5) 0 2px, transparent 2px 25%),
+    repeating-linear-gradient(90deg, rgba(255, 230, 190, 0.05) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(90deg, rgba(60, 30, 10, 0.08) 0 3px, transparent 3px 17px),
+    linear-gradient(180deg, #a06c40, #7d4f2c 70%, #6c4325);
+  box-shadow:
+    inset 0 0 50px rgba(30, 14, 4, 0.55),
+    inset 0 2px 0 rgba(255, 220, 170, 0.15);
+}
+
+.mx-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 5cqh;
+  z-index: 3;
+  padding: 0 16px;
+  text-align: center;
+  color: #f6e9d2;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(15px, 5cqw, 22px);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.mx-hint.warn {
+  color: #ffd2a8;
+  animation: jiggle 0.25s linear 2;
+}
+
+/* Mat, dice and cup, one rig: shaking moves all three, like shaking cup and mat together. */
+.mx-rig {
+  --w: min(78cqw, 72cqh, 420px);
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: var(--w);
+  aspect-ratio: 1 / 0.95;
+  transform: translate(-50%, -50%);
+}
+
+.mx-rig.shaking {
+  animation: mx-shake 0.11s ease-in-out infinite alternate;
+}
+
+@keyframes mx-shake {
+  from {
+    transform: translate(-52%, -58%) rotate(-7deg);
+  }
+  to {
+    transform: translate(-48%, -60%) rotate(7deg);
+  }
+}
+
+.mx-coaster {
+  position: absolute;
+  left: 0;
+  bottom: 2%;
+  width: 100%;
+  aspect-ratio: 200 / 96;
+  perspective: calc(var(--w) * 2.4);
+  filter: drop-shadow(0 1.4cqw 1.6cqw rgba(0, 0, 0, 0.45));
+}
+
+/* A square cardboard mat, tipped back onto the table. */
+.mx-mat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 80%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotateX(54deg) rotateZ(-6deg);
+}
+
+.mx-mat-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 6.6%;
+  background: var(--mat) center / cover;
+}
+
+/* The cardboard's white edge: the mat's outline a few times over, just below the print, a little
+   greyer towards the table (a solid extrusion, corners included). */
+.mx-mat-layer.edge {
+  background: hsl(42 22% calc(93% - var(--i) * 3.5%));
+  transform: translateY(calc(var(--i) * 0.38cqw));
+}
+
+/* The lowest one touches the table: a fine dark line there. */
+.mx-mat-layer.edge:first-child {
+  box-shadow: 0 0.25cqw 0.3cqw rgba(40, 20, 6, 0.45);
+}
+
+/* The two dice on the mat, under the cup. */
+.mx-dice {
+  position: absolute;
+  left: 50%;
+  bottom: 24.5%;
+  display: flex;
+  gap: 3%;
+  width: 38%;
+  transform: translateX(-50%);
+}
+
+.mx-die {
+  flex: 1;
+  min-width: 0;
+  filter: drop-shadow(0 0.6cqw 0.8cqw rgba(0, 0, 0, 0.35));
+}
+
+.mx-die:first-child {
+  transform: rotate(-8deg) translateY(4%);
+}
+
+.mx-die:last-child {
+  transform: rotate(7deg);
+}
+
+.mx-die-side {
+  fill: #d9d3c4;
+}
+
+.mx-die-face {
+  fill: #fffdf7;
+}
+
+.mx-pip {
+  fill: #1d1b17;
+}
+
+.mx-pip.one {
+  fill: #c3352b;
+}
+
+/* The leather cup, mouth down on the mat. Held: it lifts and tips, so you can peek. */
+.mx-cup {
+  position: absolute;
+  left: 22%;
+  top: 16.5%;
+  width: 56%;
+  padding: 0;
+  transform-origin: 50% 90%;
+  transition: transform 0.28s var(--ease);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  z-index: 2;
+}
+
+.mx-cup svg {
+  display: block;
+  width: 100%;
+  filter: drop-shadow(0 1.4cqw 1.8cqw rgba(0, 0, 0, 0.45));
+}
+
+.mx-cup:disabled {
+  cursor: default;
+}
+
+.mx-cup.lifted {
+  transform: translateY(-40%) rotate(-10deg);
+}
+
+.mx-cup.off {
+  transform: translate(-28%, -48%) rotate(-24deg);
+  transition-duration: 0.5s;
+}
+
+.mx-cup-body {
+  fill: #7b4a2b;
+}
+
+.mx-cup-top {
+  fill: #93593a;
+}
+
+.mx-cup-rim {
+  /* Filled: the lip of the cup hides the dice completely. */
+  fill: #6e4126;
+  stroke: #5c3520;
+  stroke-width: 3;
+}
+
+.mx-cup-stitch {
+  fill: none;
+  stroke: #d9a066;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+}
+
+.mx-cup-shine {
+  fill: none;
+  stroke: rgba(255, 220, 180, 0.18);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* After the cup is lifted: the verdict on a paper slip, top of the table. */
+.mx-verdict {
+  position: absolute;
+  left: 50%;
+  top: 4cqh;
+  z-index: 3;
+  width: min(86%, 360px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px 12px;
+  border-radius: 12px;
+  background: #f2e8d2;
+  color: #2a1a0e;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: mx-slip 0.4s var(--spring) both;
+}
+
+.mx-verdict-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.mx-verdict.lie .mx-verdict-title {
+  color: #c3352b;
+}
+
+.mx-verdict.truth .mx-verdict-title {
+  color: #3f7200;
+}
+
+.mx-verdict-sub {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+@keyframes mx-slip {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -16px) rotate(-3deg);
+  }
+}
+
+/* Always two rows of buttons, so the table never changes size. */
+.mx-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mx-slot {
+  display: block;
+  height: 54px;
+}
+
+/* Picking what to announce: 21 values in three rows of seven, low to high. */
+.mx-values {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.mx-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 4px 0;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+  transition: transform 0.15s var(--spring);
+}
+
+.mx-value:not(:disabled):active {
+  transform: scale(0.92);
+}
+
+.mx-value:disabled {
+  opacity: 0.28;
+}
+
+.mx-value.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.mx-value.max {
+  background: color-mix(in srgb, var(--sun) 35%, var(--surface));
+}
+
+.mx-value.max.on {
+  background: var(--accent);
+}
+
+.mx-value-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-value-tag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- F*ck the Dealer ---------- */
