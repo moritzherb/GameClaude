@@ -3678,16 +3678,11 @@ h3 {
   background: var(--mat) center / cover;
 }
 
-/* The cardboard's white edge: the mat's outline a few times over, just below the print, in the
-   shade (a solid edge, corners included). */
+/* The cardboard's edge: copies of the mat just below the print, washed out to the white of the
+   cardboard and a little darker towards the table (the copies' grain gives it its layered look). */
 .mx-mat-layer.edge {
-  background: #dcd5c6;
-  transform: translateY(calc(var(--i) * 0.38cqw));
-}
-
-/* The lowest one, where it touches the table. */
-.mx-mat-layer.edge:first-child {
-  background: #c4bba8;
+  transform: translateY(calc(var(--i) * 0.48cqw));
+  filter: grayscale(1) brightness(2.1) contrast(0.5) brightness(calc(1 - var(--i) * 0.055));
 }
 
 /* The two dice on the mat, under the cup. */
@@ -4128,7 +4123,7 @@ h3 {
 .sw-spot {
   position: absolute;
   /* pigSize() in Schweinerei.tsx uses the same numbers. */
-  width: min(44cqw, 34cqh);
+  width: min(34cqw, 27cqh);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4203,16 +4198,15 @@ h3 {
 .sw-pig {
   display: block;
   width: 100%;
-  height: auto;
-  -webkit-user-drag: none;
+  overflow: visible;
   pointer-events: none;
   filter: drop-shadow(0 1.2cqw 1.4cqw rgba(0, 0, 0, 0.4));
 }
 
 .sw-pose {
-  /* Just below the pig (the pictures leave room round it for the tipped-over poses). */
+  /* Just below the pig. */
   position: absolute;
-  top: 80%;
+  top: calc(100% + 4px);
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(30, 14, 4, 0.55);

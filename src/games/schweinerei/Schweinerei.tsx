@@ -99,15 +99,15 @@ const HAND: [PigAt, PigAt] = [
   { x: 73, y: 79, rot: 12 },
 ];
 
-/** How big a pig is on a table this size (px): the picture is 44% of the table wide at most. */
+/** How big a pig is on a table this size (px): its drawing is 34% of the table wide at most (.sw-spot). */
 const pigSize = (w: number, h: number) => {
-  const pw = Math.min(0.44 * w, 0.34 * h) * 0.9;
-  return { pw, ph: pw * 0.8 };
+  const pw = Math.min(0.34 * w, 0.27 * h) * 0.9;
+  return { pw, ph: pw * 0.75 };
 };
 
 /** Keep a pig on the table: not off the edges, not under the result slip at the top, not under the pen button. */
 function clampSpot(x: number, y: number, w: number, pw: number): [number, number] {
-  // The whole picture (a little wider than the pig) stays on the table.
+  // The whole drawing (a little wider than the pig) stays on the table.
   const half = (pw / 0.9 / 2 / w) * 100 + 1;
   let cx = Math.min(100 - half, Math.max(half, x));
   const cy = Math.min(80, Math.max(40, y));
