@@ -4066,7 +4066,8 @@ h3 {
 
 .sw-spot {
   position: absolute;
-  width: min(35cqw, 30cqh);
+  /* pigSize() in Schweinerei.tsx uses the same numbers. */
+  width: min(44cqw, 34cqh);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4134,12 +4135,16 @@ h3 {
 .sw-pig {
   display: block;
   width: 100%;
-  overflow: visible;
+  height: auto;
+  -webkit-user-drag: none;
+  pointer-events: none;
   filter: drop-shadow(0 1.2cqw 1.4cqw rgba(0, 0, 0, 0.4));
 }
 
 .sw-pose {
-  margin-top: 4px;
+  /* Just below the pig (the pictures leave room round it for the tipped-over poses). */
+  position: absolute;
+  top: 80%;
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(30, 14, 4, 0.55);
