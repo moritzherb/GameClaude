@@ -36,44 +36,57 @@ function Defs({ id }: { id: string }) {
   );
 }
 
-/** Lying on a side: the profile, facing right. Chunky like the toy: round body, big head. */
+/**
+ * Lying on a side: the profile, facing right, in the leaping pose of the toys: bulky body,
+ * head up with a big pricked ear, front legs stretched forward, back legs stretched back.
+ */
 function Profile({ dot, id }: { dot: boolean; id: string }) {
   const body = `url(#${id}b)`;
   const shade = `url(#${id}u)`;
   return (
     <>
-      {/* Curly tail */}
-      <path d="M24 33c-6-4-11 0-9 4 2 4 8 2 6-2" fill="none" stroke={EDGE} strokeWidth="2.8" strokeLinecap="round" />
+      {/* Curly tail on top of the rump */}
+      <path d="M22 29c-4-6-11-4-10 1 1 5 7 4 6-1" fill="none" stroke={EDGE} strokeWidth="2.6" strokeLinecap="round" />
       {/* Far legs, in the shade */}
-      <path d="M41 55c-2 6-3 11-2 15 1 3 6 3 7 0 1-4 1-9 1-14z" fill="#d9907f" />
-      <path d="M72 56c0 6 1 11 3 14 2 3 7 1 6-2-1-4-2-9-3-13z" fill="#d9907f" />
-      {/* Round body */}
-      <path d="M22 42c0-15 14-25 34-25 19 0 32 9 34 22 2 13-10 23-32 24-22 1-36-7-36-21z" fill={body} />
-      <path d="M22 42c0-15 14-25 34-25 19 0 32 9 34 22 2 13-10 23-32 24-22 1-36-7-36-21z" fill={shade} />
-      {/* Near legs: short and stubby, splayed */}
-      <path d="M33 55c-4 5-7 10-7 14 0 4 6 5 8 1 2-4 4-9 6-13z" fill={body} />
-      <ellipse cx="29" cy="71" rx="4.6" ry="3.4" transform="rotate(25 29 71)" fill={TROTTER} />
-      <path d="M78 55c-1 6 0 11 2 15 2 3 8 2 8-2 0-4-1-9-3-13z" fill={body} />
-      <ellipse cx="84" cy="71" rx="4.6" ry="3.4" transform="rotate(-15 84 71)" fill={TROTTER} />
-      {/* Big head with chubby cheeks */}
-      <path d="M76 27c7-9 21-10 28-2 6 7 5 17-2 22-7 5-18 5-24-1-5-5-6-13-2-19z" fill={body} />
-      {/* Short snout ending in a pink disc */}
-      <path d="M99 30c3-1 6-1 8 0v14c-2 1-5 1-8 0z" fill={body} />
-      <ellipse cx="107.5" cy="37" rx="5.2" ry="7.6" fill={`url(#${id}s)`} />
-      <ellipse cx="109.4" cy="37" rx="2.8" ry="5.4" fill={INNER} />
-      <ellipse cx="109.4" cy="34.8" rx="1" ry="1.6" fill="#8c2f4a" />
-      <ellipse cx="109.4" cy="39.2" rx="1" ry="1.6" fill="#8c2f4a" />
-      {/* Smile */}
-      <path d="M96 46q4 3 8-1" fill="none" stroke={EDGE} strokeWidth="1.4" strokeLinecap="round" />
-      {/* Big floppy ear, pointing forward */}
-      <path d="M83 25c2-10 10-17 20-17-1 10-7 17-16 20z" fill={body} />
-      <path d="M86 24c2-7 7-12 14-13-1 7-5 12-11 14z" fill={INNER} />
+      <path d="M42 53c-5 6-10 11-15 16-2 3 2 6 5 4 5-4 10-9 15-15z" fill="#d68f82" stroke="#d68f82" strokeWidth="3.5" strokeLinejoin="round" />
+      <path d="M74 52c3 7 6 13 9 18 2 3 7 1 6-2-2-6-5-12-9-18z" fill="#d68f82" stroke="#d68f82" strokeWidth="3.5" strokeLinejoin="round" />
+      <ellipse cx="29" cy="71" rx="5" ry="3.6" transform="rotate(-35 29 71)" fill="#cf6a84" />
+      <ellipse cx="86" cy="70.5" rx="5" ry="3.6" transform="rotate(25 86 70.5)" fill="#cf6a84" />
+      {/* Bulky body: round rump, deep chest */}
+      <path d="M19 37c0-12 11-19 26-19 14 0 27 2 37 7 7 4 9 11 7 18-2 8-10 13-22 15-12 2-28 2-37-2-8-4-11-10-11-19z" fill={body} />
+      <path d="M19 37c0-12 11-19 26-19 14 0 27 2 37 7 7 4 9 11 7 18-2 8-10 13-22 15-12 2-28 2-37-2-8-4-11-10-11-19z" fill={shade} />
+      {/* Near back leg, stretched back */}
+      <path d="M36 50c-6 5-13 10-19 13-3 2-1 7 3 6 7-3 15-8 22-13z" fill={body} stroke={body} strokeWidth="3.5" strokeLinejoin="round" />
+      <ellipse cx="17.5" cy="66.5" rx="5.4" ry="3.8" transform="rotate(-25 17.5 66.5)" fill={TROTTER} />
+      {/* Near front leg, stretched forward */}
+      <path d="M78 47c5 5 10 11 14 17 2 3 7 1 6-3-3-7-9-13-15-18z" fill={body} stroke={body} strokeWidth="3.5" strokeLinejoin="round" />
+      <ellipse cx="96" cy="66" rx="5.4" ry="3.8" transform="rotate(35 96 66)" fill={TROTTER} />
+      {/* Far ear, behind the head */}
+      <path d="M85 21c-3-8-1-15 4-19 3 6 3 12 1 18z" fill="#dc9a8d" />
+      {/* Big head, held up */}
+      <path d="M79 27c1-10 10-15 19-13 8 2 12 9 11 17-1 8-8 13-16 13-9 0-15-7-14-17z" fill={body} />
+      {/* Snout: a round pink disc, pointing forward */}
+      <path d="M103 24c3-1 7 0 9 2l-1 13c-3 2-6 2-9 1z" fill={body} />
+      <ellipse cx="111" cy="32" rx="5" ry="7.4" transform="rotate(-8 111 32)" fill={`url(#${id}s)`} />
+      <ellipse cx="112.6" cy="32" rx="2.6" ry="5.2" transform="rotate(-8 112.6 32)" fill={INNER} />
+      <ellipse cx="112.4" cy="29.6" rx="0.9" ry="1.5" fill="#8c2f4a" />
+      <ellipse cx="113" cy="34.2" rx="0.9" ry="1.5" fill="#8c2f4a" />
+      {/* Open smile */}
+      <path d="M98 39c3 4 8 4 11 0-3 5-8 6-11 0z" fill="#b8485f" />
+      {/* Big ear pricked up and forward, pink inside */}
+      <path d="M88 18c0-9 4-15 10-18 2 7 1 14-4 20z" fill={body} />
+      <path d="M90 17c0-6 3-10 7-13 1 5 0 10-3 14z" fill={INNER} />
       {/* Button eye */}
-      <circle cx="94" cy="31.5" r="2.3" fill="#1a1414" />
-      <circle cx="94.7" cy="30.8" r="0.7" fill="#fff" opacity="0.7" />
-      {dot && <ellipse cx="54" cy="39" rx="5.6" ry="5" fill="#191414" />}
+      <circle cx="99" cy="24" r="2.1" fill="#1a1414" />
+      {dot && (
+        <>
+          <ellipse cx="52" cy="35" rx="5.6" ry="5" fill="#191414" />
+          <circle cx="40" cy="44" r="2.4" fill="#191414" />
+          <circle cx="64" cy="45" r="2" fill="#191414" />
+        </>
+      )}
       {/* A faint sheen on the rubber */}
-      <path d="M40 23c9-4 20-4 29-1" fill="none" stroke="#fff" strokeOpacity="0.3" strokeWidth="4" strokeLinecap="round" />
+      <path d="M34 22c10-3 22-3 32 0" fill="none" stroke="#fff" strokeOpacity="0.3" strokeWidth="4" strokeLinecap="round" />
     </>
   );
 }
@@ -84,11 +97,18 @@ function Back({ id }: { id: string }) {
   return (
     <>
       <path d="M21 40c-6-4-10 0-8 4 2 4 7 2 5-2" fill="none" stroke={EDGE} strokeWidth="2.8" strokeLinecap="round" />
-      {/* Trotters peeking out under the belly */}
-      <ellipse cx="36" cy="19" rx="5" ry="4" fill={TROTTER} />
-      <ellipse cx="36" cy="61" rx="5" ry="4" fill={TROTTER} />
-      <ellipse cx="68" cy="18" rx="5" ry="4" fill={TROTTER} />
-      <ellipse cx="68" cy="62" rx="5" ry="4" fill={TROTTER} />
+      {/* Legs stretched forward and back, peeking out under the body */}
+      {[
+        [30, 22, -30],
+        [30, 58, 30],
+        [72, 20, 30],
+        [72, 60, -30],
+      ].map(([x, y, r]) => (
+        <g key={`${x}-${y}`} transform={`rotate(${r} ${x} ${y})`}>
+          <ellipse cx={x < 50 ? x - 6 : x + 6} cy={y} rx="9" ry="4.5" fill="#e8a596" />
+          <ellipse cx={x < 50 ? x - 13 : x + 13} cy={y} rx="3.6" ry="3.8" fill={TROTTER} />
+        </g>
+      ))}
       <ellipse cx="51" cy="40" rx="31" ry="22" fill={body} />
       <ellipse cx="88" cy="40" rx="15" ry="16" fill={body} />
       <path d="M100 34c3-1 6-1 7 0v12c-1 1-4 1-7 0z" fill={body} />
@@ -108,15 +128,16 @@ function Belly({ id }: { id: string }) {
   const body = `url(#${id}b)`;
   return (
     <>
+      {/* The four legs in the air, stretched forward and back like in the leap */}
       {[
-        [36, 17, -1],
-        [68, 16, -1],
-        [36, 63, 1],
-        [68, 64, 1],
-      ].map(([x, y, d]) => (
-        <g key={`${x}-${y}`}>
-          <ellipse cx={x} cy={y} rx="7" ry="8" fill={body} />
-          <ellipse cx={x} cy={y + d * 3.5} rx="4.6" ry="3.6" fill={TROTTER} />
+        [30, 21, -30],
+        [30, 59, 30],
+        [72, 19, 30],
+        [72, 61, -30],
+      ].map(([x, y, r]) => (
+        <g key={`${x}-${y}`} transform={`rotate(${r} ${x} ${y})`}>
+          <ellipse cx={x < 50 ? x - 6 : x + 6} cy={y} rx="10" ry="5.5" fill={body} />
+          <ellipse cx={x < 50 ? x - 14 : x + 14} cy={y} rx="4" ry="4.4" fill={TROTTER} />
         </g>
       ))}
       <ellipse cx="51" cy="40" rx="31" ry="22" fill={body} />
