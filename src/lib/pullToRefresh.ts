@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import { buzz } from './fx';
 
 /** How far the page follows the finger, at most. */
@@ -15,9 +15,8 @@ const REFRESH_MS = 900;
  * the very top and moves mostly downwards (a sideways swipe is left alone).
  *
  * The page moves down with the finger and `indicator` (with --p from 0 to 1 and the classes `pull`
- * and `refresh`) shows in the gap. Like the swipe, it never holds up scrolling (passive listeners;
+ * and `refresh`) shows in the gap. It never holds up scrolling (passive listeners;
  * the page can't bounce at the top: overscroll-behavior) and moves things directly, once per frame.
- * Returns whether it's refreshing right now.
  */
 export function usePullToRefresh(
   onRefresh: () => void,
@@ -25,7 +24,6 @@ export function usePullToRefresh(
   page: RefObject<HTMLElement | null>,
   indicator: RefObject<HTMLElement | null>,
 ) {
-  const [refreshing, setRefreshing] = useState(false);
   const refresh = useRef(onRefresh);
   refresh.current = onRefresh;
 
@@ -92,7 +90,6 @@ export function usePullToRefresh(
       cancelAnimationFrame(frame);
       if (off >= TRIGGER) {
         busy = true;
-        setRefreshing(true);
         phase('refresh');
         off = HOLD;
         paint();
@@ -103,7 +100,6 @@ export function usePullToRefresh(
             phase('idle');
             paint();
             busy = false;
-            setRefreshing(false);
           }, REFRESH_MS),
         );
       } else {
@@ -129,10 +125,8 @@ export function usePullToRefresh(
         off = 0;
         phase('idle');
         paint();
-        setRefreshing(false);
       }
     };
   }, [enabled, page, indicator]);
 
-  return { refreshing };
 }
