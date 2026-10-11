@@ -56,12 +56,18 @@ export function useRoute(): Route {
     const back = document.documentElement.classList.contains('nav-back');
     window.scrollTo(0, back ? (scrolls.get(screenKey(hash)) ?? 0) : 0);
     // iPhones show their picture of the screen while swiping back and drop it once the page paints
-    // something new: make sure that happens (an invisible change, for one frame).
+    // something new: make sure that happens.
     if (back) {
-      requestAnimationFrame(() => {
-        document.body.style.opacity = '0.999';
-        requestAnimationFrame(() => (document.body.style.opacity = ''));
-      });
+      // A real repaint (a dot nobody can see, drawn for two frames), not just a layer change.
+      const nudge = () => {
+        const dot = document.createElement('i');
+        dot.style.cssText = 'position:absolute;left:0;top:0;width:2px;height:2px;background:rgba(128,128,128,0.02);pointer-events:none';
+        document.body.appendChild(dot);
+        requestAnimationFrame(() => requestAnimationFrame(() => dot.remove()));
+      };
+      nudge();
+      // Once more after the swipe has surely ended.
+      window.setTimeout(nudge, 400);
     }
   }, [hash]);
   return useMemo(() => parse(hash), [hash]);
@@ -202,7 +208,11 @@ if (typeof window !== 'undefined') {
     // Swiped back onto home (from a screen, or home onto the home below it): drop what's ahead, so
     // there's never anything to swipe forward (left) to.
     if (history.state === null && isHome(window.location.hash) && !isGame(lastHash)) {
-      history.pushState(HOME_TOP, '', '#/');
+      // Not right away: changing the history while the iPhone finishes its swipe can leave its
+      // picture of the screen stuck on top of the page.
+      window.setTimeout(() => {
+        if (history.state === null && isHome(window.location.hash)) history.pushState(HOME_TOP, '', '#/');
+      }, 600);
       return;
     }
     // An old entry ahead (from an earlier version of the app): never step forward onto a screen.

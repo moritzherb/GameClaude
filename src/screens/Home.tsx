@@ -201,14 +201,6 @@ export default function Home() {
               <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
             ))}
           </div>
-          {/* The way to every game, right where the line-up ends. */}
-          <Tap className="all-games-bar" onClick={() => navigate(paths.games())}>
-            <span className="all-games-count">{GAMES.length}</span>
-            <span className="all-games-text">{t('See all games')}</span>
-            <span className="all-games-arrow">
-              <ChevronIcon />
-            </span>
-          </Tap>
         </section>
 
         {rolling && (

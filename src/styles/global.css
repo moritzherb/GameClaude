@@ -404,7 +404,7 @@ h3 {
   line-height: 1;
 }
 
-/* Home: the way to All games, hard to miss: a lime pill next to the line-up's title… */
+/* Home: the way to All games, hard to miss: a lime pill next to the line-up's title. */
 .all-games-pill {
   display: inline-flex;
   align-items: center;
@@ -429,66 +429,6 @@ h3 {
 
 .all-games-pill:active {
   transform: scale(0.95);
-}
-
-/* …and a big bar under the line-up. */
-.all-games-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  margin-top: 12px;
-  padding: 14px 14px 14px 16px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 2px var(--accent);
-  text-align: left;
-  transition: transform 0.15s var(--spring);
-}
-
-.all-games-bar:active {
-  transform: scale(0.98);
-}
-
-.all-games-count {
-  flex: none;
-  display: grid;
-  place-items: center;
-  min-width: 44px;
-  height: 44px;
-  padding: 0 8px;
-  border-radius: 12px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.4rem;
-}
-
-.all-games-text {
-  flex: 1;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.35rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--ink);
-}
-
-.all-games-arrow {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.all-games-arrow svg {
-  width: 20px;
-  height: 20px;
 }
 
 .link-btn {
