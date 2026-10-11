@@ -101,7 +101,8 @@ const pigSize = (w: number, h: number) => {
 
 /** Keep a pig on the table: not off the edges, not under the result slip at the top, not under the pen button. */
 function clampSpot(x: number, y: number, w: number, pw: number): [number, number] {
-  const half = (pw / 2 / w) * 100 + 1;
+  // The whole picture (a little wider than the pig) stays on the table.
+  const half = (pw / 0.9 / 2 / w) * 100 + 1;
   let cx = Math.min(100 - half, Math.max(half, x));
   const cy = Math.min(80, Math.max(40, y));
   if (cx > 62 && cy > 64) cx = 62;
