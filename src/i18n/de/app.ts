@@ -32,6 +32,9 @@ const app: Record<string, string> = {
   'The line-up': 'Das Line-up',
   'Last played': 'Zuletzt gespielt',
   'All games': 'Alle Spiele',
+  'Change avatar of {name}': 'Avatar von {name} ändern',
+  'Pick an avatar for {name}': 'Avatar für {name}',
+  'Rename {name}': '{name} umbenennen',
   'Picking your game…': 'Euer Spiel wird ausgewählt…',
 
   // Library

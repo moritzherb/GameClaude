@@ -1549,6 +1549,66 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+/* The name is a text field that looks like plain text: tap it to change it. */
+.player-name-input {
+  width: 100%;
+  margin: 0;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  outline: none;
+}
+
+.player-name-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.player-name-input.clash {
+  border-bottom-color: var(--bad-ink);
+  color: var(--bad-ink);
+}
+
+.player-name-warn {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--bad-ink);
+}
+
+/* Picking an avatar: all of them in a grid; the player's own one in their colour. */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.avatar-choice {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: clamp(1.4rem, 7vw, 1.9rem);
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s var(--spring);
+}
+
+.avatar-choice:active {
+  transform: scale(0.88);
+}
+
+.avatar-choice.on {
+  background: var(--chip, var(--accent));
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent);
+}
+
+/* Someone else has it: still free to pick, just quieter. */
+.avatar-choice.used {
+  opacity: 0.4;
+}
+
 .player-remove {
   flex: none;
   width: 44px;

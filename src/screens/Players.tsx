@@ -6,10 +6,13 @@ import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { unfill } from '../lib/noAutofill';
 import { navigate, paths } from '../lib/router';
-import { MAX_PLAYERS, useApp } from '../state/AppState';
+import Sheet from '../components/Sheet';
+import { AVATARS, MAX_PLAYERS, useApp, type Player } from '../state/AppState';
 
 export default function Players({ next }: { next: string | null }) {
-  const { players, addPlayer, removePlayer, rerollAvatar, clearPlayers } = useApp();
+  const { players, addPlayer, removePlayer, updatePlayer, clearPlayers } = useApp();
+  // The player whose avatar is being picked (the sheet with all avatars).
+  const [picking, setPicking] = useState<Player | null>(null);
   const [name, setName] = useState('');
   const [armClear, setArmClear] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -81,16 +84,20 @@ export default function Players({ next }: { next: string | null }) {
               <button
                 type="button"
                 className="player-avatar"
-                aria-label={t('New avatar for {name}', { name: p.name })}
+                aria-label={t('Change avatar of {name}', { name: p.name })}
                 onClick={() => {
                   sfx.pop();
                   buzz();
-                  rerollAvatar(p.id);
+                  setPicking(p);
                 }}
               >
                 {p.avatar}
               </button>
-              <span className="player-name">{p.name}</span>
+              <PlayerName
+                player={p}
+                taken={(n) => players.some((o) => o.id !== p.id && o.name.toLowerCase() === n.toLowerCase())}
+                onRename={(n) => updatePlayer(p.id, { name: n })}
+              />
               <button
                 type="button"
                 className="player-remove"
@@ -124,11 +131,104 @@ export default function Players({ next }: { next: string | null }) {
         </button>
       )}
 
+      <Sheet
+        open={!!picking}
+        onClose={() => setPicking(null)}
+        title={picking ? t('Pick an avatar for {name}', { name: picking.name }) : ''}
+        closeLabel={t('Cancel')}
+      >
+        <div className="avatar-grid">
+          {AVATARS.map((a) => {
+            const mine = a === picking?.avatar;
+            // Someone else has it already (still free to pick: it's just a hint).
+            const used = !mine && players.some((o) => o.avatar === a);
+            return (
+              <button
+                key={a}
+                type="button"
+                className={`avatar-choice${mine ? ' on' : ''}${used ? ' used' : ''}`}
+                style={picking ? ({ '--chip': picking.color } as CSSProperties) : undefined}
+                aria-pressed={mine}
+                onClick={() => {
+                  if (!picking) return;
+                  sfx.pop();
+                  buzz();
+                  updatePlayer(picking.id, { avatar: a });
+                  setPicking(null);
+                }}
+              >
+                {a}
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
+
       <div className="sticky-action">
         <BigButton size="xl" onClick={done}>
           {next ? t('Ready') : t('Done')}
         </BigButton>
       </div>
     </main>
+  );
+}
+
+/** A player's name, changed right where it stands: tap it and type. Empty or taken names don't stick. */
+function PlayerName({ player, taken, onRename }: { player: Player; taken: (name: string) => boolean; onRename: (name: string) => void }) {
+  const [draft, setDraft] = useState(player.name);
+  const cancelled = useRef(false);
+  useEffect(() => setDraft(player.name), [player.name]);
+  const clean = draft.trim();
+  const clash = !!clean && clean.toLowerCase() !== player.name.toLowerCase() && taken(clean);
+
+  const commit = () => {
+    if (cancelled.current) {
+      cancelled.current = false;
+      setDraft(player.name);
+      return;
+    }
+    if (!clean || clash) {
+      if (clean !== player.name) {
+        sfx.boo();
+        buzz([30, 40, 30]);
+      }
+      setDraft(player.name);
+      return;
+    }
+    if (clean !== player.name) {
+      sfx.pop();
+      buzz();
+      onRename(clean);
+    }
+    setDraft(clean);
+  };
+
+  return (
+    <span className="player-name">
+      <input
+        className={`player-name-input${clash ? ' clash' : ''}`}
+        type="search"
+        name="prost-player-name"
+        aria-label={t('Rename {name}', { name: player.name })}
+        value={draft}
+        maxLength={18}
+        enterKeyHint="done"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        autoCapitalize="words"
+        onChange={(e) => setDraft(e.target.value)}
+        onFocus={(e) => e.currentTarget.setSelectionRange(0, e.currentTarget.value.length)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+          if (e.key === 'Escape') {
+            cancelled.current = true;
+            e.currentTarget.blur();
+          }
+        }}
+      />
+      {clash && <span className="player-name-warn">{t('Already playing. Try a nickname.')}</span>}
+    </span>
   );
 }
