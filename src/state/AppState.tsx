@@ -22,7 +22,10 @@ export interface Settings {
   lang?: Lang;
 }
 
-export const AVATARS = ['🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '👽', '🤖', '👻', '🤠', '🥸', '😎', '🤡', '🍕', '🌮'];
+export const AVATARS = [
+  '🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '🐶', '🐱', '🐰',
+  '🐮', '🐔', '🦉', '🐢', '🦈', '🐲', '👽', '🤖', '👻', '💀', '🎃', '🤠', '🥸', '😎', '🤡', '👑', '🍕', '🌮',
+];
 export const PLAYER_COLORS = ['#ff8a3d', '#ffc83d', '#6b95ff', '#3ddc97', '#ff7ac6', '#b49cff', '#ff5a4e', '#5fd3f3'];
 export const MAX_PLAYERS = 20;
 
@@ -30,7 +33,8 @@ interface AppState {
   players: Player[];
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
-  rerollAvatar: (id: string) => void;
+  /** Change a player's name and/or avatar. A name that's empty or taken by someone else is ignored. */
+  updatePlayer: (id: string, patch: { name?: string; avatar?: string }) => void;
   clearPlayers: () => void;
   /** Replace the whole list, e.g. with everyone in a room. */
   replacePlayers: (list: Omit<Player, 'id'>[]) => void;
@@ -97,8 +101,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ];
         }),
       removePlayer: (id) => setPlayers((list) => list.filter((p) => p.id !== id)),
-      rerollAvatar: (id) =>
-        setPlayers((list) => list.map((p) => (p.id === id ? { ...p, avatar: pick(AVATARS.filter((a) => a !== p.avatar)) } : p))),
+      updatePlayer: (id, patch) =>
+        setPlayers((list) =>
+          list.map((p) => {
+            if (p.id !== id) return p;
+            const name = patch.name?.trim().slice(0, 18);
+            const nameOk = !!name && !list.some((o) => o.id !== id && o.name.toLowerCase() === name.toLowerCase());
+            return { ...p, ...(nameOk ? { name } : {}), ...(patch.avatar ? { avatar: patch.avatar } : {}) };
+          }),
+        ),
       clearPlayers: () => setPlayers([]),
       replacePlayers: (list) =>
         setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: crypto.randomUUID?.() ?? String(Date.now() + Math.random()) }))),

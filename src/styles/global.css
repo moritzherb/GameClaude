@@ -1549,6 +1549,66 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+/* The name is a text field that looks like plain text: tap it to change it. */
+.player-name-input {
+  width: 100%;
+  margin: 0;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  outline: none;
+}
+
+.player-name-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.player-name-input.clash {
+  border-bottom-color: var(--bad-ink);
+  color: var(--bad-ink);
+}
+
+.player-name-warn {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--bad-ink);
+}
+
+/* Picking an avatar: all of them in a grid; the player's own one in their colour. */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.avatar-choice {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: clamp(1.4rem, 7vw, 1.9rem);
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s var(--spring);
+}
+
+.avatar-choice:active {
+  transform: scale(0.88);
+}
+
+.avatar-choice.on {
+  background: var(--chip, var(--accent));
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent);
+}
+
+/* Someone else has it: still free to pick, just quieter. */
+.avatar-choice.used {
+  opacity: 0.4;
+}
+
 .player-remove {
   flex: none;
   width: 44px;
@@ -3023,11 +3083,11 @@ h3 {
 
 .kc-slot {
   position: absolute;
-  width: 9.2cqw;
-  height: 12.9cqw;
-  border-radius: 1cqw;
+  width: 11.4cqw;
+  height: 16cqw;
+  border-radius: 1.2cqw;
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
-  box-shadow: inset 0 0 0 0.55cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 0.65cqw #fff, 0 1px 3px rgba(0, 0, 0, 0.35);
   transform: translate(-50%, -50%) rotate(var(--rot));
   transition: transform 0.18s var(--spring);
 }
@@ -3159,13 +3219,13 @@ h3 {
 
 /* The drawn card, big in the middle so everyone can see it. Tap turns it to the rule. */
 .kc-reveal {
-  --cw: 52cqw;
+  --cw: 60cqw;
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 52cqw;
-  height: 72.8cqw;
-  margin: -36.4cqw 0 0 -26cqw;
+  width: 60cqw;
+  height: 84cqw;
+  margin: -42cqw 0 0 -30cqw;
   z-index: 3;
   will-change: transform;
 }
