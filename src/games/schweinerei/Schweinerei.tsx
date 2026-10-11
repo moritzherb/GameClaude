@@ -95,10 +95,10 @@ const HAND: [PigAt, PigAt] = [
 
 /** The bank button sits in the bottom-right corner: pigs never land under it. */
 const clampSpot = (x: number, y: number): [number, number] => {
-  let cx = Math.min(80, Math.max(20, x));
+  let cx = Math.min(77, Math.max(23, x));
   // Not under the slip with the result at the top.
   const cy = Math.min(80, Math.max(38, y));
-  if (cx > 66 && cy > 66) cx = 66;
+  if (cx > 64 && cy > 64) cx = 64;
   return [cx, cy];
 };
 
@@ -119,8 +119,8 @@ function landing(th: Throw, from: { x: number; y: number }, v: { x: number; y: n
     { x, y: y + 4, rot: j() * 8 },
     { x: x + 2, y: y - 7, rot: -6 + j() * 8 },
   ];
-  const a = clampSpot(x - 17 + j() * 6, y + j() * 8);
-  const b = clampSpot(x + 17 + j() * 6, y + j() * 8);
+  const a = clampSpot(x - 21 + j() * 5, y + j() * 8);
+  const b = clampSpot(x + 21 + j() * 5, y + j() * 8);
   return [
     { x: a[0], y: a[1], rot: j() * 30 },
     { x: b[0], y: b[1], rot: j() * 30 },

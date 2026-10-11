@@ -4066,7 +4066,7 @@ h3 {
 
 .sw-spot {
   position: absolute;
-  width: min(30cqw, 26cqh);
+  width: min(35cqw, 30cqh);
   display: flex;
   flex-direction: column;
   align-items: center;
