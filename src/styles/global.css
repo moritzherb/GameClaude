@@ -4012,16 +4012,25 @@ h3 {
 
 /* ---------- Schweinerei ---------- */
 
-/* Everyone's points in one row under whose turn it is (the table never moves). */
+/* Everyone's points in one row under whose turn it is (the table never moves), the bonus throw
+   at the end. */
 .sw-board {
   display: flex;
   gap: 6px;
   height: 34px;
+}
+
+.sw-board-players {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.sw-board::-webkit-scrollbar {
+.sw-board-players::-webkit-scrollbar {
   display: none;
 }
 
@@ -4053,7 +4062,6 @@ h3 {
 /* This turn's bonus throw, at the end of the row: what to get, how far, how much. */
 .sw-bonus {
   flex: none;
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4066,6 +4074,13 @@ h3 {
   font-weight: 700;
   white-space: nowrap;
   animation: mx-fade-in 0.3s ease both;
+}
+
+.sw-bonus-label {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
 }
 
 .sw-bonus-pts {
@@ -4085,7 +4100,14 @@ h3 {
   box-shadow: none;
 }
 
-.sw-bonus.won .sw-bonus-pts {
+.sw-bonus.won .sw-bonus-label {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.sw-bonus-pts {
   color: inherit;
 }
 
@@ -4533,7 +4555,8 @@ h3 {
 .kl-burst {
   position: absolute;
   left: 50%;
-  top: 30%;
+  /* Right on the stack (and the card flying off it). */
+  top: 50%;
   z-index: 4;
   width: min(70cqw, 52cqh);
   display: grid;

@@ -39,6 +39,11 @@ const schweinerei: Record<string, string> = {
   'Mixed double': 'Gemischtes Doppel',
   'Bonus throw! {what}: +{n}': 'Bonus-Wurf! {what}: +{n}',
   'Bonus throw: {what} for +{n}': 'Bonus-Wurf: {what} für +{n}',
+  Bonus: 'Bonus',
+  'Bonus throw': 'Bonus-Wurf',
+  'Get {what} within this turn: every pig counts, over all your throws until you put the points in the pen. Then +{n} points on top, once. Every turn has a new target.':
+    'Schaff {what} in dieser Runde: Jedes Schwein zählt, über alle deine Würfe, bis du die Punkte in den Stall bringst. Dann gibt es einmal +{n} Punkte dazu. Jede Runde gibt es ein neues Ziel.',
+  'So far this turn: {count} of {target}.': 'Bisher in dieser Runde: {count} von {target}.',
   'Piggyback!': 'Schweinerei!',
   Sider: 'Sau',
   '+{n} · give out {s} sips': '+{n} · verteile {s} Schlucke',
