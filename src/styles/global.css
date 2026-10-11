@@ -3730,7 +3730,8 @@ h3 {
 .mx-cup {
   position: absolute;
   left: 22%;
-  top: 16.5%;
+  /* Low enough that its rim hides the dice completely. */
+  top: 18.25%;
   width: 56%;
   padding: 0;
   transform-origin: 50% 90%;
