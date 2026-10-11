@@ -11,6 +11,8 @@ import mat from './mat.webp';
 import { allowedAfter, announce, believe, isDouble, MAEXCHEN, newRound, peek, reveal, shake, valueOf, VALUES, type Round, type Value } from './logic';
 
 const SHAKE_MS = 650;
+/** When the verdict lands after the cup is lifted (matches the CSS). */
+const STAMP_MS = 450;
 
 export default function Maexchen({ players }: GameProps) {
   const known = useApp().knows('maexchen');
@@ -77,10 +79,11 @@ function MaexchenTable({
   const next = (r.turn + 1) % n;
   // Whoever decides now: in 'pass' the next player (believe or lift), otherwise the one at turn.
   const who = players[r.phase === 'pass' ? next : r.verdict ? r.verdict.loser : r.turn];
-  const open = r.phase === 'reveal' && !r.verdict?.believed;
+  const open = r.phase === 'reveal';
+  const mustLift = r.phase === 'pass' && claim?.value === MAEXCHEN;
 
   /** Shake cup and coaster together for a moment, then the dice are rolled. */
-  const doShake = () => {
+  const doShake = (base: Round = r) => {
     if (shaking) return;
     setLifted(false);
     setShaking(true);
@@ -88,7 +91,7 @@ function MaexchenTable({
     [0, 110, 230, 340, 450].forEach((d) => window.setTimeout(() => sfx.tick(), d));
     timer.current = window.setTimeout(() => {
       setShaking(false);
-      setR(shake(r));
+      setR(shake(base));
       sfx.pop();
     }, SHAKE_MS);
   };
@@ -105,6 +108,8 @@ function MaexchenTable({
   };
   const lookUp = () => setLifted(false);
 
+  const allowed = allowedAfter(claim?.value ?? null);
+
   const doAnnounce = () => {
     if (choice == null) return;
     setPicking(false);
@@ -115,49 +120,42 @@ function MaexchenTable({
     setChoice(null);
   };
 
+  /** Believed: the cup goes to the next player and shakes right away. */
   const doBelieve = () => {
-    sfx.tick();
-    buzz();
-    setR(believe(r, n));
+    const next = believe(r, n);
+    if (next === r) return;
+    setR(next);
+    doShake(next);
   };
 
   const doReveal = () => {
     const out = reveal(r, n);
     setR(out);
-    if (out.verdict?.truth) sfx.boo();
-    else sfx.tada();
-    buzz([40, 40, 80]);
+    // The cup flies off first, then the verdict lands like a stamp.
+    timer.current = window.setTimeout(() => {
+      if (out.verdict?.truth) sfx.boo();
+      else sfx.tada();
+      buzz([60, 40, 120]);
+    }, STAMP_MS);
   };
 
-  const sub =
-    r.phase === 'shake'
-      ? claim
-        ? t('believed it: now beat it')
-        : t('your roll')
-      : r.phase === 'look'
-        ? r.blind
-          ? t('shaken blind: announce something')
-          : r.peeked
-            ? t('announce, or shake once more blind')
-            : t('look under the cup (or don’t)')
-        : r.phase === 'pass'
-          ? t('believe it or lift the cup?')
-          : r.verdict
-            ? r.verdict.sips === 1
-              ? t('drinks 1 sip')
-              : t('drinks {n} sips', { n: r.verdict.sips })
-            : '';
-
+  // What to do now, on the table (the player row only says who).
   const hint =
     r.phase === 'shake'
-      ? !known && t('Tap the cup to shake')
+      ? shaking
+        ? null
+        : claim
+          ? t('Believed it: now beat {value}', { value: label(claim.value) })
+          : t('Tap the cup to shake')
       : r.phase === 'look'
         ? r.blind
-          ? t('No more looking!')
-          : !known && !lifted && t('Hold the cup to look under it')
-        : r.phase === 'pass'
-          ? t('Hand the phone to {name}', { name: who.name })
-          : null;
+          ? t('Shaken blind: no more looking, announce something')
+          : lifted
+            ? null
+            : r.peeked
+              ? t('Announce, or shake once more blind')
+              : t('Hold the cup to look under it')
+        : null;
 
   return (
     <div className="mx fill">
@@ -168,7 +166,13 @@ function MaexchenTable({
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{who.name}</span>
-            <span className="bd-player-sub">{sub}</span>
+            <span className="bd-player-sub">
+              {r.phase === 'reveal' && r.verdict
+                ? r.verdict.sips === 1
+                  ? t('drinks 1 sip')
+                  : t('drinks {n} sips', { n: r.verdict.sips })
+                : t('your turn')}
+            </span>
           </span>
         </div>
         <div className="mx-claim" aria-live="polite">
@@ -177,8 +181,21 @@ function MaexchenTable({
         </div>
       </div>
 
-      <div className="mx-table">
-        {hint && <span className={`mx-hint${r.blind && r.phase === 'look' ? ' warn' : ''}`}>{hint}</span>}
+      <div className={`mx-table${open && r.verdict ? (r.verdict.truth ? ' truth' : ' lie') : ''}`}>
+        {hint && (
+          <span key={hint} className={`mx-hint${r.blind && r.phase === 'look' ? ' warn' : ''}`}>
+            {hint}
+          </span>
+        )}
+        {r.phase === 'pass' && (
+          <span className="mx-handoff" key={next} style={{ '--who': who.color } as CSSProperties}>
+            <span className="mx-handoff-avatar" style={{ background: who.color }}>
+              {who.avatar}
+            </span>
+            <span className="mx-handoff-text">{t('Hand the phone to {name}', { name: who.name })}</span>
+            <span className="mx-handoff-sub">{mustLift ? t('Mäxchen: you have to lift the cup') : t('believe it or lift the cup?')}</span>
+          </span>
+        )}
         <div className={`mx-rig${shaking ? ' shaking' : ''}`}>
           <Coaster />
           <span className="mx-dice">
@@ -213,16 +230,10 @@ function MaexchenTable({
         </div>
         {open && r.verdict && claim && (
           <div className={`mx-verdict${r.verdict.truth ? ' truth' : ' lie'}`} role="status">
-            <span className="mx-verdict-title">{r.verdict.truth ? t('It’s true!') : t('Lie!')}</span>
+            <span className="mx-stamp">{r.verdict.truth ? t('It’s true!') : t('Lie!')}</span>
             <span className="mx-verdict-sub">
               {t('{actual} under the cup, {claim} announced', { actual: label(valueOf(r.dice)), claim: label(claim.value) })}
             </span>
-          </div>
-        )}
-        {r.verdict?.believed && (
-          <div className="mx-verdict truth" role="status">
-            <span className="mx-verdict-title">{t('Mäxchen!')}</span>
-            <span className="mx-verdict-sub">{t('Nothing beats it. Believed and drunk.')}</span>
           </div>
         )}
       </div>
@@ -230,7 +241,7 @@ function MaexchenTable({
       <div className="sticky-action stack mx-actions">
         {r.phase === 'shake' && (
           <>
-            <BigButton size="xl" onClick={doShake} disabled={shaking}>
+            <BigButton onClick={() => doShake()} disabled={shaking}>
               {t('Shake')}
             </BigButton>
             <span className="mx-slot" />
@@ -238,27 +249,29 @@ function MaexchenTable({
         )}
         {r.phase === 'look' && (
           <>
-            <BigButton size="xl" onClick={() => setPicking(true)}>
+            <BigButton onClick={() => setPicking(true)}>
               {t('Announce…')}
             </BigButton>
-            <BigButton variant="light" onClick={doShake} disabled={!r.peeked || r.blind || shaking}>
+            <BigButton variant="light" onClick={() => doShake()} disabled={!r.peeked || r.blind || shaking}>
               {r.blind ? t('Shaken blind 🙈') : t('Shake once more, blind')}
             </BigButton>
           </>
         )}
         {r.phase === 'pass' && claim && (
           <>
-            <BigButton size="xl" onClick={doReveal}>
+            {mustLift ? (
+              <span className="mx-slot mx-must">{t('Mäxchen! Nothing beats it: lift the cup.')}</span>
+            ) : (
+              <BigButton onClick={doBelieve}>{t('Believe it and shake')}</BigButton>
+            )}
+            <BigButton variant="danger" onClick={doReveal}>
               {t('Lift the cup!')}
-            </BigButton>
-            <BigButton variant="light" onClick={doBelieve}>
-              {claim.value === MAEXCHEN ? t('Believe it (1 sip)') : t('Believe it and shake')}
             </BigButton>
           </>
         )}
         {r.phase === 'reveal' && r.verdict && (
           <>
-            <BigButton size="xl" onClick={() => setR(newRound(r.verdict!.loser))}>
+            <BigButton onClick={() => setR(newRound(r.verdict!.loser))}>
               {t('New round: {name} starts', { name: players[r.verdict.loser].name })}
             </BigButton>
             <span className="mx-slot" />
@@ -269,7 +282,7 @@ function MaexchenTable({
       <Sheet open={picking} onClose={() => setPicking(false)} title={t('What do you announce?')} closeLabel={t('Cancel')}>
         <div className="mx-values">
           {VALUES.map((v) => {
-            const ok = allowedAfter(claim?.value ?? null).includes(v);
+            const ok = allowed.includes(v);
             return (
               <button
                 key={v}
@@ -285,7 +298,7 @@ function MaexchenTable({
                 }}
               >
                 <span className="mx-value-num">{v}</span>
-                {(isDouble(v) || v === MAEXCHEN) && <span className="mx-value-tag">{v === MAEXCHEN ? t('Mäxchen') : t('Double')}</span>}
+                {v === MAEXCHEN ? <span className="mx-value-name">{t('Mäxchen')}</span> : isDouble(v) && <span className="mx-value-tag">{t('Double')}</span>}
               </button>
             );
           })}
@@ -377,15 +390,15 @@ function Coaster() {
   );
 }
 
-/** The leather dice cup, upside down on the mat. */
+/** The leather dice cup (like the one in 5000), upside down on the mat: its closed bottom on top. */
 function Cup() {
   return (
     <svg viewBox="0 0 100 110" aria-hidden>
-      <path className="mx-cup-body" d="M27 9h46l13 87H14z" />
-      <ellipse className="mx-cup-top" cx="50" cy="9" rx="23" ry="6" />
-      <path className="mx-cup-stitch" d="M25 22h50M17 84h66" />
-      <path className="mx-cup-shine" d="M33 16l-8 72" />
-      <ellipse className="mx-cup-rim" cx="50" cy="96" rx="36" ry="8.5" />
+      <path className="mx-cup-body" d="M23 10h54l10 86Q50 108 13 96z" />
+      <path className="mx-cup-band" d="M14.6 82Q50 94 85.4 82L87 96Q50 108 13 96z" />
+      <ellipse className="mx-cup-top" cx="50" cy="10" rx="27" ry="7" />
+      <path className="mx-cup-stitch" d="M21 24Q50 33 79 24M16 78Q50 90 84 78" />
+      <path className="mx-cup-shine" d="M30 18l-7 70" />
     </svg>
   );
 }

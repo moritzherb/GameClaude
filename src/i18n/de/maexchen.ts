@@ -15,24 +15,22 @@ const maexchen: Record<string, string> = {
     'Der Nächste glaubt es und schüttelt neu (und muss noch höher ansagen), oder er hebt den Becher.',
   'Lifted: if the dice show at least what was announced, the one who lifted drinks. If not, the liar drinks.':
     'Aufgedeckt: Zeigen die Würfel mindestens das Angesagte, trinkt der, der aufgedeckt hat. Sonst trinkt der Lügner.',
-  'A Mäxchen can’t be beaten: believe it and drink 1, or lift the cup and whoever is wrong drinks 2.':
-    'Ein Mäxchen kann man nicht schlagen: Glauben und 1 trinken, oder aufdecken, und wer falsch liegt, trinkt 2.',
+  'A Mäxchen can’t be beaten, so the next player has to lift the cup. Whoever is wrong drinks 2.':
+    'Ein Mäxchen kann man nicht schlagen, also muss der Nächste aufdecken. Wer falsch liegt, trinkt 2.',
   'Whoever drank starts the next round.': 'Wer getrunken hat, beginnt die nächste Runde.',
 
   // Setup
   'Then the cup goes round to the left. Lie well, doubt better.': 'Dann geht der Becher reihum nach links. Gut lügen, besser zweifeln.',
 
   // The table
-  'believed it: now beat it': 'geglaubt: jetzt toppen',
-  'your roll': 'du würfelst',
-  'shaken blind: announce something': 'blind geschüttelt: sag irgendwas an',
-  'announce, or shake once more blind': 'ansagen, oder noch einmal blind schütteln',
-  'look under the cup (or don’t)': 'unter den Becher schauen (oder nicht)',
+  'Believed it: now beat {value}': 'Geglaubt: jetzt {value} toppen',
+  'Shaken blind: no more looking, announce something': 'Blind geschüttelt: nicht mehr reinschauen, sag was an',
+  'Announce, or shake once more blind': 'Ansagen, oder nochmal blind schütteln',
   'believe it or lift the cup?': 'glauben oder aufdecken?',
+  'Mäxchen: you have to lift the cup': 'Mäxchen: du musst aufdecken',
   'drinks 1 sip': 'trinkt 1 Schluck',
   'drinks {n} sips': 'trinkt {n} Schlucke',
   'Tap the cup to shake': 'Becher antippen zum Schütteln',
-  'No more looking!': 'Nicht mehr reinschauen!',
   'Hold the cup to look under it': 'Becher gedrückt halten zum Reinschauen',
   'Hand the phone to {name}': 'Gib das Handy an {name}',
   '{name} says': '{name} sagt',
@@ -45,14 +43,12 @@ const maexchen: Record<string, string> = {
   'It’s true!': 'Stimmt!',
   'Lie!': 'Gelogen!',
   '{actual} under the cup, {claim} announced': 'Unterm Becher: {actual}. Angesagt: {claim}.',
-  'Mäxchen!': 'Mäxchen!',
-  'Nothing beats it. Believed and drunk.': 'Nichts schlägt es. Geglaubt und getrunken.',
+  'Mäxchen! Nothing beats it: lift the cup.': 'Mäxchen! Höher geht nicht: aufdecken.',
   Shake: 'Schütteln',
   'Announce…': 'Ansagen …',
   'Shaken blind 🙈': 'Blind geschüttelt 🙈',
   'Shake once more, blind': 'Nochmal blind schütteln',
   'Lift the cup!': 'Aufdecken!',
-  'Believe it (1 sip)': 'Glauben (1 Schluck)',
   'Believe it and shake': 'Glauben und schütteln',
   'New round: {name} starts': 'Neue Runde: {name} beginnt',
   'What do you announce?': 'Was sagst du an?',

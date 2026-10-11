@@ -3480,7 +3480,8 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 56px;
+  /* The same row as in the other games, always the same height, so the table never moves. */
+  height: 48px;
 }
 
 .mx-status .bd-player {
@@ -3552,6 +3553,7 @@ h3 {
 }
 
 .mx-hint {
+  animation: mx-fade-in 0.25s ease both;
   position: absolute;
   left: 0;
   right: 0;
@@ -3571,7 +3573,58 @@ h3 {
 
 .mx-hint.warn {
   color: #ffd2a8;
-  animation: jiggle 0.25s linear 2;
+}
+
+@keyframes mx-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Passing the phone on: a card on the table with who gets it. */
+.mx-handoff {
+  position: absolute;
+  left: 50%;
+  top: 4cqh;
+  z-index: 3;
+  width: min(86%, 340px);
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: center;
+  padding: 10px 16px 10px 10px;
+  border-radius: 16px;
+  background: #f2e8d2;
+  color: #2a1a0e;
+  box-shadow:
+    0 0 0 3px var(--who),
+    0 8px 22px rgba(0, 0, 0, 0.4);
+  animation: mx-slip 0.4s var(--spring) both;
+}
+
+.mx-handoff-avatar {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  font-size: 1.8rem;
+}
+
+.mx-handoff-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.mx-handoff-sub {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b5442;
 }
 
 /* Mat, dice and cup, one rig: shaking moves all three, like shaking cup and mat together. */
@@ -3625,16 +3678,16 @@ h3 {
   background: var(--mat) center / cover;
 }
 
-/* The cardboard's white edge: the mat's outline a few times over, just below the print, a little
-   greyer towards the table (a solid extrusion, corners included). */
+/* The cardboard's white edge: the mat's outline a few times over, just below the print, in the
+   shade (a solid edge, corners included). */
 .mx-mat-layer.edge {
-  background: hsl(42 22% calc(93% - var(--i) * 3.5%));
+  background: #dcd5c6;
   transform: translateY(calc(var(--i) * 0.38cqw));
 }
 
-/* The lowest one touches the table: a fine dark line there. */
+/* The lowest one, where it touches the table. */
 .mx-mat-layer.edge:first-child {
-  box-shadow: 0 0.25cqw 0.3cqw rgba(40, 20, 6, 0.45);
+  background: #c4bba8;
 }
 
 /* The two dice on the mat, under the cup. */
@@ -3718,14 +3771,11 @@ h3 {
 }
 
 .mx-cup-top {
-  fill: #93593a;
+  fill: #925a35;
 }
 
-.mx-cup-rim {
-  /* Filled: the lip of the cup hides the dice completely. */
-  fill: #6e4126;
-  stroke: #5c3520;
-  stroke-width: 3;
+.mx-cup-band {
+  fill: #6a3f24;
 }
 
 .mx-cup-stitch {
@@ -3742,46 +3792,109 @@ h3 {
   stroke-linecap: round;
 }
 
-/* After the cup is lifted: the verdict on a paper slip, top of the table. */
+/* After the cup is lifted: the verdict lands like a rubber stamp once the cup is off, the table
+   glows red (a lie) or green (the truth). */
+.mx-table.lie,
+.mx-table.truth {
+  animation: mx-glow 1.2s ease 0.45s both;
+}
+
+.mx-table.lie {
+  --glow: #ff4f45;
+}
+
+.mx-table.truth {
+  --glow: #7ad34a;
+}
+
+@keyframes mx-glow {
+  0% {
+    box-shadow:
+      inset 0 0 50px rgba(30, 14, 4, 0.55),
+      inset 0 0 0 0 var(--glow);
+  }
+  25% {
+    box-shadow:
+      inset 0 0 50px rgba(30, 14, 4, 0.55),
+      inset 0 0 0 10px var(--glow);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 50px rgba(30, 14, 4, 0.55),
+      inset 0 0 0 4px var(--glow);
+  }
+}
+
 .mx-verdict {
   position: absolute;
   left: 50%;
-  top: 4cqh;
+  top: 5cqh;
   z-index: 3;
-  width: min(86%, 360px);
+  width: min(90%, 380px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 14px 12px;
-  border-radius: 12px;
-  background: #f2e8d2;
-  color: #2a1a0e;
+  gap: 10px;
   text-align: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  animation: mx-slip 0.4s var(--spring) both;
+  pointer-events: none;
 }
 
-.mx-verdict-title {
+.mx-stamp {
+  padding: 6px 18px 4px;
+  border: 5px solid currentColor;
+  border-radius: 12px;
+  background: rgba(242, 232, 210, 0.92);
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.9rem;
-  line-height: 1.05;
+  font-weight: 900;
+  font-size: clamp(2.2rem, 13cqw, 3.6rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+  transform: rotate(-8deg);
+  animation: mx-stamp 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) 0.45s both;
 }
 
-.mx-verdict.lie .mx-verdict-title {
-  color: #c3352b;
+.mx-verdict.lie .mx-stamp {
+  color: #d3241b;
 }
 
-.mx-verdict.truth .mx-verdict-title {
-  color: #3f7200;
+.mx-verdict.truth .mx-stamp {
+  color: #3f7a00;
+  transform: rotate(6deg);
+  animation-name: mx-stamp-r;
 }
 
 .mx-verdict-sub {
-  font-size: 0.95rem;
-  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(242, 232, 210, 0.92);
+  color: #2a1a0e;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: mx-fade-in 0.3s ease 0.95s both;
+}
+
+@keyframes mx-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(2.6);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes mx-stamp-r {
+  from {
+    opacity: 0;
+    transform: rotate(6deg) scale(2.6);
+  }
+  60% {
+    opacity: 1;
+  }
 }
 
 @keyframes mx-slip {
@@ -3791,11 +3904,14 @@ h3 {
   }
 }
 
-/* Always two rows of buttons, so the table never changes size. */
+/* Always two rows of buttons, so the table never changes size; close to the bottom edge, so the
+   table gets the room. */
 .mx-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding-top: 8px;
+  margin-bottom: calc(-14px - env(safe-area-inset-bottom));
 }
 
 .mx-slot {
@@ -3803,10 +3919,21 @@ h3 {
   height: 54px;
 }
 
+/* After a Mäxchen there's nothing to believe: why, in place of that button. */
+.mx-must {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
 /* Picking what to announce: 21 values in three rows of seven, low to high. */
+/* Seven plain values a row, the six doubles in one row, the Mäxchen on its own. */
 .mx-values {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(42, 1fr);
   gap: 6px;
   margin-bottom: 14px;
 }
@@ -3816,13 +3943,19 @@ h3 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  gap: 3px;
+  grid-column: span 6;
+  min-height: 56px;
   padding: 4px 0;
   border-radius: 10px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
   color: var(--ink);
   transition: transform 0.15s var(--spring);
+}
+
+.mx-value.double {
+  grid-column: span 7;
 }
 
 .mx-value:not(:disabled):active {
@@ -3840,7 +3973,19 @@ h3 {
 }
 
 .mx-value.max {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  gap: 10px;
   background: color-mix(in srgb, var(--sun) 35%, var(--surface));
+}
+
+.mx-value-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1;
 }
 
 .mx-value.max.on {
@@ -3856,13 +4001,345 @@ h3 {
 }
 
 .mx-value-tag {
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---------- Schweinerei ---------- */
+
+/* Everyone's points in one row under whose turn it is (the table never moves). */
+.sw-board {
+  display: flex;
+  gap: 6px;
+  height: 34px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sw-board::-webkit-scrollbar {
+  display: none;
+}
+
+.sw-score {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 11px 0 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sw-score.on {
+  background: color-mix(in srgb, var(--who) 22%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--who);
+}
+
+.sw-score-avatar {
+  font-size: 1.15rem;
+}
+
+/* The pigs on the table: pick them up with a finger, swing and let go. */
+.sw-table {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.sw-pigs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sw-spot {
+  position: absolute;
+  width: min(35cqw, 30cqh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.sw-pigs.ready .sw-spot {
+  cursor: grab;
+}
+
+/* Waiting to be picked up: a little nudge now and then. */
+.sw-pigs.ready .sw-pig {
+  animation: sw-nudge 2.6s ease-in-out infinite;
+}
+
+.sw-pigs.ready .sw-spot + .sw-spot .sw-pig {
+  animation-delay: 0.3s;
+}
+
+@keyframes sw-nudge {
+  0%,
+  86%,
+  100% {
+    transform: none;
+  }
+  90% {
+    transform: rotate(-7deg) translateY(-4%);
+  }
+  95% {
+    transform: rotate(5deg);
+  }
+}
+
+/* In the hand: bigger (closer to the eye), following the finger, rattling. */
+.sw-spot.held {
+  z-index: 4;
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.22);
+  transition:
+    left 0.07s linear,
+    top 0.07s linear;
+  cursor: grabbing;
+}
+
+.sw-spot.held .sw-pig {
+  animation: sw-rattle 0.09s ease-in-out infinite alternate;
+  filter: drop-shadow(0 4cqw 3cqw rgba(0, 0, 0, 0.35));
+}
+
+@keyframes sw-rattle {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+
+.sw-pig {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 1.2cqw 1.4cqw rgba(0, 0, 0, 0.4));
+}
+
+.sw-pose {
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(30, 14, 4, 0.55);
+  color: #f6e9d2;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: rotate(calc(-1 * var(--rot)));
+  animation: mx-fade-in 0.25s ease both;
+}
+
+/* The small pen button in the table's corner: bank this turn's points. */
+.sw-bank {
+  --bank: max(58px, min(18cqw, 22cqh));
+}
+
+/* What the throw was: a slip at the top of the table. */
+.sw-result {
+  position: absolute;
+  left: 50%;
+  top: 4cqh;
+  z-index: 3;
+  width: min(88%, 380px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px 12px;
+  border-radius: 14px;
+  background: #f2e8d2;
+  color: #2a1a0e;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  animation: mx-slip 0.4s var(--spring) 0.35s both;
+}
+
+.sw-result-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.7rem, 9cqw, 2.4rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.sw-result.double .sw-result-name {
+  color: #b7791f;
+}
+
+.sw-result.bad {
+  box-shadow:
+    0 0 0 4px #ff4f45,
+    0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+.sw-result.bad .sw-result-name {
+  color: #d3241b;
+}
+
+.sw-result-sub {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.sw-win-pigs {
+  display: flex;
+  gap: 4px;
+  width: 220px;
+}
+
+.sw-win-pigs .sw-pig {
+  flex: 1;
+}
+
+.sw-final {
+  color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Klatschen ---------- */
+
+.kl-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kl-rule {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.kl-rule-emoji {
+  flex: none;
+  font-size: 1.7rem;
+}
+
+/* The glass in the middle of the circle, filling up with every clap glass. */
+.kl-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 17cqw;
+  transform: translate(-50%, -62%);
+  transition: opacity 0.3s ease;
+}
+
+.kc-ring.revealing .kl-center {
+  opacity: 0;
+}
+
+.kl-glass {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.kl-glass-body {
+  fill: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.kl-glass-rim {
+  fill: none;
+  stroke: color-mix(in srgb, var(--ink) 70%, transparent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.kl-glass-beer {
+  fill: #f2b233;
+  transition: y 0.6s var(--ease);
+}
+
+.kl-glass-foam {
+  fill: #fff6df;
+  transition: y 0.6s var(--ease);
+}
+
+.kl-glass-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kl-glass-count .kl-glass {
+  width: 20px;
+}
+
+/* A drawn task card: big, in its colour. */
+.kl-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqw;
+  padding: 6cqw 5cqw;
+  background: var(--card);
+  color: var(--on-color);
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 16px 30px -12px rgba(0, 0, 0, 0.55);
+}
+
+.kl-face.finale {
+  background: var(--c-yellow);
+  box-shadow: inset 0 0 0 1.4cqw #fff, 0 16px 30px -12px rgba(0, 0, 0, 0.55);
+}
+
+.kl-face-emoji {
+  font-size: 14cqw;
+  line-height: 1;
+}
+
+.kl-face-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 7.6cqw;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.kl-face-text {
+  font-size: 4.4cqw;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.kl-back {
+  transform: rotateY(180deg);
+}
+
+.kl-end-glass {
+  width: 90px;
 }
 
 /* ---------- F*ck the Dealer ---------- */

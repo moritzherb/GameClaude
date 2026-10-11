@@ -7,7 +7,7 @@
  * - They believe it (and shake again, announcing higher still) or lift the cup:
  *   at least what was announced → the one who lifted drinks; less → the liar drinks.
  * - House rule: once you've looked you may shake one more time, blind: no more looking then.
- * - A Mäxchen can't be beaten: believe it (1 sip) or lift the cup (2 sips for whoever is wrong).
+ * - A Mäxchen can't be beaten: the next player has to lift the cup (2 sips for whoever is wrong).
  */
 import { randomInt } from '../../lib/random';
 
@@ -55,8 +55,6 @@ export interface Verdict {
   truth: boolean;
   loser: number;
   sips: number;
-  /** Believed a Mäxchen without lifting the cup. */
-  believed?: boolean;
 }
 
 export function newRound(starter: number): Round {
@@ -80,13 +78,12 @@ export function announce(r: Round, value: Value): Round {
   return { ...r, claim: { by: r.turn, value }, phase: 'pass' };
 }
 
-/** The next player believes it: their turn to shake. */
+/** The next player believes it: their turn to shake (not after a Mäxchen: that has to be lifted). */
 export function believe(r: Round, players: number): Round {
   if (r.phase !== 'pass' || !r.claim) return r;
-  const next = (r.turn + 1) % players;
-  // Nothing beats a Mäxchen: believing it means drinking.
-  if (r.claim.value === MAEXCHEN) return { ...r, turn: next, phase: 'reveal', verdict: { truth: true, loser: next, sips: 1, believed: true } };
-  return { ...r, turn: next, phase: 'shake', peeked: false, blind: false };
+  // Nothing beats a Mäxchen: it has to be lifted.
+  if (r.claim.value === MAEXCHEN) return r;
+  return { ...r, turn: (r.turn + 1) % players, phase: 'shake', peeked: false, blind: false };
 }
 
 /** The next player lifts the cup. */

@@ -19,7 +19,7 @@ const maexchen: GameDefinition = {
     tx('Once you’ve looked, you may shake one more time, blind: then no more looking, you have to announce something anyway.'),
     tx('The next player believes it and shakes again (and has to announce even higher), or lifts the cup.'),
     tx('Lifted: if the dice show at least what was announced, the one who lifted drinks. If not, the liar drinks.'),
-    tx('A Mäxchen can’t be beaten: believe it and drink 1, or lift the cup and whoever is wrong drinks 2.'),
+    tx('A Mäxchen can’t be beaten, so the next player has to lift the cup. Whoever is wrong drinks 2.'),
     tx('Whoever drank starts the next round.'),
   ],
   component: Maexchen,
