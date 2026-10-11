@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 // Hash routing: works on any static host.
 //
@@ -21,6 +21,11 @@ function parse(hash: string): Route {
   return { segments: path.split('/').filter(Boolean), query: new URLSearchParams(query) };
 }
 
+/** Where each screen was scrolled to when it was left, for swiping back to it. */
+const scrolls = new Map<string, number>();
+/** Home has more than one address ('', '#', '#/'). */
+const screenKey = (hash: string) => (hash === '' || hash === '#' ? '#/' : hash);
+
 export function useRoute(): Route {
   const [hash, setHash] = useState(() => window.location.hash);
   useEffect(() => {
@@ -29,9 +34,10 @@ export function useRoute(): Route {
     const onChange = () => {
       // The app's own steps through the history can land on the screen already shown: stay put.
       if (window.location.hash === shown) return;
+      // Still the old screen on display: remember how far down it was.
+      scrolls.set(screenKey(shown), window.scrollY);
       shown = window.location.hash;
       setHash(shown);
-      window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', onChange);
     onChange();
@@ -39,6 +45,17 @@ export function useRoute(): Route {
     // Only once: later changes come in through the listener.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Once the new screen is in place (before it's painted): from the top, or, swiped back to a screen,
+  // where it was, just like the picture the phone showed while swiping.
+  const first = useRef(true);
+  useLayoutEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const back = document.documentElement.classList.contains('nav-back');
+    window.scrollTo(0, back ? (scrolls.get(screenKey(hash)) ?? 0) : 0);
+  }, [hash]);
   return useMemo(() => parse(hash), [hash]);
 }
 
@@ -57,7 +74,15 @@ let pendingGame: string | null = null;
 /** Where to go once the step back from the top game entry onto the bottom one has happened. */
 let pendingNav: string | null = null;
 
+/**
+ * Came back by swiping (or the back button): the phone already slid the screen in from its picture,
+ * so screens skip their entrance animation then (it would play a second time). Any step of the app's
+ * own brings them back.
+ */
+const cameBack = (on: boolean) => document.documentElement.classList.toggle('nav-back', on);
+
 function go(hash: string, how: 'push' | 'replace', state: string | null) {
+  cameBack(false);
   if (how === 'push') history.pushState(state, '', hash);
   else history.replaceState(state, '', hash);
   window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -145,6 +170,7 @@ if (typeof window !== 'undefined') {
   }
   let lastHash = window.location.hash;
   window.addEventListener('popstate', () => {
+    if (!pendingGame && !pendingNav && history.state !== GAME_TOP) cameBack(true);
     // Stepped back onto the bottom entry to make it the game as well.
     if (pendingGame) {
       const hash = pendingGame;

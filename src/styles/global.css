@@ -114,7 +114,8 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
+  /* No bounce or pull-to-reload of the browser's own: the app does its own pull down on home. */
+  overscroll-behavior: none;
 }
 
 /*
@@ -122,12 +123,22 @@ body {
  * room either, so the page stays centred (and 100vw is the whole width).
  */
 html,
-*:not(.library-scroll) {
+body,
+.chips,
+.sheet,
+.fk-board,
+.hr-seats,
+.pl-opps {
   scrollbar-width: none;
 }
 
 html::-webkit-scrollbar,
-*:not(.library-scroll)::-webkit-scrollbar {
+body::-webkit-scrollbar,
+.chips::-webkit-scrollbar,
+.sheet::-webkit-scrollbar,
+.fk-board::-webkit-scrollbar,
+.hr-seats::-webkit-scrollbar,
+.pl-opps::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
@@ -575,19 +586,26 @@ h3 {
 
 /* ---------- Home ---------- */
 
-/* Pull to refresh on home: the die from the app icon comes down with the finger and spins while refreshing. */
+/* Pull to refresh on home: the page moves down with the finger (transform, set by
+   pullToRefresh.ts with --y and --p) and the die from the app icon shows in the gap above it,
+   turning, and spins while refreshing. */
 .ptr {
-  flex: none;
-  height: 0;
-  margin-bottom: -18px; /* takes no room (nor a gap) while it's closed */
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 0;
+  height: 52px;
   display: grid;
   place-items: center;
-  overflow: hidden;
   pointer-events: none;
+  /* In the middle of the gap the page leaves. */
+  transform: translate3d(0, calc(var(--y, 0px) / 2 - 26px), 0);
+  transition: transform 0.3s var(--spring);
 }
 
-.ptr:not(.pull) {
-  transition: height 0.34s var(--spring);
+.ptr.pull {
+  transition: none;
 }
 
 .ptr-die {
@@ -595,6 +613,13 @@ h3 {
   opacity: var(--p, 0);
   /* Turns with the pull, like the spinner on a page you pull to reload. */
   transform: scale(calc(0.55 + 0.45 * var(--p, 0))) rotate(calc(var(--p, 0) * 300deg));
+  transition:
+    opacity 0.2s ease,
+    transform 0.3s var(--spring);
+}
+
+.ptr.pull .ptr-die {
+  transition: none;
 }
 
 .ptr.refresh .ptr-die {
@@ -612,6 +637,10 @@ h3 {
 }
 
 /* A fresh line-up deals in one ticket after the other. */
+.ticket-list.dealt {
+  animation: none;
+}
+
 .ticket-list.dealt > * {
   animation: rise 0.45s var(--spring) backwards;
 }
@@ -836,9 +865,8 @@ h3 {
   justify-content: center;
   gap: 22px;
   padding: var(--gutter);
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* Nearly opaque instead of a blur behind: a full-screen blur is heavy work for a phone. */
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
   animation: fade-in 0.15s ease;
 }
 
@@ -933,15 +961,6 @@ h3 {
   background: var(--card-bg);
   box-shadow: var(--shadow);
   transition: transform 0.18s var(--spring);
-  animation: rise 0.45s var(--spring) backwards;
-}
-
-.recent-tile:nth-child(2) {
-  animation-delay: 0.05s;
-}
-
-.recent-tile:nth-child(3) {
-  animation-delay: 0.1s;
 }
 
 .recent-tile:active {
@@ -953,12 +972,15 @@ h3 {
   line-height: 1;
 }
 
-/* Home follows the finger when swiped left, and springs back if let go early. */
+/* Home follows the finger when swiped left or pulled down (swipeLeft.ts, pullToRefresh.ts), and
+   springs back when let go. Swiping sideways is left to the app: the phone only scrolls up and down. */
 .screen.home {
+  touch-action: pan-y;
   transition: transform 0.3s var(--spring);
 }
 
-.screen.home.dragging {
+.screen.home.dragging,
+.screen.home.pulling {
   transition: none;
 }
 
@@ -974,8 +996,15 @@ h3 {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  width: 0;
   overflow: hidden;
   pointer-events: none;
+  /* Closes together with the page sliding back. */
+  transition: width 0.3s var(--spring);
+}
+
+.swipe-peek.dragging {
+  transition: none;
 }
 
 .swipe-peek-arrow {
@@ -1012,15 +1041,24 @@ h3 {
   opacity: var(--p);
 }
 
-/* All games, opened by the swipe: comes in from the right. */
+.swipe-peek-label::after {
+  content: attr(data-label);
+}
+
+/* All games, opened by the swipe: slides in from where the finger let go (--from, set by Library),
+   without overshooting (that would uncover the right edge), and as a whole, so the list doesn't
+   rise on top of that. */
 .screen.library.slide-in {
-  animation: slide-in-right 0.34s var(--spring) both;
+  animation: slide-in-right 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.screen.library.slide-in .ticket-list {
+  animation: none;
 }
 
 @keyframes slide-in-right {
   from {
-    transform: translateX(45%);
-    opacity: 0;
+    transform: translate3d(var(--from, 45%), 0, 0);
   }
 }
 
@@ -1049,6 +1087,8 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* The list comes in as one piece: one moving layer for the phone instead of one per ticket. */
+  animation: rise 0.45s var(--spring) backwards;
 }
 
 .ticket {
@@ -1070,19 +1110,6 @@ h3 {
     radial-gradient(circle 8px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
     radial-gradient(circle 8px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
   transition: transform 0.18s var(--spring);
-  animation: rise 0.45s var(--spring) backwards;
-}
-
-.ticket:nth-child(2) {
-  animation-delay: 0.05s;
-}
-
-.ticket:nth-child(3) {
-  animation-delay: 0.1s;
-}
-
-.ticket:nth-child(4) {
-  animation-delay: 0.15s;
 }
 
 .ticket:active {
@@ -2113,6 +2140,37 @@ h3 {
 
 .pcard.waiting .pcard-inner {
   animation: nudge 1.6s ease-in-out infinite;
+}
+
+/* At rest a card is flat: only the side that shows, no 3D (PlayingCard adds .turning while it
+   flips). A table full of 3D cards is hundreds of layers for the phone on every frame. */
+.pcard:not(.turning) {
+  perspective: none;
+}
+
+.pcard:not(.turning) .pcard-inner {
+  transform: none;
+  transform-style: flat;
+  transition: none;
+}
+
+.pcard:not(.turning) .pcard-face {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.pcard:not(.turning) .pcard-back {
+  transform: none;
+}
+
+.pcard:not(.turning):not(.up) .pcard-front,
+.pcard.up:not(.turning) .pcard-back {
+  visibility: hidden;
+}
+
+/* Getting ready to turn: already 3D, but nothing moves until it turns. */
+.pcard.ready .pcard-inner {
+  transition: none;
 }
 
 /* ---------- Bus Driver ---------- */
@@ -3872,7 +3930,8 @@ h3 {
   display: block;
   height: 100%;
   background: var(--accent);
-  transition: width 0.6s var(--spring);
+  transform-origin: left;
+  transition: transform 0.6s var(--spring);
 }
 
 /* Points collected this turn, top right. */
@@ -4772,8 +4831,9 @@ h3 {
   z-index: 2;
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
+  top: 0;
   left: calc(8px + var(--side) + (100cqw - var(--side)) * (var(--lane) * 2 + 1) / 8 - var(--cw) / 2);
-  transition: top 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
+  transition: transform 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
 .hs-ace .pcard-face {
@@ -5272,6 +5332,12 @@ h3 {
 
 .fade-up {
   animation: rise 0.5s var(--spring) backwards;
+}
+
+/* Swiped back to a screen: the phone already slid it in, so it doesn't rise in a second time. */
+.nav-back .fade-up,
+.nav-back .ticket-list:not(.dealt) {
+  animation: none;
 }
 
 .slide-up {
@@ -6857,8 +6923,10 @@ h3 {
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
   border-radius: calc(var(--cw) * 0.12);
+  top: 0;
+  left: 0;
   transform-origin: 50% 120%;
-  transition: transform 0.25s var(--spring), left 0.3s ease, top 0.3s ease, filter 0.2s ease, opacity 0.22s ease-in;
+  transition: transform 0.25s var(--spring), filter 0.2s ease, opacity 0.22s ease-in;
 }
 
 .pl-card:disabled {

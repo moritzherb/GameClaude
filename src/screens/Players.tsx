@@ -13,6 +13,8 @@ export default function Players({ next }: { next: string | null }) {
   const [name, setName] = useState('');
   const [armClear, setArmClear] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  // Only a player added now pops in; the ones already there just show (a long list popping at once is heavy).
+  const [listed] = useState(() => new Set(players.map((p) => p.id)));
   const full = players.length >= MAX_PLAYERS;
   const duplicate = players.some((p) => p.name.toLowerCase() === name.trim().toLowerCase());
 
@@ -75,7 +77,7 @@ export default function Players({ next }: { next: string | null }) {
       ) : (
         <ul className="player-list">
           {players.map((p) => (
-            <li key={p.id} className="player-row pop-in" style={{ '--chip': p.color } as CSSProperties}>
+            <li key={p.id} className={`player-row${listed.has(p.id) ? '' : ' pop-in'}`} style={{ '--chip': p.color } as CSSProperties}>
               <button
                 type="button"
                 className="player-avatar"

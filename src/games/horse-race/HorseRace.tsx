@@ -252,10 +252,11 @@ function Track({ race, backers }: { race: Race; backers: (s: Suit) => Player[] }
             {
               '--lane': lane,
               // At the start the Ace sits at the top of the start row, above its backers; on the track it's centred in its row.
-              top:
+              // (Moved with transform, not top: the phone slides it without laying out the track again.)
+              transform:
                 race.pos[s] === 0
-                  ? 'calc(var(--rh) * (var(--rows) + 1) + 4px)'
-                  : `calc(var(--rh) * (var(--rows) + 1 - ${Math.min(race.pos[s], race.rows + 1)}) + (var(--rh) - var(--cw) * 1.4) / 2)`,
+                  ? 'translateY(calc(var(--rh) * (var(--rows) + 1) + 4px))'
+                  : `translateY(calc(var(--rh) * (var(--rows) + 1 - ${Math.min(race.pos[s], race.rows + 1)}) + (var(--rh) - var(--cw) * 1.4) / 2))`,
             } as CSSProperties
           }
           aria-label={t('{suit}: row {n}', { suit: t(SUIT_NAME[s]), n: race.pos[s] })}
