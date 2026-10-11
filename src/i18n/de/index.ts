@@ -7,11 +7,12 @@ import horseRace from './horseRace';
 import kingsCup from './kingsCup';
 import maexchen from './maexchen';
 import palace from './palace';
+import schweinerei from './schweinerei';
 import pantsDown from './pantsDown';
 import speed from './speed';
 import trash from './trash';
 import whoDrinks from './whoDrinks';
 
-const de: Record<string, string> = { ...app, ...busDriver, ...horseRace, ...kingsCup, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...speed, ...trash, ...whoDrinks };
+const de: Record<string, string> = { ...app, ...busDriver, ...horseRace, ...kingsCup, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks };
 
 export default de;

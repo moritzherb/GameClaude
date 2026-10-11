@@ -4079,6 +4079,161 @@ h3 {
   text-overflow: ellipsis;
 }
 
+/* ---------- Schweinerei ---------- */
+
+/* Everyone's points in one row under whose turn it is (the table never moves). */
+.sw-board {
+  display: flex;
+  gap: 6px;
+  height: 34px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sw-board::-webkit-scrollbar {
+  display: none;
+}
+
+.sw-score {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 11px 0 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sw-score.on {
+  background: color-mix(in srgb, var(--who) 22%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--who);
+}
+
+.sw-score-avatar {
+  font-size: 1.15rem;
+}
+
+/* The pigs on the table. */
+.sw-spot {
+  position: absolute;
+  width: min(42cqw, 36cqh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%) rotate(var(--rot));
+}
+
+.sw-pig {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 1.2cqw 1.4cqw rgba(0, 0, 0, 0.4));
+}
+
+.sw-pose {
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(30, 14, 4, 0.55);
+  color: #f6e9d2;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: rotate(calc(-1 * var(--rot)));
+}
+
+/* Being thrown: both pigs shaking in the hand, in the middle. */
+.sw-hand {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  display: flex;
+  justify-content: center;
+  width: min(64cqw, 56cqh);
+  transform: translate(-50%, -50%);
+  animation: mx-shake 0.11s ease-in-out infinite alternate;
+}
+
+.sw-hand .sw-pig {
+  width: 56%;
+  min-width: 0;
+}
+
+.sw-hand .sw-pig + .sw-pig {
+  margin-left: -12%;
+  transform: scaleX(-1) rotate(12deg);
+}
+
+/* What the throw was: a slip at the top of the table. */
+.sw-result {
+  position: absolute;
+  left: 50%;
+  top: 4cqh;
+  z-index: 3;
+  width: min(88%, 380px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px 12px;
+  border-radius: 14px;
+  background: #f2e8d2;
+  color: #2a1a0e;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  animation: mx-slip 0.4s var(--spring) 0.35s both;
+}
+
+.sw-result-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.7rem, 9cqw, 2.4rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.sw-result.double .sw-result-name {
+  color: #b7791f;
+}
+
+.sw-result.bad {
+  box-shadow:
+    0 0 0 4px #ff4f45,
+    0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+.sw-result.bad .sw-result-name {
+  color: #d3241b;
+}
+
+.sw-result-sub {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.sw-win-pigs {
+  display: flex;
+  gap: 4px;
+  width: 220px;
+}
+
+.sw-win-pigs .sw-pig {
+  flex: 1;
+}
+
+.sw-final {
+  color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- F*ck the Dealer ---------- */
 
 /* The middle of the table: a pile per value from 2 to Ace in three rows (2–6, 7–10, J–A). */
