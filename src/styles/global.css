@@ -2455,6 +2455,13 @@ h3 {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
+/* On a turn the line under the name never wraps, so the table below never moves. */
+.bd-turn .bd-player-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* A turn fills the screen: the cards grow with the free space (sized in pixels by CardRow). */
 .bd-turn .bd-hand {
   flex: 1 1 0;
