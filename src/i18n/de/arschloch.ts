@@ -49,7 +49,7 @@ const arschloch: Record<string, string> = {
   'Say what it is': 'Sag an, was sie ist',
   'Pick a card': 'Wähl eine Karte',
   'Lay down as {rank}': 'Als {rank} ablegen',
-  'Liar! 🔍': 'Lügner! 🔍',
+  'Liar!': 'Lügner!',
   'True!': 'Stimmt!',
   'Said {claim}': 'Angesagt: {claim}',
   '{name} takes {n}': '{name} nimmt {n}',

@@ -29,7 +29,7 @@ interface Shared {
 
 const VALUES = [7, 8, 9, 10, 11, 12, 13, 14];
 /** How long a turned-over card stays up big. */
-const REVEAL_MS = 2600;
+const REVEAL_MS = 3400;
 
 /** Arschloch: lie about your cards; every player on their own phone. */
 export default function Arschloch() {
@@ -328,7 +328,7 @@ function Table({
             )}
             {o.call && (
               <BigButton variant="danger" className={o.play ? 'as-pass' : ''} onClick={() => act((x) => call(x, me))}>
-                {t('Liar! 🔍')}
+                {t('Liar!')}
               </BigButton>
             )}
           </div>
@@ -428,7 +428,10 @@ function FanHand({ cards, selected, onTap }: { cards: Card[]; selected: Card | n
   );
 }
 
-/** The turned-over card, big on everyone's phone: what was said, what it was, who takes the pile. */
+/**
+ * The turned-over card, big on everyone's phone: a magnifying glass looks it over, then it turns,
+ * with what was said, what it was, and who takes the pile.
+ */
 function Reveal({ e, seats }: { e: Extract<Entry, { k: 'call' }>; seats: Seat[] }) {
   return (
     <div className={`ar-reveal${e.lied ? ' lied' : ' true'}`} role="status">
@@ -436,6 +439,14 @@ function Reveal({ e, seats }: { e: Extract<Entry, { k: 'call' }>; seats: Seat[] 
         <span className="ar-reveal-inner">
           <span className="pcard-face pcard-back" />
           <CardFace card={e.card} />
+        </span>
+        <span className="ar-lens" aria-hidden>
+          <svg viewBox="0 0 100 100">
+            <path className="ar-lens-handle" d="M62 62L90 90" />
+            <circle className="ar-lens-glass" cx="40" cy="40" r="27" />
+            <path className="ar-lens-shine" d="M24 33a17 17 0 0 1 12-12" />
+            <circle className="ar-lens-rim" cx="40" cy="40" r="27" />
+          </svg>
         </span>
       </span>
       <span className="ar-reveal-stamp">{e.lied ? t('Lie!') : t('True!')}</span>
