@@ -163,6 +163,7 @@ export default function HoseRunter() {
   // Each phone follows its own setting: whoever knows the game skips the explanations.
   const known = useApp().knows('hose-runter');
   const [allowPass, setAllowPass] = useState(false);
+  const [tableless, setTableless] = useState(false);
   useFeedback(view, myId);
 
   if (!view) {
@@ -178,12 +179,14 @@ export default function HoseRunter() {
         </div>
       );
     }
-    // The host's phone is the table: everyone else plays.
-    const ready = room.members.filter((m) => m.online && !m.host).slice(0, MAX_PLAYERS);
+    // With a table phone the host's phone lies in the middle and everyone else plays.
+    // Without one the host plays too, and every phone shows the middle cards.
+    const online = room.members.filter((m) => m.online && (tableless || !m.host));
+    const ready = online.slice(0, MAX_PLAYERS);
     return (
       <div className="hr">
         <div className="bd-head">
-          <span className="kicker">{t('This phone is the table')}</span>
+          <span className="kicker">{tableless ? t('Everyone plays on their own phone') : t('This phone is the table')}</span>
           <h2 className="bd-title big">{t('Pants Down')}</h2>
           {!known && (
             <p className="lead">
@@ -204,10 +207,23 @@ export default function HoseRunter() {
             </li>
           ))}
         </ul>
-        {!known && <p className="fine-print">{t('Put this phone in the middle: it shows the middle cards. Everyone else plays on their own phone.')}</p>}
-        {room.members.filter((m) => m.online && !m.host).length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
+        {online.length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
         {!known && <p className="fine-print">{t('Turn order is the order above. A random player deals first.')}</p>}
         <div className="settings-list">
+          <Tap className={`setting-row${tableless ? '' : ' on'}`} onClick={() => setTableless(!tableless)} ariaLabel={t('Table phone in the middle')}>
+            <span className="setting-emoji">📱</span>
+            <span className="setting-text">
+              <span className="setting-label">{t('Table phone in the middle')}</span>
+              <span className="setting-hint">
+                {tableless
+                  ? t('Off: you play too. Every phone shows the middle cards.')
+                  : t('Put this phone in the middle: it shows the middle cards. Everyone else plays on their own phone.')}
+              </span>
+            </span>
+            <span className="switch">
+              <span className="switch-knob" />
+            </span>
+          </Tap>
           <Tap className={`setting-row${allowPass ? ' on' : ''}`} onClick={() => setAllowPass(!allowPass)} ariaLabel={t('Allow passing')}>
             <span className="setting-emoji">👉</span>
             <span className="setting-text">
@@ -237,7 +253,8 @@ export default function HoseRunter() {
   if (view.phase === 'reveal' || view.phase === 'over') {
     return <Reveal view={view} myId={myId} isHost={isHost} onNext={() => act({ type: 'next' })} onNewGame={() => setState(null)} />;
   }
-  if (isHost) return <HostTable view={view} />;
+  // The host only plays when the game was dealt without a table phone.
+  if (isHost && !view.seats.some((s) => s.id === myId)) return <HostTable view={view} />;
   return <Table view={view} myId={myId} act={act} connected={connected} />;
 }
 

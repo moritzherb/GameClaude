@@ -50,6 +50,8 @@ const arschloch: Record<string, string> = {
   'Pick a card': 'Wähl eine Karte',
   'Lay down as {rank}': 'Als {rank} ablegen',
   'Liar!': 'Lügner!',
+  'Turning it over…': 'Wird aufgedeckt …',
+  '{name} turns {who}’s card over…': '{name} deckt die Karte von {who} auf …',
   'True!': 'Stimmt!',
   'Said {claim}': 'Angesagt: {claim}',
   '{name} takes {n}': '{name} nimmt {n}',

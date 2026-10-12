@@ -30,6 +30,8 @@ interface Shared {
 const VALUES = [7, 8, 9, 10, 11, 12, 13, 14];
 /** How long a turned-over card stays up big. */
 const REVEAL_MS = 3400;
+/** Your sips after a card is turned over: once it has turned (the CSS .ar-reveal-inner turns at 1.25s, for 0.6s). */
+const SIP_AFTER_TURN_MS = 2100;
 
 /** Arschloch: lie about your cards; every player on their own phone. */
 export default function Arschloch() {
@@ -157,7 +159,17 @@ function Table({
   const [sel, setSel] = useState<Card | null>(null);
   const [claim, setClaim] = useState<number | null>(null);
   const [reveal, setReveal] = useState<{ id: string; e: Extract<Entry, { k: 'call' }> } | null>(null);
+  // While the magnifying glass looks the card over, the status doesn't give the result away yet.
+  const [suspense, setSuspense] = useState(false);
+  useEffect(() => {
+    if (!reveal) return;
+    setSuspense(true);
+    const timer = window.setTimeout(() => setSuspense(false), SIP_AFTER_TURN_MS);
+    return () => window.clearTimeout(timer);
+  }, [reveal]);
   const [sip, setSip] = useState<{ id: number; text: string } | null>(null);
+  const sipTimer = useRef<number>(undefined);
+  useEffect(() => () => window.clearTimeout(sipTimer.current), []);
 
   // A new state clears the selection.
   const key = JSON.stringify([hand, g.turn, g.log.length, g.pile.length]);
@@ -199,8 +211,15 @@ function Table({
       }
     }
     if (text) {
-      setSip({ id: Date.now(), text });
-      buzz([40, 30, 40]);
+      const show = () => {
+        setSip({ id: Date.now(), text });
+        buzz([40, 30, 40]);
+      };
+      // A card turned over: your sips only once you've seen what it was (after the magnifying
+      // glass, when it has turned).
+      window.clearTimeout(sipTimer.current);
+      if (turned) sipTimer.current = window.setTimeout(show, SIP_AFTER_TURN_MS);
+      else show();
     }
   }, [g.seq, g.log, me]);
   useEffect(() => {
@@ -232,31 +251,39 @@ function Table({
     );
 
   const chosenClaim = claim ?? (sel && sel.value >= low ? sel.value : null);
+  // While a card is being turned over, nothing tells who takes the pile yet: not whose turn it is,
+  // not the cards in hand (the taker's count from before the pile), not your buttons.
+  const hiding = suspense && reveal ? reveal.e : null;
+  const quadsAfter = hiding ? g.log.filter((e) => e.n > hiding.n && e.k === 'quad' && e.by === hiding.taker).length : 0;
+  const countOf = (i: number) => (hiding && i === hiding.taker ? g.hands[i].length - hiding.cards + 4 * quadsAfter : g.hands[i].length);
+  const up = myTurn && !hiding;
   let headline: string;
-  if (!myTurn) headline = t('{name}’s turn', { name: seats[g.turn]?.name ?? '' });
+  if (hiding) headline = t('Turning it over…');
+  else if (!myTurn) headline = t('{name}’s turn', { name: seats[g.turn]?.name ?? '' });
   else if (o.mustCall) headline = t('Nothing to play: turn it over!');
   else if (o.draw) headline = o.call ? t('Believe it and draw, or turn it over') : t('Draw a card from the circle');
   else if (o.call) headline = t('Believe it and play, or turn it over');
   else headline = t('Lay a card down and say what it is');
 
   // One line under the headline, always the same height: what to do (your turn) or what just happened.
-  const sub = myTurn && o.play && !known ? t('Say {rank} or higher. You may lie.', { rank: rank(low) }) : last ? entryText(last, seats) : '';
+  const turning = suspense && reveal ? t('{name} turns {who}’s card over…', { name: seats[reveal.e.by]?.name ?? '', who: seats[reveal.e.of]?.name ?? '' }) : null;
+  const sub = turning ?? (up && o.play && !known ? t('Say {rank} or higher. You may lie.', { rank: rank(low) }) : last ? entryText(last, seats) : '');
 
   return (
     <div className="ar fill">
-      <div className={`ar-status${myTurn ? ' mine' : ''}`}>
+      <div className={`ar-status${up ? ' mine' : ''}`}>
         <span className="ar-status-text">{headline}</span>
         <span className="ar-status-sub">{sub}</span>
       </div>
 
       <div className="as-seats ar-seats">
         {seats.map((s, i) => (
-          <span key={s.id} className={`as-seat${g.turn === i ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
+          <span key={s.id} className={`as-seat${g.turn === i && !hiding ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
             <span className="as-seat-avatar">
               <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
             </span>
             <span className="as-seat-name">{i === me ? t('You') : s.name}</span>
-            <span className="as-seat-sub">🂠 {g.hands[i].length}</span>
+            <span className="as-seat-sub">🂠 {countOf(i)}</span>
           </span>
         ))}
       </div>
@@ -308,18 +335,20 @@ function Table({
       {/* Your hand, held fanned out; always the same room, however many cards. */}
       <div className="ar-hand">
         {me >= 0 && hand.length > 0 ? (
-          <FanHand cards={hand} selected={sel} onTap={o.play ? (c) => setSel(sel && same(sel, c) ? null : c) : undefined} />
+          <div className={`ar-hand-cards${hiding && hiding.taker === me ? ' hidden' : ''}`}>
+            <FanHand cards={hand} selected={sel} onTap={up && o.play ? (c) => setSel(sel && same(sel, c) ? null : c) : undefined} />
+          </div>
         ) : me >= 0 ? (
           <p className="ar-hint">{myTurn && o.draw ? t('Tap a card in the circle. Only you get to see it.') : t('No cards in your hand: next turn you draw from the circle.')}</p>
         ) : null}
       </div>
 
       <div className="ar-actions">
-        {myTurn && !connected ? (
+        {up && !connected ? (
           <BigButton variant="glass" disabled>
             {t('Reconnecting…')}
           </BigButton>
-        ) : myTurn ? (
+        ) : up ? (
           <div className="pl-action-row">
             {o.play && (
               <BigButton disabled={!sel || chosenClaim == null} onClick={() => sel && chosenClaim != null && act((x) => play(x, me, sel, chosenClaim))}>
@@ -336,7 +365,7 @@ function Table({
       </div>
 
       {/* The card picked to lay down, big over the table, with what to say. Nothing else moves. */}
-      {myTurn && o.play && sel && (
+      {up && o.play && sel && (
         <div className="ar-pick" key={`${sel.value}${sel.suit}`}>
           <span className="ar-pick-card">
             <CardFace card={sel} />

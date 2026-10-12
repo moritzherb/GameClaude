@@ -3,7 +3,7 @@ import type { Pose } from './logic';
 
 /*
  * The two little rubber pigs, seen from above the table, like the ones in the box: plump,
- * glossy pink, short snout, ears folded forward, stubby trotters, a curly tail, and a black
+ * matt pink rubber, short snout, ears folded forward, stubby trotters, a curly tail, and a black
  * dot on one side. Lying on a side shows the profile (with or without the dot); on the back
  * shows the belly with the trotters up; standing shows the back; on the snout and on snout
  * and ear show the profile tipped over.
@@ -18,20 +18,19 @@ interface Paint {
 function Defs({ id }: { id: string }) {
   return (
     <defs>
-      {/* Rubber: a bright highlight top left, deeper pink towards the edges. */}
-      <radialGradient id={`${id}b`} cx="0.36" cy="0.3" r="0.8">
-        <stop offset="0" stopColor="#ffe1e8" />
-        <stop offset="0.35" stopColor="#f9aec0" />
-        <stop offset="0.8" stopColor="#ec8aa4" />
-        <stop offset="1" stopColor="#d46a88" />
+      {/* Matt rubber: soft light from the top left, no shine, a little deeper towards the edges. */}
+      <radialGradient id={`${id}b`} cx="0.4" cy="0.34" r="0.85">
+        <stop offset="0" stopColor="#f8bfcb" />
+        <stop offset="0.55" stopColor="#f0a5b6" />
+        <stop offset="1" stopColor="#de8299" />
       </radialGradient>
       <radialGradient id={`${id}l`} cx="0.4" cy="0.3" r="0.9">
-        <stop offset="0" stopColor="#f9b5c6" />
-        <stop offset="1" stopColor="#cf6684" />
+        <stop offset="0" stopColor="#f2aabb" />
+        <stop offset="1" stopColor="#d4778f" />
       </radialGradient>
       <radialGradient id={`${id}s`} cx="0.4" cy="0.35" r="0.75">
-        <stop offset="0" stopColor="#ffc7d4" />
-        <stop offset="1" stopColor="#e07894" />
+        <stop offset="0" stopColor="#f7b9c7" />
+        <stop offset="1" stopColor="#e08aa0" />
       </radialGradient>
     </defs>
   );
@@ -64,14 +63,7 @@ function Profile({ dot, p, s }: { dot: boolean; p: Paint; s: string }) {
       {/* Eye */}
       <circle cx="93" cy="34" r="2.3" fill="#2a1a1e" />
       <circle cx="93.7" cy="33.3" r="0.7" fill="#fff" />
-      {dot && (
-        <>
-          <circle cx="56" cy="44" r="6.5" fill="#15130f" />
-          <circle cx="54" cy="42" r="1.6" fill="#fff" opacity="0.35" />
-        </>
-      )}
-      {/* Gloss */}
-      <path d="M36 28c9-6 24-8 36-5" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="4" strokeLinecap="round" />
+      {dot && <circle cx="56" cy="44" r="6.5" fill="#15130f" />}
     </>
   );
 }
@@ -89,7 +81,6 @@ function Back({ p, s }: { p: Paint; s: string }) {
       <ellipse cx="104" cy="40" rx="5" ry="8.5" fill={s} />
       <path d="M86 28c3-8 10-11 14-8-2 6-7 10-13 11z" fill={p.limb} />
       <path d="M86 52c3 8 10 11 14 8-2-6-7-10-13-11z" fill={p.limb} />
-      <path d="M32 33c12-8 34-9 50-2" fill="none" stroke="#fff" strokeOpacity="0.5" strokeWidth="4" strokeLinecap="round" />
     </>
   );
 }

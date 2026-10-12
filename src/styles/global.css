@@ -3669,6 +3669,7 @@ h3 {
   width: 80%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%) rotateX(54deg) rotateZ(-6deg);
+  transform-style: preserve-3d;
 }
 
 .mx-mat-layer {
@@ -3678,11 +3679,12 @@ h3 {
   background: var(--mat) center / cover;
 }
 
-/* The cardboard's edge: copies of the mat just below the print, washed out to the white of the
-   cardboard and a little darker towards the table (the copies' grain gives it its layered look). */
+/* The cardboard's edge: copies of the mat stacked below the print (straight down from it, in 3D,
+   so the edge shows along the front and slants up the side facing us), washed out to the white of
+   the cardboard and a little darker towards the table (the copies' grain gives it its layered look). */
 .mx-mat-layer.edge {
-  transform: translateY(calc(var(--i) * 0.48cqw));
-  filter: grayscale(1) brightness(2.1) contrast(0.5) brightness(calc(1 - var(--i) * 0.055));
+  transform: translateZ(calc(var(--i) * -0.37cqw));
+  filter: grayscale(1) brightness(2.1) contrast(0.5) brightness(calc(1 - var(--i) * 0.037));
 }
 
 /* The two dice on the mat, under the cup. */
@@ -4009,7 +4011,8 @@ h3 {
 /* ---------- Schweinerei ---------- */
 
 /* Everyone's points in one row under whose turn it is (the table never moves), the bonus throw
-   at the end. */
+   at the end. The points keep their room: short of it, the bonus drops its name (.tight, set by
+   the script), and only then do the points scroll. */
 .sw-board {
   display: flex;
   gap: 6px;
@@ -4018,7 +4021,7 @@ h3 {
 
 .sw-board-players {
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   gap: 6px;
@@ -4072,11 +4075,11 @@ h3 {
   animation: mx-fade-in 0.3s ease both;
 }
 
-.sw-bonus-label {
-  text-transform: uppercase;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
+/* No room for the name: it takes no space (and no gap), but stays measurable for the script. */
+.sw-bonus.tight .sw-bonus-what {
+  width: 0;
+  margin-right: -6px;
+  overflow: hidden;
 }
 
 .sw-bonus-pts {
@@ -4094,13 +4097,6 @@ h3 {
   background: var(--accent);
   color: var(--on-accent);
   box-shadow: none;
-}
-
-.sw-bonus.won .sw-bonus-label {
-  text-transform: uppercase;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
 }
 
 .sw-bonus-pts {
@@ -9553,6 +9549,17 @@ h3 {
   inset: 0;
 }
 
+/* The pile you're about to take stays out of sight until the card has turned. */
+.ar-hand-cards {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ar-hand-cards.hidden {
+  opacity: 0;
+}
+
 .ar-fan-card {
   position: absolute;
   width: var(--cw);
@@ -9755,6 +9762,13 @@ h3 {
   font-weight: 700;
   text-align: center;
   animation: pop-in 0.35s 1.9s var(--spring) both;
+}
+
+/* Your sips after a card is turned over: above the turned card, not behind it. */
+.ar ~ .as-sip,
+.ar .as-sip {
+  z-index: 40;
+  top: 17%;
 }
 
 /* The magnifying glass: comes in, looks the face-down card over, and goes as it turns. */

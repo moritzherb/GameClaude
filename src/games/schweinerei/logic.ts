@@ -4,13 +4,13 @@
  *
  * How a single pig can land (the names from the German box):
  *   Faule Sau – on its side, the dot up or down · Suhle – on its back (5) · Haxe – standing (5)
- *   Schnauze – on its snout (10) · Schnauze mit Stütze – on snout and ear (25)
+ *   Schnauze – on its snout (10) · Backe – on snout and ear (15)
  *
  * - Both on the same side: "Sau", 1 point. On different sides ("Faule Sau"): the turn's points
  *   are gone.
  * - Otherwise the two count together ("Gemischtes Doppel"), a pig on its side counting 0.
  *   Both the same is a double and counts four times: Volle Suhle 20, Doppelhaxe 20,
- *   Volle Schnauze 40, both with Stütze 100.
+ *   Volle Schnauze 40, Doppelbacke 60.
  * - The pigs touch ("Sauhaufen", 1 throw in 100): every point the player ever collected is gone.
  *   One on top of the other ("Schweinerei"): the same, and drink up.
  * - Bonus throw: every turn has a target, e.g. 3 × Suhle. Reach it within the turn (counting
@@ -38,7 +38,7 @@ export const PIGGYBACK_ODDS = 0.002;
 export const TARGET = 100;
 
 type Scoring = Exclude<Pose, 'side' | 'side-dot'>;
-export const VALUE: Record<Scoring, number> = { back: 5, standing: 5, snout: 10, jowl: 25 };
+export const VALUE: Record<Scoring, number> = { back: 5, standing: 5, snout: 10, jowl: 15 };
 /** Sips a double gives out. */
 const DOUBLE_GIVES: Record<Scoring, number> = { back: 2, standing: 2, snout: 4, jowl: 6 };
 
