@@ -118,27 +118,15 @@ function Table({
   const player = players[s.turn % players.length];
   const left = s.cards.length - s.drawn;
   const [slapping, setSlapping] = useState(false);
-  // The KLATSCH! burst stays a moment longer than the slap itself (it pops over the flying card).
-  const [burst, setBurst] = useState(0);
   const timer = useRef<number>(undefined);
-  const burstTimer = useRef<number>(undefined);
-  useEffect(
-    () => () => {
-      window.clearTimeout(timer.current);
-      window.clearTimeout(burstTimer.current);
-    },
-    [],
-  );
+  useEffect(() => () => window.clearTimeout(timer.current), []);
   const card = s.current ? byId(s.current) : null;
   const lastGlass = card?.id === GLASS_ID && s.glass === 4;
 
-  /** Slap the stack: a hand comes down, KLATSCH!, and the top card flies off. */
+  /** Slap the stack: a hand comes down and the top card flies off. */
   const slap = () => {
     if (s.current || slapping || left === 0) return;
     setSlapping(true);
-    setBurst((n) => n + 1);
-    window.clearTimeout(burstTimer.current);
-    burstTimer.current = window.setTimeout(() => setBurst(0), 900);
     buzz([30, 20, 50]);
     sfx.pop();
     timer.current = window.setTimeout(() => {
@@ -225,14 +213,6 @@ function Table({
         {slapping && (
           <span className="kl-hand" aria-hidden>
             ✋
-          </span>
-        )}
-        {burst > 0 && (
-          <span className="kl-burst" key={burst} aria-hidden>
-              <svg viewBox="0 0 200 140">
-              <path d="M100 6l14 34 36-22-12 36 42 2-34 22 32 26-42-6 6 38-30-26-14 30-12-32-32 22 8-38-42 4 32-26L14 54l42-2-12-36 36 22z" />
-            </svg>
-            <span>{t('SLAP!')}</span>
           </span>
         )}
         {/* The glass in the middle of the table. A clap glass card's splash goes in once the card is put away. */}

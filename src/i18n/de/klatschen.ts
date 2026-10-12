@@ -30,7 +30,6 @@ const klatschen: Record<string, string> = {
   '{n} left': 'noch {n}',
   'Slap it!': 'Hau drauf!',
   'Slap the stack!': 'Hau auf den Stapel!',
-  'SLAP!': 'KLATSCH!',
   '{name} is Thumb Master': '{name} ist Daumenmeister',
   'The 4th clap glass!': 'Das 4. Klatschglas!',
   'You clap the whole glass in the middle. Down in one!': 'Du klatschst das ganze Glas in der Mitte. Ex!',

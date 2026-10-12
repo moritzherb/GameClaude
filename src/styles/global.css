@@ -4561,7 +4561,7 @@ h3 {
   }
 }
 
-/* The slap: a hand comes down on the stack, and a comic burst. */
+/* The slap: a hand comes down on the stack. */
 .kl-hand {
   position: absolute;
   left: var(--kl-stack-x);
@@ -4580,57 +4580,6 @@ h3 {
   }
   40% {
     opacity: 1;
-  }
-}
-
-.kl-burst {
-  position: absolute;
-  /* Right on the stack (and the card flying off it). */
-  left: var(--kl-stack-x);
-  top: 50%;
-  z-index: 4;
-  width: min(58cqw, 46cqh);
-  display: grid;
-  place-items: center;
-  transform: translate(-50%, -50%) rotate(-8deg);
-  animation:
-    kl-pop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) 0.14s both,
-    kl-gone 0.25s ease-in 0.65s forwards;
-  pointer-events: none;
-}
-
-@keyframes kl-gone {
-  to {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(-8deg) scale(1.15);
-  }
-}
-
-.kl-burst > * {
-  grid-area: 1 / 1;
-}
-
-.kl-burst svg {
-  width: 100%;
-  fill: #ffd23f;
-  stroke: #151612;
-  stroke-width: 5;
-  stroke-linejoin: round;
-}
-
-.kl-burst span {
-  color: #e3263a;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: min(8cqw, 6.2cqh);
-  letter-spacing: 0.02em;
-  -webkit-text-stroke: 1.5px #151612;
-}
-
-@keyframes kl-pop {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(-8deg) scale(0.2);
   }
 }
 
