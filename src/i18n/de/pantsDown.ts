@@ -43,6 +43,7 @@ const pantsDown: Record<string, string> = {
   'Off: you play too. Every phone shows the middle cards.': 'Aus: Du spielst mit. Jedes Handy zeigt die Karten in der Mitte.',
   'No spare phone for the table? Switch the table phone off: the host plays too, and every phone shows the middle cards.':
     'Kein Handy übrig für den Tisch? Schalte das Tisch-Handy aus: Der Host spielt mit, und jedes Handy zeigt die Karten in der Mitte.',
+  'Keep them or put them in the middle?': 'Behalten oder in die Mitte legen?',
   'Allow passing': 'Schieben erlauben',
   'House rule for big groups: skip your turn instead of swapping (“schieben”).':
     'Hausregel für große Runden: Statt zu tauschen darfst du schieben und einfach aussetzen.',

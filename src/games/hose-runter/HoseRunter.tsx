@@ -306,6 +306,8 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
   const stopper = view.stopperId ? seat(view.stopperId) : null;
   const score = view.hand.length === 3 ? scoreHand(view.hand) : null;
   const playing = me && !me.out;
+  // The dealer deciding: their three cards big in the middle of the screen, not down in the hand.
+  const deciding = dealerPhase && myTurn && !!playing;
 
   // Clear the selection (and fold the cards) whenever the table changes.
   const tableKey = JSON.stringify([view.middle, view.hand, view.turnId]);
@@ -358,25 +360,48 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
         </section>
       )}
 
+      {deciding && (
+        <section className="hr-decide" aria-live="polite">
+          <span className="hr-decide-ask">{t('Keep them or put them in the middle?')}</span>
+          <div className="hr-decide-cards">
+            {view.hand.map((c, i) => (
+              <span key={`d${i}-${cardName(c)}`} className="hr-decide-card" style={{ '--i': i - (view.hand.length - 1) / 2 } as CSSProperties}>
+                <PlayingCard card={c} size="lg" />
+              </span>
+            ))}
+          </div>
+          {score && (
+            <span className="hr-decide-score">
+              {t('{points} points', { points: formatPoints(score.points) })}
+              {score.kind !== 'suit' && <ScoreBadge score={score} />}
+            </span>
+          )}
+        </section>
+      )}
+
       <LastMove log={view.log} seats={view.seats} myId={myId} />
 
       {!playing && <p className="notice">{me ? t('You’re out. Watch the others finish.') : t('You’re watching this game.')}</p>}
 
       {playing && (
         <div className="sticky-action hr-bottom">
-          <HandFan
-            cards={view.hand}
-            open={fanOpen}
-            onToggle={() => setFanOpen(!fanOpen)}
-            selected={pickHand}
-            selectable={myTurn && !dealerPhase}
-            onPick={(i) => setPickHand(pickHand === i ? null : i)}
-          />
-          <span className="hr-hand-label">
-            {t('Your cards')}
-            {score && <strong> · {t('{points} points', { points: formatPoints(score.points) })}</strong>}
-            {score && score.kind !== 'suit' && <ScoreBadge score={score} />}
-          </span>
+          {!deciding && (
+            <>
+              <HandFan
+                cards={view.hand}
+                open={fanOpen}
+                onToggle={() => setFanOpen(!fanOpen)}
+                selected={pickHand}
+                selectable={myTurn && !dealerPhase}
+                onPick={(i) => setPickHand(pickHand === i ? null : i)}
+              />
+              <span className="hr-hand-label">
+                {t('Your cards')}
+                {score && <strong> · {t('{points} points', { points: formatPoints(score.points) })}</strong>}
+                {score && score.kind !== 'suit' && <ScoreBadge score={score} />}
+              </span>
+            </>
+          )}
 
           {myTurn && !connected && (
             <BigButton variant="glass" disabled>
