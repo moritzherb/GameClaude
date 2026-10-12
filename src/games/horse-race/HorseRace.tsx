@@ -10,6 +10,7 @@ import { pick } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { DEFAULT_ROWS, DEFAULT_STAKE, newRace, ROW_OPTIONS, sipsForRow, STAKE_MAX, STAKE_MIN, step, winnings, type Race } from './logic';
+import Finished from '../../components/Finished';
 
 const SUIT_NAME: Record<Suit, string> = { hearts: tx('Hearts'), diamonds: tx('Diamonds'), spades: tx('Spades'), clubs: tx('Clubs') };
 const RED = (s: Suit) => s === 'hearts' || s === 'diamonds';
@@ -178,6 +179,7 @@ export default function HorseRace({ players, exit }: GameProps) {
     );
     return (
       <div className="bd hs-finish">
+        <Finished game="horse-race" />
         <div className="bd-head center">
           <span className="kicker">{t('Photo finish')}</span>
           <span className="hs-finish-card">

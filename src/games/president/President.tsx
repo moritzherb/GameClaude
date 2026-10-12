@@ -11,6 +11,7 @@ import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import { HandSpread } from '../palace/Palace';
 import { canPlay, giveBack, MAX_PLAYERS, MIN_PLAYERS, newGame, nextRound, pass, play, ranksFrom, ROUND_SIPS, same, toBeat, type Entry, type Game, type Rank } from './logic';
+import Finished from '../../components/Finished';
 
 export interface Seat {
   id: string;
@@ -246,6 +247,8 @@ function Table({
 
   return (
     <div className="as fill">
+      {/* Rounds go on and on: the game counts once its first round is over. */}
+      {(g.round > 1 || g.phase === 'done') && <Finished game="president" />}
       <div className={`pl-status${myTurn || owe ? ' mine' : ''}`}>
         <span className="pl-status-text">{headline}</span>
         {last && g.phase !== 'done' && <span className="pl-status-sub">{entryText(last, seats)}</span>}

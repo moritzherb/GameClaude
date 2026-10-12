@@ -16,6 +16,7 @@ import { useChanged, useQueuedSend, useResync } from '../../net/sync';
 import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { direction, guess, MISSES_TO_PASS, newGame, next, nextGuesser, possible, takeOver, VALUES, type Game } from './logic';
+import Finished from '../../components/Finished';
 
 /*
  * Played with two phones in a room: the host's phone lies in the middle as the table and
@@ -273,6 +274,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
       <Handover session={session}>
         {g.over ? (
           <>
+            <Finished game="fuck-the-dealer" />
             <Tally session={session} />
             <div className="sticky-action">
               <BigButton onClick={onAgain}>{t('Play again')}</BigButton>
@@ -393,7 +395,10 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
     return (
       <Handover session={session}>
         {g.over ? (
-          <p className="lead center">{t('Game over. The table shows who drank what.')}</p>
+          <>
+            <Finished game="fuck-the-dealer" />
+            <p className="lead center">{t('Game over. The table shows who drank what.')}</p>
+          </>
         ) : (
           <div className="sticky-action">
             <p className="ftd-pass">{t('Pass this phone to {name}.', { name: dealer.name })}</p>

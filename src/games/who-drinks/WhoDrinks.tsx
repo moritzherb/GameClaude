@@ -5,6 +5,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { randomInt } from '../../lib/random';
 import type { GameProps } from '../types';
 import { spinFate } from './fates';
+import Finished from '../../components/Finished';
 
 export default function WhoDrinks({ players }: GameProps) {
   const [highlight, setHighlight] = useState<number | null>(null);
@@ -50,6 +51,8 @@ export default function WhoDrinks({ players }: GameProps) {
 
   return (
     <div className="who-drinks">
+      {/* Spins go on and on: the game counts from its first spin on. */}
+      {Object.keys(drunk).length > 0 && <Finished game="who-drinks" />}
       {winner && result ? (
         <div className="result-card pop-in" style={{ '--chip': winner.color } as CSSProperties}>
           <div className="result-avatar wobble">{winner.avatar}</div>

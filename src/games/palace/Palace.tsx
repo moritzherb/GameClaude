@@ -12,6 +12,7 @@ import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/
 import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { apply, deal, fits, MAX_PLAYERS, MIN_PLAYERS, same, TABLE, viewFor, type Act, type Entry, type Game, type Need, type View } from './logic';
+import Finished from '../../components/Finished';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -861,6 +862,7 @@ function Over({ view, isHost, onNewGame }: { view: PhoneView; isHost: boolean; o
     <div className="pl-over">
       <div className="pl-over-card">
         <span className="kicker">{t('Game over')}</span>
+      <Finished game="palace" />
         <h2 className="bd-title big">{w === view.me ? t('You win!') : t('{name} wins!', { name: nameOf(view, w) })}</h2>
         <ul className="pl-over-list">
           {order.map(({ s, i, left }) => (

@@ -10,6 +10,7 @@ import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useFreshMoves, useMoveNumbers, useResync } from '../../net/sync';
 import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
+import Finished from '../../components/Finished';
 import {
   applyAction,
   formatPoints,
@@ -569,6 +570,7 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
   return (
     <div className="hr">
       <Seats view={view} myId={myId} />
+      {over && <Finished game="hose-runter" />}
       <div className="bd-head center">
         <span className="kicker">{over ? t('Game over') : t('Round {round}', { round: view.round })}</span>
         <h2 className="bd-title big">{title}</h2>
