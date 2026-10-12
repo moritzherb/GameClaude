@@ -108,6 +108,18 @@ function settleHome() {
 }
 
 /**
+ * Home again on top of the bottom home entry, then down onto that one. Not at once: iPhones keep a
+ * picture of every entry, taken when it's left, and an entry left before it was ever drawn keeps
+ * the picture of what was there before (the game). So home is drawn into it first.
+ */
+function homeOnTop() {
+  history.pushState(HOME_TOP, '', '#/');
+  repaint();
+  afterPaint(settleHome);
+}
+
+
+/**
  * Came back by swiping (or the back button): the phone already slid the screen in from its picture,
  * so screens skip their entrance animation then (it would play a second time). Any step of the app's
  * own brings them back.
@@ -190,10 +202,8 @@ export function navigate(to: string) {
     // one), or the next screen.
     afterPaint(() => {
       if (history.state !== null || !isHome(window.location.hash)) return;
-      if (isHome(hash)) {
-        history.pushState(HOME_TOP, '', '#/');
-        settleHome();
-      } else go(hash, 'push', ABOVE_HOME);
+      if (isHome(hash)) homeOnTop();
+      else go(hash, 'push', ABOVE_HOME);
     });
     return;
   }
@@ -202,6 +212,7 @@ export function navigate(to: string) {
     // Home in the top entry, so the screen just left isn't waiting ahead; once it's drawn, down
     // onto the bottom entry (home as well), so there's nothing to swipe back to.
     go(hash, 'replace', state === ABOVE_HOME || state === HOME_TOP ? HOME_TOP : null);
+    repaint();
     afterPaint(settleHome);
     return;
   }
@@ -209,7 +220,44 @@ export function navigate(to: string) {
   go(hash, state === ABOVE_HOME || state === HOME_TOP ? 'replace' : 'push', ABOVE_HOME);
 }
 
+/** How far in from the side a touch counts as the phone's swipe-through-the-history gesture. */
+const EDGE = 18;
+
 if (typeof window !== 'undefined') {
+  // iPhones page through the history when a finger starts right at the side of the screen and
+  // swipes in, and show their picture of the screen next door while it moves: on home and in a game
+  // that's never wanted (the history only keeps the same screen there, but the picture can be an
+  // old one). So a touch that starts at the very edge there isn't handed to the phone at all. Buttons
+  // at the edge still take their taps, and scrolling from the edge is done by hand.
+  let edgeY: number | null = null;
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      edgeY = null;
+      if (e.touches.length !== 1 || !e.cancelable) return;
+      const { clientX, clientY } = e.touches[0];
+      if (clientX > EDGE && clientX < window.innerWidth - EDGE) return;
+      const hash = window.location.hash;
+      if (!isHome(hash) && !isGame(hash)) return;
+      if ((e.target as Element | null)?.closest?.('button, a, input, textarea, select, label, [role="button"]')) return;
+      e.preventDefault();
+      edgeY = clientY;
+    },
+    { passive: false },
+  );
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      if (edgeY === null || e.touches.length !== 1) return;
+      const y = e.touches[0].clientY;
+      window.scrollBy(0, edgeY - y);
+      edgeY = y;
+    },
+    { passive: true },
+  );
+  document.addEventListener('touchend', () => (edgeY = null), { passive: true });
+  document.addEventListener('touchcancel', () => (edgeY = null), { passive: true });
+
   // Reloaded mid-game: it stays a game entry.
   if (isGame(window.location.hash)) {
     if (history.state !== GAME_TOP) history.replaceState(GAME_ROOT, '', window.location.hash);
@@ -269,8 +317,7 @@ if (typeof window !== 'undefined') {
       // picture of the screen stuck on top of the page.
       window.setTimeout(() => {
         if (history.state !== null || !isHome(window.location.hash)) return;
-        history.pushState(HOME_TOP, '', '#/');
-        settleHome();
+        homeOnTop();
       }, 600);
       return;
     }
@@ -289,6 +336,7 @@ export const paths = {
   play: (id: string) => `/play/${id}`,
   players: (next?: string) => (next ? `/players?next=${encodeURIComponent(next)}` : '/players'),
   settings: '/settings',
+  profile: '/profile',
   room: '/room',
   online: (id: string) => `/online/${id}`,
   join: (code: string) => `/join/${code}`,
