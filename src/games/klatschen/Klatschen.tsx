@@ -8,6 +8,7 @@ import { shuffle } from '../../lib/random';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { byId, DECK, GLASS_ID, STANDING_RULES, type TaskCard } from './cards';
+import Finished from '../../components/Finished';
 
 interface State {
   /** Card ids, a face-down stack: the next one drawn is cards[drawn]. */
@@ -72,6 +73,7 @@ export default function Klatschen({ players, exit }: GameProps) {
     const loser = byPlayer(s.loser);
     return (
       <div className="bd">
+        <Finished game="klatschen" />
         <div className="bd-head center">
           <span className="kicker">{t('Game over')}</span>
           <span className="kl-end-glass" aria-hidden>

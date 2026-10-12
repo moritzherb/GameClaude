@@ -9,6 +9,7 @@ import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import mat from './mat.webp';
 import { allowedAfter, announce, believe, isDouble, MAEXCHEN, newRound, peek, reveal, shake, valueOf, VALUES, type Round, type Value } from './logic';
+import Finished from '../../components/Finished';
 
 const SHAKE_MS = 650;
 /** When the verdict lands after the cup is lifted (matches the CSS). */
@@ -81,6 +82,11 @@ function MaexchenTable({
   const who = players[r.phase === 'pass' ? next : r.verdict ? r.verdict.loser : r.turn];
   const open = r.phase === 'reveal';
   const mustLift = r.phase === 'pass' && claim?.value === MAEXCHEN;
+  // Rounds go on and on: the game counts once a first round is decided.
+  const [decided, setDecided] = useState(false);
+  useEffect(() => {
+    if (r.verdict) setDecided(true);
+  }, [r.verdict]);
 
   /** Shake cup and coaster together for a moment, then the dice are rolled. */
   const doShake = (base: Round = r) => {
@@ -159,6 +165,7 @@ function MaexchenTable({
 
   return (
     <div className="mx fill">
+      {decided && <Finished game="maexchen" />}
       <div className="mx-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>

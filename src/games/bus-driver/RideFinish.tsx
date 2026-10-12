@@ -1,6 +1,7 @@
 import BigButton from '../../components/BigButton';
 import { t } from '../../i18n';
 import type { Player } from '../../state/AppState';
+import Finished from '../../components/Finished';
 
 export interface RideStats {
   attempt: number;
@@ -46,6 +47,7 @@ export default function RideFinish({ driver, stats, onPlayAgain, onExit }: { dri
           <span className="stat-value">{stats.drawn}</span>
         </div>
       </div>
+      <Finished game="bus-driver" />
       <div className="sticky-action stack">
         <BigButton onClick={onPlayAgain}>{t('Play again')}</BigButton>
         <BigButton variant="glass" onClick={onExit}>

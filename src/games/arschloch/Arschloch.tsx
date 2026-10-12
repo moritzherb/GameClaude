@@ -12,6 +12,7 @@ import { useApp } from '../../state/AppState';
 import { layRing, type Slot } from '../kings-cup/ring';
 import { HandSpread } from '../palace/Palace';
 import { call, draw, JACK, lowestClaim, MAX_PLAYERS, MIN_PLAYERS, newGame, options, play, QUAD_SIPS, same, type Entry, type Game } from './logic';
+import Finished from '../../components/Finished';
 
 interface Seat {
   id: string;
@@ -403,6 +404,7 @@ function Over({
   const reveal = [...g.log].reverse().find((e): e is Extract<Entry, { k: 'call' }> => e.k === 'call');
   return (
     <div className="bd ar-over">
+      <Finished game="arschloch" />
       <div className="bd-head center">
         <span className="kicker">{t('Game over')}</span>
         <span className="ar-over-avatar" style={{ '--chip': loser?.color } as CSSProperties}>

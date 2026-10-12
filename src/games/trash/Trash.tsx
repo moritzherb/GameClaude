@@ -9,6 +9,7 @@ import { pick } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
+import Finished from '../../components/Finished';
 
 const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 /** How long the card in play takes to glide in: a little longer the further it comes from. */
@@ -326,6 +327,7 @@ export function TrashTable({
 
       {over && g.winner != null && (
         <div className="tr-over">
+            {g.phase === 'game-over' && <Finished game="trash" />}
           <div className="tr-over-card">
             <span className="kicker">{g.phase === 'game-over' ? t('Game over') : t('Round {n}', { n: g.round })}</span>
             <h2 className="bd-title big">

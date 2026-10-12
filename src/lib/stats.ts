@@ -6,7 +6,7 @@ import { load, save } from './storage';
  */
 
 export interface Stats {
-  /** Games started, by game id. */
+  /** Games played to the end, by game id. */
   played: Record<string, number>;
   /** Arschloch rounds finished, by rank. */
   ranks: Record<string, number>;
@@ -14,34 +14,39 @@ export interface Stats {
   lost: Record<string, number>;
   /** Sips drunk and handed out (counted in the games that know who drinks). */
   sips: { drunk: number; given: number };
-  /** The last game counted, and when: the same game opened again soon after is the same game. */
+  /** The last game counted, and when: its end shown again right after (a reload) counts once. */
   last?: { id: string; at: number };
+  /** 2: `played` counts finished games (before, it counted games started). */
+  v?: number;
 }
 
 const KEY = 'stats';
-/** Opening the same game again within this long (a reload, back from the rules) counts once. */
-const SAME_GAME_MS = 30 * 60_000;
+/** The same game's end shown again within this long (a reload) counts once. */
+const SAME_GAME_MS = 15_000;
 
-const empty = (): Stats => ({ played: {}, ranks: {}, lost: {}, sips: { drunk: 0, given: 0 } });
+const empty = (): Stats => ({ played: {}, ranks: {}, lost: {}, sips: { drunk: 0, given: 0 }, v: 2 });
 
 export function loadStats(): Stats {
   const s = load<Partial<Stats> | null>(KEY, null);
   if (!s || typeof s !== 'object') return empty();
   return {
-    played: s.played && typeof s.played === 'object' ? s.played : {},
+    // Counted from before, when every game started counted: started over.
+    played: s.v === 2 && s.played && typeof s.played === 'object' ? s.played : {},
     ranks: s.ranks && typeof s.ranks === 'object' ? s.ranks : {},
     lost: s.lost && typeof s.lost === 'object' ? s.lost : {},
     sips: { drunk: Number(s.sips?.drunk) || 0, given: Number(s.sips?.given) || 0 },
     last: s.last,
+    v: 2,
   };
 }
 
 const update = (fn: (s: Stats) => Stats) => save(KEY, fn(loadStats()));
 
-/** A game was started on this phone. */
-export function recordPlay(id: string, now = Date.now()) {
+/** A game was played to its end on this phone (or, in a game without an end, a first round was). */
+export function recordFinished(id: string, now = Date.now()) {
   update((s) => {
-    if (s.last?.id === id && now - s.last.at < SAME_GAME_MS) return { ...s, last: { id, at: now } };
+    // The end screen shown again a moment later (a reload): the same game.
+    if (s.last?.id === id && now - s.last.at < SAME_GAME_MS) return s;
     return { ...s, played: { ...s.played, [id]: (s.played[id] ?? 0) + 1 }, last: { id, at: now } };
   });
 }

@@ -13,6 +13,7 @@ import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { layRing, SLOT_WIDTH, type Slot } from './ring';
 import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
+import Finished from '../../components/Finished';
 
 interface State {
   /** All 52 cards, face down in a messy circle: cards[i] lies at slots[i]. */
@@ -143,6 +144,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       <div className="kc">
         <div className="bd-head">
           <span className="kicker">{t('Game over')}</span>
+        <Finished game="kings-cup" />
           <h2 className="bd-title big">{t('Deck’s empty!')}</h2>
           <p className="lead">
             {s.cupBy ? t('{name} drank the King’s Cup', { name: byId(s.cupBy)?.name ?? '' }) : t('{n} cards drawn.', { n: 52 - left })}

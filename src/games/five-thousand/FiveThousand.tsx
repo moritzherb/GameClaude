@@ -7,6 +7,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
+import Finished from '../../components/Finished';
 import {
   canStop,
   ENTRY,
@@ -236,6 +237,7 @@ export function FiveThousandTable({
         </span>
       </div>
 
+      {g.phase === 'over' && <Finished game="five-thousand" />}
       <Table
         key={`${g.current}-${turn.rolls}-${g.phase === 'roll' ? 'cup' : 'dice'}`}
         roll={g.phase === 'roll' || shaking ? EMPTY : turn.roll}

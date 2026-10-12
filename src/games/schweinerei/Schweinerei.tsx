@@ -10,6 +10,7 @@ import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Pig from './Pigs';
 import { bank, BONUSES, loserSips, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
+import Finished from '../../components/Finished';
 
 const POSE_NAME: Record<Pose, string> = {
   side: tx('Side'),
@@ -596,6 +597,7 @@ function Finish({ g, players, onAgain, exit }: { g: Game; players: GameProps['pl
             })}
         </div>
       </section>
+      <Finished game="schweinerei" />
       <div className="sticky-action stack">
         <BigButton onClick={onAgain}>{t('Play again')}</BigButton>
         <BigButton variant="glass" onClick={exit}>

@@ -11,6 +11,7 @@ import { useChanged, useQueuedSend, useResync } from '../../net/sync';
 import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { draw, HAND_MAX, markReady, newGame, overDrawn, play, putBack, sortHand, stuck, targetFor, turnOver, type Game, type Who } from './logic';
+import Finished from '../../components/Finished';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -300,6 +301,7 @@ export default function Speed() {
 
       {g.phase === 'over' && (
         <div className="sp-over">
+          <Finished game="speed" />
           <p className="sp-result">
             {g.winner === me ? t('You win! 🏆') : t('{name} wins!', { name: match.seats[g.winner ?? 0].name })}
           </p>
