@@ -9553,6 +9553,17 @@ h3 {
   inset: 0;
 }
 
+/* The pile you're about to take stays out of sight until the card has turned. */
+.ar-hand-cards {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ar-hand-cards.hidden {
+  opacity: 0;
+}
+
 .ar-fan-card {
   position: absolute;
   width: var(--cw);
@@ -9755,6 +9766,13 @@ h3 {
   font-weight: 700;
   text-align: center;
   animation: pop-in 0.35s 1.9s var(--spring) both;
+}
+
+/* Your sips after a card is turned over: above the turned card, not behind it. */
+.ar ~ .as-sip,
+.ar .as-sip {
+  z-index: 40;
+  top: 17%;
 }
 
 /* The magnifying glass: comes in, looks the face-down card over, and goes as it turns. */
