@@ -123,7 +123,6 @@ const busDriver: Record<string, string> = {
   'Flip this card': 'Diese Karte aufdecken',
   'Row {row} · {n} sip per card': 'Reihe {row} · {n} Schluck pro Karte',
   'Row {row} · {n} sips per card': 'Reihe {row} · {n} Schlucke pro Karte',
-  'lays {cards}': 'legt {cards}',
   'gives out': 'verteilt',
   'Nobody has an {rank}.': '{rank} hat keiner.',
   'Nobody has a {rank}.': '{rank} hat keiner.',

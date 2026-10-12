@@ -340,19 +340,19 @@ export default function BusDriver({ players, exit }: GameProps) {
 
       <h2 className="bd-question">{t(question.title)}</h2>
 
-      {reveal ? (
-        <ResultBanner result={reveal.result} card={reveal.card} newDeck={s.newDeckOpened} />
-      ) : (
-        <Answers questionId={question.id} onAnswer={answer} />
-      )}
-
-      {reveal && (
-        <div className="sticky-action">
-          <BigButton size="xl" variant="light" onClick={next}>
-            {nextLabel} →
-          </BigButton>
-        </div>
-      )}
+      {/* Answers, or the verdict and "next": one room of the same height, so the cards never move. */}
+      <div className="bd-foot">
+        {reveal ? (
+          <>
+            <ResultBanner result={reveal.result} card={reveal.card} newDeck={s.newDeckOpened} />
+            <BigButton size="xl" variant="light" onClick={next}>
+              {nextLabel} →
+            </BigButton>
+          </>
+        ) : (
+          <Answers questionId={question.id} onAnswer={answer} />
+        )}
+      </div>
     </div>
   );
 }
