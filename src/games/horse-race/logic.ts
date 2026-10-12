@@ -85,7 +85,7 @@ export const sipsForRow = (row: number) => row;
 /** Everyone stakes sips on their horse before the race. */
 export const STAKE_MIN = 1;
 export const STAKE_MAX = 10;
-export const DEFAULT_STAKE = 2;
+export const DEFAULT_STAKE = 1;
 
 /** A winning bet gives out twice its stake (a losing one drinks the stake). */
 export const winnings = (stake: number) => stake * 2;
