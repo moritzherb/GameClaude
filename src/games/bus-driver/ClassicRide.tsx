@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from 'react';
+import { useRef, useState } from 'react';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
@@ -7,6 +7,7 @@ import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
 import Answers, { Verdict } from './Answers';
+import CardRow from './CardRow';
 import type { RideStats } from './RideFinish';
 import { QUESTIONS, type Guess, type Result } from './logic';
 import { answerRide, startRide, type RideState } from './ride';
@@ -82,6 +83,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
           title={outcome === 'same' ? t('Same value! Drink {n}', { n: sips }) : t('Wrong! Drink {n}', { n: sips })}
           sub={t('Back to question 1.')}
           detail={detail}
+          short
         />
       );
       nextLabel = t('Start over');
@@ -109,12 +111,12 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         <DeckCount left={ride.deck.length} />
       </div>
 
-      <div className="bd-hand" style={{ '--n': held.length + 1 } as CSSProperties}>
+      <CardRow count={held.length + 1}>
         {held.map((c, i) => (
           <PlayingCard key={i} card={c} />
         ))}
         <PlayingCard key={`slot-${reveal ? reveal.index : ride.drawn}`} card={reveal?.card} faceUp={!!reveal} waiting={!reveal} />
-      </div>
+      </CardRow>
 
       <h2 className="bd-question">
         <span className="bd-question-num">
@@ -123,15 +125,18 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         {t(question.title)}
       </h2>
 
-      {reveal ? verdict : <Answers questionId={question.id} onAnswer={answer} />}
-
-      {reveal && (
-        <div className="sticky-action">
-          <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
-            {nextLabel}
-          </BigButton>
-        </div>
-      )}
+      <div className="bd-foot">
+        {reveal ? (
+          <>
+            {verdict}
+            <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
+              {nextLabel}
+            </BigButton>
+          </>
+        ) : (
+          <Answers questionId={question.id} onAnswer={answer} />
+        )}
+      </div>
     </div>
   );
 }

@@ -59,16 +59,42 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
 }
 
 
-/** Coloured result box: green when right, red when wrong, orange for "same value". */
-export function Verdict({ tone, emoji, title, sub, detail }: { tone: Outcome; emoji: string; title: string; sub: string; detail?: string }) {
+/**
+ * Right or wrong: a big stamp pops up over the table once the card has turned (with the sips to
+ * drink or give out) and goes again; a slim line stays above the "next" button.
+ */
+export function Verdict({
+  tone,
+  emoji,
+  title,
+  sub,
+  detail,
+  short,
+}: {
+  tone: Outcome;
+  emoji: string;
+  title: string;
+  sub: string;
+  detail?: string;
+  /** The stamp shows just the title (the sub is a whole sentence, it stays in the line below). */
+  short?: boolean;
+}) {
   return (
-    <div className={`bd-result ${tone}`}>
-      <span className="bd-result-emoji">{emoji}</span>
-      <span className="bd-result-text">
-        <span className="bd-result-title">{title}</span>
-        <span className="bd-result-sub">{sub}</span>
-        {detail && <span className="bd-result-card">{detail}</span>}
-      </span>
-    </div>
+    <>
+      <div className={`bd-pop ${tone}`} aria-hidden>
+        <span className="bd-pop-emoji">{emoji}</span>
+        <span className="bd-pop-title">{title}</span>
+        {!short && <span className="bd-pop-sub">{sub}</span>}
+      </div>
+      <div className={`bd-verdict ${tone}`} role="status">
+        <span className="bd-verdict-emoji">{emoji}</span>
+        <span className="bd-verdict-text">
+          <span className="bd-verdict-main">
+            <strong>{title}</strong> {sub}
+          </span>
+          {detail && <span className="bd-verdict-detail">{detail}</span>}
+        </span>
+      </div>
+    </>
   );
 }

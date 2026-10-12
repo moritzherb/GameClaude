@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from 'react';
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
@@ -19,6 +19,7 @@ import {
   SIP_MODES,
   type SipMode,
 } from './pyramid';
+import { fitCards, useBox } from './useBox';
 
 export interface PyramidSeat {
   player: Player;
@@ -211,8 +212,6 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   }
 
   /* ---------- Flipping the pyramid ---------- */
-  const sizes = pyramidRows(game.rows);
-  const starts = sizes.map((_, r) => sizes.slice(0, r).reduce((a, b) => a + b, 0));
   const lastIndex = game.flips - 1;
   const last = lastIndex >= 0 ? game.cards[lastIndex] : null;
   const lastLaid = lastIndex >= 0 ? game.laid[lastIndex] : null;
@@ -225,32 +224,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   // (a fixed row each) share the height, their cards sized from the room they get.
   return (
     <div className="bd bd-pyr fill">
-      <div className="pyramid" style={{ '--rows': game.rows } as CSSProperties}>
-        {[...sizes.keys()].reverse().map((r) => (
-          <div key={r} className={`pyramid-row${r === nextRow && !done ? ' current' : ''}`}>
-            <span className="pyramid-sips">×{rowSips(r, game.sipMode)}</span>
-            <div className="pyramid-cards">
-              {Array.from({ length: sizes[r] }, (_, k) => {
-                const idx = starts[r] + k;
-                const laidCount = game.laid[idx]?.reduce((n, l) => n + l.length, 0) ?? 0;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="pyramid-slot"
-                    disabled={idx !== game.flips}
-                    onClick={flip}
-                    aria-label={idx === game.flips ? t('Flip this card') : undefined}
-                  >
-                    <PlayingCard card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={{ '--cw': 'inherit' } as CSSProperties} />
-                    {laidCount > 0 && <span className="pyramid-badge">{laidCount}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+      <PyramidCards game={game} nextRow={done ? -1 : nextRow} onFlip={flip} />
 
       <div className="flip-zone">
         {last && lastLaid ? (
@@ -294,7 +268,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
       <section className="panel hands">
         <h3 className="section-title">{t('Hands')}</h3>
         {/* A fixed row per player; more than four players go in two columns. */}
-        <div className={`hand-rows${seats.length > 4 ? ' two' : ''}`} style={{ '--rows': seats.length > 4 ? Math.ceil(seats.length / 2) : seats.length } as CSSProperties}>
+        <HandRows count={seats.length}>
           {seats.map((x, i) => (
             <div key={x.player.id} className={`hand-row${lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
               <span className="bd-avatar xs" style={{ background: x.player.color }}>
@@ -306,7 +280,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
               </span>
             </div>
           ))}
-        </div>
+        </HandRows>
         {game.toppedUp && <p className="fine-print">{t('A fresh deck was added to build the pyramid.')}</p>}
       </section>
 
@@ -321,6 +295,57 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           </BigButton>
         )}
       </div>
+    </div>
+  );
+}
+
+/** The pyramid, bottom row widest: its cards as big as the room it gets allows. */
+function PyramidCards({ game, nextRow, onFlip }: { game: Game; nextRow: number; onFlip: () => void }) {
+  const [ref, box] = useBox<HTMLDivElement>();
+  const sizes = pyramidRows(game.rows);
+  const starts = sizes.map((_, r) => sizes.slice(0, r).reduce((a, b) => a + b, 0));
+  // The box's padding (10px all round) and the sips column on each side (30px) are no room for cards.
+  const cw = fitCards({ w: box.w - 20 - 60, h: box.h - 20 }, game.rows, game.rows, 6, 6, 72, 18);
+  const cardStyle = { '--cw': `${cw}px` } as CSSProperties;
+  return (
+    <div ref={ref} className="pyramid">
+      {[...sizes.keys()].reverse().map((r) => (
+        <div key={r} className={`pyramid-row${r === nextRow ? ' current' : ''}`}>
+          <span className="pyramid-sips">×{rowSips(r, game.sipMode)}</span>
+          <div className="pyramid-cards">
+            {Array.from({ length: sizes[r] }, (_, k) => {
+              const idx = starts[r] + k;
+              const laidCount = game.laid[idx]?.reduce((n, l) => n + l.length, 0) ?? 0;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  className="pyramid-slot"
+                  disabled={idx !== game.flips}
+                  onClick={onFlip}
+                  aria-label={idx === game.flips ? t('Flip this card') : undefined}
+                >
+                  <PlayingCard card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={cardStyle} />
+                  {laidCount > 0 && <span className="pyramid-badge">{laidCount}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** A fixed row per player (two columns from five players): avatar and cards as tall as a row. */
+function HandRows({ count, children }: { count: number; children: ReactNode }) {
+  const [ref, box] = useBox<HTMLDivElement>();
+  const two = count > 4;
+  const rows = two ? Math.ceil(count / 2) : count;
+  const rh = box.h ? Math.floor((box.h - (rows - 1) * 4) / rows) : 30;
+  return (
+    <div ref={ref} className={`hand-rows${two ? ' two' : ''}`} style={{ '--rows': rows, '--rh': `${rh}px` } as CSSProperties}>
+      {children}
     </div>
   );
 }
