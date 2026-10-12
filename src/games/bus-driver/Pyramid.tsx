@@ -219,12 +219,13 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   const lastRow = lastIndex >= 0 ? rowOfFlip(lastIndex, game.rows) : 0;
   const lastSips = rowSips(lastRow, game.sipMode);
   const nextRow = rowOfFlip(Math.min(game.flips, total - 1), game.rows);
-  // Screen minus gutters, pyramid padding and the two side columns, shared by the bottom row.
-  const cardWidth = `clamp(28px, calc((min(100vw, 560px) - 136px - ${(game.rows - 1) * 6}px) / ${game.rows}), 62px)`;
+  const hits = lastLaid?.some((l) => l.length) ?? false;
 
+  // One screen, nothing moves: the pyramid, what the last card did (a fixed room) and the hands
+  // (a fixed row each) share the height, their cards sized from the room they get.
   return (
-    <div className="bd">
-      <div className="pyramid" style={{ '--cw': cardWidth } as CSSProperties}>
+    <div className="bd bd-pyr fill">
+      <div className="pyramid" style={{ '--rows': game.rows } as CSSProperties}>
         {[...sizes.keys()].reverse().map((r) => (
           <div key={r} className={`pyramid-row${r === nextRow && !done ? ' current' : ''}`}>
             <span className="pyramid-sips">×{rowSips(r, game.sipMode)}</span>
@@ -251,57 +252,61 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
         ))}
       </div>
 
-      {last && lastLaid ? (
-        <div key={lastIndex} className={`flip-result${lastLaid.some((l) => l.length) ? ' hit' : ''}`}>
-          <div className="flip-result-head">
-            <span className="flip-result-card">{cardName(last)}</span>
-            <span className="flip-result-row">
-              {lastSips === 1
-                ? t('Row {row} · {n} sip per card', { row: lastRow + 1, n: lastSips })
-                : t('Row {row} · {n} sips per card', { row: lastRow + 1, n: lastSips })}
-            </span>
+      <div className="flip-zone">
+        {last && lastLaid ? (
+          <div key={lastIndex} className={`flip-result${hits ? ' hit' : ''}`}>
+            <div className="flip-result-head">
+              <span className="flip-result-card">{cardName(last)}</span>
+              <span className="flip-result-row">
+                {lastSips === 1
+                  ? t('Row {row} · {n} sip per card', { row: lastRow + 1, n: lastSips })
+                  : t('Row {row} · {n} sips per card', { row: lastRow + 1, n: lastSips })}
+              </span>
+            </div>
+            {hits ? (
+              <ul className="flip-result-list">
+                {lastLaid.map((l, i) =>
+                  l.length ? (
+                    <li key={seats[i].player.id}>
+                      <span className="bd-avatar xs" style={{ background: seats[i].player.color }}>
+                        {seats[i].player.avatar}
+                      </span>
+                      <span>
+                        <strong>{seats[i].player.name}</strong> {t('gives out')} <strong>{l.length * lastSips}</strong>
+                      </span>
+                    </li>
+                  ) : null,
+                )}
+              </ul>
+            ) : (
+              <p className="flip-result-none">
+                {last.value === 8 || last.value === 14
+                  ? t('Nobody has an {rank}.', { rank: rankLabel(last.value) })
+                  : t('Nobody has a {rank}.', { rank: rankLabel(last.value) })}
+              </p>
+            )}
           </div>
-          {lastLaid.some((l) => l.length) ? (
-            <ul className="flip-result-list">
-              {lastLaid.map((l, i) =>
-                l.length ? (
-                  <li key={seats[i].player.id}>
-                    <span className="bd-avatar xs" style={{ background: seats[i].player.color }}>
-                      {seats[i].player.avatar}
-                    </span>
-                    <span>
-                      <strong>{seats[i].player.name}</strong> {t('lays {cards}', { cards: l.map(cardName).join(' + ') })} · {t('gives out')}{' '}
-                      <strong>{l.length * lastSips}</strong>
-                    </span>
-                  </li>
-                ) : null,
-              )}
-            </ul>
-          ) : (
-            <p className="flip-result-none">
-              {last.value === 8 || last.value === 14
-                ? t('Nobody has an {rank}.', { rank: rankLabel(last.value) })
-                : t('Nobody has a {rank}.', { rank: rankLabel(last.value) })}
-            </p>
-          )}
-        </div>
-      ) : (
-        !known && <p className="lead center">{t('Flip the first card. Bottom row, left to right.')}</p>
-      )}
+        ) : (
+          !known && <p className="flip-zone-hint">{t('Flip the first card. Bottom row, left to right.')}</p>
+        )}
+      </div>
 
       <section className="panel hands">
         <h3 className="section-title">{t('Hands')}</h3>
-        {seats.map((x, i) => (
-          <div key={x.player.id} className={`hand-row${lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
-            <span className="bd-avatar xs" style={{ background: x.player.color }}>
-              {x.player.avatar}
-            </span>
-            <span className="hand-name">{x.player.name}</span>
-            <span className="hand-cards">
-              {game.hands[i].length ? game.hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
-            </span>
-          </div>
-        ))}
+        {/* A fixed row per player; more than four players go in two columns. */}
+        <div className={`hand-rows${seats.length > 4 ? ' two' : ''}`} style={{ '--rows': seats.length > 4 ? Math.ceil(seats.length / 2) : seats.length } as CSSProperties}>
+          {seats.map((x, i) => (
+            <div key={x.player.id} className={`hand-row${lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
+              <span className="bd-avatar xs" style={{ background: x.player.color }}>
+                {x.player.avatar}
+              </span>
+              <span className="hand-name">{x.player.name}</span>
+              <span className="hand-cards">
+                {game.hands[i].length ? game.hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
+              </span>
+            </div>
+          ))}
+        </div>
         {game.toppedUp && <p className="fine-print">{t('A fresh deck was added to build the pyramid.')}</p>}
       </section>
 

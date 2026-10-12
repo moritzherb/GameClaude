@@ -2472,6 +2472,33 @@ h3 {
   min-height: clamp(96px, 13dvh, 150px);
 }
 
+/* A turn's bottom: the answers, or the verdict with "next", in the same fixed room (tall enough
+   for the four suits), so answering never resizes the cards above. */
+.bd-foot {
+  flex: none;
+  height: clamp(200px, 27dvh, 260px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: calc(2px + env(safe-area-inset-bottom));
+}
+
+.bd-foot .answer-grid {
+  flex: 1;
+  min-height: 0;
+  grid-auto-rows: 1fr;
+}
+
+.bd-turn .bd-foot .answer-btn {
+  min-height: 0;
+}
+
+.bd-foot .bd-result {
+  flex: 1;
+  min-height: 0;
+}
+
 .bd-question {
   font-family: var(--font-display);
   font-weight: 800;
@@ -2927,6 +2954,174 @@ h3 {
   color: var(--muted);
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+/* Flipping the pyramid: one screen, nothing moves. The pyramid and the hands share the height
+   left over by the fixed room for the last card's result, each sizing its cards from its room. */
+.bd-pyr {
+  gap: 12px;
+}
+
+.bd-pyr .pyramid {
+  flex: 1.5 1 0;
+  min-height: 150px;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 10px;
+  container-type: size;
+}
+
+.bd-pyr .pyramid-cards {
+  /* As wide as the bottom row allows, as tall as the rows allow. */
+  --cw: max(22px, min(62px, calc((100cqw - 68px - (var(--rows) - 1) * 6px) / var(--rows)), calc((100cqh - (var(--rows) - 1) * 6px) / var(--rows) / 1.4)));
+}
+
+.bd-pyr .pyramid-badge {
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 0.7rem;
+}
+
+/* What the last card did: always the same height, whatever it says. */
+.flip-zone {
+  flex: none;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bd-pyr .flip-result {
+  height: 100%;
+  gap: 6px;
+  padding: 10px 14px;
+  overflow: hidden;
+}
+
+.bd-pyr .flip-result-head {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.bd-pyr .flip-result-card {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.bd-pyr .flip-result-row {
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.bd-pyr .flip-result-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.bd-pyr .flip-result-list li {
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.bd-pyr .flip-result-list .bd-avatar.xs {
+  width: 22px;
+  height: 22px;
+  font-size: 0.8rem;
+}
+
+.bd-pyr .flip-result-none {
+  font-size: 0.95rem;
+}
+
+.flip-zone-hint {
+  color: var(--muted);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* The hands: a fixed row per player (two columns from five players), avatar and cards as tall
+   as a row allows. */
+.bd-pyr .panel.hands {
+  flex: 1 1 0;
+  min-height: 120px;
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.hand-rows {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: 4px 10px;
+  container-type: size;
+  /* One row's height. */
+  --rh: calc((100cqh - (var(--rows) - 1) * 4px) / var(--rows));
+}
+
+.hand-rows.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bd-pyr .hands .section-title {
+  font-size: 1rem;
+}
+
+.bd-pyr .hand-row {
+  min-height: 0;
+  grid-template-columns: auto minmax(0, 5.5em) 1fr;
+  gap: 8px;
+  padding: 2px 6px;
+}
+
+.hand-rows.two .hand-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 5px;
+  padding: 2px 4px;
+}
+
+.bd-pyr .hand-row .bd-avatar.xs {
+  width: max(18px, min(32px, calc(var(--rh) - 4px)));
+  height: max(18px, min(32px, calc(var(--rh) - 4px)));
+  font-size: max(0.7rem, min(1rem, calc((var(--rh) - 4px) * 0.5)));
+}
+
+.bd-pyr .hand-cards {
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+.bd-pyr .hand-cards .pcard {
+  --cw: max(15px, min(30px, calc((var(--rh) - 4px) / 1.4)));
+}
+
+/* Small cards: the rank and suit as big as the card allows. */
+.bd-pyr .hand-cards .pcard-corner {
+  font-size: calc(var(--cw) * 0.48);
+}
+
+.hand-rows.two .hand-name {
+  font-size: 0.8rem;
+}
+
+/* Two columns: smaller cards and avatars, so the names keep their room. */
+.bd-pyr .hand-rows.two .bd-avatar.xs {
+  width: max(18px, min(26px, calc(var(--rh) - 4px)));
+  height: max(18px, min(26px, calc(var(--rh) - 4px)));
+}
+
+.bd-pyr .hand-rows.two .hand-cards .pcard {
+  --cw: max(15px, min(21px, calc((var(--rh) - 4px) / 1.4)));
+}
+
+.bd-pyr .hands .fine-print {
+  font-size: 0.75rem;
 }
 
 .tb-players {
