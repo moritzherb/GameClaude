@@ -8932,6 +8932,24 @@ h3 {
   align-self: stretch;
 }
 
+/* Remove photo: a red X in front. */
+.chip-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-x {
+  display: grid;
+  place-items: center;
+  color: var(--bad);
+  font-size: 1.05rem;
+}
+
+.chip-x svg {
+  stroke-width: 3;
+}
+
 .profile-colors {
   display: flex;
   flex-wrap: wrap;

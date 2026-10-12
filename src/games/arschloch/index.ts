@@ -5,7 +5,7 @@ import { MAX_PLAYERS, MIN_PLAYERS } from './logic';
 
 const arschloch: GameDefinition = {
   id: 'arschloch',
-  name: tx('Arschloch'),
+  name: tx('Asshole'),
   emoji: '💩',
   tagline: tx('Lie about your cards. Don’t end up with four Jacks.'),
   color: 'var(--c-mint)',
@@ -23,7 +23,7 @@ const arschloch: GameDefinition = {
     tx('Only the next player may turn the card before over, before they play. A lie: the liar takes the whole pile. The truth: whoever turned it over takes it.'),
     tx('Whoever takes the pile drinks a sip for every card in it. Whoever turned the card over carries on, and anything goes again.'),
     tx('Four of a value in your hand go out of the game, face down beside it. Whoever lays them down hands out 2 sips.'),
-    tx('Whoever ends up with all four Jacks is the Arschloch: empty your glass. The game is over.'),
+    tx('Whoever ends up with all four Jacks is the Asshole: empty your glass. The game is over.'),
   ],
   online: Arschloch,
 };

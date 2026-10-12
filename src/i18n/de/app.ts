@@ -232,7 +232,7 @@ const app: Record<string, string> = {
   'Sips handed out': 'Verteilte Schlucke',
   'Play a few games: your numbers show up here.': 'Spiel ein paar Runden: Hier tauchen dann deine Zahlen auf.',
   '{n}×': '{n}×',
-  'Sips are counted in the games that know who drinks (President and Arschloch, so far).': 'Schlucke zählen in den Spielen, die wissen, wer trinkt (bisher Präsident und Arschloch).',
+  'Sips are counted in the games that know who drinks (President and Asshole, so far).': 'Schlucke zählen in den Spielen, die wissen, wer trinkt (bisher Präsident und Arschloch).',
   'Tap again to reset your stats': 'Nochmal tippen zum Zurücksetzen',
   'Reset stats': 'Statistik zurücksetzen',
   'Edit your profile': 'Profil bearbeiten',
