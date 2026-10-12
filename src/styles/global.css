@@ -7327,6 +7327,12 @@ h3 {
   font-weight: 600;
 }
 
+/* In a player's seat: five hearts with room to spare. */
+.hr-seat .hr-lives {
+  font-size: 0.74rem;
+  letter-spacing: 0;
+}
+
 .hr-seats {
   display: flex;
   gap: 8px;
@@ -7597,6 +7603,11 @@ h3 {
     width: 34px;
     height: 34px;
     font-size: 1.15rem;
+  }
+
+  /* Five hearts still fit the narrower seat. */
+  .hr-player .hr-seat .hr-lives {
+    font-size: 0.66rem;
   }
 
   .hr-player .hr-status {

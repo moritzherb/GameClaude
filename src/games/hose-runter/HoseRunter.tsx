@@ -343,6 +343,18 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
         )}
       </div>
 
+      {/* While the dealer decides, the others see the middle still face down (as on the table phone). */}
+      {dealerPhase && !deciding && (
+        <section className="hr-felt">
+          <span className="hr-zone-label">{t('Middle')}</span>
+          <div className="hr-felt-cards">
+            {[0, 1, 2].map((i) => (
+              <PlayingCard key={i} card={null} faceUp={false} size="lg" />
+            ))}
+          </div>
+        </section>
+      )}
+
       {!dealerPhase && (
         <section className="hr-felt">
           <span className="hr-zone-label">{t('Middle')}</span>
