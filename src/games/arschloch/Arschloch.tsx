@@ -284,7 +284,7 @@ function Table({
           </div>
           <div className="ar-pile">
             {g.pile.length > 0 ? (
-              <span className="ar-pile-stack" key={g.pile.length}>
+              <span className="ar-pile-stack" key={g.pile.length} style={{ '--n': Math.min(5, g.pile.length) } as CSSProperties}>
                 {Array.from({ length: Math.min(5, g.pile.length) }, (_, i) => (
                   <span key={i} className="ar-pile-card" style={{ '--i': i } as CSSProperties} />
                 ))}
