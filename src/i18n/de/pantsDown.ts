@@ -40,6 +40,9 @@ const pantsDown: Record<string, string> = {
   'Max {max} players. The first {max} play.': 'Maximal {max} Spieler. Die ersten {max} spielen mit.',
   'Turn order is the order above. A random player deals first.':
     'Gespielt wird in der Reihenfolge oben. Ein zufälliger Spieler gibt zuerst.',
+  'Off: you play too. Every phone shows the middle cards.': 'Aus: Du spielst mit. Jedes Handy zeigt die Karten in der Mitte.',
+  'No spare phone for the table? Switch the table phone off: the host plays too, and every phone shows the middle cards.':
+    'Kein Handy übrig für den Tisch? Schalte das Tisch-Handy aus: Der Host spielt mit, und jedes Handy zeigt die Karten in der Mitte.',
   'Allow passing': 'Schieben erlauben',
   'House rule for big groups: skip your turn instead of swapping (“schieben”).':
     'Hausregel für große Runden: Statt zu tauschen darfst du schieben und einfach aussetzen.',
