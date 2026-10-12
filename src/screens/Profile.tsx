@@ -1,5 +1,6 @@
 import { useRef, useState, type CSSProperties } from 'react';
 import Avatar from '../components/Avatar';
+import PhotoCrop from '../components/PhotoCrop';
 import { CloseIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { findGame } from '../games/registry';
@@ -7,7 +8,7 @@ import { RANK_EMOJI, RANK_NAME } from '../games/president/President';
 import type { Rank } from '../games/president/logic';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
-import { squarePhoto } from '../lib/photo';
+import { loadImage, releaseImage } from '../lib/photo';
 import { navigate, paths } from '../lib/router';
 import { unfill } from '../lib/noAutofill';
 import { loadStats, resetStats } from '../lib/stats';
@@ -24,21 +25,25 @@ export default function Profile() {
   const [failed, setFailed] = useState(false);
   const [stats, setStats] = useState(loadStats);
   const [confirmReset, setConfirmReset] = useState(false);
+  // A picked photo, waiting for its part to be chosen.
+  const [cropping, setCropping] = useState<HTMLImageElement | null>(null);
 
   const onFile = async (f: File | undefined) => {
     if (!f) return;
     setBusy(true);
     setFailed(false);
     try {
-      setPhoto(await squarePhoto(f));
-      sfx.pop();
-      buzz(15);
+      setCropping(await loadImage(f));
     } catch {
       setFailed(true);
     } finally {
       setBusy(false);
       if (file.current) file.current.value = '';
     }
+  };
+  const closeCrop = () => {
+    if (cropping) releaseImage(cropping);
+    setCropping(null);
   };
 
   const games = Object.entries(stats.played)
@@ -190,6 +195,17 @@ export default function Profile() {
         >
           {confirmReset ? t('Tap again to reset your stats') : t('Reset stats')}
         </button>
+      )}
+      {cropping && (
+        <PhotoCrop
+          img={cropping}
+          onCancel={closeCrop}
+          onDone={(photo) => {
+            setPhoto(photo);
+            sfx.pop();
+            closeCrop();
+          }}
+        />
       )}
     </main>
   );

@@ -237,6 +237,11 @@ const app: Record<string, string> = {
   'Reset stats': 'Statistik zurücksetzen',
   'Edit your profile': 'Profil bearbeiten',
   'Add a photo to your profile': 'Foto zum Profil hinzufügen',
+  'Move and zoom': 'Ausschnitt wählen',
+  'Drag the photo, pinch or slide to zoom. The circle is what the others see.':
+    'Verschieb das Foto, zoom mit zwei Fingern oder dem Regler. Was im Kreis ist, sehen die anderen.',
+  Zoom: 'Zoom',
+  'Use photo': 'Foto übernehmen',
 };
 
 export default app;

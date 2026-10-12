@@ -9681,3 +9681,84 @@ h3 {
   transform: rotate(12deg) translateY(6px);
   animation-delay: 240ms;
 }
+
+/* ---------- Picking the part of a profile photo ---------- */
+
+.crop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  animation: fade-in 0.2s ease;
+}
+
+.crop {
+  width: 100%;
+  max-width: var(--max);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px var(--gutter) calc(16px + env(safe-area-inset-bottom));
+  border-radius: 14px 14px 0 0;
+  background: var(--bg);
+  animation: slide-up 0.3s var(--ease) both;
+}
+
+.crop-hint {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* The photo in a square, the circle cut out of a dark veil: what's inside is what the others see. */
+.crop-frame {
+  position: relative;
+  align-self: center;
+  width: min(78vw, 46dvh, 320px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #111;
+  touch-action: none;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.crop-frame:active {
+  cursor: grabbing;
+}
+
+.crop-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+
+.crop-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 0 999px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.crop-zoom {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.crop-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 10px;
+}
