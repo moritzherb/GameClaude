@@ -1,16 +1,15 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
-import { rankLabel, type Card } from '../../lib/cards';
+import { cardName, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { recordLoss, recordSips } from '../../lib/stats';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import { layRing, type Slot } from '../kings-cup/ring';
-import { HandSpread } from '../palace/Palace';
 import { call, draw, JACK, lowestClaim, MAX_PLAYERS, MIN_PLAYERS, newGame, options, play, QUAD_SIPS, same, type Entry, type Game } from './logic';
 import Finished from '../../components/Finished';
 
@@ -240,15 +239,17 @@ function Table({
   else if (o.call) headline = t('Believe it and play, or turn it over');
   else headline = t('Lay a card down and say what it is');
 
+  // One line under the headline, always the same height: what to do (your turn) or what just happened.
+  const sub = myTurn && o.play && !known ? t('Say {rank} or higher. You may lie.', { rank: rank(low) }) : last ? entryText(last, seats) : '';
+
   return (
-    <div className="as ar fill">
-      <div className={`pl-status${myTurn ? ' mine' : ''}`}>
-        <span className="pl-status-text">{headline}</span>
-        {last && <span className="pl-status-sub">{entryText(last, seats)}</span>}
-        {myTurn && o.play && !known && <span className="pl-status-sub">{t('Say {rank} or higher. You may lie.', { rank: rank(low) })}</span>}
+    <div className="ar fill">
+      <div className={`ar-status${myTurn ? ' mine' : ''}`}>
+        <span className="ar-status-text">{headline}</span>
+        <span className="ar-status-sub">{sub}</span>
       </div>
 
-      <div className="as-seats">
+      <div className="as-seats ar-seats">
         {seats.map((s, i) => (
           <span key={s.id} className={`as-seat${g.turn === i ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
             <span className="as-seat-avatar">
@@ -283,85 +284,146 @@ function Table({
           </div>
           <div className="ar-pile">
             {g.pile.length > 0 ? (
-              <>
-                <span className="ar-pile-stack" style={{ '--n': Math.min(5, g.pile.length) } as CSSProperties} key={g.pile.length}>
-                  {Array.from({ length: Math.min(5, g.pile.length) }, (_, i) => (
-                    <span key={i} className="ar-pile-card" style={{ '--i': i } as CSSProperties} />
-                  ))}
-                </span>
-                <span className="ar-claim">
-                  <strong>{rank(top!.claim)}</strong>
-                  <small>{seats[top!.by]?.name}</small>
-                </span>
-                <span className="ar-pile-count">{t('{n} in the pile', { n: g.pile.length })}</span>
-              </>
+              <span className="ar-pile-stack" key={g.pile.length}>
+                {Array.from({ length: Math.min(5, g.pile.length) }, (_, i) => (
+                  <span key={i} className="ar-pile-card" style={{ '--i': i } as CSSProperties} />
+                ))}
+              </span>
             ) : (
               <span className="ar-pile-empty">{t('Pile')}</span>
             )}
+            {top && (
+              <span className="ar-claim" key={`${g.pile.length}:${top.claim}`}>
+                <strong>{rank(top.claim)}</strong>
+                <small>{seats[top.by]?.name}</small>
+              </span>
+            )}
+            {g.pile.length > 0 && <span className="ar-pile-count">{t('{n} in the pile', { n: g.pile.length })}</span>}
+            {g.burned.length > 0 && <span className="ar-burned">{t('Out: {ranks}', { ranks: g.burned.map((b) => `4×${rank(b.value)}`).join(' ') })}</span>}
           </div>
-          {g.burned.length > 0 && (
-            <span className="ar-burned">
-              {t('Out: {ranks}', { ranks: g.burned.map((b) => `4×${rank(b.value)}`).join(' ') })}
-            </span>
-          )}
           {reveal && <Reveal key={reveal.id} e={reveal.e} seats={seats} />}
         </div>
       </div>
 
-      {me >= 0 && hand.length > 0 && (
-        <HandSpread cards={hand} isSelected={(c) => !!sel && same(sel, c)} onTap={o.play ? (c) => setSel(sel && same(sel, c) ? null : c) : undefined} />
-      )}
-      {me >= 0 && hand.length === 0 && (
-        <p className="ar-hint">{myTurn && o.draw ? t('Tap a card in the circle. Only you get to see it.') : t('No cards in your hand: next turn you draw from the circle.')}</p>
-      )}
+      {/* Your hand, held fanned out; always the same room, however many cards. */}
+      <div className="ar-hand">
+        {me >= 0 && hand.length > 0 ? (
+          <FanHand cards={hand} selected={sel} onTap={o.play ? (c) => setSel(sel && same(sel, c) ? null : c) : undefined} />
+        ) : me >= 0 ? (
+          <p className="ar-hint">{myTurn && o.draw ? t('Tap a card in the circle. Only you get to see it.') : t('No cards in your hand: next turn you draw from the circle.')}</p>
+        ) : null}
+      </div>
 
-      <div className="pl-actions">
+      <div className="ar-actions">
         {myTurn && !connected ? (
           <BigButton variant="glass" disabled>
             {t('Reconnecting…')}
           </BigButton>
         ) : myTurn ? (
-          <>
-            {o.play && sel && (
-              <div className="ar-claims" role="radiogroup" aria-label={t('Say what it is')}>
-                {VALUES.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="radio"
-                    aria-checked={chosenClaim === v}
-                    className={`ar-claim-btn${chosenClaim === v ? ' active' : ''}${v === sel.value ? ' true' : ''}`}
-                    disabled={v < low}
-                    onClick={() => {
-                      setClaim(v);
-                      buzz(8);
-                    }}
-                  >
-                    {rank(v)}
-                  </button>
-                ))}
-              </div>
+          <div className="pl-action-row">
+            {o.play && (
+              <BigButton disabled={!sel || chosenClaim == null} onClick={() => sel && chosenClaim != null && act((x) => play(x, me, sel, chosenClaim))}>
+                {!sel ? t('Pick a card') : chosenClaim == null ? t('Say what it is') : t('Lay down as {rank}', { rank: rank(chosenClaim) })}
+              </BigButton>
             )}
-            <div className="pl-action-row">
-              {o.play && (
-                <BigButton disabled={!sel || chosenClaim == null} onClick={() => sel && chosenClaim != null && act((x) => play(x, me, sel, chosenClaim))}>
-                  {!sel ? t('Pick a card') : chosenClaim == null ? t('Say what it is') : t('Lay down as {rank}', { rank: rank(chosenClaim) })}
-                </BigButton>
-              )}
-              {o.call && (
-                <BigButton variant="danger" className={o.play ? 'as-pass' : ''} onClick={() => act((x) => call(x, me))}>
-                  {t('Liar! 🔍')}
-                </BigButton>
-              )}
-            </div>
-          </>
+            {o.call && (
+              <BigButton variant="danger" className={o.play ? 'as-pass' : ''} onClick={() => act((x) => call(x, me))}>
+                {t('Liar! 🔍')}
+              </BigButton>
+            )}
+          </div>
         ) : null}
       </div>
+
+      {/* The card picked to lay down, big over the table, with what to say. Nothing else moves. */}
+      {myTurn && o.play && sel && (
+        <div className="ar-pick" key={`${sel.value}${sel.suit}`}>
+          <span className="ar-pick-card">
+            <CardFace card={sel} />
+          </span>
+          <div className="ar-claims" role="radiogroup" aria-label={t('Say what it is')}>
+            {VALUES.map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={chosenClaim === v}
+                className={`ar-claim-btn${chosenClaim === v ? ' active' : ''}${v === sel.value ? ' true' : ''}`}
+                disabled={v < low}
+                onClick={() => {
+                  setClaim(v);
+                  buzz(8);
+                }}
+              >
+                {rank(v)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {sip && (
         <span key={sip.id} className="as-sip" aria-live="polite">
           {sip.text}
         </span>
       )}
+    </div>
+  );
+}
+
+/**
+ * Your hand, held like real cards: fanned out round a point below, the outer cards lower and
+ * turned out. The more cards, the closer together; the picked one stands out a little.
+ */
+function FanHand({ cards, selected, onTap }: { cards: Card[]; selected: Card | null; onTap?: (c: Card) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: 340, h: 150 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const n = cards.length;
+  const LIFT = 22;
+  const ch = Math.max(60, box.h - LIFT - 8);
+  const cw = ch / 1.4;
+  // The point the cards turn round, below the hand.
+  const radius = ch * 2.4;
+  // Spread: a few degrees per card, never wider than the screen.
+  const fit = 2 * Math.asin(Math.min(1, Math.max(0, (box.w / 2 - cw / 2 - 6) / radius)));
+  const total = Math.min(n > 1 ? (n - 1) * 0.16 : 0, 1.25, fit);
+  const step = n > 1 ? total / (n - 1) : 0;
+  return (
+    <div ref={ref} className="ar-fan">
+      {cards.map((c, i) => {
+        const angle = (i - (n - 1) / 2) * step;
+        const sel = !!selected && same(selected, c);
+        return (
+          <button
+            key={`${c.value}${c.suit}`}
+            type="button"
+            className={`ar-fan-card${sel ? ' selected' : ''}`}
+            style={
+              {
+                '--cw': `${cw}px`,
+                left: (box.w - cw) / 2,
+                top: box.h - ch - 4,
+                transformOrigin: `50% ${radius}px`,
+                transform: `rotate(${angle}rad) translateY(${sel ? -LIFT : 0}px)`,
+                zIndex: i + 1,
+              } as CSSProperties
+            }
+            disabled={!onTap}
+            onClick={() => onTap?.(c)}
+            aria-label={cardName(c)}
+          >
+            <CardFace card={c} />
+          </button>
+        );
+      })}
     </div>
   );
 }
