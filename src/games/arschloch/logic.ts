@@ -11,7 +11,7 @@ import { shuffle } from '../../lib/random';
  *   You may lie.
  * - Before playing, and only then, the next player may turn the card before over. A lie: the liar
  *   takes the whole pile. The truth: whoever turned it over takes the pile. Either way they drink a
- *   sip per card taken, and whoever turned it over carries on (with a fresh pile: anything goes).
+ *   sip per card taken, and it's their turn (with a fresh pile: anything goes).
  * - Four of a value in your hand go out of the game, face down beside it; whoever lays them down
  *   hands out 2 sips.
  * - Four Jacks in your hand: you're the Arschloch. Empty your glass, the game is over.
@@ -179,9 +179,10 @@ export function call(g: Game, who: number): Game {
   };
   next = sortOut(next, taker);
   if (next.phase === 'over') return next;
-  // Whoever turned it over carries on, if they can (else the next one who can).
-  const o = options(next, who);
-  return o.draw || o.play ? next : advance(next, who);
+  // Whoever took the pile is up (with a fresh pile), if they can (else the next one who can).
+  next = { ...next, turn: taker };
+  const o = options(next, taker);
+  return o.draw || o.play ? next : advance(next, taker);
 }
 
 /** Every card in the game, wherever it is (four of a kind laid out count four each). */

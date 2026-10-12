@@ -8994,7 +8994,7 @@ h3 {
   align-self: center;
 }
 
-/* ---------- Arschloch ---------- */
+/* ---------- President ---------- */
 
 .as {
   display: flex;
@@ -9293,11 +9293,123 @@ h3 {
 
 /* ---------- Arschloch ---------- */
 
+/* Every part has its own fixed height except the table, which takes the rest: picking cards up,
+   playing them, choosing what to say, nothing ever moves. */
+.ar {
+  --ar-hand: clamp(128px, 19dvh, 168px);
+  --ar-actions: 56px;
+  --ar-gap: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ar-gap);
+}
+
+.ar > * {
+  flex-shrink: 0;
+}
+
+.ar-status {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  height: 62px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.ar-status.mine {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.ar-status-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ar-status-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 1.2em;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.2;
+  opacity: 0.8;
+}
+
+.ar-seats .as-seat {
+  padding: 5px 4px 4px;
+}
+
+.ar-seats .as-seat-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 1rem;
+}
+
+/* Short phones: everything around the table a bit tighter, so the circle stays big. */
+@media (max-height: 720px) {
+  .ar {
+    --ar-hand: 112px;
+    --ar-actions: 52px;
+    --ar-gap: 6px;
+  }
+
+  .ar-status {
+    height: 52px;
+  }
+
+  .ar-status-text {
+    font-size: 1.02rem;
+  }
+
+  .ar-status-sub {
+    -webkit-line-clamp: 1;
+  }
+
+  .ar-seats .as-seat {
+    gap: 0;
+    padding: 3px 4px;
+  }
+
+  .ar-seats .as-seat-avatar {
+    width: 22px;
+    height: 22px;
+    font-size: 0.85rem;
+  }
+
+  .ar-seats .as-seat-name {
+    font-size: 0.72rem;
+  }
+
+  .ar-seats .as-seat-sub {
+    font-size: 0.66rem;
+  }
+
+  .ar-actions .big-btn {
+    min-height: 52px;
+  }
+}
+
 /* The circle of face-down cards, the pile in the middle: as big as the room allows. */
 .ar-table {
   position: relative;
-  flex: 1.2 1 0;
-  min-height: 180px;
+  flex: 1 1 0;
+  min-height: 160px;
   display: grid;
   place-items: center;
   container-type: size;
@@ -9305,9 +9417,15 @@ h3 {
 
 .ar-ring {
   position: relative;
-  width: min(100cqw, 100cqh, 520px);
+  width: min(100cqw, 100cqh, 560px);
   aspect-ratio: 1;
   container-type: inline-size;
+}
+
+/* Bigger cards than in Kings Cup: easier to hit. */
+.ar-ring .kc-slot {
+  width: 13.6cqw;
+  height: 19cqw;
 }
 
 /* Your turn to draw: the circle breathes, inviting a tap. */
@@ -9328,95 +9446,95 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5cqw;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -54%);
 }
 
 .ar-pile-stack {
   position: relative;
-  width: 17cqw;
-  height: 24cqw;
+  width: 19cqw;
+  height: 26.6cqw;
   animation: pop-in 0.3s var(--spring) both;
 }
 
 .ar-pile-card {
   position: absolute;
   inset: 0;
-  border-radius: 1.8cqw;
-  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
-  box-shadow: inset 0 0 0 0.9cqw #fff, 0 2px 6px rgba(0, 0, 0, 0.35);
-  transform: rotate(calc((var(--i) - 2) * 7deg)) translate(calc(var(--i) * 0.6cqw), calc(var(--i) * -0.5cqw));
-}
-
-/* What the top card was said to be. */
-.ar-claim {
-  position: absolute;
-  left: 50%;
-  top: 9cqw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 14cqw;
-  padding: 0.8cqw 2.4cqw;
   border-radius: 2cqw;
-  background: var(--ink);
-  color: var(--bg);
-  transform: translateX(-50%) rotate(-4deg);
-  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.5);
-}
-
-.ar-claim strong {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 7cqw;
-  line-height: 1;
-}
-
-.ar-claim small {
-  max-width: 22cqw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 2.6cqw;
-  font-weight: 700;
-  opacity: 0.8;
-}
-
-.ar-pile-count {
-  font-size: 3cqw;
-  font-weight: 700;
-  color: var(--muted);
-  white-space: nowrap;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
+  box-shadow: inset 0 0 0 1cqw #fff, 0 2px 6px rgba(0, 0, 0, 0.35);
+  transform: rotate(calc((var(--i) - 2) * 7deg)) translate(calc(var(--i) * 0.6cqw), calc(var(--i) * -0.5cqw));
 }
 
 .ar-pile-empty {
   display: grid;
   place-items: center;
-  width: 17cqw;
-  height: 24cqw;
-  border-radius: 1.8cqw;
+  width: 19cqw;
+  height: 26.6cqw;
+  border-radius: 2cqw;
   border: 0.6cqw dashed color-mix(in srgb, var(--ink) 25%, transparent);
   color: var(--muted);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 3.6cqw;
+  font-size: 4cqw;
   text-transform: uppercase;
 }
 
-.ar-burned {
-  position: absolute;
-  left: 50%;
-  bottom: 23cqw;
-  transform: translateX(-50%);
+/* What the top card was said to be: big, over the bottom of the pile. */
+.ar-claim {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 20cqw;
+  margin-top: -8cqw;
+  padding: 1cqw 3cqw 0.8cqw;
+  border-radius: 2.4cqw;
+  background: var(--ink);
+  color: var(--bg);
+  transform: rotate(-4deg);
+  box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.6);
+  animation: pop-in 0.3s var(--spring) both;
+}
+
+.ar-claim strong {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 11cqw;
+  line-height: 1;
+}
+
+.ar-claim small {
+  max-width: 26cqw;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 2.8cqw;
+  font-size: 3.2cqw;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.ar-pile-count,
+.ar-burned {
+  margin-top: 1.2cqw;
+  font-size: 3.2cqw;
   font-weight: 700;
   color: var(--muted);
+  white-space: nowrap;
+}
+
+.ar-burned {
+  margin-top: 0.4cqw;
+}
+
+/* Your hand: always the same height. */
+.ar-hand {
+  position: relative;
+  height: var(--ar-hand);
 }
 
 .ar-hint {
-  flex: 0.6 1 0;
-  min-height: 60px;
+  height: 100%;
   margin: 0;
   display: grid;
   place-items: center;
@@ -9426,27 +9544,92 @@ h3 {
   font-weight: 600;
 }
 
-.ar .pl-hand {
-  flex: 0.9 1 0;
-  min-height: 120px;
+.ar-fan {
+  position: absolute;
+  inset: 0;
+}
+
+.ar-fan-card {
+  position: absolute;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  border-radius: calc(var(--cw) * 0.12);
+  transition: transform 0.25s var(--spring);
+}
+
+.ar-fan-card:disabled {
+  cursor: default;
+}
+
+.ar-fan-card .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, -3px 4px 10px -4px rgba(0, 0, 0, 0.45);
+}
+
+.ar-fan-card.selected .pcard-front {
+  box-shadow: 0 0 0 4px var(--accent), 0 12px 24px -8px rgba(17, 18, 20, 0.5);
+}
+
+.ar-actions {
+  height: var(--ar-actions);
+}
+
+/* The card picked to lay down: big, floating over the bottom of the table, with what to say. */
+.ar-pick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--ar-hand) + var(--ar-actions) + 2 * var(--ar-gap) - 10px);
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.55), inset 0 0 0 1px var(--line);
+  animation: ar-pick-in 0.25s var(--spring) both;
+}
+
+@keyframes ar-pick-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+}
+
+.ar-pick-card {
+  --cw: min(30vw, 120px);
+  position: relative;
+  flex: none;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  transform: rotate(-4deg);
+}
+
+.ar-pick-card .pcard-front {
+  box-shadow: 0 0 0 3px var(--accent), 0 14px 26px -10px rgba(0, 0, 0, 0.55);
 }
 
 /* Say what you lay down: 7 to Ace (lower than the card before can't be said). */
 .ar-claims {
+  flex: 1;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 5px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .ar-claim-btn {
   position: relative;
-  height: 44px;
+  height: 48px;
   border-radius: 10px;
-  background: var(--surface);
+  background: var(--bg);
   box-shadow: inset 0 0 0 1px var(--line);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   transition: transform 0.15s var(--spring), background 0.15s ease;
 }
 
@@ -9490,7 +9673,7 @@ h3 {
   gap: 14px;
   pointer-events: none;
   background: color-mix(in srgb, var(--bg) 55%, transparent);
-  animation: ar-reveal 2.6s ease both;
+  animation: ar-reveal 3.4s ease both;
 }
 
 @keyframes ar-reveal {
@@ -9521,7 +9704,8 @@ h3 {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  animation: pl-turn 0.6s 0.25s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+  /* Turned over once the magnifying glass has had its look. */
+  animation: pl-turn 0.6s 1.25s cubic-bezier(0.3, 1.3, 0.5, 1) both;
 }
 
 .ar-reveal .pcard-front {
@@ -9546,7 +9730,7 @@ h3 {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   transform: rotate(-8deg);
-  animation: mx-stamp 0.4s 0.75s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation: mx-stamp 0.4s 1.75s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
 
 .ar-reveal.lied .ar-reveal-stamp {
@@ -9566,7 +9750,76 @@ h3 {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
   font-weight: 700;
   text-align: center;
-  animation: pop-in 0.35s 0.9s var(--spring) both;
+  animation: pop-in 0.35s 1.9s var(--spring) both;
+}
+
+/* The magnifying glass: comes in, looks the face-down card over, and goes as it turns. */
+.ar-lens {
+  position: absolute;
+  left: 10%;
+  top: 14%;
+  z-index: 2;
+  width: 80%;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.4));
+  animation: ar-lens 1.35s cubic-bezier(0.45, 0, 0.3, 1) 0.15s both;
+}
+
+.ar-lens svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.ar-lens-glass {
+  fill: rgba(220, 240, 255, 0.28);
+}
+
+.ar-lens-rim {
+  fill: none;
+  stroke: #2b2b2b;
+  stroke-width: 7;
+}
+
+.ar-lens-handle {
+  fill: none;
+  stroke: #6b3f1f;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.ar-lens-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+@keyframes ar-lens {
+  0% {
+    opacity: 0;
+    transform: translate(55%, 70%) rotate(18deg) scale(0.7);
+  }
+  14% {
+    opacity: 1;
+  }
+  32% {
+    transform: translate(-14%, 18%) rotate(-6deg) scale(1);
+  }
+  52% {
+    transform: translate(22%, -10%) rotate(6deg) scale(1);
+  }
+  72% {
+    transform: translate(4%, 28%) rotate(0deg) scale(1.08);
+  }
+  86% {
+    opacity: 1;
+    transform: translate(4%, 22%) rotate(0deg) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(4%, 22%) rotate(0deg) scale(1.5);
+  }
 }
 
 /* The end: the Arschloch with the four Jacks. */

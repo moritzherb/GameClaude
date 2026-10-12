@@ -37,7 +37,7 @@ describe('Arschloch', () => {
     expect(lowestClaim(g)).toBe(ACE);
   });
 
-  it('a lie turned over: the liar takes the pile and drinks a sip per card; the caller carries on', () => {
+  it('a lie turned over: the liar takes the pile, drinks a sip per card, and is up next', () => {
     let g = playing([[c(7)], [c(8), c(12)], [c(9)]]);
     g = play(g, 0, c(7), 13); // a lie
     expect(options(g, 1).call).toBe(true);
@@ -45,13 +45,13 @@ describe('Arschloch', () => {
     expect(g.hands[0]).toEqual([c(7)]);
     expect(g.pile).toHaveLength(0);
     expect(g.sips[0].drunk).toBe(1);
-    expect(g.turn).toBe(1);
-    expect(options(g, 1).call).toBe(false);
+    expect(g.turn).toBe(0);
+    expect(options(g, 0)).toMatchObject({ call: false, play: true });
     expect(lowestClaim(g)).toBe(7);
     expect(g.log.at(-1)).toMatchObject({ k: 'call', by: 1, of: 0, lied: true, taker: 0, cards: 1 });
   });
 
-  it('the truth turned over: the caller takes the pile', () => {
+  it('the truth turned over: the caller takes the pile and is up next', () => {
     let g = playing([[c(7), c(10)], [c(8)], [c(9)]]);
     g = play(g, 0, c(10), 10);
     g = play(g, 1, c(8), 10); // a lie, believed
@@ -96,12 +96,13 @@ describe('Arschloch', () => {
     let g = playing([[c(9)], [], [c(8)]]);
     g = play(g, 0, c(9), 9);
     expect(options(g, 1)).toEqual({ call: true, draw: false, play: false, mustCall: true });
-    g = call(g, 1); // the truth: seat 1 takes it and carries on
+    g = call(g, 1); // the truth: seat 1 takes it and is up
     expect(g.turn).toBe(1);
     g = play(g, 1, c(9), 12);
-    g = call(g, 2); // a lie: seat 1 takes it back; seat 2 carries on
-    expect(g.turn).toBe(2);
-    g = play(g, 2, c(8), 8);
+    g = call(g, 2); // a lie: seat 1 takes it back and is up again
+    expect(g.turn).toBe(1);
+    g = play(g, 1, c(9), 9);
+    g = play(g, 2, c(8), 10);
     // Seat 0 has nothing: turning over is all they can do.
     expect(options(g, 0).mustCall).toBe(true);
   });

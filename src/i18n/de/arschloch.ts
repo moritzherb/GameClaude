@@ -11,8 +11,8 @@ const arschloch: Record<string, string> = {
     'Hast du Handkarten, legst du stattdessen eine davon. Erst wenn deine Hand leer ist, ziehst du wieder aus dem Kreis.',
   'Only the next player may turn the card before over, before they play. A lie: the liar takes the whole pile. The truth: whoever turned it over takes it.':
     'Nur der nächste Spieler darf die Karte davor aufdecken, bevor er selbst legt. Gelogen: Der Lügner nimmt den ganzen Stapel. Gestimmt: Wer aufgedeckt hat, nimmt ihn.',
-  'Whoever takes the pile drinks a sip for every card in it. Whoever turned the card over carries on, and anything goes again.':
-    'Wer den Stapel nimmt, trinkt einen Schluck pro Karte. Wer aufgedeckt hat, macht weiter, und es ist wieder alles erlaubt.',
+  'Whoever takes the pile drinks a sip for every card in it and is up next, and anything goes again.':
+    'Wer den Stapel nimmt, trinkt einen Schluck pro Karte und ist als Nächstes dran. Es ist wieder alles erlaubt.',
   'Four of a value in your hand go out of the game, face down beside it. Whoever lays them down hands out 2 sips.':
     'Vier Gleiche auf der Hand sind raus aus dem Spiel und kommen verdeckt daneben. Wer sie ablegt, verteilt 2 Schlucke.',
   'Whoever ends up with all four Jacks is the Asshole: empty your glass. The game is over.':
@@ -49,7 +49,7 @@ const arschloch: Record<string, string> = {
   'Say what it is': 'Sag an, was sie ist',
   'Pick a card': 'Wähl eine Karte',
   'Lay down as {rank}': 'Als {rank} ablegen',
-  'Liar! 🔍': 'Lügner! 🔍',
+  'Liar!': 'Lügner!',
   'True!': 'Stimmt!',
   'Said {claim}': 'Angesagt: {claim}',
   '{name} takes {n}': '{name} nimmt {n}',
