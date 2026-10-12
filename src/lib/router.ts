@@ -8,7 +8,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // left) anywhere. All games opens with its button.
 //
 // A running game has nothing underneath it at all: there's no swiping back out of it by
-// accident (that would just end it). The X in the corner is the way out.
+// accident (that would just end it). The X in the corner is the way out. Home is the same: nothing
+// underneath it, so no swiping at all there (only pulling down to reload).
 
 /**
  * A real repaint (a dot nobody can see, drawn for two frames), not just a layer change: iPhones
@@ -92,6 +93,19 @@ const isGame = (hash: string) => /^#\/(play|online)\//.test(hash);
 let pendingGame: string | null = null;
 /** Where to go once the step back from the top game entry onto the bottom one has happened. */
 let pendingNav: string | null = null;
+/** The app's own step back from the top home entry onto the bottom one: not a swipe. */
+let settling = false;
+
+/**
+ * Home, like a running game, stands on the bottom entry with nothing behind it (no swiping back)
+ * and only home again ahead (swiping forward goes nowhere new, and steps right back). From home
+ * in the top entry: step down onto the bottom one, which is home too.
+ */
+function settleHome() {
+  if (history.state !== HOME_TOP || !isHome(window.location.hash)) return;
+  settling = true;
+  history.back();
+}
 
 /**
  * Came back by swiping (or the back button): the phone already slid the screen in from its picture,
@@ -122,7 +136,7 @@ function afterPaint(fn: () => void) {
 /*
  * The history never holds more than two entries, and never anything ahead of the one you're on,
  * so swiping can't bring back an old screen (or show one the phone has no picture of):
- *   home                 [home] or [home, home]
+ *   home                 [home] or [home, home]  standing on the first: nothing to swipe back to
  *   any other screen     [home, screen]
  *   a running game       [game, game]      standing on the first: nothing to swipe back to
  */
@@ -130,6 +144,12 @@ export function navigate(to: string) {
   const hash = `#${to}`;
   if (hash === window.location.hash) return;
   const state = history.state;
+
+  // Stepping down onto the bottom home entry right now: go on from there.
+  if (settling) {
+    pendingNav = to;
+    return;
+  }
 
   // On the top game entry (swiped forward a moment ago): step onto the bottom one first.
   if (state === GAME_TOP) {
@@ -166,18 +186,23 @@ export function navigate(to: string) {
     // Out of a game. iPhones show the last picture of an entry while you swipe back to it, and
     // the bottom entry last showed the game. So home goes on screen there first, then:
     go('#/', 'replace', null);
-    // …and the game's second entry (ahead) is replaced: by home again, or the next screen.
+    // …and the game's second entry (ahead) is replaced: by home again (standing on the bottom
+    // one), or the next screen.
     afterPaint(() => {
       if (history.state !== null || !isHome(window.location.hash)) return;
-      if (isHome(hash)) history.pushState(HOME_TOP, '', '#/');
-      else go(hash, 'push', ABOVE_HOME);
+      if (isHome(hash)) {
+        history.pushState(HOME_TOP, '', '#/');
+        settleHome();
+      } else go(hash, 'push', ABOVE_HOME);
     });
     return;
   }
 
   if (isHome(hash)) {
-    // Home in the top entry, so the screen just left isn't waiting ahead.
+    // Home in the top entry, so the screen just left isn't waiting ahead; once it's drawn, down
+    // onto the bottom entry (home as well), so there's nothing to swipe back to.
     go(hash, 'replace', state === ABOVE_HOME || state === HOME_TOP ? HOME_TOP : null);
+    afterPaint(settleHome);
     return;
   }
   // From the home entry: one entry on top. From the top one: swap it.
@@ -197,7 +222,17 @@ if (typeof window !== 'undefined') {
   }
   let lastHash = window.location.hash;
   window.addEventListener('popstate', () => {
-    if (!pendingGame && !pendingNav && history.state !== GAME_TOP) cameBack(true);
+    // The app's own step down onto the bottom home entry: the same screen, nothing to do.
+    if (settling) {
+      settling = false;
+      if (pendingNav) {
+        const to = pendingNav;
+        pendingNav = null;
+        navigate(to);
+      }
+      return;
+    }
+    if (!pendingGame && !pendingNav && history.state !== GAME_TOP && history.state !== HOME_TOP) cameBack(true);
     // Stepped back onto the bottom entry to make it the game as well.
     if (pendingGame) {
       const hash = pendingGame;
@@ -220,13 +255,22 @@ if (typeof window !== 'undefined') {
       navigate(to);
       return;
     }
-    // Swiped back onto home (from a screen, or home onto the home below it): drop what's ahead, so
-    // there's never anything to swipe forward (left) to.
-    if (history.state === null && isHome(window.location.hash) && !isGame(lastHash)) {
+    // Swiped forward from home onto the top home entry: back down (it's home too, so nothing
+    // changes on screen), so there's still nothing to swipe back to.
+    if (history.state === HOME_TOP) {
+      settleHome();
+      repaint();
+      return;
+    }
+    // Swiped back onto home from a screen: drop what's ahead (home again instead, standing on the
+    // bottom entry), so there's never anything to swipe forward (left) to, nor back.
+    if (history.state === null && isHome(window.location.hash) && !isGame(lastHash) && !isHome(lastHash)) {
       // Not right away: changing the history while the iPhone finishes its swipe can leave its
       // picture of the screen stuck on top of the page.
       window.setTimeout(() => {
-        if (history.state === null && isHome(window.location.hash)) history.pushState(HOME_TOP, '', '#/');
+        if (history.state !== null || !isHome(window.location.hash)) return;
+        history.pushState(HOME_TOP, '', '#/');
+        settleHome();
       }, 600);
       return;
     }
