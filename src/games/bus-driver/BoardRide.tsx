@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
@@ -10,6 +10,7 @@ import Answers, { Verdict } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
 import type { Guess } from './logic';
 import type { RideStats } from './RideFinish';
+import { fitCards, useBox } from './useBox';
 
 const TITLES = { color: tx('Red or black?'), 'higher-lower': tx('Higher or lower?') } as const;
 
@@ -20,7 +21,6 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
   const [pick, setPick] = useState<number | null>(null);
   const [step, setStep] = useState<BoardStep | null>(null);
   const answered = useRef(false);
-  const verdictRef = useRef<HTMLDivElement>(null);
 
   const rows = BOARD_ROWS[mode];
   const questions = BOARD_QUESTIONS[mode];
@@ -35,13 +35,6 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
 
   // A new row with a single card: nothing to pick.
   useEffect(() => setPick(null), [board.path.length, board.attempt]);
-
-  // Bring the result into view once the card has flipped (the board is tall on small phones).
-  useEffect(() => {
-    if (!step) return;
-    const timer = window.setTimeout(() => verdictRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 500);
-    return () => window.clearTimeout(timer);
-  }, [step]);
 
   const answer = (guess: Guess) => {
     if (step || answered.current || slot === null) return;
@@ -90,6 +83,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
           title={step.outcome === 'same' ? t('Same value! Drink {n}', { n: step.sips }) : t('Wrong! Drink {n}', { n: step.sips })}
           sub={t('Turned cards get covered. Back to the bottom.')}
           detail={detail}
+          short
         />
       );
       nextLabel = t('Start over');
@@ -97,7 +91,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
   }
 
   return (
-    <div className="bd">
+    <div className="bd bd-turn fill">
       <div className="bd-progress" aria-label={t('Row {n} of {total}', { n: row + 1, total: rows.length })}>
         {rows.map((_, i) => (
           <span key={i} className={i < row ? 'done' : i === row ? (step ? (failed ? 'fail' : 'done') : 'now') : ''} />
@@ -117,7 +111,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
         <DeckCount left={board.deck.length} />
       </div>
 
-      <div className="board" style={{ '--cols': Math.max(...rows) } as CSSProperties}>
+      <Board cols={Math.max(...rows)} rows={rows.length}>
         {[...rows.keys()].reverse().map((r) => (
           <div key={r} className={`board-row${r === row ? ' current' : ''}`}>
             <span className="board-row-num">{r + 1}</span>
@@ -140,7 +134,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
                     }}
                     aria-label={isUp ? cardName(card) : canPick ? t('Pick card {n}', { n: si + 1 }) : t('Face-down card')}
                   >
-                    <PlayingCard card={card} faceUp={isUp} waiting={picked && !isUp} style={{ '--cw': 'inherit' } as CSSProperties} />
+                    <PlayingCard card={card} faceUp={isUp} waiting={picked && !isUp} />
                   </button>
                 );
               })}
@@ -148,7 +142,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
             <span className="board-row-sips">×{r + 1}</span>
           </div>
         ))}
-      </div>
+      </Board>
 
       <h2 className="bd-question">
         <span className="bd-question-num">
@@ -158,21 +152,34 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
         {t(TITLES[questions[row]])}
       </h2>
 
-      {step ? (
-        <div ref={verdictRef}>{verdict}</div>
-      ) : slot === null ? (
-        <p className="notice center">{known ? t('Pick a card in row {n}.', { n: row + 1 }) : t('Pick a card in row {n}: tap the left or the right one.', { n: row + 1 })}</p>
-      ) : (
-        <Answers questionId={questions[row]} onAnswer={answer} />
-      )}
+      <div className="bd-foot">
+        {step ? (
+          <>
+            {verdict}
+            <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
+              {nextLabel}
+            </BigButton>
+          </>
+        ) : slot === null ? (
+          <p className="notice center bd-foot-note">
+            {known ? t('Pick a card in row {n}.', { n: row + 1 }) : t('Pick a card in row {n}: tap the left or the right one.', { n: row + 1 })}
+          </p>
+        ) : (
+          <Answers questionId={questions[row]} onAnswer={answer} />
+        )}
+      </div>
+    </div>
+  );
+}
 
-      {step && (
-        <div className="sticky-action">
-          <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
-            {nextLabel}
-          </BigButton>
-        </div>
-      )}
+/** The board, rows bottom to top: its cards as big as the room it gets allows. */
+function Board({ cols, rows, children }: { cols: number; rows: number; children: ReactNode }) {
+  const [ref, box] = useBox<HTMLDivElement>();
+  // The box's padding (10px) and the number and sips columns (30px each) are no room for cards.
+  const cw = fitCards({ w: box.w - 20 - 60, h: box.h - 20 }, cols, rows, 10, 6, 84, 24);
+  return (
+    <div ref={ref} className="board" style={{ '--board-cw': `${cw}px` } as CSSProperties}>
+      {children}
     </div>
   );
 }

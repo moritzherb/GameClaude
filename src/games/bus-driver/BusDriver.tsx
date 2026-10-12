@@ -11,6 +11,7 @@ import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Answers, { Verdict } from './Answers';
 import BusRide from './BusRide';
+import CardRow from './CardRow';
 import { judge, questionsFor, type Guess, type Result } from './logic';
 import Pyramid from './Pyramid';
 import Tiebreak from './Tiebreak';
@@ -331,12 +332,12 @@ export default function BusDriver({ players, exit }: GameProps) {
         </span>
       </div>
 
-      <div className="bd-hand" style={{ '--n': held.length + 1 } as CSSProperties}>
+      <CardRow count={held.length + 1}>
         {held.map((c, i) => (
           <PlayingCard key={i} card={c} />
         ))}
         <PlayingCard key={`slot-${s.round}-${s.turn}`} card={reveal?.card} faceUp={!!reveal} waiting={!reveal} />
-      </div>
+      </CardRow>
 
       <h2 className="bd-question">{t(question.title)}</h2>
 

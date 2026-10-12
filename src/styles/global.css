@@ -2455,28 +2455,31 @@ h3 {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-/* A turn fills the screen: the cards grow with the free space, the answers get taller on big phones. */
+/* On a turn the line under the name never wraps, so the table below never moves. */
+.bd-turn .bd-player-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A turn fills the screen: the cards grow with the free space (sized in pixels by CardRow). */
 .bd-turn .bd-hand {
   flex: 1 1 0;
   min-height: 110px;
   align-items: center;
   padding: 10px 8px;
-  container-type: size;
+  overflow: hidden;
 }
 
 .bd-turn .bd-hand .pcard {
-  --cw: min(124px, calc((100cqw - 16px - (var(--n, 5) - 1) * 8px) / var(--n, 5)), calc((100cqh - 20px) / 1.4));
+  --cw: var(--hand-cw, 96px);
 }
 
-.bd-turn .answer-btn {
-  min-height: clamp(96px, 13dvh, 150px);
-}
-
-/* A turn's bottom: the answers, or the verdict with "next", in the same fixed room (tall enough
-   for the four suits), so answering never resizes the cards above. */
+/* A turn's bottom: the answers, or the slim verdict with "next", in the same fixed room (tall
+   enough for the four suits), so answering never resizes the cards above. */
 .bd-foot {
   flex: none;
-  height: clamp(200px, 27dvh, 260px);
+  height: clamp(150px, 20dvh, 190px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -2494,9 +2497,136 @@ h3 {
   min-height: 0;
 }
 
-.bd-foot .bd-result {
-  flex: 1;
-  min-height: 0;
+/* "Pick a card": in the middle of the bottom room. */
+.bd-foot-note {
+  margin: auto 0;
+}
+
+/* Right or wrong: a big stamp over the table once the card has turned, then gone. */
+.bd-pop {
+  position: fixed;
+  left: 50%;
+  top: 44%;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: min(84vw, 380px);
+  padding: 18px 28px 20px;
+  border-radius: 24px;
+  color: var(--on-color);
+  text-align: center;
+  box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: bd-pop 2.1s var(--ease) 0.5s both;
+}
+
+.bd-pop.correct {
+  background: var(--good);
+}
+
+.bd-pop.wrong {
+  background: var(--bad);
+}
+
+.bd-pop.same {
+  background: var(--c-yellow);
+}
+
+.bd-pop-emoji {
+  font-size: 3.2rem;
+  line-height: 1;
+}
+
+.bd-pop-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2.4rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.bd-pop-sub {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+@keyframes bd-pop {
+  0% {
+    opacity: 0;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(0.4) rotate(-8deg);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08) rotate(-3deg);
+  }
+  22%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(-3deg);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -50%) scale(0.92) rotate(-3deg);
+  }
+}
+
+/* What stays after the stamp: one slim line above "next". */
+.bd-verdict {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  color: var(--on-color);
+  animation: mx-fade-in 0.3s ease 0.5s both;
+}
+
+.bd-verdict.correct {
+  background: var(--good);
+}
+
+.bd-verdict.wrong {
+  background: var(--bad);
+}
+
+.bd-verdict.same {
+  background: var(--c-yellow);
+}
+
+.bd-verdict-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.bd-verdict-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.bd-verdict-main {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.bd-verdict-main strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.bd-verdict-detail {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 .bd-question {
@@ -2957,7 +3087,8 @@ h3 {
 }
 
 /* Flipping the pyramid: one screen, nothing moves. The pyramid and the hands share the height
-   left over by the fixed room for the last card's result, each sizing its cards from its room. */
+   left over by the fixed room for the last card's result; the script sizes their cards in
+   pixels from the room they get (the rooms never take their size from the cards). */
 .bd-pyr {
   gap: 12px;
 }
@@ -2967,13 +3098,12 @@ h3 {
   min-height: 150px;
   justify-content: center;
   gap: 6px;
-  padding: 10px 10px;
-  container-type: size;
+  padding: 10px;
+  overflow: hidden;
 }
 
-.bd-pyr .pyramid-cards {
-  /* As wide as the bottom row allows, as tall as the rows allow. */
-  --cw: max(22px, min(62px, calc((100cqw - 68px - (var(--rows) - 1) * 6px) / var(--rows)), calc((100cqh - (var(--rows) - 1) * 6px) / var(--rows) / 1.4)));
+.bd-pyr .pyramid-row {
+  grid-template-columns: 30px 1fr 30px;
 }
 
 .bd-pyr .pyramid-badge {
@@ -3060,9 +3190,7 @@ h3 {
   display: grid;
   grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
   gap: 4px 10px;
-  container-type: size;
-  /* One row's height. */
-  --rh: calc((100cqh - (var(--rows) - 1) * 4px) / var(--rows));
+  overflow: hidden;
 }
 
 .hand-rows.two {
@@ -8093,26 +8221,29 @@ h3 {
 
 /* ---------- Bus ride boards (Diamond, 1-2-1-2-1) ---------- */
 
+/* The bus ride's board: it takes the screen's free height, and the script sizes its cards in
+   pixels from that (the board never takes its size from them), so everything fits one screen. */
 .board {
-  /* The widest row and the screen height decide the card size, so the board, the question and
-     the answer buttons fit on one phone screen. */
-  --cw: clamp(
-    42px,
-    min(calc((min(100vw, 560px) - 148px - (var(--cols) - 1) * 10px) / var(--cols)), calc((100dvh - 500px) / 7)),
-    84px
-  );
+  flex: 1 1 0;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px 10px;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.board .pcard {
+  --cw: var(--board-cw, 64px);
 }
 
 .board-row {
   display: grid;
-  grid-template-columns: 34px 1fr 34px;
+  grid-template-columns: 30px 1fr 30px;
   align-items: center;
 }
 
