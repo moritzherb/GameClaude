@@ -1,5 +1,6 @@
 import { useRef, useState, type CSSProperties } from 'react';
 import Avatar from '../components/Avatar';
+import { CloseIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { findGame } from '../games/registry';
 import { RANK_EMOJI, RANK_NAME } from '../games/president/President';
@@ -62,7 +63,10 @@ export default function Profile() {
             {profile.photo ? t('New photo') : t('Add a photo')}
           </button>
           {profile.photo ? (
-            <button type="button" className="chip" onClick={() => setPhoto(undefined)}>
+            <button type="button" className="chip chip-remove" onClick={() => setPhoto(undefined)}>
+              <span className="chip-x">
+                <CloseIcon />
+              </span>
               {t('Remove photo')}
             </button>
           ) : (
