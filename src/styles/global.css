@@ -9411,7 +9411,8 @@ h3 {
   flex: 1 1 0;
   min-height: 160px;
   display: grid;
-  place-items: center;
+  /* Low in its room: the player row above stays clear, and the hand's free top takes the circle's edge. */
+  place-items: end center;
   container-type: size;
 }
 
@@ -9420,6 +9421,7 @@ h3 {
   width: min(100cqw, 100cqh, 560px);
   aspect-ratio: 1;
   container-type: inline-size;
+  transform: translateY(14px);
 }
 
 /* Bigger cards than in Kings Cup: easier to hit. */
@@ -9439,14 +9441,15 @@ h3 {
   }
 }
 
+/* The pile right in the middle of the circle (a touch above), what was said and the count below it. */
 .ar-pile {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 47%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translate(-50%, -54%);
+  transform: translate(-50%, -13.3cqw);
 }
 
 .ar-pile-stack {
@@ -9462,7 +9465,8 @@ h3 {
   border-radius: 2cqw;
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px), var(--accent);
   box-shadow: inset 0 0 0 1cqw #fff, 0 2px 6px rgba(0, 0, 0, 0.35);
-  transform: rotate(calc((var(--i) - 2) * 7deg)) translate(calc(var(--i) * 0.6cqw), calc(var(--i) * -0.5cqw));
+  /* Fanned a little round the middle, however many lie there. */
+  transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 7deg)) translate(calc((var(--i) - (var(--n) - 1) / 2) * 0.6cqw), calc(var(--i) * -0.5cqw));
 }
 
 .ar-pile-empty {
