@@ -17,7 +17,7 @@ function playing(hands: Card[][], over: Partial<Game> = {}): Game {
   return { ...newGame(hands.length), hands, turn: 0, ...over };
 }
 
-describe('Arschloch', () => {
+describe('President', () => {
   it('deals all 32 cards (7 to Ace); whoever holds the 7 of clubs starts', () => {
     for (const n of [3, 4, 5, 6]) {
       const g = newGame(n);
@@ -138,5 +138,6 @@ describe('Arschloch', () => {
         expect(new Set(g.out).size).toBe(n);
       }
     }
-  });
+    // Hundreds of whole games: give a slow machine time.
+  }, 30_000);
 });

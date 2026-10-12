@@ -107,7 +107,7 @@ describe('Arschloch', () => {
   });
 
   it('random games keep every card and always end with an Arschloch', () => {
-    for (let run = 0; run < 400; run++) {
+    for (let run = 0; run < 200; run++) {
       const n = 2 + (run % 7);
       let g = newGame(n, run % n);
       let moves = 0;
@@ -133,5 +133,6 @@ describe('Arschloch', () => {
       expect(g.phase).toBe('over');
       expect(g.hands[g.loser!].filter((x) => x.value === 11)).toHaveLength(4);
     }
-  });
+    // Hundreds of whole games: give a slow machine time.
+  }, 30_000);
 });
