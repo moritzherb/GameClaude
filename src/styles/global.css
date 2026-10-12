@@ -3632,7 +3632,7 @@ h3 {
   --w: min(78cqw, 72cqh, 420px);
   position: absolute;
   left: 50%;
-  top: 56%;
+  top: 52%;
   width: var(--w);
   aspect-ratio: 1 / 0.95;
   transform: translate(-50%, -50%);
