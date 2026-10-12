@@ -7,6 +7,8 @@ export interface Profile {
   name: string;
   avatar: string;
   color: string;
+  /** A small photo (a JPEG data URL, about 4 kB), shown instead of the emoji. */
+  photo?: string;
 }
 
 export interface Member extends Omit<Profile, 'clientId'> {

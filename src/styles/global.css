@@ -8832,3 +8832,494 @@ h3 {
 .section-head:has(.all-games-pill) {
   align-items: center;
 }
+
+/* ---------- Avatars with a photo ---------- */
+
+/* A profile photo where an emoji would be: about as big as the emoji, round. */
+.avatar-photo {
+  display: block;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: 50%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* In a coloured circle, the photo fills it. */
+.player-avatar .avatar-photo,
+.home-me .avatar-photo,
+.profile-avatar .avatar-photo,
+.as-seat-avatar .avatar-photo {
+  width: 100%;
+  height: 100%;
+}
+
+.player-avatar:has(.avatar-photo) {
+  overflow: hidden;
+}
+
+/* Home: your own avatar next to the settings, opens the profile. */
+.home-me {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  margin: 1px;
+  border-radius: 50%;
+  background: var(--chip);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: 1.35rem;
+  transition: transform 0.18s var(--spring);
+}
+
+.home-date + .home-me {
+  margin-left: 0;
+}
+
+.home-me:active {
+  transform: scale(0.88);
+}
+
+.me-profile-link {
+  align-self: flex-start;
+  margin-top: -6px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Profile ---------- */
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.profile-avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: var(--chip);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: 3.6rem;
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.2s ease;
+}
+
+.profile-avatar.busy {
+  opacity: 0.5;
+}
+
+.profile-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.profile-name {
+  align-self: stretch;
+}
+
+.profile-colors {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.profile-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--chip);
+  transition: transform 0.18s var(--spring);
+}
+
+.profile-color.active {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 0 0 5px var(--ink);
+}
+
+.profile-color:active {
+  transform: scale(0.88);
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.profile-games {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.profile-games li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.profile-games li + li {
+  border-top: 1px solid var(--line);
+}
+
+.profile-game-emoji {
+  font-size: 1.3rem;
+}
+
+.profile-game-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.profile-game-n {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.profile-reset {
+  align-self: center;
+}
+
+/* ---------- Arschloch ---------- */
+
+.as {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.as > * {
+  flex-shrink: 0;
+}
+
+/* Everyone at the table: rank from the last round, cards left, who passed. */
+.as-seats {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.as-seats::-webkit-scrollbar {
+  display: none;
+}
+
+.as-seat {
+  flex: 1 0 0;
+  min-width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.as-seat.turn {
+  background: color-mix(in srgb, var(--chip) 30%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--chip);
+}
+
+.as-seat.passed,
+.as-seat.out {
+  opacity: 0.5;
+}
+
+.as-seat-avatar {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--chip);
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+}
+
+.as-seat-avatar .avatar-photo {
+  border-radius: 50%;
+}
+
+.as-seat-rank {
+  position: absolute;
+  right: -7px;
+  top: -7px;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.as-seat-name {
+  max-width: 100%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.as-seat-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* The table: the play to beat, big, in the middle of a felt. */
+.as-table {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 40%, #2f8a5b, #1d5c3c 75%);
+  box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.18), inset 0 -30px 50px rgba(0, 0, 0, 0.18);
+  container-type: size;
+  overflow: hidden;
+}
+
+.as-trick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.as-trick-cards {
+  --cw: min(24cqw, 32cqh, 96px);
+  position: relative;
+  display: block;
+  width: calc(var(--cw) * (1 + (var(--n, 1) - 1) * 0.42));
+  height: calc(var(--cw) * 1.4);
+}
+
+.as-trick-card {
+  position: absolute;
+  top: 0;
+  left: calc(var(--i) * var(--cw) * 0.42);
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  border-radius: calc(var(--cw) * 0.12);
+  transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 6deg));
+  animation: as-land 0.32s var(--spring) both;
+  animation-delay: calc(var(--i) * 50ms);
+}
+
+.as-trick-card .pcard-front {
+  box-shadow: inset 0 0 0 1px #dcdfe4, 0 8px 16px -6px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes as-land {
+  from {
+    opacity: 0;
+    transform: translateY(40%) scale(0.8) rotate(0deg);
+  }
+}
+
+.as-trick-by {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.as-empty {
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1rem, 5cqw, 1.4rem);
+  text-transform: uppercase;
+}
+
+.as-got {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+}
+
+.as .pl-hand {
+  flex: 1.3 1 0;
+  min-height: 136px;
+}
+
+.as-pass {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 18px;
+}
+
+/* Your own sips, big for a moment. */
+.as-sip {
+  position: fixed;
+  left: 50%;
+  top: 42%;
+  z-index: 30;
+  padding: 10px 22px;
+  border-radius: 16px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: as-sip 1.6s var(--ease) both;
+}
+
+@keyframes as-sip {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(-6deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06) rotate(-3deg);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(-3deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(0.96) rotate(-3deg);
+  }
+}
+
+/* The end of a round: everyone's rank and what they drink or hand out. */
+.as-over {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.as-ranks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.as-rank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  animation: pop-in 0.3s var(--spring) backwards;
+}
+
+.as-rank:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.as-rank:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.as-rank:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.as-rank:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+.as-rank:nth-child(6) {
+  animation-delay: 300ms;
+}
+
+.as-rank.me {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.as-rank-president {
+  background: color-mix(in srgb, var(--c-yellow) 35%, var(--surface));
+}
+
+.as-rank-arschloch {
+  background: color-mix(in srgb, #8b5a2b 30%, var(--surface));
+}
+
+.as-rank-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.as-rank-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.as-rank-text small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.as-rank-sips {
+  font-weight: 700;
+  white-space: nowrap;
+}

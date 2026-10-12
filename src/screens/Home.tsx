@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import AppDie from '../components/AppDie';
+import Avatar from '../components/Avatar';
 import GameCard from '../components/GameCard';
 import { ChevronIcon, PlusIcon, SettingsIcon } from '../components/Icons';
 import Logo from '../components/Logo';
@@ -15,11 +16,13 @@ import { recentGames } from '../lib/recent';
 import { lineup } from '../lib/lineup';
 import { usePullToRefresh } from '../lib/pullToRefresh';
 import { navigate, paths } from '../lib/router';
+import { useProfile } from '../net/profile';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
 export default function Home() {
   const { players } = useApp();
+  const { profile } = useProfile();
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   const [rolling, setRolling] = useState<GameDefinition | null>(null);
@@ -116,6 +119,9 @@ export default function Home() {
         <header className="home-header">
           <Logo />
           <span className="home-date">{date}</span>
+          <Tap className="home-me" style={{ '--chip': profile.color } as CSSProperties} onClick={() => navigate(paths.profile)} ariaLabel={t('Your profile')}>
+            <Avatar avatar={profile.avatar} photo={profile.photo} />
+          </Tap>
           <RoundButton label={t('Settings')} onClick={() => navigate(paths.settings)}>
             <SettingsIcon />
           </RoundButton>

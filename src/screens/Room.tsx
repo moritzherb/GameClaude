@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import Avatar from '../components/Avatar';
 import BigButton from '../components/BigButton';
 import { CloseIcon } from '../components/Icons';
 import QrCode from '../components/QrCode';
@@ -63,8 +64,14 @@ function Start({ joinCode }: { joinCode: string | null }) {
       {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}
 
       <section className="me-card">
-        <Tap className="player-avatar me-avatar" style={{ '--chip': profile.color } as CSSProperties} onClick={rerollAvatar} ariaLabel={t('New avatar')}>
-          {profile.avatar}
+        {/* With a photo, the avatar opens the profile; without one, a tap rolls a new emoji. */}
+        <Tap
+          className="player-avatar me-avatar"
+          style={{ '--chip': profile.color } as CSSProperties}
+          onClick={profile.photo ? () => navigate(paths.profile) : rerollAvatar}
+          ariaLabel={profile.photo ? t('Your profile') : t('New avatar')}
+        >
+          <Avatar avatar={profile.avatar} photo={profile.photo} />
         </Tap>
         <label className="me-field" htmlFor="room-nick">
           <span className="me-label">{unfill(t('Your name'))}</span>
@@ -85,6 +92,9 @@ function Start({ joinCode }: { joinCode: string | null }) {
           />
         </label>
       </section>
+      <button type="button" className="text-btn me-profile-link" onClick={() => navigate(paths.profile)}>
+        {profile.photo ? t('Edit your profile') : t('Add a photo to your profile')}
+      </button>
 
       {fromLink ? (
         <div className="stack">
@@ -225,7 +235,7 @@ function Lobby() {
           {room.members.map((m) => (
             <li key={m.id} className={`member-row${listed.has(m.id) ? '' : ' pop-in'}${m.online ? '' : ' offline'}`}>
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
-                {m.avatar}
+                <Avatar avatar={m.avatar} photo={m.photo} />
               </span>
               <span className="member-text">
                 <span className="member-name">{m.name}</span>

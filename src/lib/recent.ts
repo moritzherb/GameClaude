@@ -1,3 +1,4 @@
+import { recordPlay } from './stats';
 import { load, save } from './storage';
 
 const KEY = 'recent-games';
@@ -12,4 +13,5 @@ export function recentGames(): string[] {
 /** Remember that a game was just started. */
 export function markPlayed(id: string) {
   save(KEY, [id, ...recentGames().filter((x) => x !== id)].slice(0, KEEP));
+  recordPlay(id);
 }

@@ -11,7 +11,7 @@ export function savedFor<T>(storeKey: string, field: string, isHost: boolean, co
 }
 
 /** Where the room games keep the host's saved copy (see each game's STORE_KEY and useShared). */
-const GAME_STORES = ['speed:match', 'palace:match', 'hose-runter:game', 'ftd:session', 'tr:shared', 'fk:shared'];
+const GAME_STORES = ['speed:match', 'palace:match', 'hose-runter:game', 'ftd:session', 'tr:shared', 'fk:shared', 'as:shared'];
 
 /** The host ended the game for everyone: starting one again starts fresh. */
 export function forgetSavedGames() {

@@ -215,6 +215,28 @@ const app: Record<string, string> = {
   '📱 Each on their own phone': '📱 Jeder auf seinem Handy',
   'Couldn’t reach the host’s phone. Make sure the app is open on it, then try again.':
     'Keine Verbindung zum Handy des Hosts. Schau, dass die App dort offen ist, und versuch es nochmal.',
+  // Profile
+  'Your profile': 'Dein Profil',
+  'What the others see when you play together in a room. It stays on this phone.':
+    'Das sehen die anderen, wenn ihr zusammen in einem Raum spielt. Es bleibt auf diesem Handy.',
+  'New photo': 'Neues Foto',
+  'Add a photo': 'Foto hinzufügen',
+  'Remove photo': 'Foto entfernen',
+  'Other emoji': 'Anderes Emoji',
+  'That picture didn’t work. Try another one.': 'Das Bild hat nicht geklappt. Probier ein anderes.',
+  Colour: 'Farbe',
+  'Your stats': 'Deine Statistik',
+  'Games played': 'Gespielte Spiele',
+  'Favourite: {game}': 'Lieblingsspiel: {game}',
+  'Favourite game': 'Lieblingsspiel',
+  'Sips handed out': 'Verteilte Schlucke',
+  'Play a few games: your numbers show up here.': 'Spiel ein paar Runden: Hier tauchen dann deine Zahlen auf.',
+  '{n}×': '{n}×',
+  'Sips are counted in the games that know who drinks (Arschloch, so far).': 'Schlucke zählen in den Spielen, die wissen, wer trinkt (bisher Arschloch).',
+  'Tap again to reset your stats': 'Nochmal tippen zum Zurücksetzen',
+  'Reset stats': 'Statistik zurücksetzen',
+  'Edit your profile': 'Profil bearbeiten',
+  'Add a photo to your profile': 'Foto zum Profil hinzufügen',
 };
 
 export default app;

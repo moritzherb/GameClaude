@@ -289,6 +289,7 @@ export const paths = {
   play: (id: string) => `/play/${id}`,
   players: (next?: string) => (next ? `/players?next=${encodeURIComponent(next)}` : '/players'),
   settings: '/settings',
+  profile: '/profile',
   room: '/room',
   online: (id: string) => `/online/${id}`,
   join: (code: string) => `/join/${code}`,

@@ -758,7 +758,7 @@ function MiniTable({ view }: { view: PhoneView }) {
  * Your hand, spread out to fill the space: one row while it fits, more rows (overlapping, so each
  * card's corner shows) once the hand grows. Cards get as big as the space allows.
  */
-function HandSpread({
+export function HandSpread({
   cards,
   isSelected,
   isLeaving,

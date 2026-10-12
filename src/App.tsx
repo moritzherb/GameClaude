@@ -12,6 +12,7 @@ import Library from './screens/Library';
 import OnlinePlay from './screens/OnlinePlay';
 import Play from './screens/Play';
 import Players from './screens/Players';
+import Profile from './screens/Profile';
 import Room from './screens/Room';
 import Settings from './screens/Settings';
 import { useApp } from './state/AppState';
@@ -39,6 +40,8 @@ function Screen() {
       return <Players next={query.get('next')} />;
     case 'settings':
       return <Settings />;
+    case 'profile':
+      return <Profile />;
     case 'room':
       return <Room joinCode={null} />;
     case 'join':

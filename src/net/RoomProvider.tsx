@@ -183,7 +183,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
         setStatus('open');
         saveRoom({ role: 'host', code: roomCode, game: gameRef.current });
         if (!membersRef.current.some((m) => m.host)) {
-          setAllMembers([{ id: profile.clientId, name: profile.name, avatar: profile.avatar, color: profile.color, host: true, online: true }]);
+          setAllMembers([{ id: profile.clientId, name: profile.name, avatar: profile.avatar, color: profile.color, photo: profile.photo, host: true, online: true }]);
         }
       });
 
@@ -200,7 +200,9 @@ export function RoomProvider({ children }: { children: ReactNode }) {
             guests.current.set(pr.clientId, conn);
             const others = membersRef.current.filter((m) => m.id !== pr.clientId);
             const existing = membersRef.current.find((m) => m.id === pr.clientId);
-            const member: Member = { id: pr.clientId, name: pr.name, avatar: pr.avatar, color: pr.color, host: false, online: true };
+            // Only a small picture is passed on to everyone (anything else is dropped).
+            const photo = typeof pr.photo === 'string' && pr.photo.startsWith('data:image/') && pr.photo.length < 16_000 ? pr.photo : undefined;
+            const member: Member = { id: pr.clientId, name: pr.name, avatar: pr.avatar, color: pr.color, photo, host: false, online: true };
             setAllMembers(existing ? membersRef.current.map((m) => (m.id === pr.clientId ? member : m)) : [...others, member]);
             if (!existing) {
               sfx.tick();
