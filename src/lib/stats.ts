@@ -10,7 +10,9 @@ export interface Stats {
   played: Record<string, number>;
   /** Arschloch rounds finished, by rank. */
   ranks: Record<string, number>;
-  /** Sips drunk and handed out (counted in the games that know who drinks: Arschloch). */
+  /** Games lost, by game id (Arschloch: holding the four Jacks). */
+  lost: Record<string, number>;
+  /** Sips drunk and handed out (counted in the games that know who drinks). */
   sips: { drunk: number; given: number };
   /** The last game counted, and when: the same game opened again soon after is the same game. */
   last?: { id: string; at: number };
@@ -20,7 +22,7 @@ const KEY = 'stats';
 /** Opening the same game again within this long (a reload, back from the rules) counts once. */
 const SAME_GAME_MS = 30 * 60_000;
 
-const empty = (): Stats => ({ played: {}, ranks: {}, sips: { drunk: 0, given: 0 } });
+const empty = (): Stats => ({ played: {}, ranks: {}, lost: {}, sips: { drunk: 0, given: 0 } });
 
 export function loadStats(): Stats {
   const s = load<Partial<Stats> | null>(KEY, null);
@@ -28,6 +30,7 @@ export function loadStats(): Stats {
   return {
     played: s.played && typeof s.played === 'object' ? s.played : {},
     ranks: s.ranks && typeof s.ranks === 'object' ? s.ranks : {},
+    lost: s.lost && typeof s.lost === 'object' ? s.lost : {},
     sips: { drunk: Number(s.sips?.drunk) || 0, given: Number(s.sips?.given) || 0 },
     last: s.last,
   };
@@ -48,7 +51,12 @@ export function recordSips(drunk: number, given: number) {
   update((s) => ({ ...s, sips: { drunk: s.sips.drunk + drunk, given: s.sips.given + given } }));
 }
 
-/** An Arschloch round finished with this rank. */
+/** A game lost on this phone. */
+export function recordLoss(id: string) {
+  update((s) => ({ ...s, lost: { ...s.lost, [id]: (s.lost[id] ?? 0) + 1 } }));
+}
+
+/** A President round finished with this rank. */
 export function recordRank(rank: string) {
   update((s) => ({ ...s, ranks: { ...s.ranks, [rank]: (s.ranks[rank] ?? 0) + 1 } }));
 }

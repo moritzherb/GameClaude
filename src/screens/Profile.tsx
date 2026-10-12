@@ -2,8 +2,8 @@ import { useRef, useState, type CSSProperties } from 'react';
 import Avatar from '../components/Avatar';
 import TopBar from '../components/TopBar';
 import { findGame } from '../games/registry';
-import { RANK_EMOJI, RANK_NAME } from '../games/arschloch/Arschloch';
-import type { Rank } from '../games/arschloch/logic';
+import { RANK_EMOJI, RANK_NAME } from '../games/president/President';
+import type { Rank } from '../games/president/logic';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { squarePhoto } from '../lib/photo';
@@ -147,7 +147,7 @@ export default function Profile() {
 
       {rounds > 0 && (
         <>
-          <h2 className="section-title">{t('Arschloch')}</h2>
+          <h2 className="section-title">{t('President')}</h2>
           <ul className="profile-games">
             {RANKS.filter((r) => stats.ranks[r]).map((r) => (
               <li key={r}>
@@ -159,7 +159,16 @@ export default function Profile() {
           </ul>
         </>
       )}
-      <p className="fine-print">{t('Sips are counted in the games that know who drinks (Arschloch, so far).')}</p>
+      {(stats.lost.arschloch ?? 0) > 0 && (
+        <ul className="profile-games">
+          <li>
+            <span className="profile-game-emoji">💩</span>
+            <span className="profile-game-name">{t('Ended up the Arschloch')}</span>
+            <span className="profile-game-n">{t('{n}×', { n: stats.lost.arschloch })}</span>
+          </li>
+        </ul>
+      )}
+      <p className="fine-print">{t('Sips are counted in the games that know who drinks (President and Arschloch, so far).')}</p>
 
       {total > 0 && (
         <button

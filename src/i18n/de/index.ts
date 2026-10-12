@@ -1,6 +1,7 @@
 // German translations, one file per area. Keys are the exact English text.
 import app from './app';
 import arschloch from './arschloch';
+import president from './president';
 import busDriver from './busDriver';
 import fiveThousand from './fiveThousand';
 import fuckTheDealer from './fuckTheDealer';
@@ -15,6 +16,6 @@ import speed from './speed';
 import trash from './trash';
 import whoDrinks from './whoDrinks';
 
-const de: Record<string, string> = { ...app, ...arschloch, ...busDriver, ...horseRace, ...kingsCup, ...klatschen, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks };
+const de: Record<string, string> = { ...app, ...arschloch, ...president, ...busDriver, ...horseRace, ...kingsCup, ...klatschen, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks };
 
 export default de;
