@@ -59,7 +59,7 @@ export default function Profile() {
         </span>
         <div className="profile-buttons">
           <button type="button" className="chip" onClick={() => file.current?.click()} disabled={busy}>
-            📷 {profile.photo ? t('New photo') : t('Add a photo')}
+            {profile.photo ? t('New photo') : t('Add a photo')}
           </button>
           {profile.photo ? (
             <button type="button" className="chip" onClick={() => setPhoto(undefined)}>
@@ -93,23 +93,26 @@ export default function Profile() {
           />
         </label>
 
-        <div className="profile-colors" role="radiogroup" aria-label={t('Colour')}>
-          {PLAYER_COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              role="radio"
-              aria-checked={profile.color === c}
-              aria-label={c}
-              className={`profile-color${profile.color === c ? ' active' : ''}`}
-              style={{ '--chip': c } as CSSProperties}
-              onClick={() => {
-                setColor(c);
-                buzz(8);
-              }}
-            />
-          ))}
-        </div>
+        {/* The colour is the circle behind the emoji: a photo fills it, so there's nothing to pick. */}
+        {!profile.photo && (
+          <div className="profile-colors" role="radiogroup" aria-label={t('Colour')}>
+            {PLAYER_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={profile.color === c}
+                aria-label={c}
+                className={`profile-color${profile.color === c ? ' active' : ''}`}
+                style={{ '--chip': c } as CSSProperties}
+                onClick={() => {
+                  setColor(c);
+                  buzz(8);
+                }}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <h2 className="section-title">{t('Your stats')}</h2>
@@ -163,12 +166,12 @@ export default function Profile() {
         <ul className="profile-games">
           <li>
             <span className="profile-game-emoji">💩</span>
-            <span className="profile-game-name">{t('Ended up the Arschloch')}</span>
+            <span className="profile-game-name">{t('Ended up the Asshole')}</span>
             <span className="profile-game-n">{t('{n}×', { n: stats.lost.arschloch })}</span>
           </li>
         </ul>
       )}
-      <p className="fine-print">{t('Sips are counted in the games that know who drinks (President and Arschloch, so far).')}</p>
+      <p className="fine-print">{t('Sips are counted in the games that know who drinks (President and Asshole, so far).')}</p>
 
       {total > 0 && (
         <button

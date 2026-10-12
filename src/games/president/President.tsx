@@ -30,11 +30,11 @@ export const RANK_NAME: Record<Rank, string> = {
   president: tx('President'),
   vice: tx('Vice President'),
   citizen: tx('Citizen'),
-  'vice-arschloch': tx('Vice Arschloch'),
-  arschloch: tx('Arschloch'),
+  'vice-arschloch': tx('Vice Asshole'),
+  arschloch: tx('Asshole'),
 };
 export const RANK_EMOJI: Record<Rank, string> = {
-  president: '👑',
+  president: '👔',
   vice: '🎩',
   citizen: '🙂',
   'vice-arschloch': '🥴',
@@ -57,7 +57,7 @@ export default function President() {
       return (
         <div className="bd">
           <div className="connecting">
-            <div className="connecting-emoji">👑</div>
+            <div className="connecting-emoji">👔</div>
             <h2 className="bd-title">{t('President')}</h2>
             <p className="lead">{host ? t('Waiting for {name} to deal…', { name: host.name }) : t('Waiting for the host to deal…')}</p>
           </div>
@@ -74,7 +74,7 @@ export default function President() {
         <div className="bd-head">
           <span className="kicker">{t('3 to 6 players, 32 cards')}</span>
           <h2 className="bd-title big">{t('President')}</h2>
-          {!known && <p className="lead">{t('Each player on their own phone. Get rid of your cards first: the last one is the Arschloch.')}</p>}
+          {!known && <p className="lead">{t('Each player on their own phone. Get rid of your cards first: the last one is the Asshole.')}</p>}
         </div>
         <h3 className="section-title">{t('Who plays?')}</h3>
         <div className="pick-grid">

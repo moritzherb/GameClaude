@@ -15,7 +15,7 @@ const arschloch: Record<string, string> = {
     'Wer den Stapel nimmt, trinkt einen Schluck pro Karte. Wer aufgedeckt hat, macht weiter, und es ist wieder alles erlaubt.',
   'Four of a value in your hand go out of the game, face down beside it. Whoever lays them down hands out 2 sips.':
     'Vier Gleiche auf der Hand sind raus aus dem Spiel und kommen verdeckt daneben. Wer sie ablegt, verteilt 2 Schlucke.',
-  'Whoever ends up with all four Jacks is the Arschloch: empty your glass. The game is over.':
+  'Whoever ends up with all four Jacks is the Asshole: empty your glass. The game is over.':
     'Wer alle vier Buben auf der Hand hat, ist das Arschloch: Glas leer trinken. Das Spiel ist aus.',
   'Waiting for {name} to lay out the circle…': 'Warte, bis {name} den Kreis auslegt …',
   'Waiting for the host to start…': 'Warte, bis der Host startet …',
@@ -53,13 +53,13 @@ const arschloch: Record<string, string> = {
   'True!': 'Stimmt!',
   'Said {claim}': 'Angesagt: {claim}',
   '{name} takes {n}': '{name} nimmt {n}',
-  'You’re the Arschloch!': 'Du bist das Arschloch!',
-  '{name} is the Arschloch!': '{name} ist das Arschloch!',
+  'You’re the Asshole!': 'Du bist das Arschloch!',
+  '{name} is the Asshole!': '{name} ist das Arschloch!',
   'All four Jacks. Empty your glass!': 'Alle vier Buben. Glas leer!',
   'Caught lying, and the pile held the last Jack.': 'Beim Lügen erwischt, und im Stapel lag der letzte Bube.',
   'Turned over the truth, and the pile held the last Jack.': 'Die Wahrheit aufgedeckt, und im Stapel lag der letzte Bube.',
   'The host starts the next game.': 'Der Host startet das nächste Spiel.',
-  'Ended up the Arschloch': 'Arschloch geworden',
+  'Ended up the Asshole': 'Arschloch geworden',
 };
 
 export default arschloch;

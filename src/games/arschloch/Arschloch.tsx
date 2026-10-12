@@ -46,7 +46,7 @@ export default function Arschloch() {
         <div className="bd">
           <div className="connecting">
             <div className="connecting-emoji">💩</div>
-            <h2 className="bd-title">{t('Arschloch')}</h2>
+            <h2 className="bd-title">{t('Asshole')}</h2>
             <p className="lead">{host ? t('Waiting for {name} to lay out the circle…', { name: host.name }) : t('Waiting for the host to start…')}</p>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function Arschloch() {
       <div className="bd">
         <div className="bd-head">
           <span className="kicker">{t('2 to 8 players, 32 cards')}</span>
-          <h2 className="bd-title big">{t('Arschloch')}</h2>
+          <h2 className="bd-title big">{t('Asshole')}</h2>
           {!known && <p className="lead">{t('Each player on their own phone. Lie about your cards, catch the liars, and don’t end up with all four Jacks.')}</p>}
         </div>
         <h3 className="section-title">{t('Who plays?')}</h3>
@@ -409,7 +409,7 @@ function Over({
           <Avatar avatar={loser?.avatar ?? '💩'} photo={loser ? photoOf(loser.id) : undefined} />
           <span className="ar-over-poo">💩</span>
         </span>
-        <h2 className="bd-title big">{g.loser === me ? t('You’re the Arschloch!') : t('{name} is the Arschloch!', { name: loser?.name ?? '' })}</h2>
+        <h2 className="bd-title big">{g.loser === me ? t('You’re the Asshole!') : t('{name} is the Asshole!', { name: loser?.name ?? '' })}</h2>
         <p className="lead">{t('All four Jacks. Empty your glass!')}</p>
         {reveal && <p className="fine-print">{reveal.lied ? t('Caught lying, and the pile held the last Jack.') : t('Turned over the truth, and the pile held the last Jack.')}</p>}
       </div>
