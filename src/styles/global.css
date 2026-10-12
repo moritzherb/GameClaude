@@ -9764,7 +9764,8 @@ h3 {
   animation: pop-in 0.35s 1.9s var(--spring) both;
 }
 
-/* Your sips after a card is turned over: above the turned card, not behind it. */
+/* Your sips after a card is turned over: on top of the turned card, not behind it (placed right
+   on its middle by the script; up here when there's no card). */
 .ar ~ .as-sip,
 .ar .as-sip {
   z-index: 40;

@@ -243,7 +243,7 @@ function Table({
         {/* The card that brought the last Jack, turned over big on top of the end. */}
         {reveal && <Reveal key={reveal.id} e={reveal.e} seats={seats} />}
         {sip && (
-          <span key={sip.id} className="as-sip" aria-live="polite">
+          <span key={sip.id} ref={onTurnedCard} className="as-sip" aria-live="polite">
             {sip.text}
           </span>
         )}
@@ -391,12 +391,21 @@ function Table({
         </div>
       )}
       {sip && (
-        <span key={sip.id} className="as-sip" aria-live="polite">
+        <span key={sip.id} ref={onTurnedCard} className="as-sip" aria-live="polite">
           {sip.text}
         </span>
       )}
     </div>
   );
+}
+
+/** Sips after a card is turned over show right on the middle of that card, while it's there. */
+function onTurnedCard(el: HTMLElement | null) {
+  const card = el && document.querySelector('.ar-reveal-card');
+  if (!el || !card) return;
+  const r = card.getBoundingClientRect();
+  el.style.left = `${r.left + r.width / 2}px`;
+  el.style.top = `${r.top + r.height / 2}px`;
 }
 
 /**
