@@ -10,13 +10,13 @@ describe('schweinerei', () => {
     expect(score('side', 'back')).toMatchObject({ points: 5, double: false });
     expect(score('standing', 'back')).toMatchObject({ points: 10, double: false });
     expect(score('snout', 'side-dot')).toMatchObject({ points: 10 });
-    // Schnauze mit Stütze 25
-    expect(score('jowl', 'side')).toMatchObject({ points: 25 });
+    // Backe 15
+    expect(score('jowl', 'side')).toMatchObject({ points: 15 });
     // Volle Suhle 20
     expect(score('back', 'back')).toMatchObject({ points: 20, double: true, gives: 2 });
     expect(score('standing', 'standing')).toMatchObject({ points: 20, double: true });
     expect(score('snout', 'snout')).toMatchObject({ points: 40, gives: 4 });
-    expect(score('jowl', 'jowl')).toMatchObject({ points: 100, gives: 6 });
+    expect(score('jowl', 'jowl')).toMatchObject({ points: 60, gives: 6 });
     expect(score('back', 'snout')).toMatchObject({ points: 15, double: false });
   });
 

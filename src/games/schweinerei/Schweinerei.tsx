@@ -196,6 +196,29 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     if (chip.offsetLeft < row.scrollLeft || chip.offsetLeft + chip.offsetWidth > row.scrollLeft + row.clientWidth)
       row.scrollTo({ left: chip.offsetLeft - 6, behavior: 'smooth' });
   }, [g.turn]);
+  // The bonus names its target only when that fits next to everyone's points; otherwise it shows
+  // just how far and how much (tap it for the rest), and the points keep their room.
+  const bonusEl = useRef<HTMLButtonElement>(null);
+  const bonusWhat = useRef<HTMLSpanElement>(null);
+  const [bonusTight, setBonusTight] = useState(false);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const row = board.current;
+      const pill = bonusEl.current;
+      const what = bonusWhat.current;
+      const last = row?.lastElementChild as HTMLElement | null;
+      if (!row || !pill || !what || !last) return;
+      const GAP = 6;
+      // The pill without its name (the same whether the name shows or not), and what the name needs.
+      const rest = pill.offsetWidth - what.offsetWidth - (bonusTight ? 0 : GAP);
+      const room = row.parentElement!.clientWidth - GAP - (last.offsetLeft + last.offsetWidth) - rest;
+      setBonusTight(room < what.scrollWidth + GAP);
+    };
+    fit();
+    const watch = new ResizeObserver(fit);
+    if (board.current?.parentElement) watch.observe(board.current.parentElement);
+    return () => watch.disconnect();
+  });
   /** A finger holding the pigs: where it has been, and what's needed to move them without asking the page for layout. */
   const drag = useRef<{
     id: number;
@@ -382,12 +405,30 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         ],
         { duration: dur, delay: i * 60, fill: 'backwards' },
       );
-      // From the tumbling pig to the way it lies, while it rolls out.
+      // From the tumbling pig to the way it lies: as it touches down it rolls over, the tumbling
+      // pig turning away edge-on and the lying one turning up out of it, each squashed along the
+      // axis it rolls over, so the two never stand on top of each other as two different pigs.
       const fade = { duration: dur, delay: i * 60, fill: 'both' as const };
-      // The final pig appears underneath the moment it touches down (hidden by the tumbling one on
-      // top), then the tumbling one fades away: never two see-through pigs.
-      el.querySelector('.sw-air')?.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0, offset: 0.84 }, { opacity: 0 }], fade);
-      el.querySelector('.sw-final')?.animate([{ opacity: 0 }, { opacity: 0, offset: 0.579 }, { opacity: 1, offset: 0.58 }, { opacity: 1 }], fade);
+      el.querySelector('.sw-air')?.animate(
+        [
+          { opacity: 1, transform: 'none' },
+          { opacity: 1, transform: 'none', offset: 0.5, easing: 'cubic-bezier(0.5, 0, 0.8, 0.4)' },
+          { opacity: 0.6, transform: 'scaleY(0.08)', offset: 0.62 },
+          { opacity: 0, transform: 'scaleY(0.08)', offset: 0.63 },
+          { opacity: 0, transform: 'scaleY(0.08)' },
+        ],
+        fade,
+      );
+      el.querySelector('.sw-final')?.animate(
+        [
+          { opacity: 0, transform: 'scaleY(0.08)' },
+          { opacity: 0, transform: 'scaleY(0.08)', offset: 0.6 },
+          { opacity: 1, transform: 'scaleY(0.08)', offset: 0.61, easing: 'cubic-bezier(0.2, 0.6, 0.3, 1)' },
+          { opacity: 1, transform: 'none', offset: 0.76 },
+          { opacity: 1, transform: 'none' },
+        ],
+        fade,
+      );
     });
     // Lying still: the throw counts.
     timer.current = window.setTimeout(() => {
@@ -460,14 +501,16 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         </div>
         <button
           type="button"
-          className={`sw-bonus${g.bonus.won ? ' won' : ''}`}
+          ref={bonusEl}
+          className={`sw-bonus${g.bonus.won ? ' won' : ''}${bonusTight ? ' tight' : ''}`}
           key={`bonus-${g.turn}-${g.bonus.target}`}
           aria-label={t('Bonus throw: {what} for +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}
           onClick={() => setBonusInfo(true)}
         >
           <span aria-hidden>🎯</span>
-          <span className="sw-bonus-label">{t('Bonus')}</span>
-          <span className="sw-bonus-what">{bonusLabel(g.bonus.target)}</span>
+          <span className="sw-bonus-what" ref={bonusWhat}>
+            {bonusLabel(g.bonus.target)}
+          </span>
           <span className="sw-bonus-pts">{g.bonus.won ? '✓' : `${Math.min(g.bonus.count, BONUSES[g.bonus.target].count)}/${BONUSES[g.bonus.target].count}`}</span>
           <span className="sw-bonus-plus">+{BONUSES[g.bonus.target].points}</span>
         </button>
@@ -507,7 +550,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
                 <Pig pose={poses[i]} className={mode === 'flying' ? 'sw-final' : ''} />
                 {mode === 'flying' && <Pig pose={i ? 'side' : 'side-dot'} className="sw-air" />}
               </span>
-              {showResult && <span className="sw-pose">{t(POSE_NAME[poses[i]])}</span>}
+              {/* Whoever knows the game sees how they lie: no names under the pigs. */}
+              {showResult && !known && <span className="sw-pose">{t(POSE_NAME[poses[i]])}</span>}
             </span>
           ))}
         </span>

@@ -4011,7 +4011,8 @@ h3 {
 /* ---------- Schweinerei ---------- */
 
 /* Everyone's points in one row under whose turn it is (the table never moves), the bonus throw
-   at the end. */
+   at the end. The points keep their room: short of it, the bonus drops its name (.tight, set by
+   the script), and only then do the points scroll. */
 .sw-board {
   display: flex;
   gap: 6px;
@@ -4020,7 +4021,7 @@ h3 {
 
 .sw-board-players {
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   gap: 6px;
@@ -4074,11 +4075,11 @@ h3 {
   animation: mx-fade-in 0.3s ease both;
 }
 
-.sw-bonus-label {
-  text-transform: uppercase;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
+/* No room for the name: it takes no space (and no gap), but stays measurable for the script. */
+.sw-bonus.tight .sw-bonus-what {
+  width: 0;
+  margin-right: -6px;
+  overflow: hidden;
 }
 
 .sw-bonus-pts {
@@ -4096,13 +4097,6 @@ h3 {
   background: var(--accent);
   color: var(--on-accent);
   box-shadow: none;
-}
-
-.sw-bonus.won .sw-bonus-label {
-  text-transform: uppercase;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
 }
 
 .sw-bonus-pts {
