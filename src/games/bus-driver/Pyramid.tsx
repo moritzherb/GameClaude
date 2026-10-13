@@ -225,6 +225,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   const lastSips = rowSips(lastRow, game.sipMode);
   const nextRow = rowOfFlip(Math.min(game.flips, total - 1), game.rows);
   const hits = lastLaid?.some((l) => l.length) ?? false;
+  const layers = lastLaid?.filter((l) => l.length).length ?? 0;
   // Until the screen catches up with the last flip, the hands still hold what was just laid.
   const pending = settled < game.flips;
   const hands = pending && lastLaid ? game.hands.map((h, i) => [...h, ...lastLaid[i]]) : game.hands;
@@ -235,9 +236,9 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           index: lastIndex,
           hit: hits,
           text: hits
-            ? lastSips === 1
-              ? t('{n} sip per card', { n: lastSips })
-              : t('{n} sips per card', { n: lastSips })
+            ? layers === 1
+              ? t('1 player lays down')
+              : t('{n} players lay down', { n: layers })
             : last.value === 8 || last.value === 14
               ? t('Nobody has an {rank}.', { rank: rankLabel(last.value) })
               : t('Nobody has a {rank}.', { rank: rankLabel(last.value) }),

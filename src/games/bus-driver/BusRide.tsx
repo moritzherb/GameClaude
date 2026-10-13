@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import BigButton from '../../components/BigButton';
 import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { useApp, type Player } from '../../state/AppState';
+import Boarding from './Boarding';
 import BoardRide from './BoardRide';
 import { BOARD_ROWS, type BoardMode } from './board';
 import ClassicRide from './ClassicRide';
@@ -48,6 +49,12 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
   const known = useApp().knows('bus-driver');
   const [mode, setMode] = useState<RideMode>('classic');
   const [started, setStarted] = useState(false);
+  // "Start the ride": the bus pulls up and takes the driver away first.
+  const [boarding, setBoarding] = useState(false);
+  const board = useCallback(() => {
+    setBoarding(false);
+    setStarted(true);
+  }, []);
   const [stats, setStats] = useState<RideStats | null>(null);
 
   if (stats) return <RideFinish driver={driver} stats={stats} onPlayAgain={onPlayAgain} onExit={onExit} />;
@@ -87,10 +94,11 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
       </section>
 
       <div className="sticky-action">
-        <BigButton size="xl" onClick={() => setStarted(true)}>
+        <BigButton size="xl" onClick={() => setBoarding(true)}>
           {t('Start the ride')}
         </BigButton>
       </div>
+      {boarding && <Boarding driver={driver} road={t(current.name)} onDone={board} />}
     </div>
   );
 }
