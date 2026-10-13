@@ -41,7 +41,7 @@ const fiveThousand: Record<string, string> = {
   'Roll 1 die': '1 Würfel würfeln',
   'Roll {n} dice': '{n} Würfel würfeln',
   'Pick your dice': 'Würfel wählen',
-  'Tap Kings, Aces or a triple to set them aside.': 'Tipp Könige, Asse oder einen Drilling an, um sie zur Seite zu legen.',
+  'Tap Kings, Aces or a triple to set them aside.': 'Tipp Könige, Asse oder Drillinge an, die du behältst.',
   'That’s over 5000. Pick less.': 'Das wäre über 5000. Nimm weniger.',
   '+{n} points': '+{n} Punkte',
   'Take all': 'Alle nehmen',

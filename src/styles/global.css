@@ -6091,6 +6091,8 @@ h3 {
 
 /* The table the dice land on: it takes the room the screen has left. */
 .fk-table {
+  /* The bank button's size (the coin flies to it). */
+  --bank: max(58px, min(19cqw, 27cqh));
   position: relative;
   width: 100%;
   flex: 1 1 0;
@@ -6233,67 +6235,194 @@ h3 {
 }
 
 /*
- * Below the 5000 table: always the same height (what's set aside + the picking row, or how the
- * turn went in their place), so the table never changes size during the game.
+ * Below the 5000 table: one row, always the same height (what's set aside, and while picking what
+ * the pick is worth), so the table never changes size during the game.
  */
 .fk-below {
   flex-shrink: 0;
-  /* Set aside (34) + gap + picking row (44), and a little more so the longest turn result fits. */
-  height: calc(34px + 18px + 44px + 8px);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-/* How the turn went, made to fit that space. */
-.fk-below .bd-result {
-  height: 100%;
-  padding: 7px 14px;
-  gap: 14px;
-  overflow: hidden;
-}
-
-.fk-below .bd-result {
-  gap: 12px;
-}
-
-.fk-below .bd-result-emoji {
-  font-size: 1.6rem;
-}
-
-/* The score after the turn is on the scoreboard and next to the name already. */
-.fk-below .bd-result-card {
-  display: none;
-}
-
-.fk-below .bd-result-title {
-  font-size: 1.2rem;
-}
-
-.fk-below .bd-result-sub {
-  font-size: 0.875rem;
-  line-height: 1.25;
-}
-
-.fk-aside {
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 34px;
-  flex-shrink: 0;
 }
 
-.fk-aside-label {
+.fk-aside {
   flex: none;
-  color: var(--muted);
-  font-size: 0.8125rem;
+  display: flex;
+  gap: 5px;
+}
+
+.fk-aside .fk-die.sm {
+  --size: 30px;
+  font-size: 0.95rem;
+}
+
+.fk-below .fk-pick-info {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  /* Two lines at most: the row keeps its height. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fk-pick-info.bad {
+  color: var(--bad-ink);
+}
+
+.fk-below .text-btn {
+  flex: none;
+  margin-left: auto;
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
-.fk-aside-dice {
+/* Banked: the points fly from the middle of the table into the bank in the corner… */
+.fk-coin {
+  position: absolute;
+  z-index: 4;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: max(1.4rem, 7cqw);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  animation: fk-coin 0.95s cubic-bezier(0.5, 0, 0.75, 0.4) both;
+}
+
+@keyframes fk-coin {
+  0% {
+    left: 50%;
+    top: 45%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  25% {
+    left: 50%;
+    top: 45%;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  45% {
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    left: calc(100% - 3cqw - var(--bank) / 2);
+    top: calc(100% - 3cqw - var(--bank) / 2);
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.3);
+    visibility: hidden;
+  }
+}
+
+/* …which takes them with a bump and shows the new score. */
+.fk-bank.banked:disabled {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow:
+    inset 0 calc(var(--bank) * -0.05) 0 rgba(0, 0, 0, 0.18),
+    0 calc(var(--bank) * 0.06) calc(var(--bank) * 0.14) rgba(0, 0, 0, 0.35);
+  animation: fk-bank-take 0.45s var(--spring) 0.9s both;
+}
+
+.fk-bank.banked:disabled .fk-bank-icon {
+  filter: none;
+  opacity: 1;
+}
+
+@keyframes fk-bank-take {
+  40% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* How the turn ended: stamped onto the table (after the coin, when there is one). */
+.fk-stamp {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  z-index: 5;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: 84%;
+  padding: 14px 22px 16px;
+  border-radius: 22px;
+  color: var(--on-color);
+  text-align: center;
+  box-shadow: 0 20px 50px -14px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: fk-stamp 0.5s var(--spring) 0.35s both;
+}
+
+.fk-stamp.correct {
+  background: var(--good);
+  animation-delay: 1.15s;
+}
+
+.fk-stamp.wrong {
+  background: var(--bad);
+}
+
+.fk-stamp-emoji {
+  font-size: max(2rem, 10cqw);
+  line-height: 1;
+}
+
+.fk-stamp-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: max(1.7rem, 8.5cqw);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.fk-stamp-sub {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+@keyframes fk-stamp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(-8deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(-3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fk-coin {
+    display: none;
+  }
+
+  .fk-stamp,
+  .fk-stamp.correct,
+  .fk-bank.banked:disabled {
+    animation: none;
+  }
 }
 
 /* The leather dice cup in the middle of the table, before a roll. */
@@ -6364,35 +6493,12 @@ h3 {
   visibility: hidden;
 }
 
-.fk-pick-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  /* Always as tall as with the "Take all" button (or two lines of text), so the table above
-     keeps its size whatever the row shows. */
-  height: 44px;
-  flex-shrink: 0;
-}
-
-.fk-pick-info {
-  font-weight: 600;
-  font-size: 1rem;
-  line-height: 1.35;
-}
-
 .fk-wait {
   margin: 0;
   padding: 14px 0;
   text-align: center;
   font-weight: 700;
   color: var(--muted);
-}
-
-.fk-pick-row .text-btn {
-  flex: none;
-  color: var(--accent-ink);
-  font-weight: 600;
 }
 
 /* A crashed screen: the error text, small, for a screenshot. */
