@@ -6721,6 +6721,8 @@ h3 {
 
 .sp-mid-card .pcard-face {
   backface-visibility: visible;
+
+  -webkit-backface-visibility: visible;
   box-shadow: inset 0 0 0 1px #dcdfe4, 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
@@ -6830,6 +6832,8 @@ h3 {
 
 .sp-card .pcard-face {
   backface-visibility: visible;
+
+  -webkit-backface-visibility: visible;
   box-shadow: inset 0 0 0 1px #dcdfe4, 0 3px 8px -2px rgba(0, 0, 0, 0.4);
 }
 
@@ -7194,6 +7198,8 @@ h3 {
 
 .hs-side .pcard-face {
   backface-visibility: visible;
+
+  -webkit-backface-visibility: visible;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
@@ -7228,6 +7234,8 @@ h3 {
 
 .hs-ace .pcard-face {
   backface-visibility: visible;
+
+  -webkit-backface-visibility: visible;
   box-shadow: inset 0 0 0 1px #dcdfe4, 0 4px 10px rgba(0, 0, 0, 0.45);
 }
 
@@ -7430,12 +7438,14 @@ h3 {
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
   border-radius: calc(var(--cw) * 0.12);
-  /* Each card on a layer of its own: when one changes, iPhones don't redraw (and drop) the rest. */
-  will-change: transform;
+  /* No layers of their own here: inside the board turned upside down, iPhones then leave the
+     cards out altogether. */
 }
 
 .tr-slot .pcard-face {
   backface-visibility: visible;
+
+  -webkit-backface-visibility: visible;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
@@ -7542,6 +7552,8 @@ h3 {
 .tr-discard .pcard-face,
 .tr-hand .pcard-face {
   backface-visibility: visible;
+
+  -webkit-backface-visibility: visible;
 }
 
 .tr-discard.nope {
