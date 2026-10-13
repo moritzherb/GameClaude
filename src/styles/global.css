@@ -3080,6 +3080,14 @@ h3 {
   grid-template-columns: 30px 1fr 30px;
 }
 
+/* Every card of the pyramid and of the ride's board on a layer of its own, for good. Otherwise
+   the phone moves cards on and off layers whenever another one turns or the next one starts to
+   nudge, and redrawn that way their ranks and suits shift by a hair (on iPhones it shows). */
+.pyramid .pcard,
+.board .pcard {
+  will-change: transform;
+}
+
 .bd-pyr .pyramid-badge {
   top: -6px;
   right: -6px;
