@@ -168,11 +168,16 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
   );
 }
 
+/** How much of a card the row above it hides (part of its height): like cards laid on a table. */
+const OVERLAP = 0.18;
+
 /** The board, rows bottom to top: its cards as big as the room it gets allows. */
 function Board({ cols, rows, children }: { cols: number; rows: number; children: ReactNode }) {
   const [ref, box] = useBox<HTMLDivElement>();
-  // The box's padding (10px) and the number and sips columns (30px each) are no room for cards.
-  const cw = fitCards({ w: box.w - 20 - 60, h: box.h - 20 }, cols, rows, 10, 6, 84, 24);
+  // The box's padding (10px) and the number and sips columns (30px each) are no room for cards;
+  // the rows overlap a little, so the board's height holds bigger cards.
+  const byHeight = box.h ? Math.floor((box.h - 20) / (1.4 * (rows - OVERLAP * (rows - 1)))) : 0;
+  const cw = Math.min(fitCards({ w: box.w - 20 - 60, h: 10_000 }, cols, 1, 10, 0, 120, 24), byHeight || 24);
   return (
     <div ref={ref} className="board" style={{ '--board-cw': `${cw}px` } as CSSProperties}>
       {children}

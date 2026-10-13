@@ -8175,7 +8175,7 @@ h3 {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 0;
   padding: 10px;
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -8185,6 +8185,11 @@ h3 {
 
 .board .pcard {
   --cw: var(--board-cw, 64px);
+}
+
+/* The rows overlap a little, like cards laid on a table (OVERLAP in BoardRide; gap can't go below 0). */
+.board-row + .board-row {
+  margin-top: calc(var(--board-cw, 64px) * -0.252);
 }
 
 .board-row {
