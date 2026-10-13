@@ -555,6 +555,19 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             </span>
           ))}
         </span>
+        {/* Turn lost: a big red cross over the pigs, so nobody misses it. */}
+        {showResult && bad && (
+          <svg
+            className="sw-lost"
+            viewBox="0 0 100 100"
+            aria-hidden
+            key={`x-${g.scores.join()}-${g.turnPts}-${g.turn}`}
+            style={{ '--x': `${(at[0].x + at[1].x) / 2}cqw`, '--y': `${(at[0].y + at[1].y) / 2}cqh` } as CSSProperties}
+          >
+            <path d="M22 22 78 78M78 22 22 78" className="sw-lost-edge" />
+            <path d="M22 22 78 78M78 22 22 78" className="sw-lost-bar" />
+          </svg>
+        )}
         {showResult && (
           <div className={`sw-result${bad ? ' bad' : th.kind === 'score' && th.double ? ' double' : ''}`} key={`${g.scores.join()}-${g.turnPts}-${g.turn}`} role="status">
             <span className="sw-result-name">{throwName(th)}</span>
