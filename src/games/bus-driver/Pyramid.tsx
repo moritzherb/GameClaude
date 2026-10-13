@@ -3,7 +3,7 @@ import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
-import { cardName, rankLabel, type Card } from '../../lib/cards';
+import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
 import {
@@ -219,51 +219,29 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   const lastSips = rowSips(lastRow, game.sipMode);
   const nextRow = rowOfFlip(Math.min(game.flips, total - 1), game.rows);
   const hits = lastLaid?.some((l) => l.length) ?? false;
+  // What the card just turned means, in a bubble at that card for a moment.
+  const bubble =
+    last && lastLaid
+      ? {
+          index: lastIndex,
+          hit: hits,
+          text: hits
+            ? lastSips === 1
+              ? t('{n} sip per card', { n: lastSips })
+              : t('{n} sips per card', { n: lastSips })
+            : last.value === 8 || last.value === 14
+              ? t('Nobody has an {rank}.', { rank: rankLabel(last.value) })
+              : t('Nobody has a {rank}.', { rank: rankLabel(last.value) }),
+        }
+      : !known
+        ? { index: 0, hit: false, text: t('Flip the first card. Bottom row, left to right.') }
+        : null;
 
   // One screen, nothing moves: the pyramid, what the last card did (a fixed room) and the hands
   // (a fixed row each) share the height, their cards sized from the room they get.
   return (
     <div className="bd bd-pyr fill">
-      <PyramidCards game={game} nextRow={done ? -1 : nextRow} onFlip={flip} />
-
-      <div className="flip-zone">
-        {last && lastLaid ? (
-          <div key={lastIndex} className={`flip-result${hits ? ' hit' : ''}`}>
-            <div className="flip-result-head">
-              <span className="flip-result-card">{cardName(last)}</span>
-              <span className="flip-result-row">
-                {lastSips === 1
-                  ? t('Row {row} · {n} sip per card', { row: lastRow + 1, n: lastSips })
-                  : t('Row {row} · {n} sips per card', { row: lastRow + 1, n: lastSips })}
-              </span>
-            </div>
-            {hits ? (
-              <ul className="flip-result-list">
-                {lastLaid.map((l, i) =>
-                  l.length ? (
-                    <li key={seats[i].player.id}>
-                      <span className="bd-avatar xs" style={{ background: seats[i].player.color }}>
-                        {seats[i].player.avatar}
-                      </span>
-                      <span>
-                        <strong>{seats[i].player.name}</strong> {t('gives out')} <strong>{l.length * lastSips}</strong>
-                      </span>
-                    </li>
-                  ) : null,
-                )}
-              </ul>
-            ) : (
-              <p className="flip-result-none">
-                {last.value === 8 || last.value === 14
-                  ? t('Nobody has an {rank}.', { rank: rankLabel(last.value) })
-                  : t('Nobody has a {rank}.', { rank: rankLabel(last.value) })}
-              </p>
-            )}
-          </div>
-        ) : (
-          !known && <p className="flip-zone-hint">{t('Flip the first card. Bottom row, left to right.')}</p>
-        )}
-      </div>
+      <PyramidCards game={game} nextRow={done ? -1 : nextRow} onFlip={flip} bubble={bubble} />
 
       <section className="panel hands">
         <h3 className="section-title">{t('Hands')}</h3>
@@ -275,6 +253,11 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
                 {x.player.avatar}
               </span>
               <span className="hand-name">{x.player.name}</span>
+            {!!lastLaid?.[i]?.length && (
+              <span key={lastIndex} className="hand-bubble">
+                🍻 {t('gives out')} {lastLaid[i].length * lastSips}
+              </span>
+            )}
               <span className="hand-cards">
                 {game.hands[i].length ? game.hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
               </span>
@@ -300,12 +283,18 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
 }
 
 /** The pyramid, bottom row widest: its cards as big as the room it gets allows. */
-function PyramidCards({ game, nextRow, onFlip }: { game: Game; nextRow: number; onFlip: () => void }) {
+interface Bubble {
+  index: number;
+  hit: boolean;
+  text: string;
+}
+
+function PyramidCards({ game, nextRow, onFlip, bubble }: { game: Game; nextRow: number; onFlip: () => void; bubble: Bubble | null }) {
   const [ref, box] = useBox<HTMLDivElement>();
   const sizes = pyramidRows(game.rows);
   const starts = sizes.map((_, r) => sizes.slice(0, r).reduce((a, b) => a + b, 0));
   // The box's padding (10px all round) and the sips column on each side (30px) are no room for cards.
-  const cw = fitCards({ w: box.w - 20 - 60, h: box.h - 20 }, game.rows, game.rows, 6, 6, 72, 18);
+  const cw = fitCards({ w: box.w - 20 - 60, h: box.h - 20 }, game.rows, game.rows, 6, 6, 90, 18);
   const cardStyle = { '--cw': `${cw}px` } as CSSProperties;
   return (
     <div ref={ref} className="pyramid">
@@ -327,6 +316,11 @@ function PyramidCards({ game, nextRow, onFlip }: { game: Game; nextRow: number; 
                 >
                   <PlayingCard card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={cardStyle} />
                   {laidCount > 0 && <span className="pyramid-badge">{laidCount}</span>}
+                  {bubble?.index === idx && (
+                    <span key={`${idx}-${bubble.text}`} className={`pyr-bubble${bubble.hit ? ' hit' : ''}${r === game.rows - 1 ? ' below' : ''}`}>
+                      {bubble.text}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -337,14 +331,12 @@ function PyramidCards({ game, nextRow, onFlip }: { game: Game; nextRow: number; 
   );
 }
 
-/** A fixed row per player (two columns from five players): avatar and cards as tall as a row. */
+/** A row of fixed height per player (two columns from five players), so the pyramid gets the rest. */
 function HandRows({ count, children }: { count: number; children: ReactNode }) {
-  const [ref, box] = useBox<HTMLDivElement>();
   const two = count > 4;
   const rows = two ? Math.ceil(count / 2) : count;
-  const rh = box.h ? Math.floor((box.h - (rows - 1) * 4) / rows) : 30;
   return (
-    <div ref={ref} className={`hand-rows${two ? ' two' : ''}`} style={{ '--rows': rows, '--rh': `${rh}px` } as CSSProperties}>
+    <div className={`hand-rows${two ? ' two' : ''}`} style={{ '--rows': rows } as CSSProperties}>
       {children}
     </div>
   );

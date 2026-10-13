@@ -2946,68 +2946,6 @@ h3 {
   animation: pop-in 0.4s var(--spring) 0.4s both;
 }
 
-.flip-result {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px 18px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
-  animation: pop-in 0.4s var(--spring) 0.35s both;
-}
-
-.flip-result.hit {
-  background: var(--good);
-  color: var(--on-color);
-  box-shadow: none;
-}
-
-.flip-result-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.flip-result-card {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.955rem;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
-
-.flip-result-row {
-  font-weight: 600;
-  font-size: 0.95rem;
-  opacity: 0.75;
-}
-
-.flip-result-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 1.05rem;
-  line-height: 1.35;
-}
-
-.flip-result-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.flip-result-none {
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: var(--muted);
-}
-
 .panel.hands {
   gap: 10px;
 }
@@ -3046,20 +2984,94 @@ h3 {
   font-size: 0.95rem;
 }
 
-/* Flipping the pyramid: one screen, nothing moves. The pyramid and the hands share the height
-   left over by the fixed room for the last card's result; the script sizes their cards in
-   pixels from the room they get (the rooms never take their size from the cards). */
+/* Flipping the pyramid: one screen, nothing moves. The pyramid and the hands share the height;
+   the script sizes their cards in pixels from the room they get (the rooms never take their
+   size from the cards). What a card means pops up in bubbles, over the cards. */
 .bd-pyr {
   gap: 12px;
 }
 
 .bd-pyr .pyramid {
-  flex: 1.5 1 0;
-  min-height: 150px;
+  flex: 1 1 0;
+  min-height: 180px;
   justify-content: center;
   gap: 6px;
   padding: 10px;
-  overflow: hidden;
+}
+
+/* At the card just turned: what it means (sips per card laid, or that nobody has one). */
+.pyr-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 6;
+  width: max-content;
+  max-width: 200px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  animation: pyr-bubble 2.8s var(--ease) 0.45s both;
+}
+
+.pyr-bubble.hit {
+  background: var(--good);
+  color: var(--on-color);
+}
+
+/* The little tail towards the card. */
+.pyr-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+  transform: translateX(-50%);
+}
+
+.pyr-bubble.hit::after {
+  border-top-color: var(--good);
+}
+
+/* The top card: the bubble hangs below it. */
+.pyr-bubble.below {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
+.pyr-bubble.below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--ink);
+}
+
+.pyr-bubble.below.hit::after {
+  border-bottom-color: var(--good);
+}
+
+@keyframes pyr-bubble {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.7);
+  }
+  12%,
+  82% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-4px) scale(0.96);
+  }
 }
 
 .bd-pyr .pyramid-row {
@@ -3075,82 +3087,20 @@ h3 {
   font-size: 0.7rem;
 }
 
-/* What the last card did: always the same height, whatever it says. */
-.flip-zone {
-  flex: none;
-  height: 100px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.bd-pyr .flip-result {
-  height: 100%;
-  gap: 6px;
-  padding: 10px 14px;
-  overflow: hidden;
-}
-
-.bd-pyr .flip-result-head {
-  flex-wrap: nowrap;
-  align-items: center;
-}
-
-.bd-pyr .flip-result-card {
-  font-size: 1.6rem;
-  line-height: 1;
-}
-
-.bd-pyr .flip-result-row {
-  font-size: 0.85rem;
-  text-align: right;
-}
-
-.bd-pyr .flip-result-list {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 0.9rem;
-  line-height: 1.2;
-}
-
-.bd-pyr .flip-result-list li {
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.bd-pyr .flip-result-list .bd-avatar.xs {
-  width: 22px;
-  height: 22px;
-  font-size: 0.8rem;
-}
-
-.bd-pyr .flip-result-none {
-  font-size: 0.95rem;
-}
-
-.flip-zone-hint {
-  color: var(--muted);
-  font-weight: 500;
-  text-align: center;
-}
-
 /* The hands: a fixed row per player (two columns from five players), avatar and cards as tall
    as a row allows. */
 .bd-pyr .panel.hands {
-  flex: 1 1 0;
-  min-height: 120px;
+  flex: none;
   gap: 6px;
   padding: 10px 12px;
 }
 
 .hand-rows {
-  flex: 1;
-  min-height: 0;
+  /* One row's height: avatar and cards are sized from it. */
+  --rh: 40px;
   display: grid;
-  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), var(--rh));
   gap: 4px 10px;
-  overflow: hidden;
 }
 
 .hand-rows.two {
@@ -3162,6 +3112,7 @@ h3 {
 }
 
 .bd-pyr .hand-row {
+  position: relative;
   min-height: 0;
   grid-template-columns: auto minmax(0, 5.5em) 1fr;
   gap: 8px;
@@ -3187,6 +3138,41 @@ h3 {
 
 .bd-pyr .hand-cards .pcard {
   --cw: max(15px, min(30px, calc((var(--rh) - 4px) / 1.4)));
+}
+
+/* Whoever lays down: a bubble at their avatar, for a moment. */
+.hand-bubble {
+  position: absolute;
+  left: 26px;
+  top: 50%;
+  z-index: 3;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--good);
+  color: var(--on-color);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: hand-bubble 2.8s var(--ease) 0.5s both;
+}
+
+@keyframes hand-bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.6);
+  }
+  12%,
+  82% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-50%) scale(0.96);
+  }
 }
 
 /* Small cards: the rank and suit as big as the card allows. */
