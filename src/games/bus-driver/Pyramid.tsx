@@ -19,6 +19,7 @@ import {
   SIP_MODES,
   type SipMode,
 } from './pyramid';
+import { VERDICT_DELAY_MS } from './Answers';
 import { fitCards, useBox } from './useBox';
 
 export interface PyramidSeat {
@@ -67,6 +68,9 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   const [sipMode, setSipMode] = useState<SipMode>('normal');
   const [game, setGame] = useState<Game | null>(null);
   const [showResult, setShowResult] = useState(false);
+  // The flips the hands have caught up with: a laid card leaves its hand only once the flipped
+  // card has turned and lain there a moment.
+  const [settled, setSettled] = useState(0);
   // Flip index already handled, so a double tap can't flip two cards before React re-renders.
   const handled = useRef(-1);
 
@@ -151,12 +155,14 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
       laid: [...game.laid, laid],
       gave: game.gave.map((g, i) => g + laid[i].length * sips),
     });
+    const flips = game.flips + 1;
     window.setTimeout(() => {
+      setSettled(flips);
       if (laid.some((l) => l.length)) {
         sfx.tada();
         buzz([30, 40, 30]);
       } else sfx.tick();
-    }, 450);
+    }, VERDICT_DELAY_MS);
   };
 
   /* ---------- Result: who has the most cards left ---------- */
@@ -219,6 +225,9 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
   const lastSips = rowSips(lastRow, game.sipMode);
   const nextRow = rowOfFlip(Math.min(game.flips, total - 1), game.rows);
   const hits = lastLaid?.some((l) => l.length) ?? false;
+  // Until the screen catches up with the last flip, the hands still hold what was just laid.
+  const pending = settled < game.flips;
+  const hands = pending && lastLaid ? game.hands.map((h, i) => [...h, ...lastLaid[i]]) : game.hands;
   // What the card just turned means, in a bubble at that card for a moment.
   const bubble =
     last && lastLaid
@@ -248,7 +257,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
         {/* A fixed row per player; more than four players go in two columns. */}
         <HandRows count={seats.length}>
           {seats.map((x, i) => (
-            <div key={x.player.id} className={`hand-row${lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
+            <div key={x.player.id} className={`hand-row${!pending && lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
               <span className="bd-avatar xs" style={{ background: x.player.color }}>
                 {x.player.avatar}
               </span>
@@ -259,7 +268,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
               </span>
             )}
               <span className="hand-cards">
-                {game.hands[i].length ? game.hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
+                {hands[i].length ? hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
               </span>
             </div>
           ))}

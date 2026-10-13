@@ -6,7 +6,7 @@ import { t, tx } from '../../i18n';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
-import Answers, { Verdict } from './Answers';
+import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
 import type { Guess } from './logic';
 import type { RideStats } from './RideFinish';
@@ -53,7 +53,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
         sfx.boo();
         buzz(result.outcome === 'same' ? [80, 60, 80, 60, 200] : [60, 40, 120]);
       }
-    }, 450);
+    }, VERDICT_DELAY_MS);
   };
 
   const next = () => {

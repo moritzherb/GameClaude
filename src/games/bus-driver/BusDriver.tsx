@@ -9,7 +9,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
-import Answers, { Verdict } from './Answers';
+import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import BusRide from './BusRide';
 import CardRow from './CardRow';
 import { judge, questionsFor, type Guess, type Result } from './logic';
@@ -37,8 +37,6 @@ interface State {
   tied: Player[];
   driver: Player | null;
 }
-
-const REVEAL_MS = 550;
 
 function seatOrder(players: Player[], dealerId: string): Seat[] {
   const i = Math.max(0, players.findIndex((p) => p.id === dealerId));
@@ -112,7 +110,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         sfx.boo();
         buzz(result.outcome === 'same' ? [80, 60, 80, 60, 200] : [60, 40, 120]);
       }
-    }, REVEAL_MS);
+    }, VERDICT_DELAY_MS);
   };
 
   const next = () => {

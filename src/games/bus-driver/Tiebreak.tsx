@@ -5,8 +5,16 @@ import { t } from '../../i18n';
 import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
-import { Verdict } from './Answers';
+import { Verdict, VERDICT_DELAY_MS } from './Answers';
 import { dealTiebreak, flipTiebreak, type TiebreakOutcome, type TiebreakState } from './pyramid';
+
+interface Shown {
+  /** The flip the screen shows the result of. */
+  flips: number;
+  remaining: string[];
+  justSafe: string[];
+  outcome: TiebreakOutcome;
+}
 
 interface Props {
   tied: Player[];
@@ -22,7 +30,11 @@ export default function Tiebreak({ tied, onDone }: Props) {
   const [tb, setTb] = useState<TiebreakState>(() => dealTiebreak(tied.map((p) => p.id)));
   const [attempt, setAttempt] = useState(1);
   const [outcome, setOutcome] = useState<TiebreakOutcome>({ kind: 'continue' });
-  const [justSafe, setJustSafe] = useState<string[]>([]);
+  // What the screen shows: it catches up with a flip only once the card has turned and lain there
+  // a moment (who's safe, the line under the card, how it ended).
+  const [shown, setShown] = useState<Shown>(() => ({ flips: 0, remaining: tb.remaining, justSafe: [], outcome: { kind: 'continue' } }));
+  const showTimer = useRef<number>(undefined);
+  useEffect(() => () => window.clearTimeout(showTimer.current), []);
   // Flip count already handled, so a double tap can't flip twice before React re-renders.
   const handled = useRef(-1);
 
@@ -35,9 +47,10 @@ export default function Tiebreak({ tied, onDone }: Props) {
     handled.current = tb.flipped.length;
     const r = flipTiebreak(tb);
     setTb(r.state);
-    setJustSafe(r.safe);
     setOutcome(r.outcome);
-    window.setTimeout(() => {
+    window.clearTimeout(showTimer.current);
+    showTimer.current = window.setTimeout(() => {
+      setShown({ flips: r.state.flipped.length, remaining: r.state.remaining, justSafe: r.safe, outcome: r.outcome });
       if (r.outcome.kind === 'driver') {
         sfx.boo();
         buzz([80, 60, 80, 60, 200]);
@@ -45,21 +58,28 @@ export default function Tiebreak({ tied, onDone }: Props) {
         sfx.tada();
         buzz([30, 40, 30]);
       } else sfx.tick();
-    }, 450);
+    }, VERDICT_DELAY_MS);
   };
 
   const redo = (ids: string[]) => {
     handled.current = -1;
-    setTb(dealTiebreak(ids));
+    const next = dealTiebreak(ids);
+    window.clearTimeout(showTimer.current);
+    setTb(next);
     setAttempt((a) => a + 1);
     setOutcome({ kind: 'continue' });
-    setJustSafe([]);
+    setShown({ flips: 0, remaining: next.remaining, justSafe: [], outcome: { kind: 'continue' } });
   };
+
+  const { justSafe, outcome: ended } = shown;
+  // The card has turned, but the screen hasn't caught up with it yet.
+  const pending = shown.flips !== tb.flipped.length;
 
   // The line under the flipped card: what it did, or how it ended.
   let line: string;
-  if (outcome.kind === 'driver') line = t('{name} drives the bus!', { name: byId(outcome.id).name });
-  else if (outcome.kind === 'redo') line = t('Still tied!');
+  if (pending) line = '';
+  else if (ended.kind === 'driver') line = t('{name} drives the bus!', { name: byId(ended.id).name });
+  else if (ended.kind === 'redo') line = t('Still tied!');
   else if (!last) line = t('Ready?');
   else if (!justSafe.length) line = t('{rank}. Nobody’s safe.', { rank: rankLabel(last.value) });
   else {
@@ -79,7 +99,7 @@ export default function Tiebreak({ tied, onDone }: Props) {
       {/* Four or more: compact rows in two columns, so it all still fits one screen. */}
       <div className={`tb-players${inPlay.length > 3 ? ' many' : ''}`}>
         {inPlay.map((p, i) => {
-          const safe = !tb.remaining.includes(p.id);
+          const safe = !shown.remaining.includes(p.id);
           return (
             <div key={p.id} className={`tb-player${safe ? ' safe' : ''}${justSafe.includes(p.id) ? ' just' : ''}`} style={{ '--chip': p.color } as CSSProperties}>
               <span className="bd-avatar sm" style={{ background: p.color }}>
@@ -116,18 +136,18 @@ export default function Tiebreak({ tied, onDone }: Props) {
         <span className="fine-print">{t('{n} flipped', { n: tb.flipped.length })}</span>
       </div>
 
-      {outcome.kind === 'driver' && <Verdict tone="same" emoji="🚌" title={t('{name} drives the bus!', { name: byId(outcome.id).name })} />}
-      {outcome.kind === 'redo' && (
-        <Verdict tone="correct" emoji="🔁" title={t('Still tied!')} sub={t('{names} go again with new cards.', { names: outcome.ids.map((id) => byId(id).name).join(' & ') })} />
+      {ended.kind === 'driver' && <Verdict tone="same" emoji="🚌" title={t('{name} drives the bus!', { name: byId(ended.id).name })} />}
+      {ended.kind === 'redo' && (
+        <Verdict tone="correct" emoji="🔁" title={t('Still tied!')} sub={t('{names} go again with new cards.', { names: ended.ids.map((id) => byId(id).name).join(' & ') })} />
       )}
 
       <div className="sticky-action">
-        {outcome.kind === 'driver' ? (
-          <BigButton size="xl" onClick={() => onDone(byId(outcome.id))}>
+        {ended.kind === 'driver' ? (
+          <BigButton size="xl" onClick={() => onDone(byId(ended.id))}>
             {t('Continue')}
           </BigButton>
-        ) : outcome.kind === 'redo' ? (
-          <BigButton size="xl" onClick={() => redo(outcome.ids)}>
+        ) : ended.kind === 'redo' ? (
+          <BigButton size="xl" onClick={() => redo(ended.ids)}>
             {t('Deal new cards')}
           </BigButton>
         ) : (
