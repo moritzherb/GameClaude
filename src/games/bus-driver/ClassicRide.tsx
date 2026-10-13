@@ -6,7 +6,7 @@ import { t } from '../../i18n';
 import type { Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
-import Answers, { Verdict } from './Answers';
+import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import CardRow from './CardRow';
 import type { RideStats } from './RideFinish';
 import { QUESTIONS, type Guess, type Result } from './logic';
@@ -46,7 +46,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         sfx.boo();
         buzz(step.result.outcome === 'same' ? [80, 60, 80, 60, 200] : [60, 40, 120]);
       }
-    }, 450);
+    }, VERDICT_DELAY_MS);
   };
 
   const next = () => {

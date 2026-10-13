@@ -60,15 +60,21 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
 
 
 /**
+ * How long after an answer (or a flip) right or wrong shows, with its sound: the card turns first
+ * and lies there on its own for a moment (the stamp's animation-delay in the CSS is the same).
+ */
+export const VERDICT_DELAY_MS = 1100;
+
+/**
  * Right or wrong: a big stamp pops up over the table once the card has turned, with the sips to
  * drink or give out (or what happens now), and goes again.
  */
-export function Verdict({ tone, emoji, title, sub }: { tone: Outcome; emoji: string; title: string; sub: string }) {
+export function Verdict({ tone, emoji, title, sub }: { tone: Outcome; emoji: string; title: string; sub?: string }) {
   return (
     <div className={`bd-pop ${tone}`} role="status">
       <span className="bd-pop-emoji">{emoji}</span>
       <span className="bd-pop-title">{title}</span>
-      <span className="bd-pop-sub">{sub}</span>
+      {sub && <span className="bd-pop-sub">{sub}</span>}
     </div>
   );
 }
