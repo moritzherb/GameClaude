@@ -4927,12 +4927,12 @@ h3 {
 
 .sw-lost-edge {
   stroke: #fff;
-  stroke-width: 22;
+  stroke-width: 14;
 }
 
 .sw-lost-bar {
   stroke: #e3261c;
-  stroke-width: 15;
+  stroke-width: 9;
 }
 
 @keyframes sw-lost {
