@@ -11,6 +11,7 @@ import type { GameProps } from '../types';
 import Pig from './Pigs';
 import { bank, BONUSES, loserSips, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
 
 const POSE_NAME: Record<Pose, string> = {
   side: tx('Side'),
@@ -65,7 +66,7 @@ export default function Schweinerei({ players, exit }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar">{p.avatar}</span>
+              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starterId && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>
@@ -484,7 +485,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
       <div className="mx-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
-            {who.avatar}
+            <Avatar avatar={who.avatar} photo={who.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{who.name}</span>
@@ -502,7 +503,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         <div className="sw-board-players" ref={board} aria-label={t('Scores')}>
           {players.map((p, i) => (
             <span key={p.id} className={`sw-score${i === g.turn ? ' on' : ''}`} style={{ '--who': p.color } as CSSProperties}>
-              <span className="sw-score-avatar">{p.avatar}</span>
+              <span className="sw-score-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
               <span className="sw-score-num">{g.scores[i]}</span>
             </span>
           ))}
@@ -666,7 +667,7 @@ function Finish({ g, players, onAgain, exit }: { g: Game; players: GameProps['pl
               return (
                 <div key={p.id} className="ftd-tally-row">
                   <span className="bd-avatar xs" style={{ background: p.color }}>
-                    {p.avatar}
+                    <Avatar avatar={p.avatar} photo={p.photo} />
                   </span>
                   <span className="ftd-tally-name">{p.name}</span>
                   <span className="sw-final">{s}</span>

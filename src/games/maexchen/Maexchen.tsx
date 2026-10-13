@@ -10,6 +10,7 @@ import type { GameProps } from '../types';
 import mat from './mat.webp';
 import { allowedAfter, announce, believe, isDouble, MAEXCHEN, newRound, peek, reveal, shake, valueOf, VALUES, type Round, type Value } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
 
 const SHAKE_MS = 650;
 /** When the verdict lands after the cup is lifted (matches the CSS). */
@@ -35,7 +36,7 @@ export default function Maexchen({ players }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar">{p.avatar}</span>
+              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starterId && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>
@@ -169,7 +170,7 @@ function MaexchenTable({
       <div className="mx-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
-            {who.avatar}
+            <Avatar avatar={who.avatar} photo={who.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{who.name}</span>
@@ -197,7 +198,7 @@ function MaexchenTable({
         {r.phase === 'pass' && (
           <span className="mx-handoff" key={next} style={{ '--who': who.color } as CSSProperties}>
             <span className="mx-handoff-avatar" style={{ background: who.color }}>
-              {who.avatar}
+              <Avatar avatar={who.avatar} photo={who.photo} />
             </span>
             <span className="mx-handoff-text">{t('Hand the phone to {name}', { name: who.name })}</span>
             <span className="mx-handoff-sub">{mustLift ? t('Mäxchen: you have to lift the cup') : t('believe it or lift the cup?')}</span>

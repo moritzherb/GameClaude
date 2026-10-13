@@ -11,6 +11,7 @@ import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { DEFAULT_ROWS, DEFAULT_STAKE, newRace, ROW_OPTIONS, sipsForRow, STAKE_MAX, STAKE_MIN, step, winnings, type Race } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
 
 const SUIT_NAME: Record<Suit, string> = { hearts: tx('Hearts'), diamonds: tx('Diamonds'), spades: tx('Spades'), clubs: tx('Clubs') };
 const RED = (s: Suit) => s === 'hearts' || s === 'diamonds';
@@ -72,7 +73,7 @@ export default function HorseRace({ players, exit }: GameProps) {
           {players.map((p) => (
             <div key={p.id} className="hs-bet-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                {p.avatar}
+                <Avatar avatar={p.avatar} photo={p.photo} />
               </span>
               <span className="hs-bet-name">{p.name}</span>
               <span className="hs-stake" role="group" aria-label={t('Stake of {name}', { name: p.name })}>
@@ -165,7 +166,7 @@ export default function HorseRace({ players, exit }: GameProps) {
             .map(({ p, n }) => (
               <div key={p.id} className="ftd-tally-row">
                 <span className="bd-avatar xs" style={{ background: p.color }}>
-                  {p.avatar}
+                  <Avatar avatar={p.avatar} photo={p.photo} />
                 </span>
                 <span className="ftd-tally-name">{p.name}</span>
                 <span className={`hs-tally-suit${RED(bets[p.id]) ? ' red' : ''}`}>
@@ -300,7 +301,7 @@ function Track({ race, backers }: { race: Race; backers: (s: Suit) => Player[] }
           <span key={s} className="hs-backer-lane">
             {backers(s).map((p) => (
               <span key={p.id} className="hs-backer" style={{ background: p.color }} title={p.name}>
-                {p.avatar}
+                <Avatar avatar={p.avatar} photo={p.photo} />
               </span>
             ))}
           </span>

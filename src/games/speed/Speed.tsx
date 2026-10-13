@@ -12,6 +12,8 @@ import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { draw, HAND_MAX, markReady, newGame, overDrawn, play, putBack, sortHand, stuck, targetFor, turnOver, type Game, type Who } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
+import { usePhotoOf } from '../../net/photos';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -217,7 +219,7 @@ export default function Speed() {
               style={{ '--chip': m.color } as CSSProperties}
               onClick={() => toggle(m.id)}
             >
-              <span className="pick-chip-avatar">{m.avatar}</span>
+              <span className="pick-chip-avatar"><Avatar avatar={m.avatar} photo={m.photo} /></span>
               <span className="pick-chip-name">{m.name}</span>
             </Tap>
           ))}
@@ -323,12 +325,13 @@ export default function Speed() {
 
 /** The other player: how many cards they have left, their hand face down. */
 function Opponent({ g, who, seat }: { g: Game; who: Who; seat: Seat }) {
+  const photoOf = usePhotoOf();
   const side = g.sides[who];
   const left = side.hand.length + side.pile.length;
   return (
     <div className="sp-opp" style={{ '--chip': seat.color } as CSSProperties}>
       <span className="bd-avatar xs" style={{ background: seat.color }}>
-        {seat.avatar}
+        <Avatar avatar={seat.avatar} photo={photoOf(seat.id)} />
       </span>
       <span className="sp-name">{seat.name}</span>
       <span className="sp-opp-hand" aria-label={t('{n} cards in hand', { n: side.hand.length })}>

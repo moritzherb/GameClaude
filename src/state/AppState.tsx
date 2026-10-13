@@ -9,6 +9,19 @@ export interface Player {
   name: string;
   avatar: string;
   color: string;
+  /** A small photo, shown instead of the emoji (people added from a room, or this phone's own profile). */
+  photo?: string;
+  /** Who this is when it's someone from a room (their phone's id) or this phone's owner: their numbers are kept. */
+  personId?: string;
+}
+
+/** Someone with a profile who can join the crew: a person met in a room, or this phone's owner. */
+export interface CrewProfile {
+  personId: string;
+  name: string;
+  avatar: string;
+  color: string;
+  photo?: string;
 }
 
 export interface Settings {
@@ -36,6 +49,9 @@ interface AppState {
   /** Change a player's name and/or avatar. A name that's empty or taken by someone else is ignored. */
   updatePlayer: (id: string, patch: { name?: string; avatar?: string }) => void;
   clearPlayers: () => void;
+  /** Add someone with a profile. Already in the crew: nothing happens. A player with the same name and
+   *  no profile yet becomes them (their photo and numbers). */
+  addProfile: (profile: CrewProfile) => void;
   /** Replace the whole list, e.g. with everyone in a room. */
   replacePlayers: (list: Omit<Player, 'id'>[]) => void;
   settings: Settings;
@@ -55,11 +71,23 @@ const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'obj
 /** Stored players, keeping only complete entries (damaged storage must never break the app). */
 function cleanPlayers(raw: unknown): Player[] {
   if (!Array.isArray(raw)) return [];
-  return raw.filter(
-    (p): p is Player =>
-      isObject(p) && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.avatar === 'string' && typeof p.color === 'string',
-  );
+  return raw
+    .filter(
+      (p): p is Player =>
+        isObject(p) && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.avatar === 'string' && typeof p.color === 'string',
+    )
+    .map(({ id, name, avatar, color, photo, personId }) => ({
+      id,
+      name,
+      avatar,
+      color,
+      ...(okPhoto(photo) ? { photo } : {}),
+      ...(typeof personId === 'string' && personId ? { personId } : {}),
+    }));
 }
+
+const okPhoto = (p: unknown): p is string => typeof p === 'string' && p.startsWith('data:image/') && p.length < 20_000;
+const newId = () => crypto.randomUUID?.() ?? String(Date.now() + Math.random());
 
 /** Stored settings over the defaults (missing or damaged values fall back to them). */
 function cleanSettings(raw: unknown): Settings {
@@ -94,7 +122,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return [
             ...list,
             {
-              id: crypto.randomUUID?.() ?? String(Date.now() + Math.random()),
+              id: newId(),
               name: clean,
               avatar: pick(freeAvatars.length ? freeAvatars : AVATARS),
               color: PLAYER_COLORS[list.length % PLAYER_COLORS.length],
@@ -108,12 +136,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (p.id !== id) return p;
             const name = patch.name?.trim().slice(0, 18);
             const nameOk = !!name && !list.some((o) => o.id !== id && o.name.toLowerCase() === name.toLowerCase());
-            return { ...p, ...(nameOk ? { name } : {}), ...(patch.avatar ? { avatar: patch.avatar } : {}) };
+            // Picking an emoji shows the emoji: the photo goes.
+            return { ...p, ...(nameOk ? { name } : {}), ...(patch.avatar ? { avatar: patch.avatar, photo: undefined } : {}) };
           }),
         ),
       clearPlayers: () => setPlayers([]),
-      replacePlayers: (list) =>
-        setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: crypto.randomUUID?.() ?? String(Date.now() + Math.random()) }))),
+      addProfile: (pr) =>
+        setPlayers((list) => {
+          if (list.some((p) => p.personId === pr.personId)) return list;
+          const fields = { name: pr.name.trim().slice(0, 18), avatar: pr.avatar, color: pr.color, photo: okPhoto(pr.photo) ? pr.photo : undefined, personId: pr.personId };
+          const same = list.find((p) => !p.personId && p.name.toLowerCase() === fields.name.toLowerCase());
+          if (same) return list.map((p) => (p === same ? { ...p, ...fields } : p));
+          if (!fields.name || list.length >= MAX_PLAYERS) return list;
+          // Someone else already goes by this name: a number tells them apart.
+          let name = fields.name;
+          for (let n = 2; list.some((p) => p.name.toLowerCase() === name.toLowerCase()); n++) name = `${fields.name.slice(0, 15)} ${n}`;
+          return [...list, { id: newId(), ...fields, name }];
+        }),
+      replacePlayers: (list) => setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: newId() }))),
       settings,
       updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
       knows: (gameId) => !!settings.known?.includes(gameId),

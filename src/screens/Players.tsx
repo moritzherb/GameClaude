@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import Avatar from '../components/Avatar';
 import BigButton from '../components/BigButton';
 import { CloseIcon, PlusIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
@@ -7,10 +8,28 @@ import { buzz, sfx } from '../lib/fx';
 import { unfill } from '../lib/noAutofill';
 import { navigate, paths } from '../lib/router';
 import Sheet from '../components/Sheet';
-import { AVATARS, MAX_PLAYERS, useApp, type Player } from '../state/AppState';
+import { findGame } from '../games/registry';
+import { loadPeople } from '../lib/people';
+import { crewKey, loadCrewStats, loadStats, summary } from '../lib/stats';
+import { useProfile } from '../net/profile';
+import { AVATARS, MAX_PLAYERS, useApp, type CrewProfile, type Player } from '../state/AppState';
 
 export default function Players({ next }: { next: string | null }) {
-  const { players, addPlayer, removePlayer, updatePlayer, clearPlayers } = useApp();
+  const { players, addPlayer, addProfile, removePlayer, updatePlayer, clearPlayers } = useApp();
+  const { profile } = useProfile();
+  // Everyone met in a room (and this phone's owner): one tap puts them in the crew, photo and all.
+  const [people] = useState(loadPeople);
+  const profiles = useMemo<CrewProfile[]>(() => {
+    const me: CrewProfile[] = profile.name.trim()
+      ? [{ personId: profile.clientId, name: profile.name.trim(), avatar: profile.avatar, color: profile.color, photo: profile.photo }]
+      : [];
+    return [...me, ...people.map((p) => ({ personId: p.id, name: p.name, avatar: p.avatar, color: p.color, photo: p.photo }))].filter(
+      (pr) => !players.some((p) => p.personId === pr.personId),
+    );
+  }, [profile, people, players]);
+  // Everyone's numbers (games played here), for the line under their name.
+  const [stats] = useState(() => ({ crew: loadCrewStats(), mine: loadStats().played }));
+  const statsOf = (p: Player) => summary(p.personId === profile.clientId ? stats.mine : (stats.crew[crewKey(p)]?.played ?? {}));
   // The player whose avatar is being picked (the sheet with all avatars).
   const [picking, setPicking] = useState<Player | null>(null);
   const [name, setName] = useState('');
@@ -72,6 +91,35 @@ export default function Players({ next }: { next: string | null }) {
       </form>
       {duplicate && name.trim() && <p className="warn">{t('Already playing. Try a nickname.')}</p>}
 
+      {profiles.length > 0 && !full && (
+        <section className="crew-people" aria-label={t('From your rooms')}>
+          <span className="crew-people-title">{t('From your rooms')}</span>
+          <div className="chips">
+            {profiles.map((pr) => (
+              <button
+                key={pr.personId}
+                type="button"
+                className="chip person-chip"
+                style={{ '--chip': pr.color } as CSSProperties}
+                onClick={() => {
+                  sfx.pop();
+                  buzz();
+                  addProfile(pr);
+                }}
+              >
+                <span className="person-chip-avatar">
+                  <Avatar avatar={pr.avatar} photo={pr.photo} />
+                </span>
+                {pr.personId === profile.clientId ? t('{name} (you)', { name: pr.name }) : pr.name}
+                <span className="person-chip-plus" aria-hidden>
+                  +
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {players.length === 0 ? (
         <div className="empty">
           <div className="empty-emoji">🦗</div>
@@ -91,9 +139,10 @@ export default function Players({ next }: { next: string | null }) {
                   setPicking(p);
                 }}
               >
-                {p.avatar}
+                <Avatar avatar={p.avatar} photo={p.photo} />
               </button>
               <PlayerName
+                stats={statsOf(p)}
                 player={p}
                 taken={(n) => players.some((o) => o.id !== p.id && o.name.toLowerCase() === n.toLowerCase())}
                 onRename={(n) => updatePlayer(p.id, { name: n })}
@@ -174,7 +223,18 @@ export default function Players({ next }: { next: string | null }) {
 }
 
 /** A player's name, changed right where it stands: tap it and type. Empty or taken names don't stick. */
-function PlayerName({ player, taken, onRename }: { player: Player; taken: (name: string) => boolean; onRename: (name: string) => void }) {
+function PlayerName({
+  player,
+  stats,
+  taken,
+  onRename,
+}: {
+  player: Player;
+  stats: { total: number; favourite: string | null };
+  taken: (name: string) => boolean;
+  onRename: (name: string) => void;
+}) {
+  const fav = stats.favourite ? findGame(stats.favourite) : undefined;
   const [draft, setDraft] = useState(player.name);
   const cancelled = useRef(false);
   useEffect(() => setDraft(player.name), [player.name]);
@@ -228,7 +288,16 @@ function PlayerName({ player, taken, onRename }: { player: Player; taken: (name:
           }
         }}
       />
-      {clash && <span className="player-name-warn">{t('Already playing. Try a nickname.')}</span>}
+      {clash ? (
+        <span className="player-name-warn">{t('Already playing. Try a nickname.')}</span>
+      ) : (
+        stats.total > 0 && (
+          <span className="player-stats">
+            {stats.total === 1 ? t('1 game played') : t('{n} games played', { n: stats.total })}
+            {fav && ` · ${fav.emoji} ${t(fav.name)}`}
+          </span>
+        )
+      )}
     </span>
   );
 }

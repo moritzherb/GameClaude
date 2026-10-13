@@ -27,6 +27,7 @@ import {
   type Score,
   type Seat,
 } from './logic';
+import Avatar from '../../components/Avatar';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -198,7 +199,7 @@ export default function HoseRunter() {
           {ready.map((m) => (
             <li key={m.id} className="member-row">
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
-                {m.avatar}
+                <Avatar avatar={m.avatar} photo={m.photo} />
               </span>
               <span className="member-text">
                 <span className="member-name">{m.name}</span>

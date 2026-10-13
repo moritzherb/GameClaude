@@ -7,6 +7,7 @@ import { useShared } from '../../net/shared';
 import { useApp, type Player } from '../../state/AppState';
 import { newGame, type Game, type Who } from './logic';
 import { TrashTable } from './Trash';
+import Avatar from '../../components/Avatar';
 
 interface Shared {
   g: Game | null;
@@ -58,7 +59,7 @@ export default function TrashOnline() {
                   style={{ '--chip': m.color } as CSSProperties}
                   onClick={() => toggle(m.id)}
                 >
-                  <span className="pick-chip-avatar">{m.avatar}</span>
+                  <span className="pick-chip-avatar"><Avatar avatar={m.avatar} photo={m.photo} /></span>
                   <span className="pick-chip-name">{m.name}</span>
                 </Tap>
               ))}

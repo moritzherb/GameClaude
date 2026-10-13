@@ -6,6 +6,8 @@ import { useShared } from '../../net/shared';
 import { useApp, type Player } from '../../state/AppState';
 import { FiveThousandTable } from './FiveThousand';
 import { newGame, type Game } from './logic';
+import Avatar from '../../components/Avatar';
+import { usePhotoOf } from '../../net/photos';
 
 interface Shared {
   g: Game | null;
@@ -17,6 +19,7 @@ interface Shared {
 
 /** 5000 with every player on their own phone: one table, everyone sees every roll. */
 export default function FiveThousandOnline() {
+  const photoOf = usePhotoOf();
   const { state, set, room, isHost, myId } = useShared<Shared>('fk', { g: null, picked: [], seats: [] });
   const known = useApp().knows('five-thousand');
   const online = room.members.filter((m) => m.online);
@@ -52,7 +55,7 @@ export default function FiveThousandOnline() {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar">{p.avatar}</span>
+              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={photoOf(p.id)} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starter?.id && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>

@@ -10,6 +10,7 @@ import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
 
 const SLOT_LABELS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 /** How long the card in play takes to glide in: a little longer the further it comes from. */
@@ -53,7 +54,7 @@ export default function Trash({ players, exit }: GameProps) {
                 style={{ '--chip': p.color } as CSSProperties}
                 onClick={() => toggle(p.id)}
               >
-                <span className="pick-chip-avatar">{p.avatar}</span>
+                <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
                 <span className="pick-chip-name">{p.name}</span>
               </Tap>
             ))}
@@ -306,7 +307,7 @@ export function TrashTable({
         </span>
         <span className="tr-status">
           <span className="tr-status-name" style={{ color: player.color }}>
-            {player.avatar}
+            <Avatar avatar={player.avatar} photo={player.photo} />
           </span>
           <span className="tr-status-text">{status}</span>
           {msg ? (
@@ -327,7 +328,7 @@ export function TrashTable({
 
       {over && g.winner != null && (
         <div className="tr-over">
-            {g.phase === 'game-over' && <Finished game="trash" />}
+            {g.phase === 'game-over' && <Finished game="trash" players={two} />}
           <div className="tr-over-card">
             <span className="kicker">{g.phase === 'game-over' ? t('Game over') : t('Round {n}', { n: g.round })}</span>
             <h2 className="bd-title big">
@@ -407,7 +408,7 @@ function Board({
     <section className={`tr-board${flipped ? ' flipped' : ''}${active ? ' active' : ''}`}>
       <div className="tr-board-head">
         <span className="bd-avatar xs" style={{ background: player.color }}>
-          {player.avatar}
+          <Avatar avatar={player.avatar} photo={player.photo} />
         </span>
         <span className="tr-board-name">{player.name}</span>
         <span className="tr-board-count">

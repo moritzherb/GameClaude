@@ -1583,6 +1583,63 @@ h3 {
   color: var(--bad-ink);
 }
 
+/* Under a crew member's name: how much they've played here. */
+.player-stats {
+  display: block;
+  margin-top: -6px;
+  padding-bottom: 4px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* People met in a room (and you): one tap adds them to the crew. */
+.crew-people {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 2px 0 14px;
+}
+
+.crew-people-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.person-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 5px;
+}
+
+.person-chip-avatar {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--chip);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: 1rem;
+}
+
+.person-chip-avatar .avatar-photo {
+  width: 100%;
+  height: 100%;
+}
+
+.person-chip-plus {
+  font-weight: 800;
+  color: var(--accent-ink, var(--accent));
+}
+
 /* Picking an avatar: all of them in a grid; the player's own one in their colour. */
 .avatar-grid {
   display: grid;

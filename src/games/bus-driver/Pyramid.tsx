@@ -21,6 +21,7 @@ import {
 } from './pyramid';
 import { VERDICT_DELAY_MS } from './Answers';
 import { fitCards, useBox } from './useBox';
+import Avatar from '../../components/Avatar';
 
 export interface PyramidSeat {
   player: Player;
@@ -190,7 +191,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
             <div key={seats[i].player.id} className={`bd-summary-row${losers.includes(i) ? ' loser' : ''}`}>
               <div className="bd-summary-who">
                 <span className="bd-avatar sm" style={{ background: seats[i].player.color }}>
-                  {seats[i].player.avatar}
+                  <Avatar avatar={seats[i].player.avatar} photo={seats[i].player.photo} />
                 </span>
                 <span className="bd-summary-name">{seats[i].player.name}</span>
                 <span className="bd-summary-stats">
@@ -260,7 +261,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           {seats.map((x, i) => (
             <div key={x.player.id} className={`hand-row${!pending && lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
               <span className="bd-avatar xs" style={{ background: x.player.color }}>
-                {x.player.avatar}
+                <Avatar avatar={x.player.avatar} photo={x.player.photo} />
               </span>
               <span className="hand-name">{x.player.name}</span>
             {!!lastLaid?.[i]?.length && (

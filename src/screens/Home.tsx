@@ -141,7 +141,7 @@ export default function Home() {
             <span className="avatar-stack">
               {players.slice(0, 4).map((p) => (
                 <span key={p.id} style={{ background: p.color }}>
-                  {p.avatar}
+                  <Avatar avatar={p.avatar} photo={p.photo} />
                 </span>
               ))}
               {players.length > 4 && <span className="more">+{players.length - 4}</span>}

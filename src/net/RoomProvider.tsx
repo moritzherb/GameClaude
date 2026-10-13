@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { t } from '../i18n';
+import { rememberPeople } from '../lib/people';
 import { buzz, sfx } from '../lib/fx';
 import { load } from '../lib/storage';
 import { newRoomCode, peerIdFor, type Member, type Profile, type ToGuest, type ToHost } from './protocol';
@@ -126,6 +127,8 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const setAllMembers = (list: Member[]) => {
     membersRef.current = list;
     setMembers(list);
+    // Everyone met here can join the crew for the one-phone games later.
+    rememberPeople(list, profileRef.current?.clientId);
   };
 
   const emitGame = (data: unknown, fromId: string | null) => listeners.current.forEach((l) => l(data, fromId));

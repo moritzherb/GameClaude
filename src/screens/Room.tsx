@@ -295,7 +295,7 @@ function Lobby() {
             variant="glass"
             disabled={room.members.length < 2}
             onClick={() => {
-              replacePlayers(room.members.map((m) => ({ name: m.name, avatar: m.avatar, color: m.color })));
+              replacePlayers(room.members.map((m) => ({ name: m.name, avatar: m.avatar, color: m.color, photo: m.photo, personId: m.id })));
               navigate(paths.players());
             }}
           >

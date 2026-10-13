@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BigButton from '../components/BigButton';
+import { CrewContext } from '../components/Finished';
 import { HelpIcon } from '../components/Icons';
 import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
@@ -17,6 +18,11 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   const [showRules, setShowRules] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   useWakeLock();
+  // Everyone in the room: a game played to its end counts for them on this phone too.
+  const crew = useMemo(
+    () => room.members.map((m) => ({ id: m.id, personId: m.id, name: m.name, avatar: m.avatar, color: m.color })),
+    [room.members],
+  );
 
   const Game = game.online;
   const inRoom = room.status === 'open' || room.status === 'reconnecting' || room.status === 'connecting';
@@ -60,7 +66,9 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}
 
-      <Game />
+      <CrewContext.Provider value={crew}>
+        <Game />
+      </CrewContext.Provider>
 
       <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>
         <RulesList rules={game.rules} />
