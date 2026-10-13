@@ -63,12 +63,12 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
  * Right or wrong: a big stamp pops up over the table once the card has turned, with the sips to
  * drink or give out (or what happens now), and goes again.
  */
-export function Verdict({ tone, emoji, title, sub }: { tone: Outcome; emoji: string; title: string; sub: string }) {
+export function Verdict({ tone, emoji, title, sub }: { tone: Outcome; emoji: string; title: string; sub?: string }) {
   return (
     <div className={`bd-pop ${tone}`} role="status">
       <span className="bd-pop-emoji">{emoji}</span>
       <span className="bd-pop-title">{title}</span>
-      <span className="bd-pop-sub">{sub}</span>
+      {sub && <span className="bd-pop-sub">{sub}</span>}
     </div>
   );
 }

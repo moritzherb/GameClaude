@@ -1,10 +1,11 @@
-import { useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import { t } from '../../i18n';
-import { rankLabel } from '../../lib/cards';
+import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
+import { Verdict } from './Answers';
 import { dealTiebreak, flipTiebreak, type TiebreakOutcome, type TiebreakState } from './pyramid';
 
 interface Props {
@@ -55,64 +56,70 @@ export default function Tiebreak({ tied, onDone }: Props) {
     setJustSafe([]);
   };
 
+  // The line under the flipped card: what it did, or how it ended.
+  let line: string;
+  if (outcome.kind === 'driver') line = t('{name} drives the bus!', { name: byId(outcome.id).name });
+  else if (outcome.kind === 'redo') line = t('Still tied!');
+  else if (!last) line = t('Ready?');
+  else if (!justSafe.length) line = t('{rank}. Nobody’s safe.', { rank: rankLabel(last.value) });
+  else {
+    const names = justSafe.map((id) => byId(id).name).join(' & ');
+    line = justSafe.length > 1 ? t('{rank}! {names} are safe.', { rank: rankLabel(last.value), names }) : t('{rank}! {names} is safe.', { rank: rankLabel(last.value), names });
+  }
+
+  // One screen, nothing moves: how it ends pops up over the table instead of pushing it down.
   return (
-    <div className="bd">
+    <div className="bd bd-tb fill">
       <div className="bd-head">
         <span className="kicker">{attempt > 1 ? t('Tiebreaker · round {n}', { n: attempt }) : t('Tiebreaker')}</span>
         <h2 className="bd-title">{t('Whose card shows up first?')}</h2>
-        {outcome.kind === 'continue' && !known && (
-          <p className="lead">{t('Everyone got a new card. We flip the deck: when your value shows up, you’re safe. The last one left drives the bus.')}</p>
-        )}
+        {!known && <p className="lead">{t('Everyone got a new card. We flip the deck: when your value shows up, you’re safe. The last one left drives the bus.')}</p>}
       </div>
 
-      {outcome.kind === 'driver' && (
-        <div className="bd-result same">
-          <span className="bd-result-emoji">🚌</span>
-          <span className="bd-result-text">
-            <span className="bd-result-title">{t('{name} drives the bus!', { name: byId(outcome.id).name })}</span>
-          </span>
-        </div>
-      )}
-      {outcome.kind === 'redo' && (
-        <div className="bd-result correct">
-          <span className="bd-result-emoji">🔁</span>
-          <span className="bd-result-text">
-            <span className="bd-result-title">{t('Still tied!')}</span>
-            <span className="bd-result-sub">{t('{names} go again with new cards.', { names: outcome.ids.map((id) => byId(id).name).join(' & ') })}</span>
-          </span>
-        </div>
-      )}
-
-
-      <div className="tb-players">
-        {inPlay.map((p) => {
+      {/* Four or more: compact rows in two columns, so it all still fits one screen. */}
+      <div className={`tb-players${inPlay.length > 3 ? ' many' : ''}`}>
+        {inPlay.map((p, i) => {
           const safe = !tb.remaining.includes(p.id);
           return (
             <div key={p.id} className={`tb-player${safe ? ' safe' : ''}${justSafe.includes(p.id) ? ' just' : ''}`} style={{ '--chip': p.color } as CSSProperties}>
               <span className="bd-avatar sm" style={{ background: p.color }}>
                 {p.avatar}
               </span>
-              <span className="tb-name">{p.name}</span>
-              <PlayingCard card={tb.cards[p.id]} />
-              <span className="tb-state">{safe ? t('Safe ✓') : t('Waiting…')}</span>
+              <span className="tb-who">
+                <span className="tb-name">{p.name}</span>
+                <span className="tb-state">{safe ? t('Safe ✓') : t('Waiting…')}</span>
+              </span>
+              {/* Dealt from the deck, one after the other, and turned. */}
+              <DrawnCard key={`${attempt}-${p.id}`} card={tb.cards[p.id]} className="tb-dealt" delay={i * 160} />
             </div>
           );
         })}
       </div>
 
-      <div className="tb-flip">
-        <PlayingCard key={tb.flipped.length} card={last} faceUp={!!last} size="lg" waiting={!last} />
-        <span className="tb-flip-text">
-          {last
-            ? justSafe.length
-              ? justSafe.length > 1
-                ? t('{rank}! {names} are safe.', { rank: rankLabel(last.value), names: justSafe.map((id) => byId(id).name).join(' & ') })
-                : t('{rank}! {names} is safe.', { rank: rankLabel(last.value), names: justSafe.map((id) => byId(id).name).join(' & ') })
-              : t('{rank}. Nobody’s safe.', { rank: rankLabel(last.value) })
-            : t('Ready?')}
+      <div className="tb-table">
+        <div className="tb-cards">
+          <span className="tb-deck" aria-hidden>
+            <PlayingCard card={null} faceUp={false} size="lg" />
+            <PlayingCard card={null} faceUp={false} size="lg" />
+          </span>
+          <span className="tb-drawn">
+            {last ? (
+              <DrawnCard key={tb.flipped.length} card={last} className="tb-draw" size="lg" />
+            ) : (
+              <span className="tb-slot" aria-hidden />
+            )}
+          </span>
+        </div>
+        <span key={line} className="tb-flip-text">
+          {line}
         </span>
         <span className="fine-print">{t('{n} flipped', { n: tb.flipped.length })}</span>
       </div>
+
+      {outcome.kind === 'driver' && <Verdict tone="same" emoji="🚌" title={t('{name} drives the bus!', { name: byId(outcome.id).name })} />}
+      {outcome.kind === 'redo' && (
+        <Verdict tone="correct" emoji="🔁" title={t('Still tied!')} sub={t('{names} go again with new cards.', { names: outcome.ids.map((id) => byId(id).name).join(' & ') })} />
+      )}
 
       <div className="sticky-action">
         {outcome.kind === 'driver' ? (
@@ -130,5 +137,19 @@ export default function Tiebreak({ tied, onDone }: Props) {
         )}
       </div>
     </div>
+  );
+}
+
+/** A card drawn from the deck: it slides in face down, then turns over. */
+function DrawnCard({ card, className, delay = 0, size }: { card: Card; className: string; delay?: number; size?: 'lg' }) {
+  const [up, setUp] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setUp(true), delay + 380);
+    return () => window.clearTimeout(id);
+  }, [delay]);
+  return (
+    <span className={className} style={{ animationDelay: `${delay}ms` }}>
+      <PlayingCard card={card} faceUp={up} size={size} />
+    </span>
   );
 }
