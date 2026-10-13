@@ -2534,7 +2534,7 @@ h3 {
   box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   /* Once the card has turned and lain there a moment (VERDICT_DELAY_MS). */
-  animation: bd-pop 2.1s var(--ease) 1.1s both;
+  animation: bd-pop 2.1s var(--ease) 0.8s both;
 }
 
 .bd-pop.correct {
@@ -2944,7 +2944,7 @@ h3 {
   font-weight: 700;
   display: grid;
   place-items: center;
-  animation: pop-in 0.4s var(--spring) 1.1s both;
+  animation: pop-in 0.4s var(--spring) 0.8s both;
 }
 
 .panel.hands {
@@ -3019,7 +3019,7 @@ h3 {
   box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   /* Once the card has turned and lain there a moment (VERDICT_DELAY_MS). */
-  animation: pyr-bubble 2.8s var(--ease) 1.1s both;
+  animation: pyr-bubble 2.8s var(--ease) 0.8s both;
 }
 
 .pyr-bubble.hit {
@@ -3157,7 +3157,7 @@ h3 {
   white-space: nowrap;
   box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
   pointer-events: none;
-  animation: hand-bubble 2.8s var(--ease) 1.15s both;
+  animation: hand-bubble 2.8s var(--ease) 0.85s both;
 }
 
 @keyframes hand-bubble {
@@ -3422,6 +3422,192 @@ h3 {
   letter-spacing: 0.01em;
   text-transform: uppercase;
   animation: mx-fade-in 0.3s ease both;
+}
+
+/* "Start the ride": a bus pulls up, the door opens, the driver hops on, the door shuts and off
+   it goes (Boarding.tsx, 3.3 s). The whole screen; a tap skips it. */
+.boarding {
+  --bus-w: min(86vw, 420px);
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  animation: boarding 3.3s ease both;
+}
+
+@keyframes boarding {
+  0% {
+    opacity: 0;
+  }
+  6%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.boarding-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  animation: pop-in 0.4s var(--spring) 0.15s both;
+}
+
+.boarding-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* The street: the bus and, at the stop, the driver waiting. */
+.boarding-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(var(--bus-w) * 0.5);
+  border-bottom: 3px solid color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+.boarding-bus {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  display: block;
+  width: var(--bus-w);
+  margin-left: calc(var(--bus-w) / -2);
+  animation: boarding-drive 3.3s both;
+}
+
+.boarding-svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+@keyframes boarding-drive {
+  0% {
+    transform: translateX(-120vw);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  28% {
+    transform: translateX(1.5%);
+  }
+  32%,
+  72% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5);
+  }
+  100% {
+    transform: translateX(130vw);
+  }
+}
+
+.boarding-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: boarding-wheel 3.3s both;
+}
+
+@keyframes boarding-wheel {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  30%,
+  72% {
+    transform: rotate(900deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5);
+  }
+  100% {
+    transform: rotate(1800deg);
+  }
+}
+
+/* The folding door: each half folds to its side, then back. */
+.boarding-door-l,
+.boarding-door-r {
+  transform-box: fill-box;
+  animation: boarding-door 3.3s both;
+}
+
+.boarding-door-l {
+  transform-origin: left center;
+}
+
+.boarding-door-r {
+  transform-origin: right center;
+}
+
+@keyframes boarding-door {
+  0%,
+  34% {
+    transform: scaleX(1);
+  }
+  41%,
+  60% {
+    transform: scaleX(0.12);
+  }
+  67%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* The driver waits at the stop (by where the door will be) and hops on. The door's middle is a
+   third of the bus's width right of its middle. */
+.boarding-driver {
+  position: absolute;
+  left: calc(50% + var(--bus-w) * 0.335);
+  bottom: calc(var(--bus-w) * 0.5 * 0.1);
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-left: -23px;
+  border-radius: 50%;
+  background: var(--chip);
+  font-size: 1.6rem;
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  animation: boarding-hop 3.3s both;
+}
+
+@keyframes boarding-hop {
+  0% {
+    opacity: 0;
+    transform: translateX(46px) scale(0.6);
+  }
+  8%,
+  40% {
+    opacity: 1;
+    transform: translateX(46px) scale(1);
+  }
+  46% {
+    transform: translateX(20px) translateY(-34px) scale(1);
+  }
+  53% {
+    opacity: 1;
+    transform: translateX(0) translateY(-22px) scale(0.7);
+  }
+  58%,
+  100% {
+    opacity: 0;
+    transform: translateX(0) translateY(-22px) scale(0.5);
+  }
 }
 
 .driver {
