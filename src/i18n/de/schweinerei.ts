@@ -7,8 +7,8 @@ const schweinerei: Record<string, string> = {
     'Wirf die zwei Schweinchen. Wie sie landen, bringt Punkte. Wirf weiter, um sie zu sammeln, oder bring sie in den Stall und gib weiter.',
   'How one pig can land: on its side (0), on its back (5), standing (5), on its snout (10), on snout and ear (15). Two pigs add up: a mixed double.':
     'So kann ein Schwein liegen: Faule Sau (auf der Seite, 0), Suhle (auf dem Rücken, 5), Haxe (stehend, 5), Schnauze (10), Backe (Schnauze und Ohr, 15). Zwei Schweine werden addiert: ein Gemischtes Doppel.',
-  'Both on the same side: 1 point. On different sides (one with the dot up, one without): pig out! This turn’s points are gone and you drink 1.':
-    'Beide auf derselben Seite: Sau, 1 Punkt. Auf verschiedenen Seiten (eins mit dem Punkt oben, eins ohne): Faule Sau! Die Punkte dieser Runde sind weg, und du trinkst 1.',
+  'Both on the same side: 1 point. On different sides (one with the dot up, one without): pig out! This turn’s points are gone and you drink 1. On your turn’s first throw it’s just 0 points: throw again.':
+    'Beide auf derselben Seite: Sau, 1 Punkt. Auf verschiedenen Seiten (eins mit dem Punkt oben, eins ohne): Faule Sau! Die Punkte dieser Runde sind weg, und du trinkst 1. Beim ersten Wurf deiner Runde gibt es nur 0 Punkte: wirf nochmal.',
   'Both the same is a double and counts four times: back or standing 20, snout 40, snout and ear 60. A double lets you give out sips (2, 4 or 6).':
     'Beide gleich ist ein Doppel und zählt vierfach: Volle Suhle 20, Doppelhaxe 20, Volle Schnauze 40, Doppelbacke 60. Bei einem Doppel verteilst du Schlucke (2, 4 oder 6).',
   'The pigs touch (about 1 throw in 100): every point you collected is gone, drink 2. One lands on top of the other: all your points are gone, drink up.':
@@ -48,6 +48,7 @@ const schweinerei: Record<string, string> = {
   '+{n} · give out {s} sips': '+{n} · verteile {s} Schlucke',
   '+{n}': '+{n}',
   'This turn’s points are gone. Drink 1.': 'Die Punkte dieser Runde sind weg. Trink 1.',
+  'First throw: 0 points, throw again.': 'Erster Wurf: 0 Punkte, wirf nochmal.',
   'The pigs touch: all your points are gone. Drink 2.': 'Die Schweine berühren sich: alle deine Punkte sind weg. Trink 2.',
   'One on top of the other: all your points are gone. Drink up!': 'Eins auf dem anderen: alle deine Punkte sind weg. Ex!',
 

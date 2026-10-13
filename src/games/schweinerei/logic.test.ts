@@ -77,6 +77,28 @@ describe('schweinerei', () => {
     expect(g.scores).toEqual([15, 0, 0]);
   });
 
+  it('a pig out on the first throw of a turn: no points, throw again', () => {
+    let g = { ...newGame(2, 0), bonus: { target: 7, count: 0, won: false } };
+    g = play(g, score('side', 'side-dot'));
+    expect(g.ended).toBe(false);
+    expect(g.freeThrow).toBe(true);
+    expect(g.turnPts).toBe(0);
+    expect(g.turn).toBe(0);
+    // The next throw counts as usual…
+    g = play(g, score('back', 'side'));
+    expect(g.freeThrow).toBe(false);
+    expect(g.turnPts).toBe(5);
+    // …and a pig out later in the turn loses it.
+    g = play(g, score('side-dot', 'side'));
+    expect(g.ended).toBe(true);
+    expect(g.turnPts).toBe(0);
+    // Only the very first throw: two pig outs in a row end the turn.
+    g = play(nextPlayer(g), score('side', 'side-dot'));
+    expect(g.ended).toBe(false);
+    g = play(g, score('side', 'side-dot'));
+    expect(g.ended).toBe(true);
+  });
+
   it('touching pigs lose everything', () => {
     let g = { ...newGame(2, 0), scores: [80, 10] };
     g = play(g, { kind: 'touch' });

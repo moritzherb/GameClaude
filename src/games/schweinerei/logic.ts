@@ -7,7 +7,7 @@
  *   Schnauze – on its snout (10) · Backe – on snout and ear (15)
  *
  * - Both on the same side: "Sau", 1 point. On different sides ("Faule Sau"): the turn's points
- *   are gone.
+ *   are gone. Except on the turn's very first throw: no points, but the player throws again.
  * - Otherwise the two count together ("Gemischtes Doppel"), a pig on its side counting 0.
  *   Both the same is a double and counts four times: Volle Suhle 20, Doppelhaxe 20,
  *   Volle Schnauze 40, Doppelbacke 60.
@@ -106,6 +106,8 @@ export interface Game {
   bonus: { target: number; count: number; won: boolean };
   /** The last throw just reached the bonus. */
   bonusNow: boolean;
+  /** The last throw was a Faule Sau on the turn's first throw: no points, but throw again. */
+  freeThrow?: boolean;
 }
 
 const newBonus = (rand: () => number = Math.random) => ({ target: Math.floor(rand() * BONUSES.length), count: 0, won: false });
@@ -127,27 +129,31 @@ export function play(g: Game, t: Throw): Game {
     // Reaching 100 wins right away.
     if (g.scores[g.turn] + turnPts >= TARGET) {
       const scores = g.scores.map((s, i) => (i === g.turn ? s + turnPts : s));
-      return { ...g, scores, turnPts: 0, last: t, winner: g.turn, bonus, bonusNow };
+      return { ...g, scores, turnPts: 0, last: t, winner: g.turn, bonus, bonusNow, freeThrow: false };
     }
-    return { ...g, turnPts, last: t, bonus, bonusNow };
+    return { ...g, turnPts, last: t, bonus, bonusNow, freeThrow: false };
   }
-  if (t.kind === 'pig-out') return { ...g, turnPts: 0, last: t, ended: true, bonusNow: false };
+  if (t.kind === 'pig-out') {
+    // On the turn's first throw there's nothing to lose yet: no points, throw again.
+    if (!g.last) return { ...g, last: t, bonusNow: false, freeThrow: true };
+    return { ...g, turnPts: 0, last: t, ended: true, bonusNow: false, freeThrow: false };
+  }
   // Sauhaufen or Schweinerei: everything this player had is gone.
   const scores = g.scores.map((s, i) => (i === g.turn ? 0 : s));
-  return { ...g, scores, turnPts: 0, last: t, ended: true, bonusNow: false };
+  return { ...g, scores, turnPts: 0, last: t, ended: true, bonusNow: false, freeThrow: false };
 }
 
 /** Put the turn's points in the pen and hand on. */
 export function bank(g: Game, rand: () => number = Math.random): Game {
   if (g.ended || g.winner != null || g.turnPts === 0) return g;
   const scores = g.scores.map((s, i) => (i === g.turn ? s + g.turnPts : s));
-  return { ...g, scores, turnPts: 0, last: null, turn: (g.turn + 1) % g.scores.length, bonus: newBonus(rand), bonusNow: false };
+  return { ...g, scores, turnPts: 0, last: null, turn: (g.turn + 1) % g.scores.length, bonus: newBonus(rand), bonusNow: false, freeThrow: false };
 }
 
 /** After a turn that went wrong: the next player. */
 export function nextPlayer(g: Game, rand: () => number = Math.random): Game {
   if (!g.ended) return g;
-  return { ...g, turnPts: 0, last: null, ended: false, turn: (g.turn + 1) % g.scores.length, bonus: newBonus(rand), bonusNow: false };
+  return { ...g, turnPts: 0, last: null, ended: false, turn: (g.turn + 1) % g.scores.length, bonus: newBonus(rand), bonusNow: false, freeThrow: false };
 }
 
 /** At the end: everyone else drinks a sip for every 10 points they're short (at least 1). */
