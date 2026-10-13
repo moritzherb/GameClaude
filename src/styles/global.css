@@ -7178,7 +7178,6 @@ h3 {
   padding: 8px;
   border-radius: var(--radius-lg);
   background: radial-gradient(ellipse at 50% 30%, #2a7a4f, #17553a 75%);
-  container-type: size;
   transition: box-shadow 0.25s ease;
 }
 
@@ -7232,11 +7231,12 @@ h3 {
   font-weight: 700;
 }
 
+/* Five across, two rows: as big as both the width and the height allow (--cw in px, set by
+   Trash.tsx from this box's size, so the box must not take its size from its cards). */
 .tr-slots {
-  /* Five across, two rows: as big as both the width and the height allow. */
   --gap: 6px;
-  --cw: min(calc((100cqw - 16px - 4 * var(--gap)) / 5), calc((100cqh - 16px - 32px - var(--gap)) / 2 / 1.4));
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(5, var(--cw));
   grid-auto-rows: calc(var(--cw) * 1.4);
@@ -7250,6 +7250,8 @@ h3 {
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
   border-radius: calc(var(--cw) * 0.12);
+  /* Each card on a layer of its own: when one changes, iPhones don't redraw (and drop) the rest. */
+  will-change: transform;
 }
 
 .tr-slot .pcard-face {

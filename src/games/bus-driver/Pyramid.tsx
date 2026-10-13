@@ -20,7 +20,7 @@ import {
   type SipMode,
 } from './pyramid';
 import { VERDICT_DELAY_MS } from './Answers';
-import { fitCards, useBox } from './useBox';
+import { fitCards, useBox } from '../../lib/useBox';
 import Avatar from '../../components/Avatar';
 
 export interface PyramidSeat {

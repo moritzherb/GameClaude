@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 /**
  * The inner size of a box (whole pixels), kept up to date while the screen changes.
  *
- * The bus driver's tables size their cards from this in plain pixels: no container query units
+ * The card tables (bus driver, Trash) size their cards from this in plain pixels: no container query units
  * handed down to 3D cards, which iPhones don't draw reliably (cards flicker or vanish). The box
  * itself must not take its size from its cards (flex-basis 0, overflow hidden), or it would chase
  * its own tail.
