@@ -51,7 +51,8 @@ interface RoomState {
 const Ctx = createContext<RoomState | null>(null);
 
 const GUEST_RETRY_MS = 2500;
-const GUEST_GIVE_UP_MS = 90_000;
+/** A guest keeps trying this long to get back to the host: long enough for a tunnel or a dead spot on the road. */
+const GUEST_GIVE_UP_MS = 10 * 60_000;
 /** Joining: try again after this long without an answer from the host, and give up after this long. */
 const JOIN_RETRY_MS = 8000;
 const JOIN_GIVE_UP_MS = 24_000;
@@ -303,7 +304,9 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const scheduleRetry = useCallback(() => {
     if (!peer.current) return;
     const since = (retry.current.since ??= Date.now());
-    if (Date.now() - since > GUEST_GIVE_UP_MS) {
+    // Only while the app is open: a phone locked in a pocket for a while is still in the room when
+    // it comes back (the clock starts again then).
+    if (document.visibilityState === 'visible' && Date.now() - since > GUEST_GIVE_UP_MS) {
       teardown();
       saveRoom(null);
       setStatus('error');
@@ -376,7 +379,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     [teardown, connectToHost, scheduleRetry],
   );
 
-  // Coming back to the app after the phone was locked: reconnect right away.
+  // Coming back to the app after the phone was locked, or out of a dead spot: reconnect right away.
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState !== 'visible' || !peer.current) return;
@@ -388,7 +391,11 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       }
     };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onVisible);
+    };
   }, [role, connectToHost]);
 
   // After a reload: go straight back into the room this tab was in.

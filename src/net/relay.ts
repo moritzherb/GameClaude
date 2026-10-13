@@ -20,7 +20,9 @@ const idFromClaim = (topic: string) => topic.slice(PREFIX.length + 1, -'/claim'.
 const KNOCK_MS = 1500;
 /** Say "still here" this often on an open connection… */
 const PING_MS = 4000;
-/** …and treat it as gone after this long without a word. */
+/** …ask the servers whether our own line still works after this long without a word… */
+const QUIET_MS = 6000;
+/** …and treat it as gone after this long. */
 const SILENT_MS = 13_000;
 /** How long the server gets to hand over who holds an id (it does so right after subscribing). */
 const CLAIM_WAIT_MS = 1200;
@@ -180,6 +182,7 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
     this.timers.push(window.setInterval(() => this.heartbeat(), PING_MS));
     if (this.listening) this.timers.push(window.setInterval(() => this.lines.forEach((l) => l.claimed && this.claim(l)), CLAIM_RENEW_MS));
     document.addEventListener('visibilitychange', this.onVisible);
+    window.addEventListener('online', this.onOnline);
     // Connect after the caller had the chance to listen for 'open'.
     window.setTimeout(() => this.lines.forEach((l) => this.connectLine(l)), 0);
   }
@@ -216,6 +219,7 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
     this.open = false;
     this.timers.forEach((t) => window.clearInterval(t));
     document.removeEventListener('visibilitychange', this.onVisible);
+    window.removeEventListener('online', this.onOnline);
     for (const l of this.lines) {
       window.clearTimeout(l.retry);
       // Give the id free for the next room.
@@ -240,6 +244,15 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
     if (document.visibilityState !== 'visible') return;
     // Back from sleep: the connections may have died meanwhile without anyone noticing.
     this.lines.forEach((l) => l.mq?.check());
+    this.reconnect();
+  };
+
+  /** The network is back (out of a dead spot, Wi-Fi ↔ mobile data): don't wait for the next retry. */
+  private onOnline = () => {
+    this.lines.forEach((l) => {
+      l.failures = 0;
+      l.mq?.check();
+    });
     this.reconnect();
   };
 
@@ -417,7 +430,12 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
     for (const c of [...this.conns.values()]) {
       if (!c.open) continue;
       if (now - c.heard > SILENT_MS) c.close();
-      else this.sendOn(c, 'p');
+      else {
+        // Maybe it's our own connection that died without a sound (switched networks on the
+        // road): find out now, and a dead one is replaced before the other phone counts as gone.
+        if (now - c.heard > QUIET_MS) this.lines.forEach((l) => l.mq?.check());
+        this.sendOn(c, 'p');
+      }
     }
   }
 }

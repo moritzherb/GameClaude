@@ -4,7 +4,7 @@ import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { t, tx } from '../../i18n';
 import { cardName, type Card } from '../../lib/cards';
-import { buzz, celebrate, sfx } from '../../lib/fx';
+import { buzz, cheer, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
 import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
@@ -45,7 +45,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
     setStep(result);
     setBoard(result.state);
     window.setTimeout(() => {
-      if (result.state.done) celebrate();
+      if (result.state.done) cheer();
       else if (result.outcome === 'correct') {
         sfx.pop();
         buzz(20);

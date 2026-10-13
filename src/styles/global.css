@@ -182,14 +182,17 @@ textarea {
 
 /* Opened from the iPhone home screen, 100vh/100dvh come up short by the status
    bar's height and iOS paints the leftover strip at the bottom black. Stretch
-   the page (and every screen) down to the real bottom edge. */
+   the page (and every screen) down to the real bottom edge. Only there: other phones (Android)
+   already size the page right, and the extra height would let every screen scroll. */
 @media (display-mode: standalone) {
-  html {
-    min-height: calc(100% + env(safe-area-inset-top));
-  }
+  @supports (-webkit-touch-callout: none) {
+    html {
+      min-height: calc(100% + env(safe-area-inset-top));
+    }
 
-  .screen {
-    min-height: calc(100dvh + env(safe-area-inset-top));
+    .screen {
+      min-height: calc(100dvh + env(safe-area-inset-top));
+    }
   }
 }
 
@@ -3078,6 +3081,14 @@ h3 {
 
 .bd-pyr .pyramid-row {
   grid-template-columns: 30px 1fr 30px;
+}
+
+/* Every card of the pyramid and of the ride's board on a layer of its own, for good. Otherwise
+   the phone moves cards on and off layers whenever another one turns or the next one starts to
+   nudge, and redrawn that way their ranks and suits shift by a hair (on iPhones it shows). */
+.pyramid .pcard,
+.board .pcard {
+  will-change: transform;
 }
 
 .bd-pyr .pyramid-badge {

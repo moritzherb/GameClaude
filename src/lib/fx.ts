@@ -68,9 +68,14 @@ export function confetti(amount = 90) {
   setTimeout(() => layer.remove(), 3400);
 }
 
-/** The full "something great happened" package. */
-export function celebrate() {
+/** "Something great happened", heard and felt: the fanfare and a happy buzz. */
+export function cheer() {
   sfx.tada();
   buzz([40, 60, 40, 60, 120]);
+}
+
+/** The full "something great happened" package: cheer, and confetti on top. */
+export function celebrate() {
+  cheer();
   confetti();
 }
