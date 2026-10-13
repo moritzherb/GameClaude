@@ -64,6 +64,8 @@ export default function KingsCup({ players, exit }: GameProps) {
   const [ruleDraft, setRuleDraft] = useState('');
   // The sheet open over the table: everything in play, picking a mate (8) or writing a rule (Jack).
   const [sheet, setSheet] = useState<'effects' | 'mate' | 'rule' | null>(null);
+  // Mate or rule just set: its pill shrinks from the big ask down to the others' size.
+  const [justSet, setJustSet] = useState<'mate' | 'rule' | null>(null);
   const drawing = useRef(false);
   const timer = useRef<number>(undefined);
   // Where the tapped card lay, so the big card can fly out from there.
@@ -107,6 +109,7 @@ export default function KingsCup({ players, exit }: GameProps) {
     drawing.current = false;
     setRuleDraft('');
     setSheet(null);
+    setJustSet(null);
     // The 4th King only empties the cup: the game goes on until every card is drawn.
     if (left === 0) return setS({ ...s, over: true });
     setS({ ...s, current: null, turn: (s.turn + 1) % players.length });
@@ -120,11 +123,13 @@ export default function KingsCup({ players, exit }: GameProps) {
     setS({ ...s, rule: text });
     setRuleDraft('');
     setSheet(null);
+    setJustSet('rule');
   };
 
   const pickMate = (mate: Player) => {
     setS({ ...s, mate: [player.id, mate.id] });
     setSheet(null);
+    setJustSet('mate');
   };
 
   const questionMaster = s.questionMasterId ? byId(s.questionMasterId) : undefined;
@@ -195,7 +200,7 @@ export default function KingsCup({ players, exit }: GameProps) {
             mates && (
               <button
                 type="button"
-                className="kc-chip"
+                className={`kc-chip${justSet === 'mate' ? ' settle' : ''}`}
                 aria-label={t('{a} is mates with {b}', { a: mates[0].name, b: mates[1].name })}
                 onClick={() => setSheet(asking === 'mate' ? 'mate' : 'effects')}
               >
@@ -213,7 +218,7 @@ export default function KingsCup({ players, exit }: GameProps) {
             </button>
           ) : (
             s.rule && (
-              <button type="button" className="kc-chip rule" aria-label={s.rule} onClick={() => {
+              <button type="button" className={`kc-chip rule${justSet === 'rule' ? ' settle' : ''}`} aria-label={s.rule} onClick={() => {
                   if (asking === 'rule') setRuleDraft(s.rule ?? '');
                   setSheet(asking === 'rule' ? 'rule' : 'effects');
                 }}>

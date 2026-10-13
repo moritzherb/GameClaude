@@ -4086,6 +4086,7 @@ h3 {
   right: 0;
   z-index: 1;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
   gap: 6px;
   height: 32px;
@@ -4126,11 +4127,58 @@ h3 {
   text-overflow: ellipsis;
 }
 
-/* The 8 or Jack asks for a mate or rule: lime, so it isn't missed. */
+/* The 8 or Jack asks for a mate or rule: big, lime and breathing, so it isn't missed. It hangs
+   over the free strip above the circle (nothing moves), and once done it's a small pill again. */
 .kc-chip.ask {
+  flex-shrink: 0;
+  height: 48px;
+  gap: 7px;
+  padding: 0 20px 0 16px;
   background: var(--accent);
   color: var(--on-accent);
-  box-shadow: none;
+  font-size: 1.08rem;
+  font-weight: 800;
+  box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+  animation:
+    kc-ask-in 0.45s var(--spring) both,
+    kc-ask-breathe 1.6s ease-in-out 0.6s infinite;
+}
+
+.kc-chip.ask:active {
+  transform: scale(0.95);
+  animation: none;
+}
+
+@keyframes kc-ask-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* Done: the pill shrinks from the ask's size down to the others'. */
+.kc-chip.settle {
+  animation: kc-chip-settle 0.45s var(--spring) both;
+}
+
+@keyframes kc-chip-settle {
+  from {
+    transform: scale(1.45);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+}
+
+@keyframes kc-ask-breathe {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kc-chip.ask {
+    animation: none;
+  }
 }
 
 @keyframes kc-chip-in {
