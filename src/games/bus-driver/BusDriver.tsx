@@ -5,7 +5,7 @@ import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
 import { newDeck, type Card } from '../../lib/cards';
-import { buzz, celebrate, sfx } from '../../lib/fx';
+import { buzz, cheer, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
@@ -64,7 +64,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   const answered = useRef(false);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   useEffect(() => {
-    if (s.stage === 'driver') celebrate();
+    if (s.stage === 'driver') cheer();
   }, [s.stage]);
 
   // Without the round intros (game known), a short card still flags each new question.
@@ -105,7 +105,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
     // Let the card flip before the verdict lands.
     timer.current = window.setTimeout(() => {
-      if (result.outcome === 'correct') celebrate();
+      if (result.outcome === 'correct') cheer();
       else {
         sfx.boo();
         buzz(result.outcome === 'same' ? [80, 60, 80, 60, 200] : [60, 40, 120]);

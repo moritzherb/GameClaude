@@ -4,7 +4,7 @@ import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { t } from '../../i18n';
 import type { Card } from '../../lib/cards';
-import { buzz, celebrate, sfx } from '../../lib/fx';
+import { buzz, cheer, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
 import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import CardRow from './CardRow';
@@ -38,7 +38,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
     setReveal({ card: step.card, result: step.result, shown: step.shown, reshuffled: step.reshuffled, index: ride.drawn });
     setRide(step.state);
     window.setTimeout(() => {
-      if (step.state.done) celebrate();
+      if (step.state.done) cheer();
       else if (step.result.outcome === 'correct') {
         sfx.pop();
         buzz(20);
