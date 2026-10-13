@@ -265,7 +265,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
               <span className="hand-name">{x.player.name}</span>
             {!!lastLaid?.[i]?.length && (
               <span key={lastIndex} className="hand-bubble">
-                🍻 {t('gives out')} {lastLaid[i].length * lastSips}
+                {t('gives out')} {lastLaid[i].length * lastSips}
               </span>
             )}
               <span className="hand-cards">

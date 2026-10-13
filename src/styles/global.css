@@ -3142,10 +3142,11 @@ h3 {
   --cw: max(15px, min(30px, calc((var(--rh) - 4px) / 1.4)));
 }
 
-/* Whoever lays down: a bubble at their avatar, for a moment. */
+/* Whoever lays down: a bubble over their name, right of the avatar, for a moment. */
 .hand-bubble {
   position: absolute;
-  left: 26px;
+  /* The row's padding, the avatar (at most 32px) and the gap after it. */
+  left: 46px;
   top: 50%;
   z-index: 3;
   padding: 3px 10px;
@@ -3184,6 +3185,17 @@ h3 {
 
 .hand-rows.two .hand-name {
   font-size: 0.8rem;
+}
+
+.hand-rows.two .hand-bubble {
+  /* Narrow rows: the bubble covers the row right of the avatar, its text in the middle. */
+  left: 35px;
+  right: 2px;
+  height: calc(100% - 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
 }
 
 /* Two columns: smaller cards and avatars, so the names keep their room. */
