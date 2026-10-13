@@ -4103,11 +4103,12 @@ h3 {
   font-weight: 600;
   white-space: nowrap;
   animation: kc-chip-in 0.3s var(--spring) both;
-  transition: transform 0.15s var(--spring);
+  transition: scale 0.15s var(--spring);
 }
 
+/* Pressed: `scale`, not `transform`, which the pills' own animations hold on to. */
 .kc-chip:active {
-  transform: scale(0.95);
+  scale: 0.95;
 }
 
 /* The house rule gives up its room first, so the names stay readable. */
@@ -4123,7 +4124,9 @@ h3 {
 }
 
 /* The 8 or Jack asks for a mate or rule: big, lime and breathing, so it isn't missed. It hangs
-   over the free strip above the circle (nothing moves), and once done it's a small pill again. */
+   over the free strip above the circle (nothing moves), and once done it's a small pill again.
+   A press never stops or restarts its animations: started again on letting go, the fade-in
+   jumped, and an iPhone took the change for a hover and swallowed that first tap. */
 .kc-chip.ask {
   flex-shrink: 0;
   height: 48px;
@@ -4137,11 +4140,6 @@ h3 {
   animation:
     kc-ask-in 0.45s var(--spring) both,
     kc-ask-breathe 1.6s ease-in-out 0.6s infinite;
-}
-
-.kc-chip.ask:active {
-  transform: scale(0.95);
-  animation: none;
 }
 
 @keyframes kc-ask-in {
