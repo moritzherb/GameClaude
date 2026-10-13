@@ -4904,6 +4904,59 @@ h3 {
   color: #d3241b;
 }
 
+/* Turn lost: a big red cross stamped over the pigs (under the slip), right between them. */
+.sw-lost {
+  position: absolute;
+  --size: min(54cqw, 44cqh, 230px);
+  /* Never past the table's edge, wherever the pigs landed. */
+  left: clamp(calc(var(--size) / 2 + 8px), var(--x), calc(100cqw - var(--size) / 2 - 8px));
+  top: clamp(calc(var(--size) / 2 + 8px), var(--y), calc(100cqh - var(--size) / 2 - 8px));
+  z-index: 2;
+  width: var(--size);
+  height: auto;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  animation: sw-lost 0.45s var(--spring) 0.3s both;
+}
+
+.sw-lost path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.sw-lost-edge {
+  stroke: #fff;
+  stroke-width: 14;
+}
+
+.sw-lost-bar {
+  stroke: #e3261c;
+  stroke-width: 9;
+}
+
+@keyframes sw-lost {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.7) rotate(-14deg);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.94) rotate(2deg);
+  }
+  100% {
+    opacity: 0.88;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-lost {
+    animation: none;
+    opacity: 0.88;
+  }
+}
+
 .sw-result-bonus {
   margin: 2px 0;
   padding: 2px 10px;
