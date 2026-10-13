@@ -9,6 +9,7 @@ import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { byId, DECK, GLASS_ID, STANDING_RULES, type TaskCard } from './cards';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
 
 interface State {
   /** Card ids, a face-down stack: the next one drawn is cards[drawn]. */
@@ -163,7 +164,7 @@ function Table({
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: player.color }}>
-            {player.avatar}
+            <Avatar avatar={player.avatar} photo={player.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{player.name}</span>

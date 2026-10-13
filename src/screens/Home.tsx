@@ -127,7 +127,7 @@ export default function Home() {
           </RoundButton>
         </header>
 
-        <h1 className="poster-title fade-up">
+        <h1 className="poster-title">
           {headline.top} <span className="hl">{headline.sticker}</span>
         </h1>
 
@@ -141,7 +141,7 @@ export default function Home() {
             <span className="avatar-stack">
               {players.slice(0, 4).map((p) => (
                 <span key={p.id} style={{ background: p.color }}>
-                  {p.avatar}
+                  <Avatar avatar={p.avatar} photo={p.photo} />
                 </span>
               ))}
               {players.length > 4 && <span className="more">+{players.length - 4}</span>}

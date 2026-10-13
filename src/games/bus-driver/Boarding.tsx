@@ -2,6 +2,7 @@ import { useEffect, type CSSProperties } from 'react';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
+import Avatar from '../../components/Avatar';
 
 /** How long the bus takes: in, stop, door open, the driver gets on, door shut, off it goes. */
 const BOARDING_MS = 3300;
@@ -77,7 +78,7 @@ export default function Boarding({ driver, road, onDone }: { driver: Player; roa
         </span>
         {/* The driver, waiting at the stop, hopping on */}
         <span className="boarding-driver" style={{ '--chip': driver.color } as CSSProperties}>
-          {driver.avatar}
+          <Avatar avatar={driver.avatar} photo={driver.photo} />
         </span>
       </span>
     </button>

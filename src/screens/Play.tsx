@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import BigButton from '../components/BigButton';
+import { CrewContext } from '../components/Finished';
 import { HelpIcon } from '../components/Icons';
 import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
@@ -43,7 +44,9 @@ export default function Play({ game }: { game: GameDefinition }) {
         }
       />
 
-      <Game players={players} exit={exit} />
+      <CrewContext.Provider value={players}>
+        <Game players={players} exit={exit} />
+      </CrewContext.Provider>
 
       <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>
         <RulesList rules={game.rules} />

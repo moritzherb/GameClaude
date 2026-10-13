@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import Tap from '../../components/Tap';
@@ -22,6 +22,7 @@ import {
   type Face,
   type Game,
 } from './logic';
+import Avatar from '../../components/Avatar';
 
 /** Letters on the dice; German poker dice say B (Bube) and D (Dame). */
 const FACE_LABEL: Record<Face, string> = { 9: '9', 10: '10', 11: tx('J'), 12: tx('Q'), 13: tx('K'), 14: tx('A') };
@@ -52,7 +53,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar">{p.avatar}</span>
+              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starterId && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>
@@ -132,6 +133,8 @@ export function FiveThousandTable({
   }, [won]);
 
   const me = players[g.current];
+  // How the turn ended (not a win: that has the big 5000).
+  const ended = g.phase === 'over' && !won ? g.end : null;
   const score = g.scores[g.current];
   const opened = g.opened[g.current];
   const turn = g.turn;
@@ -143,7 +146,7 @@ export function FiveThousandTable({
         <div className="bd-head center">
           <span className="kicker">{t('Exactly 5000!')}</span>
           <span className="bd-avatar xl" style={{ background: me.color }}>
-            {me.avatar}
+            <Avatar avatar={me.avatar} photo={me.photo} />
           </span>
           <h2 className="bd-title big">{t('{name} wins!', { name: me.name })}</h2>
         </div>
@@ -222,7 +225,7 @@ export function FiveThousandTable({
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: me.color }}>
-            {me.avatar}
+            <Avatar avatar={me.avatar} photo={me.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{me.name}</span>
@@ -261,52 +264,43 @@ export function FiveThousandTable({
                   setG(setAside(g, picked, 'stop'));
                 },
               }
-            : null
+            : ended?.kind === 'banked'
+              ? // Banked: the points fly in, the button shows the new score.
+                { text: t('Bank'), amount: fmt(score), disabled: true, onClick: () => {}, banked: true }
+              : null
         }
+        coin={ended?.kind === 'banked' ? `+${fmt(ended.gained)}` : null}
+        stamp={ended ? <TurnStamp g={g} name={me.name} /> : null}
       />
 
       {/*
-        * Below the table, always the same height, so the table keeps its size the whole game:
-        * what's set aside and the picking row, or at the end of a turn how it went (in their place).
+        * Below the table, one row, always the same height, so the table keeps its size the whole
+        * game: what's set aside, and while picking what the pick is worth (how a turn ended pops up
+        * on the table instead).
         */}
       <div className="fk-below">
-        {g.phase === 'over' && g.end && !won ? (
-          <TurnVerdict g={g} name={me.name} />
-        ) : (
+        <span className="fk-aside" aria-label={turn.aside.length ? t('Set aside') : undefined}>
+          {turn.aside.map((f, i) => (
+            <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
+              {t(FACE_LABEL[f])}
+            </span>
+          ))}
+        </span>
+        {g.phase === 'choose' && mine && (
           <>
-            <div className="fk-aside" aria-hidden={turn.aside.length === 0}>
-              {turn.aside.length > 0 && (
-                <>
-                  <span className="fk-aside-label">{t('Set aside')}</span>
-                  <span className="fk-aside-dice">
-                    {turn.aside.map((f, i) => (
-                      <span key={i} className={`fk-die sm${f >= 13 ? ' red' : ''}`}>
-                        {t(FACE_LABEL[f])}
-                      </span>
-                    ))}
-                  </span>
-                </>
-              )}
-            </div>
-            {g.phase === 'choose' && mine ? (
-              <div className="fk-pick-row">
-                <span className="fk-pick-info">
-                  {gain == null
-                    ? known
-                      ? t('Pick your dice')
-                      : t('Tap Kings, Aces or a triple to set them aside.')
-                    : over
-                      ? t('That’s over 5000. Pick less.')
-                      : t('+{n} points', { n: fmt(gain) })}
-                </span>
-                {allGain != null && !tooMuch(g, allGain) && picked.length === 0 && (
-                  <button type="button" className="text-btn" onClick={pickAll}>
-                    {t('Take all')}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="fk-pick-row" aria-hidden />
+            <span className={`fk-pick-info${over ? ' bad' : ''}`}>
+              {gain == null
+                ? known || turn.aside.length
+                  ? t('Pick your dice')
+                  : t('Tap Kings, Aces or a triple to set them aside.')
+                : over
+                  ? t('That’s over 5000. Pick less.')
+                  : t('+{n} points', { n: fmt(gain) })}
+            </span>
+            {allGain != null && !tooMuch(g, allGain) && picked.length === 0 && (
+              <button type="button" className="text-btn" onClick={pickAll}>
+                {t('Take all')}
+              </button>
             )}
           </>
         )}
@@ -367,40 +361,34 @@ export function FiveThousandTable({
   );
 }
 
-function TurnVerdict({ g, name }: { g: Game; name: string }) {
+/** How a turn ended, stamped onto the table (after the points have flown into the bank). */
+function TurnStamp({ g, name }: { g: Game; name: string }) {
   const end = g.end!;
   const score = fmt(g.scores[g.current]);
   if (end.kind === 'banked') {
-    const firstIn = !!end.first;
     return (
-      <div className="bd-result correct">
-        <span className="bd-result-emoji">💰</span>
-        <span className="bd-result-text">
-          <span className="bd-result-title">{t('+{n} banked', { n: fmt(end.gained) })}</span>
-          <span className="bd-result-sub">{firstIn ? t('{name} is in with {score}.', { name, score }) : t('{name} now has {score}.', { name, score })}</span>
-        </span>
-      </div>
+      <span className="fk-stamp correct">
+        <span className="fk-stamp-title">{t('+{n} banked', { n: fmt(end.gained) })}</span>
+        <span className="fk-stamp-sub">{end.first ? t('{name} is in with {score}.', { name, score }) : t('{name} now has {score}.', { name, score })}</span>
+      </span>
     );
   }
   const lost = end.kind === 'nothing' || end.kind === 'too-much' ? end.lost : 0;
   return (
-    <div className="bd-result wrong">
-      <span className="bd-result-emoji">{end.kind === 'too-much' ? '🫠' : '💥'}</span>
-      <span className="bd-result-text">
-        <span className="bd-result-title">{end.kind === 'too-much' ? t('Over 5000!') : t('Nothing!')}</span>
-        <span className="bd-result-sub">
-          {end.kind === 'too-much'
-            ? t('The roll is worth {value}, you needed {need}.', { value: fmt(end.value), need: fmt(end.need) }) +
-              (lost ? ` ${t('{n} points from this turn are gone.', { n: fmt(lost) })}` : '')
-            : end.kind === 'nothing' && end.penalty
-              ? t('First roll without points: −{n}.', { n: end.penalty })
-              : lost
-                ? t('{n} points from this turn are gone.', { n: fmt(lost) })
-                : t('No King, no Ace, no triple.')}
-        </span>
-        <span className="bd-result-card">{t('{name} stays on {score}.', { name, score })}</span>
+    <span className="fk-stamp wrong">
+      <span className="fk-stamp-emoji">{end.kind === 'too-much' ? '🫠' : '💥'}</span>
+      <span className="fk-stamp-title">{end.kind === 'too-much' ? t('Over 5000!') : t('Nothing!')}</span>
+      <span className="fk-stamp-sub">
+        {end.kind === 'too-much'
+          ? t('The roll is worth {value}, you needed {need}.', { value: fmt(end.value), need: fmt(end.need) }) +
+            (lost ? ` ${t('{n} points from this turn are gone.', { n: fmt(lost) })}` : '')
+          : end.kind === 'nothing' && end.penalty
+            ? t('First roll without points: −{n}.', { n: end.penalty })
+            : lost
+              ? t('{n} points from this turn are gone.', { n: fmt(lost) })
+              : t('No King, no Ace, no triple.')}
       </span>
-    </div>
+    </span>
   );
 }
 
@@ -422,7 +410,7 @@ function Scoreboard({ g, players }: { g: Game; players: GameProps['players'] }) 
         <div key={p.id} ref={i === g.current ? current : undefined} className={`fk-chip${i === g.current ? ' on' : ''}${g.opened[i] ? '' : ' out'}`}>
           <span className="fk-chip-top">
             <span className="bd-avatar xs" style={{ background: p.color }}>
-              {p.avatar}
+              <Avatar avatar={p.avatar} photo={p.photo} />
             </span>
             <span className="fk-chip-score">{fmt(g.scores[i])}</span>
           </span>
@@ -447,7 +435,7 @@ function Standings({ g, players }: { g: Game; players: GameProps['players'] }) {
           .map(({ p, n }) => (
             <div key={p.id} className="ftd-tally-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                {p.avatar}
+                <Avatar avatar={p.avatar} photo={p.photo} />
               </span>
               <span className="ftd-tally-name">{p.name}</span>
               <span className="ftd-tally-num">{fmt(n)}</span>
@@ -466,7 +454,7 @@ interface Spot {
 
 /** The bank button in the table's bottom-right corner (as in the CSS): its size and distance from the edges. */
 const BANK = { size: 19, ofAspect: 0.27, edge: 3, minPx: 58 };
-/** The die size (as in the CSS: min(15cqw, 24cqh)), in % of the table's width. */
+/** The die size (as in the CSS: the smaller of 15% of the table's width and 24% of its height), in % of the table's width. */
 const dieSize = (h: number) => Math.min(15, 0.24 * h);
 
 /**
@@ -517,6 +505,8 @@ function Table({
   hint,
   onCup,
   bank,
+  coin,
+  stamp,
 }: {
   roll: Face[];
   picked: number[];
@@ -527,8 +517,12 @@ function Table({
   dead: boolean;
   hint: string | null;
   onCup: () => void;
-  /** The stop-and-bank button in the table's corner (while picking). */
-  bank: { text: string; amount: string; disabled: boolean; onClick: () => void } | null;
+  /** The stop-and-bank button in the table's corner (while picking; after banking it shows the new score). */
+  bank: { text: string; amount: string; disabled: boolean; onClick: () => void; banked?: boolean } | null;
+  /** Points just banked: they fly from the middle of the table into the bank. */
+  coin: string | null;
+  /** How the turn ended, over the table. */
+  stamp: ReactNode;
 }) {
   const dice = useRef<HTMLDivElement>(null);
   // The table takes whatever room the screen has, so the dice are spread out once its shape is known.
@@ -596,7 +590,7 @@ function Table({
         </button>
       ))}
       {bank && (
-        <Tap className="fk-bank" disabled={bank.disabled} onClick={bank.onClick} ariaLabel={`${bank.text} ${bank.amount}`}>
+        <Tap className={`fk-bank${bank.banked ? ' banked' : ''}`} disabled={bank.disabled} onClick={bank.onClick} ariaLabel={`${bank.text} ${bank.amount}`}>
           <span className="fk-bank-icon" aria-hidden>
             💰
           </span>
@@ -604,6 +598,12 @@ function Table({
           <span className="fk-bank-amount">{bank.amount}</span>
         </Tap>
       )}
+      {coin && (
+        <span className="fk-coin" aria-hidden>
+          {coin}
+        </span>
+      )}
+      {stamp}
       {cup && (
         <button type="button" className={`fk-cup${shaking ? ' shaking' : ''}`} aria-label={t('Roll the dice')} onClick={onCup}>
           <svg viewBox="0 0 100 110" aria-hidden>

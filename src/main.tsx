@@ -5,6 +5,7 @@ import './styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { watchBoxes } from './lib/boxes';
 import { watchForUpdates } from './lib/update';
 import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
@@ -42,6 +43,10 @@ function fontsReady() {
   const fonts = Promise.all([document.fonts.load('1em "Big Shoulders Display Variable"'), document.fonts.load('1em "Archivo Variable"')]);
   return Promise.race([fonts, new Promise((done) => window.setTimeout(done, 1000))]).catch(() => {});
 }
+
+// The game tables' sizes for the CSS (instead of container queries, see lib/boxes.ts): watching
+// before the first render, so the first picture has them.
+watchBoxes();
 
 void fontsReady().then(() =>
   createRoot(document.getElementById('root')!).render(

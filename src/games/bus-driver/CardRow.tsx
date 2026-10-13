@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { fitCards, useBox } from './useBox';
+import { fitCards, useBox } from '../../lib/useBox';
 
 /** A player's cards in a row, as big as the room it gets allows (the room never depends on them). */
 export default function CardRow({ count, children }: { count: number; children: ReactNode }) {

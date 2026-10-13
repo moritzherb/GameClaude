@@ -83,6 +83,10 @@ const app: Record<string, string> = {
   // Players
   'Party’s full': 'Party ist voll',
   'Add a name': 'Name eingeben',
+  'From your rooms': 'Aus deinen Räumen',
+  '{name} (you)': '{name} (du)',
+  '1 game played': '1 Spiel gespielt',
+  '{n} games played': '{n} Spiele gespielt',
   'Add player': 'Spieler hinzufügen',
   'Already playing. Try a nickname.': 'Spielt schon mit. Nimm einen Spitznamen.',
   'It’s quiet in here. Add the squad.': 'Ganz schön leer hier. Hol die Truppe dazu.',

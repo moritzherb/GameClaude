@@ -13,6 +13,8 @@ import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { apply, deal, fits, MAX_PLAYERS, MIN_PLAYERS, same, TABLE, viewFor, type Act, type Entry, type Game, type Need, type View } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
+import { usePhotoOf } from '../../net/photos';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -201,7 +203,7 @@ export default function Palace() {
           {ready.map((m) => (
             <li key={m.id} className="member-row">
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
-                {m.avatar}
+                <Avatar avatar={m.avatar} photo={m.photo} />
               </span>
               <span className="member-text">
                 <span className="member-name">{m.name}</span>
@@ -294,6 +296,7 @@ function turnText(view: PhoneView) {
 /* ---------------- The table (host's phone) ---------------- */
 
 function TableView({ view }: { view: PhoneView }) {
+  const photoOf = usePhotoOf();
   const last = view.log.at(-1);
   const { fresh, ghost } = usePileFx(view);
   return (
@@ -308,7 +311,7 @@ function TableView({ view }: { view: PhoneView }) {
               style={{ '--chip': s.color } as CSSProperties}
             >
               <div className="pl-seat-head">
-                <span className="pl-seat-avatar">{s.avatar}</span>
+                <span className="pl-seat-avatar"><Avatar avatar={s.avatar} photo={photoOf(s.id)} /></span>
                 <span className="pl-seat-name">{s.name}</span>
                 {i === view.dealer && <span className="pl-dealer">{t('D')}</span>}
               </div>
@@ -708,6 +711,7 @@ function Reveal({ card, flip, text, good }: RevealInfo) {
 
 /** Without a table phone: everyone else's table cards, small, and how many cards they hold. */
 function Opponents({ view }: { view: PhoneView }) {
+  const photoOf = usePhotoOf();
   return (
     <div className="pl-opps">
       {view.seats.map((s, i) => {
@@ -716,7 +720,7 @@ function Opponents({ view }: { view: PhoneView }) {
         return (
           <div key={s.id} className={`pl-opp${i === view.turn && view.phase === 'play' ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
             <div className="pl-seat-head">
-              <span className="pl-seat-avatar">{s.avatar}</span>
+              <span className="pl-seat-avatar"><Avatar avatar={s.avatar} photo={photoOf(s.id)} /></span>
               <span className="pl-seat-name">{s.name}</span>
               <span className="pl-opp-hand" aria-label={t('{n} in hand', { n: side.hand })}>
                 🂠 {side.hand}
@@ -853,6 +857,7 @@ export function HandSpread({
 /* ---------------- Game over ---------------- */
 
 function Over({ view, isHost, onNewGame }: { view: PhoneView; isHost: boolean; onNewGame: () => void }) {
+  const photoOf = usePhotoOf();
   const w = view.winner!;
   const order = view.seats
     .map((s, i) => ({ s, i, left: view.sides[i].hand + view.sides[i].up.filter(Boolean).length + view.sides[i].down.filter(Boolean).length }))
@@ -868,7 +873,7 @@ function Over({ view, isHost, onNewGame }: { view: PhoneView; isHost: boolean; o
           {order.map(({ s, i, left }) => (
             <li key={s.id}>
               <span>
-                {s.avatar} {i === view.me ? t('You') : s.name}
+                <Avatar avatar={s.avatar} photo={photoOf(s.id)} /> {i === view.me ? t('You') : s.name}
               </span>
               <strong>{t('{n} cards left', { n: left })}</strong>
             </li>

@@ -11,6 +11,7 @@ import CardRow from './CardRow';
 import type { RideStats } from './RideFinish';
 import { QUESTIONS, type Guess, type Result } from './logic';
 import { answerRide, startRide, type RideState } from './ride';
+import Avatar from '../../components/Avatar';
 
 
 interface Reveal {
@@ -96,7 +97,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
 
       <div className="bd-player">
         <span className="bd-avatar" style={{ background: driver.color }}>
-          {driver.avatar}
+          <Avatar avatar={driver.avatar} photo={driver.photo} />
         </span>
         <span className="bd-player-text">
           <span className="bd-player-name">{driver.name}</span>

@@ -7,6 +7,7 @@ import { buzz, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
 import { Verdict, VERDICT_DELAY_MS } from './Answers';
 import { dealTiebreak, flipTiebreak, type TiebreakOutcome, type TiebreakState } from './pyramid';
+import Avatar from '../../components/Avatar';
 
 interface Shown {
   /** The flip the screen shows the result of. */
@@ -103,7 +104,7 @@ export default function Tiebreak({ tied, onDone }: Props) {
           return (
             <div key={p.id} className={`tb-player${safe ? ' safe' : ''}${justSafe.includes(p.id) ? ' just' : ''}`} style={{ '--chip': p.color } as CSSProperties}>
               <span className="bd-avatar sm" style={{ background: p.color }}>
-                {p.avatar}
+                <Avatar avatar={p.avatar} photo={p.photo} />
               </span>
               <span className="tb-who">
                 <span className="tb-name">{p.name}</span>

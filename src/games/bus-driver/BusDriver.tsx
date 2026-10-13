@@ -15,6 +15,7 @@ import CardRow from './CardRow';
 import { judge, questionsFor, type Guess, type Result } from './logic';
 import Pyramid from './Pyramid';
 import Tiebreak from './Tiebreak';
+import Avatar from '../../components/Avatar';
 
 interface Seat {
   player: Player;
@@ -139,7 +140,7 @@ export default function BusDriver({ players, exit }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setS({ ...s, dealerId: p.id })}
             >
-              <span className="pick-chip-avatar">{p.avatar}</span>
+              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === s.dealerId && <span className="pick-chip-badge">{t('Dealer')}</span>}
             </Tap>
@@ -195,7 +196,7 @@ export default function BusDriver({ players, exit }: GameProps) {
             <div key={x.player.id} className="bd-summary-row">
               <div className="bd-summary-who">
                 <span className="bd-avatar sm" style={{ background: x.player.color }}>
-                  {x.player.avatar}
+                  <Avatar avatar={x.player.avatar} photo={x.player.photo} />
                 </span>
                 <span className="bd-summary-name">{x.player.name}</span>
                 <span className="bd-summary-stats">
@@ -273,7 +274,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         </div>
         <div className="bd-first">
           <span className="bd-avatar sm" style={{ background: first.color }}>
-            {first.avatar}
+            <Avatar avatar={first.avatar} photo={first.photo} />
           </span>
           <span>
             <strong>{first.name}</strong> {t('starts')}
@@ -316,7 +317,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
       <div className="bd-player">
         <span className="bd-avatar" style={{ background: seat.player.color }}>
-          {seat.player.avatar}
+          <Avatar avatar={seat.player.avatar} photo={seat.player.photo} />
         </span>
         <span className="bd-player-text">
           <span className="bd-player-name">{seat.player.name}</span>

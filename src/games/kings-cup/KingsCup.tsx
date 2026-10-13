@@ -14,6 +14,7 @@ import type { GameProps } from '../types';
 import { layRing, SLOT_WIDTH, type Slot } from './ring';
 import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
 
 interface State {
   /** All 52 cards, face down in a messy circle: cards[i] lies at slots[i]. */
@@ -166,7 +167,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: player.color }}>
-            {player.avatar}
+            <Avatar avatar={player.avatar} photo={player.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{player.name}</span>
@@ -265,7 +266,7 @@ export default function KingsCup({ players, exit }: GameProps) {
                     pickMate(p);
                   }}
                 >
-                  <span className="pick-chip-avatar">{p.avatar}</span>
+                  <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
                   <span className="pick-chip-name">{p.name}</span>
                 </button>
               ))}

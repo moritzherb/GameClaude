@@ -10,7 +10,8 @@ import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
 import type { Guess } from './logic';
 import type { RideStats } from './RideFinish';
-import { fitCards, useBox } from './useBox';
+import { fitCards, useBox } from '../../lib/useBox';
+import Avatar from '../../components/Avatar';
 
 const TITLES = { color: tx('Red or black?'), 'higher-lower': tx('Higher or lower?') } as const;
 
@@ -96,7 +97,7 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
 
       <div className="bd-player">
         <span className="bd-avatar" style={{ background: driver.color }}>
-          {driver.avatar}
+          <Avatar avatar={driver.avatar} photo={driver.photo} />
         </span>
         <span className="bd-player-text">
           <span className="bd-player-name">{driver.name}</span>

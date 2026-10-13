@@ -17,6 +17,8 @@ import { savedFor } from '../../net/saved';
 import { useApp } from '../../state/AppState';
 import { direction, guess, MISSES_TO_PASS, newGame, next, nextGuesser, possible, takeOver, VALUES, type Game } from './logic';
 import Finished from '../../components/Finished';
+import Avatar from '../../components/Avatar';
+import { usePhotoOf } from '../../net/photos';
 
 /*
  * Played with two phones in a room: the host's phone lies in the middle as the table and
@@ -159,7 +161,7 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
                 style={{ '--chip': p.color } as CSSProperties}
                 onClick={() => setDealerId(p.id)}
               >
-                <span className="pick-chip-avatar">{p.avatar}</span>
+                <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
                 <span className="pick-chip-name">{p.name}</span>
                 {/* The same word in German for this game. */}
                 {p.id === dealerId && <span className="pick-chip-badge">Dealer</span>}
@@ -212,6 +214,7 @@ function WaitForTable({ host }: { host?: string }) {
 /* ---------------- Host: the table in the middle ---------------- */
 
 function Handover({ session, children }: { session: Session; children?: React.ReactNode }) {
+  const photoOf = usePhotoOf();
   const g = session.game;
   const from = session.seats[g.handover!.dealer];
   const sips = g.handover!.sips;
@@ -220,7 +223,7 @@ function Handover({ session, children }: { session: Session; children?: React.Re
       <div className="bd-head center">
         <span className="kicker">{g.over ? t('Deck’s empty!') : t('Dealer change')}</span>
         <span className="bd-avatar xl" style={{ background: from.color }}>
-          {from.avatar}
+          <Avatar avatar={from.avatar} photo={photoOf(from.id)} />
         </span>
         <h2 className="bd-title big">{sips ? t('{name} drinks up', { name: from.name }) : t('{name} gets away', { name: from.name })}</h2>
         <div className={`ftd-sips${sips ? '' : ' none'}`}>
@@ -235,6 +238,7 @@ function Handover({ session, children }: { session: Session; children?: React.Re
 }
 
 function TableView({ session, onAgain }: { session: Session; onAgain: () => void }) {
+  const photoOf = usePhotoOf();
   const known = useApp().knows('fuck-the-dealer');
   const g = session.game;
   const seats = session.seats;
@@ -285,7 +289,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
             <span className="kicker">{t('New dealer')}</span>
             <span className="bd-player">
               <span className="bd-avatar sm" style={{ background: dealer.color }}>
-                {dealer.avatar}
+                <Avatar avatar={dealer.avatar} photo={photoOf(dealer.id)} />
               </span>
               <span className="bd-player-name">{dealer.name}</span>
             </span>
@@ -306,7 +310,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: dealer.color }}>
-            {dealer.avatar}
+            <Avatar avatar={dealer.avatar} photo={photoOf(dealer.id)} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{dealer.name}</span>
@@ -329,7 +333,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
           <div className="ftd-ask">
             <span className="ftd-guesser">
               <span className="bd-avatar xs" style={{ background: guesser.color }}>
-                {guesser.avatar}
+                <Avatar avatar={guesser.avatar} photo={photoOf(guesser.id)} />
               </span>
               <span className="ftd-guesser-name">{guesser.name}</span>
             </span>
@@ -352,6 +356,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
 }
 
 function Tally({ session }: { session: Session }) {
+  const photoOf = usePhotoOf();
   return (
     <section className="panel">
       <h3 className="section-title">{t('Drunk as dealer')}</h3>
@@ -362,7 +367,7 @@ function Tally({ session }: { session: Session }) {
           .map(({ p, n }) => (
             <div key={p.id} className="ftd-tally-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                {p.avatar}
+                <Avatar avatar={p.avatar} photo={photoOf(p.id)} />
               </span>
               <span className="ftd-tally-name">{p.name}</span>
               <span className="ftd-tally-num">{n === 1 ? t('1 sip') : t('{n} sips', { n })}</span>
