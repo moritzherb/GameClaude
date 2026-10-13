@@ -12,6 +12,7 @@ import type { GameProps } from '../types';
 import { DEFAULT_ROWS, DEFAULT_STAKE, newRace, ROW_OPTIONS, sipsForRow, STAKE_MAX, STAKE_MIN, step, winnings, type Race } from './logic';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
+import { useBox } from '../../lib/useBox';
 
 const SUIT_NAME: Record<Suit, string> = { hearts: tx('Hearts'), diamonds: tx('Diamonds'), spades: tx('Spades'), clubs: tx('Clubs') };
 const RED = (s: Suit) => s === 'hearts' || s === 'diamonds';
@@ -32,6 +33,8 @@ export default function HorseRace({ players, exit }: GameProps) {
     setStakes({ ...stakes, [p.id]: n });
   };
   const [rows, setRows] = useState(DEFAULT_ROWS);
+  // A narrow list of bets puts the suits on a line of their own.
+  const [betsBox, betsSize] = useBox<HTMLDivElement>();
   const [race, setRace] = useState<Race | null>(null);
   const [auto, setAuto] = useState(false);
 
@@ -69,7 +72,7 @@ export default function HorseRace({ players, exit }: GameProps) {
           )}
         </div>
 
-        <div className="hs-bets">
+        <div className={`hs-bets${betsSize.w && betsSize.w <= 345 ? ' narrow' : ''}`} ref={betsBox}>
           {players.map((p) => (
             <div key={p.id} className="hs-bet-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>

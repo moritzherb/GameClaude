@@ -572,7 +572,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             viewBox="0 0 100 100"
             aria-hidden
             key={`x-${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}-${g.freeThrow}`}
-            style={{ '--x': `${(at[0].x + at[1].x) / 2}cqw`, '--y': `${(at[0].y + at[1].y) / 2}cqh` } as CSSProperties}
+            style={{ '--x': `calc(${(at[0].x + at[1].x) / 2} * var(--qw))`, '--y': `calc(${(at[0].y + at[1].y) / 2} * var(--qh))` } as CSSProperties}
           >
             {bad ? (
               <>

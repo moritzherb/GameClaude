@@ -127,7 +127,7 @@ export default function Home() {
           </RoundButton>
         </header>
 
-        <h1 className="poster-title fade-up">
+        <h1 className="poster-title">
           {headline.top} <span className="hl">{headline.sticker}</span>
         </h1>
 

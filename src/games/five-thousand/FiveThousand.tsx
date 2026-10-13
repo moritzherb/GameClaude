@@ -454,7 +454,7 @@ interface Spot {
 
 /** The bank button in the table's bottom-right corner (as in the CSS): its size and distance from the edges. */
 const BANK = { size: 19, ofAspect: 0.27, edge: 3, minPx: 58 };
-/** The die size (as in the CSS: min(15cqw, 24cqh)), in % of the table's width. */
+/** The die size (as in the CSS: the smaller of 15% of the table's width and 24% of its height), in % of the table's width. */
 const dieSize = (h: number) => Math.min(15, 0.24 * h);
 
 /**
