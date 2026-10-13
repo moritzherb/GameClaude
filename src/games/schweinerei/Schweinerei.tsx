@@ -166,6 +166,10 @@ function landing(th: Throw, from: { x: number; y: number }, v: { x: number; y: n
   ];
 }
 
+/** The "throw again" arrow: most of a circle, its head at the top right, turning clockwise. */
+const AGAIN_ARC = 'M69.3 29.8A28 28 0 1 0 78 50';
+const AGAIN_HEAD = 'M76.5 36.8 62.3 34.2 73.5 22.6Z';
+
 const shownPoses = (th: Throw): [Pose, Pose] => (th.kind === 'score' || th.kind === 'pig-out' ? th.pigs : th.kind === 'touch' ? ['side-dot', 'side'] : ['back', 'standing']);
 
 /** A throw in the air: where from, and the throw itself (decided when it leaves the hand). */
@@ -559,21 +563,33 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             </span>
           ))}
         </span>
-        {/* Turn lost: a big red cross over the pigs, so nobody misses it. */}
-        {showResult && bad && (
+        {/* Over the pigs, so nobody misses it: a red cross when the turn is lost, a yellow
+            "again" arrow when a pig out on the first throw lets the player throw once more. */}
+        {showResult && (bad || g.freeThrow) && (
           <svg
-            className="sw-lost"
+            className={`sw-mark ${bad ? 'sw-lost' : 'sw-again'}`}
             viewBox="0 0 100 100"
             aria-hidden
-            key={`x-${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}`}
+            key={`x-${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}-${g.freeThrow}`}
             style={{ '--x': `${(at[0].x + at[1].x) / 2}cqw`, '--y': `${(at[0].y + at[1].y) / 2}cqh` } as CSSProperties}
           >
-            <path d="M22 22 78 78M78 22 22 78" className="sw-lost-edge" />
-            <path d="M22 22 78 78M78 22 22 78" className="sw-lost-bar" />
+            {bad ? (
+              <>
+                <path d="M22 22 78 78M78 22 22 78" className="sw-mark-edge" />
+                <path d="M22 22 78 78M78 22 22 78" className="sw-mark-bar" />
+              </>
+            ) : (
+              <>
+                <path d={AGAIN_ARC} className="sw-mark-edge" />
+                <path d={AGAIN_HEAD} className="sw-mark-head-edge" />
+                <path d={AGAIN_ARC} className="sw-mark-bar" />
+                <path d={AGAIN_HEAD} className="sw-mark-head" />
+              </>
+            )}
           </svg>
         )}
         {showResult && (
-          <div className={`sw-result${bad ? ' bad' : th.kind === 'score' && th.double ? ' double' : ''}`} key={`${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}-${g.freeThrow}`} role="status">
+          <div className={`sw-result${bad ? ' bad' : g.freeThrow ? ' again' : th.kind === 'score' && th.double ? ' double' : ''}`} key={`${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}-${g.freeThrow}`} role="status">
             <span className="sw-result-name">{throwName(th)}</span>
             {g.bonusNow && <span className="sw-result-bonus">{t('Bonus throw! {what}: +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}</span>}
             <span className="sw-result-sub">

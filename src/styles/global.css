@@ -4904,8 +4904,15 @@ h3 {
   color: #d3241b;
 }
 
-/* Turn lost: a big red cross stamped over the pigs (under the slip), right between them. */
-.sw-lost {
+.sw-result.again {
+  box-shadow:
+    0 0 0 4px #f6c21c,
+    0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+/* Over the pigs (under the slip), right between them: a red cross when the turn is lost, a
+   yellow arrow when the player may throw again. */
+.sw-mark {
   position: absolute;
   --size: min(54cqw, 44cqh, 230px);
   /* Never past the table's edge, wherever the pigs landed. */
@@ -4920,19 +4927,40 @@ h3 {
   animation: sw-lost 0.45s var(--spring) 0.3s both;
 }
 
-.sw-lost path {
+.sw-mark path {
   fill: none;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.sw-lost-edge {
+.sw-mark-edge {
   stroke: #fff;
   stroke-width: 14;
 }
 
-.sw-lost-bar {
-  stroke: #e3261c;
+.sw-mark-bar {
+  stroke: var(--mark);
   stroke-width: 9;
+}
+
+.sw-mark .sw-mark-head-edge {
+  fill: #fff;
+  stroke: #fff;
+  stroke-width: 5;
+}
+
+.sw-mark .sw-mark-head {
+  fill: var(--mark);
+}
+
+.sw-lost {
+  --mark: #e3261c;
+}
+
+.sw-again {
+  --mark: #f6c21c;
+  animation-name: sw-again;
+  animation-duration: 0.6s;
 }
 
 @keyframes sw-lost {
@@ -4950,8 +4978,24 @@ h3 {
   }
 }
 
+/* The arrow spins in once, the way it points. */
+@keyframes sw-again {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(-220deg);
+  }
+  70% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.06) rotate(8deg);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .sw-lost {
+  .sw-mark {
     animation: none;
     opacity: 0.88;
   }
