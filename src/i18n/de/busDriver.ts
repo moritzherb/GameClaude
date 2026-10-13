@@ -92,7 +92,6 @@ const busDriver: Record<string, string> = {
   'Drink {n} sips': 'Trink {n} Schlucke',
   'Double trouble: drink {n} sips': 'Doppelt bitter: Trink {n} Schlucke',
   'It was {card}': 'Es war {card}',
-  'It was {card} · fresh deck opened': 'Es war {card} · neues Deck aufgemacht',
 
   /* ---------- Part 2: pyramid ---------- */
   'Part 2 · The pyramid': 'Teil 2 · Die Pyramide',
@@ -121,8 +120,8 @@ const busDriver: Record<string, string> = {
   'Start the tiebreaker': 'Ab ins Stechen',
   Continue: 'Weiter',
   'Flip this card': 'Diese Karte aufdecken',
-  'Row {row} · {n} sip per card': 'Reihe {row} · {n} Schluck pro Karte',
-  'Row {row} · {n} sips per card': 'Reihe {row} · {n} Schlucke pro Karte',
+  '{n} sip per card': '{n} Schluck pro Karte',
+  '{n} sips per card': '{n} Schlucke pro Karte',
   'gives out': 'verteilt',
   'Nobody has an {rank}.': '{rank} hat keiner.',
   'Nobody has a {rank}.': '{rank} hat keiner.',
@@ -164,7 +163,6 @@ const busDriver: Record<string, string> = {
   'Part 3 · The bus ride': 'Teil 3 · Die Busfahrt',
   'Which road?': 'Welche Strecke?',
   'Start the ride': 'Losfahren',
-  'It was {card} · new deck shuffled': 'Es war {card} · neues Deck gemischt',
   'All correct!': 'Alles richtig!',
   'The bus has arrived.': 'Der Bus ist angekommen.',
   'Finish the ride': 'Fahrt beenden',

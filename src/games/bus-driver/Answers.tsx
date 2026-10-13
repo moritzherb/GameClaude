@@ -46,7 +46,7 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
       );
     default:
       return (
-        <div className="answer-grid">
+        <div className="answer-grid four">
           {SUITS.map((suit) =>
             btn(suit, SUIT_SYMBOL[suit], t(SUIT_LABEL[suit]), suit === 'hearts' || suit === 'diamonds' ? 'tone-suit-red' : 'tone-suit-black', {
               q: 'suit',
@@ -60,41 +60,15 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
 
 
 /**
- * Right or wrong: a big stamp pops up over the table once the card has turned (with the sips to
- * drink or give out) and goes again; a slim line stays above the "next" button.
+ * Right or wrong: a big stamp pops up over the table once the card has turned, with the sips to
+ * drink or give out (or what happens now), and goes again.
  */
-export function Verdict({
-  tone,
-  emoji,
-  title,
-  sub,
-  detail,
-  short,
-}: {
-  tone: Outcome;
-  emoji: string;
-  title: string;
-  sub: string;
-  detail?: string;
-  /** The stamp shows just the title (the sub is a whole sentence, it stays in the line below). */
-  short?: boolean;
-}) {
+export function Verdict({ tone, emoji, title, sub }: { tone: Outcome; emoji: string; title: string; sub: string }) {
   return (
-    <>
-      <div className={`bd-pop ${tone}`} aria-hidden>
-        <span className="bd-pop-emoji">{emoji}</span>
-        <span className="bd-pop-title">{title}</span>
-        {!short && <span className="bd-pop-sub">{sub}</span>}
-      </div>
-      <div className={`bd-verdict ${tone}`} role="status">
-        <span className="bd-verdict-emoji">{emoji}</span>
-        <span className="bd-verdict-text">
-          <span className="bd-verdict-main">
-            <strong>{title}</strong> {sub}
-          </span>
-          {detail && <span className="bd-verdict-detail">{detail}</span>}
-        </span>
-      </div>
-    </>
+    <div className={`bd-pop ${tone}`} role="status">
+      <span className="bd-pop-emoji">{emoji}</span>
+      <span className="bd-pop-title">{title}</span>
+      <span className="bd-pop-sub">{sub}</span>
+    </div>
   );
 }
