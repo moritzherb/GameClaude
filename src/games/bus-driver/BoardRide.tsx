@@ -65,14 +65,12 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
   let verdict = null;
   let nextLabel = '';
   if (step) {
-    const card = cardName(step.card);
-    const detail = step.reshuffled ? t('It was {card} · new deck shuffled', { card }) : t('It was {card}', { card });
     if (board.done) {
-      verdict = <Verdict tone="correct" emoji="🏁" title={t('All correct!')} sub={t('The bus has arrived.')} detail={detail} />;
+      verdict = <Verdict tone="correct" emoji="🏁" title={t('All correct!')} sub={t('The bus has arrived.')} />;
       nextLabel = t('Finish the ride');
     } else if (!failed) {
       verdict = (
-        <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next row: {question}', { question: t(TITLES[questions[row + 1]]) })} detail={detail} />
+        <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next row: {question}', { question: t(TITLES[questions[row + 1]]) })} />
       );
       nextLabel = t('Next row →');
     } else {
@@ -82,8 +80,6 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
           emoji={step.outcome === 'same' ? '😱' : '🍺'}
           title={step.outcome === 'same' ? t('Same value! Drink {n}', { n: step.sips }) : t('Wrong! Drink {n}', { n: step.sips })}
           sub={t('Turned cards get covered. Back to the bottom.')}
-          detail={detail}
-          short
         />
       );
       nextLabel = t('Start over');

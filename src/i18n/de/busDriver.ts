@@ -92,7 +92,6 @@ const busDriver: Record<string, string> = {
   'Drink {n} sips': 'Trink {n} Schlucke',
   'Double trouble: drink {n} sips': 'Doppelt bitter: Trink {n} Schlucke',
   'It was {card}': 'Es war {card}',
-  'It was {card} · fresh deck opened': 'Es war {card} · neues Deck aufgemacht',
 
   /* ---------- Part 2: pyramid ---------- */
   'Part 2 · The pyramid': 'Teil 2 · Die Pyramide',
@@ -164,7 +163,6 @@ const busDriver: Record<string, string> = {
   'Part 3 · The bus ride': 'Teil 3 · Die Busfahrt',
   'Which road?': 'Welche Strecke?',
   'Start the ride': 'Losfahren',
-  'It was {card} · new deck shuffled': 'Es war {card} · neues Deck gemischt',
   'All correct!': 'Alles richtig!',
   'The bus has arrived.': 'Der Bus ist angekommen.',
   'Finish the ride': 'Fahrt beenden',

@@ -4,7 +4,7 @@ import NextName from '../../components/NextName';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
-import { cardName, newDeck, type Card } from '../../lib/cards';
+import { newDeck, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
 import { useApp, type Player } from '../../state/AppState';
@@ -33,8 +33,6 @@ interface State {
   round: number;
   turn: number;
   reveal: { card: Card; result: Result } | null;
-  /** True right after the deck ran out and a fresh one was opened. */
-  newDeckOpened: boolean;
   /** Players tied for most cards after the pyramid. */
   tied: Player[];
   driver: Player | null;
@@ -60,7 +58,6 @@ export default function BusDriver({ players, exit }: GameProps) {
     round: 0,
     turn: 0,
     reveal: null,
-    newDeckOpened: false,
     tied: [],
     driver: null,
   }));
@@ -106,7 +103,7 @@ export default function BusDriver({ players, exit }: GameProps) {
           }
         : x,
     );
-    setS({ ...s, seats, deck, reveal: { card, result }, newDeckOpened: fresh });
+    setS({ ...s, seats, deck, reveal: { card, result } });
 
     // Let the card flip before the verdict lands.
     timer.current = window.setTimeout(() => {
@@ -121,9 +118,9 @@ export default function BusDriver({ players, exit }: GameProps) {
   const next = () => {
     answered.current = false;
     const lastTurn = s.turn + 1 >= s.seats.length;
-    if (!lastTurn) return setS({ ...s, turn: s.turn + 1, reveal: null, newDeckOpened: false });
+    if (!lastTurn) return setS({ ...s, turn: s.turn + 1, reveal: null });
     const lastRound = s.round + 1 >= questions.length;
-    setS({ ...s, stage: lastRound ? 'done' : roundStart, round: lastRound ? s.round : s.round + 1, turn: 0, reveal: null, newDeckOpened: false });
+    setS({ ...s, stage: lastRound ? 'done' : roundStart, round: lastRound ? s.round : s.round + 1, turn: 0, reveal: null });
   };
 
   /* ---------- Setup: pick the dealer, risky mode ---------- */
@@ -345,7 +342,7 @@ export default function BusDriver({ players, exit }: GameProps) {
       <div className="bd-foot">
         {reveal ? (
           <>
-            <ResultBanner result={reveal.result} card={reveal.card} newDeck={s.newDeckOpened} />
+            <ResultBanner result={reveal.result} />
             <BigButton size="xl" variant="light" onClick={next}>
               {nextLabel} →
             </BigButton>
@@ -358,7 +355,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   );
 }
 
-function ResultBanner({ result, card, newDeck }: { result: Result; card: Card; newDeck: boolean }) {
+function ResultBanner({ result }: { result: Result }) {
   const n = result.sips;
   const one = n === 1;
   const copy = {
@@ -366,6 +363,5 @@ function ResultBanner({ result, card, newDeck }: { result: Result; card: Card; n
     wrong: { emoji: '🍺', title: t('Wrong!'), sub: one ? t('Drink {n} sip', { n }) : t('Drink {n} sips', { n }) },
     same: { emoji: '😱', title: t('Same value!'), sub: t('Double trouble: drink {n} sips', { n }) },
   }[result.outcome];
-  const detail = newDeck ? t('It was {card} · fresh deck opened', { card: cardName(card) }) : t('It was {card}', { card: cardName(card) });
-  return <Verdict tone={result.outcome} {...copy} detail={detail} />;
+  return <Verdict tone={result.outcome} {...copy} />;
 }

@@ -2475,11 +2475,11 @@ h3 {
   --cw: var(--hand-cw, 96px);
 }
 
-/* A turn's bottom: the answers, or the slim verdict with "next", in the same fixed room (tall
-   enough for the four suits), so answering never resizes the cards above. */
+/* A turn's bottom: the answers (one row, the four suits too), or "next", in the same fixed room,
+   so answering never resizes the cards above. Right or wrong pops up over the cards. */
 .bd-foot {
   flex: none;
-  height: clamp(150px, 20dvh, 190px);
+  height: clamp(112px, 15dvh, 150px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -2495,6 +2495,19 @@ h3 {
 
 .bd-turn .bd-foot .answer-btn {
   min-height: 0;
+}
+
+.bd-foot .answer-grid.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.bd-foot .answer-grid.four .answer-btn {
+  padding: 8px 4px;
+}
+
+.bd-foot .answer-grid.four .answer-label {
+  font-size: 0.95rem;
 }
 
 /* "Pick a card": in the middle of the bottom room. */
@@ -2574,59 +2587,6 @@ h3 {
     visibility: hidden;
     transform: translate(-50%, -50%) scale(0.92) rotate(-3deg);
   }
-}
-
-/* What stays after the stamp: one slim line above "next". */
-.bd-verdict {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: var(--radius);
-  color: var(--on-color);
-  animation: mx-fade-in 0.3s ease 0.5s both;
-}
-
-.bd-verdict.correct {
-  background: var(--good);
-}
-
-.bd-verdict.wrong {
-  background: var(--bad);
-}
-
-.bd-verdict.same {
-  background: var(--c-yellow);
-}
-
-.bd-verdict-emoji {
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.bd-verdict-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  line-height: 1.25;
-}
-
-.bd-verdict-main {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.bd-verdict-main strong {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
-
-.bd-verdict-detail {
-  font-size: 0.8rem;
-  opacity: 0.8;
 }
 
 .bd-question {

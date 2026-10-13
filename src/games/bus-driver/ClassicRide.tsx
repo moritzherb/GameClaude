@@ -3,7 +3,7 @@ import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
 import { t } from '../../i18n';
-import { cardName, type Card } from '../../lib/cards';
+import type { Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
 import Answers, { Verdict } from './Answers';
@@ -64,14 +64,12 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
   let verdict = null;
   let nextLabel = '';
   if (reveal) {
-    const card = cardName(reveal.card);
-    const detail = reveal.reshuffled ? t('It was {card} · new deck shuffled', { card }) : t('It was {card}', { card });
     if (ride.done) {
-      verdict = <Verdict tone="correct" emoji="🏁" title={t('All correct!')} sub={t('The bus has arrived.')} detail={detail} />;
+      verdict = <Verdict tone="correct" emoji="🏁" title={t('All correct!')} sub={t('The bus has arrived.')} />;
       nextLabel = t('Finish the ride');
     } else if (!failed) {
       verdict = (
-        <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next: {question}', { question: t(questions[q + 1].title) })} detail={detail} />
+        <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next: {question}', { question: t(questions[q + 1].title) })} />
       );
       nextLabel = t('Next question →');
     } else {
@@ -82,8 +80,6 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
           emoji={outcome === 'same' ? '😱' : '🍺'}
           title={outcome === 'same' ? t('Same value! Drink {n}', { n: sips }) : t('Wrong! Drink {n}', { n: sips })}
           sub={t('Back to question 1.')}
-          detail={detail}
-          short
         />
       );
       nextLabel = t('Start over');
