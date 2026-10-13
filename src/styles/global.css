@@ -2534,7 +2534,7 @@ h3 {
   box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   /* Once the card has turned and lain there a moment (VERDICT_DELAY_MS). */
-  animation: bd-pop 2.1s var(--ease) 0.8s both;
+  animation: bd-pop 2.1s var(--ease) 0.65s both;
 }
 
 .bd-pop.correct {
@@ -2944,7 +2944,7 @@ h3 {
   font-weight: 700;
   display: grid;
   place-items: center;
-  animation: pop-in 0.4s var(--spring) 0.8s both;
+  animation: pop-in 0.4s var(--spring) 0.65s both;
 }
 
 .panel.hands {
@@ -3019,7 +3019,7 @@ h3 {
   box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   /* Once the card has turned and lain there a moment (VERDICT_DELAY_MS). */
-  animation: pyr-bubble 2.8s var(--ease) 0.8s both;
+  animation: pyr-bubble 2.8s var(--ease) 0.65s both;
 }
 
 .pyr-bubble.hit {
@@ -3157,7 +3157,7 @@ h3 {
   white-space: nowrap;
   box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
   pointer-events: none;
-  animation: hand-bubble 2.8s var(--ease) 0.85s both;
+  animation: hand-bubble 2.8s var(--ease) 0.7s both;
 }
 
 @keyframes hand-bubble {
