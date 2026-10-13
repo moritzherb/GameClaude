@@ -442,6 +442,9 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         if (out.double || next.bonusNow) sfx.tada();
         else sfx.pop();
         buzz(out.double || next.bonusNow ? [40, 40, 80] : 20);
+      } else if (next.freeThrow) {
+        sfx.tick();
+        buzz(20);
       } else {
         sfx.boo();
         buzz([80, 40, 80]);
@@ -457,7 +460,8 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     setG(bank(g));
   };
 
-  const bad = th && th.kind !== 'score';
+  // A pig out on the turn's first throw costs nothing: no cross, no red.
+  const bad = th && th.kind !== 'score' && !g.freeThrow;
   // Not after picking them up and putting them down again: that throw is over.
   const showResult = th && mode === 'rest' && !dropped;
   const hint =
@@ -561,7 +565,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             className="sw-lost"
             viewBox="0 0 100 100"
             aria-hidden
-            key={`x-${g.scores.join()}-${g.turnPts}-${g.turn}`}
+            key={`x-${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}`}
             style={{ '--x': `${(at[0].x + at[1].x) / 2}cqw`, '--y': `${(at[0].y + at[1].y) / 2}cqh` } as CSSProperties}
           >
             <path d="M22 22 78 78M78 22 22 78" className="sw-lost-edge" />
@@ -569,7 +573,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
           </svg>
         )}
         {showResult && (
-          <div className={`sw-result${bad ? ' bad' : th.kind === 'score' && th.double ? ' double' : ''}`} key={`${g.scores.join()}-${g.turnPts}-${g.turn}`} role="status">
+          <div className={`sw-result${bad ? ' bad' : th.kind === 'score' && th.double ? ' double' : ''}`} key={`${g.scores.join()}-${g.turnPts}-${g.turn}-${g.ended}-${g.freeThrow}`} role="status">
             <span className="sw-result-name">{throwName(th)}</span>
             {g.bonusNow && <span className="sw-result-bonus">{t('Bonus throw! {what}: +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}</span>}
             <span className="sw-result-sub">
@@ -578,7 +582,9 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
                   ? t('+{n} · give out {s} sips', { n: th.points, s: th.gives })
                   : t('+{n}', { n: th.points })
                 : th.kind === 'pig-out'
-                  ? t('This turn’s points are gone. Drink 1.')
+                  ? g.freeThrow
+                    ? t('First throw: 0 points, throw again.')
+                    : t('This turn’s points are gone. Drink 1.')
                   : th.kind === 'touch'
                     ? t('The pigs touch: all your points are gone. Drink 2.')
                     : t('One on top of the other: all your points are gone. Drink up!')}
