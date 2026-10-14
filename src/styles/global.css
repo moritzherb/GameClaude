@@ -11663,3 +11663,462 @@ h3 {
 .play-screen.clean .hr-status {
   padding-block: 8px;
 }
+
+/*
+ * The two voting games (Princess/King Treatment, He's a 10/10 but…): a card on the table, the
+ * phone goes round for a secret vote, then everyone's vote and who drinks.
+ */
+.vt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vt > * {
+  flex-shrink: 0;
+}
+
+.vt-seg-emoji {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.vt-count {
+  flex: none;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The card's room: the rest of the screen, the card in the middle of it. */
+.vt-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.vt-stage.small {
+  flex: none;
+}
+
+.vt-card-in {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  animation: vt-deal 0.45s var(--spring) both;
+}
+
+@keyframes vt-deal {
+  from {
+    transform: translateY(28px) rotate(-5deg) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.vt-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 360px);
+  padding: 30px 22px;
+  border: 4px solid #151612;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.35) 1.3px, transparent 1.8px) 0 0 / 9px 9px,
+    var(--card);
+  color: #151612;
+  text-align: center;
+  box-shadow: 8px 8px 0 #151612;
+  transform: rotate(-1.5deg);
+}
+
+.pt-card {
+  --card: var(--c-pink);
+}
+
+.tb-card {
+  --card: var(--c-lilac);
+}
+
+.vt-card-emoji {
+  font-size: 3.4rem;
+  line-height: 1;
+}
+
+.vt-card-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.25rem, 6vw, 1.6rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.vt-card-text {
+  font-size: clamp(1.25rem, 6vw, 1.55rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+/* Over the ballot and the reveal: the same card, small and straight. */
+.vt-card.small {
+  width: 100%;
+  gap: 4px;
+  padding: 12px 14px;
+  border-width: 3px;
+  border-radius: 16px;
+  box-shadow: 4px 4px 0 #151612;
+  transform: none;
+}
+
+.vt-card.small .vt-card-title {
+  font-size: 0.95rem;
+}
+
+.vt-card.small .vt-card-text {
+  font-size: 1.05rem;
+}
+
+.vt-under {
+  margin-top: 10px;
+}
+
+/* Whose turn it is to vote: big, so the phone goes to the right person. */
+.vt-voter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 3px var(--chip);
+  animation: vt-hand 0.35s var(--spring) both;
+}
+
+@keyframes vt-hand {
+  from {
+    transform: translateX(48px);
+    opacity: 0;
+  }
+}
+
+.vt-voter-avatar {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--chip);
+  font-size: 2.4rem;
+  overflow: hidden;
+}
+
+.vt-voter-avatar .avatar-photo,
+.vt-voter-chip-avatar .avatar-photo,
+.tb-dot .avatar-photo {
+  width: 100%;
+  height: 100%;
+}
+
+.vt-voter-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.vt-voter-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vt-ballot {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.vt-undo {
+  color: var(--muted);
+}
+
+/* Princess/King Treatment: two big buttons. */
+.pt-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pt-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 150px;
+  padding: 16px 10px;
+  border: 3px solid #151612;
+  border-radius: var(--radius);
+  box-shadow: 5px 5px 0 #151612;
+  color: #151612;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.15rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+  transition: scale 0.1s;
+}
+
+/* Pressed: smaller (scale, not transform: a transform on touch made iPhones swallow the tap). */
+.pt-choice:active,
+.tb-score:active {
+  scale: 0.94;
+}
+
+.pt-choice.treat {
+  background: var(--c-pink);
+}
+
+.pt-choice.bare {
+  background: #d9d4c7;
+}
+
+.pt-choice-emoji {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.pt-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pt-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.pt-side.drinks {
+  box-shadow: inset 0 0 0 3px var(--bad);
+}
+
+.pt-side-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pt-side-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.pt-side-label {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.pt-side-n {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.vt-voters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vt-voter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 9px 3px 3px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.vt-voter-chip.drinks {
+  background: var(--bad);
+  color: var(--on-color);
+}
+
+.vt-voter-chip-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--chip);
+  font-size: 0.9rem;
+  overflow: hidden;
+}
+
+.vt-voter-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vt-nobody {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.vt-verdict {
+  padding: 14px 16px;
+  animation-delay: 0.2s;
+}
+
+/* He's a 10/10 but…: 0 to 10, in two rows (the 10 twice as wide). */
+.tb-ballot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tb-ballot-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.4rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.tb-scores {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.tb-score {
+  height: 64px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.8rem;
+  transition: scale 0.1s;
+}
+
+.tb-score.ten {
+  grid-column: span 2;
+  background: var(--c-lilac);
+  color: #151612;
+  box-shadow: none;
+}
+
+.tb-average {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tb-average-n {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 4.2rem;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  animation: pop-in 0.45s var(--spring) both;
+}
+
+.tb-average-n small {
+  margin-left: 2px;
+  font-size: 1.4rem;
+  opacity: 0.6;
+}
+
+.tb-average-sub {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Everyone's number: a column per score, the people who gave it stacked over it. */
+.tb-spread {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  align-items: end;
+  gap: 2px;
+  padding: 10px 6px 8px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.tb-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tb-col-people {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 3px;
+}
+
+.tb-dot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--chip);
+  font-size: 0.85rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.tb-dot.drinks {
+  box-shadow: 0 0 0 3px var(--bad);
+}
+
+.tb-col-n {
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-col.used .tb-col-n {
+  color: var(--ink);
+}
+
+/* Clean table: who reads is in the bar's bubble; no count, no how-to. */
+.play-screen.clean .vt-status,
+.play-screen.clean .vt-under,
+.play-screen.clean .vt-voter-sub {
+  display: none;
+}
