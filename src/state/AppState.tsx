@@ -29,6 +29,8 @@ export interface Settings {
   haptics: boolean;
   /** Everything gets even bigger. For later in the night. */
   bigMode: boolean;
+  /** In games, only the table and the buttons you need: no status lines, counters or explanations. */
+  clean?: boolean;
   /** Games the group already knows: their in-game explanations are hidden. Missing in older saves. */
   known?: string[];
   /** App language. English is the default (and missing in older saves). */
@@ -56,8 +58,11 @@ interface AppState {
   replacePlayers: (list: Omit<Player, 'id'>[]) => void;
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => void;
-  /** True when the players marked this game as known, so tutorials and explanations stay hidden. */
+  /** True when the players marked this game as known, or play with a clean table: tutorials and
+   *  explanations stay hidden. */
   knows: (gameId: string) => boolean;
+  /** Just the players' mark (for the settings page). */
+  markedKnown: (gameId: string) => boolean;
   setKnown: (gameId: string, known: boolean) => void;
   ageConfirmed: boolean;
   confirmAge: () => void;
@@ -156,7 +161,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       replacePlayers: (list) => setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: newId() }))),
       settings,
       updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
-      knows: (gameId) => !!settings.known?.includes(gameId),
+      knows: (gameId) => !!settings.clean || !!settings.known?.includes(gameId),
+      markedKnown: (gameId) => !!settings.known?.includes(gameId),
       setKnown: (gameId, known) =>
         setSettings((s) => {
           const rest = (s.known ?? []).filter((id) => id !== gameId);

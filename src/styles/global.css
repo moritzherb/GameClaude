@@ -1932,6 +1932,40 @@ h3 {
   gap: 16px;
 }
 
+/* Over a game: two buttons on the right (clean table, rules), so both sides are two wide and the
+   name stays in the middle, a little smaller on narrow phones. */
+.top-bar.game-bar {
+  grid-template-columns: 88px 1fr 88px;
+}
+
+.game-bar .top-bar-title {
+  font-size: clamp(1.1rem, 5.2vw, 1.35rem);
+}
+
+/*
+ * Clean table (a setting, and the corner button over every game): just the table and the buttons
+ * you need. The bar shrinks to two small corner buttons, and each game hides its status lines,
+ * counters and explanations (below, game by game: `.play-screen.clean …`). The tables fill
+ * whatever room that frees.
+ */
+.play-screen.clean {
+  gap: 10px;
+}
+
+.play-screen.clean > .top-bar {
+  min-height: 34px;
+  grid-template-columns: 40px 1fr 40px;
+}
+
+.play-screen.clean > .top-bar .round-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 1rem;
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  color: var(--muted);
+}
+
 .who-drinks {
   display: flex;
   flex-direction: column;
@@ -11083,4 +11117,158 @@ h3 {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
   gap: 10px;
+}
+
+/* ---------- Clean table, game by game ---------- */
+
+/*
+ * What goes (see `.play-screen.clean` above): who's on and their numbers, scoreboards, counters,
+ * reminders of what's in play and how-to lines. What stays: the table, everything on it, the
+ * buttons, and what you'd otherwise hear across a real table (the claim to beat, your own points
+ * this turn). Explanations are off as well (a clean table counts as a game you know).
+ */
+
+/* Kings Cup: only the circle, the card and the asks (pick a mate, set a rule). */
+.play-screen.clean .kc > .kc-status,
+.play-screen.clean .kc-chip:not(.ask) {
+  display: none;
+}
+
+/* 5000: the table with the cup, the dice and the bank; set-aside dice below it. */
+.play-screen.clean .fk > .fk-board,
+.play-screen.clean .fk > .kc-status {
+  display: none;
+}
+
+/* Mäxchen and Schweinerei: what's to beat or in the pen this turn, and who drinks how much after
+   the cup is lifted. No how-to lines (a warning still shows). */
+.play-screen.clean .mx-status:not(.verdict) .bd-player,
+.play-screen.clean .sw-board,
+.play-screen.clean .mx-hint:not(.warn) {
+  display: none;
+}
+
+.play-screen.clean .mx-status:not(.verdict) {
+  justify-content: center;
+}
+
+.play-screen.clean .sw-actions .mx-must {
+  visibility: hidden;
+}
+
+.play-screen.clean .mx-status:not(.verdict) .mx-claim {
+  align-items: center;
+  text-align: center;
+  max-width: 100%;
+}
+
+/* Klatschen: the stack and the glass (how full it is says how many clap glasses are out). */
+.play-screen.clean .kl > .kc-status,
+.play-screen.clean .kl-pills,
+.play-screen.clean .kl-stack-left,
+.play-screen.clean .kl-slap-hint,
+.play-screen.clean .kl-table-glass-count {
+  display: none;
+}
+
+/* Bus Driver: the cards, the question and everyone's hand. Row numbers, sips per row and
+   counters go (their room stays, so nothing shifts). */
+.play-screen.clean .bd-turn > .bd-progress,
+.play-screen.clean .bd-turn > .bd-player,
+.play-screen.clean .bd-question-num,
+.play-screen.clean .hands > .section-title,
+.play-screen.clean .hands > .fine-print {
+  display: none;
+}
+
+.play-screen.clean .pyramid-sips,
+.play-screen.clean .board-row-num,
+.play-screen.clean .board-row-sips,
+.play-screen.clean .bd-foot-note {
+  visibility: hidden;
+}
+
+/* Horse race: the track and the card just drawn; a side card still says who gives out sips. */
+.play-screen.clean .hs-now > .hs-now-text:first-child,
+.play-screen.clean .hs-now-card:not(.side) + .hs-now-text,
+.play-screen.clean .hs-now .deck-count {
+  display: none;
+}
+
+.play-screen.clean .hs-row-num {
+  visibility: hidden;
+}
+
+.play-screen.clean .hs-now {
+  justify-content: center;
+}
+
+/* Trash: the two boards and the cards in the middle (a warning still shows). */
+.play-screen.clean .tr-board-head,
+.play-screen.clean .tr-status > :not(.tr-warn) {
+  display: none;
+}
+
+.play-screen.clean .tr-middle {
+  justify-content: center;
+}
+
+/* Who drinks? The wheel of names, no sip counters. */
+.play-screen.clean .spin-chip-count,
+.play-screen.clean .who-drinks > .fine-print {
+  display: none;
+}
+
+/*
+ * Room games (every phone its own seat): the seats around the table show whose turn it is, so the
+ * line on top only speaks up when it's your move. It keeps its room when it's quiet (nothing
+ * jumps when the turn comes round), just empty.
+ */
+.play-screen.clean .ar-status-sub,
+.play-screen.clean .ar-hint,
+.play-screen.clean .ar-pile-count,
+.play-screen.clean .as .pl-status-sub,
+.play-screen.clean .pl-player .pl-status-sub,
+.play-screen.clean .pl-status-need small,
+.play-screen.clean .pl-hint,
+.play-screen.clean .pl-heap-label,
+.play-screen.clean .pl-table > .pl-status,
+.play-screen.clean .pl-table .pl-need,
+.play-screen.clean .hr-status-round,
+.play-screen.clean .hr-zone-label,
+.play-screen.clean .hr-hand-label,
+.play-screen.clean .hr-hint,
+.play-screen.clean .hr-last,
+.play-screen.clean .sp-left,
+.play-screen.clean .ftd-tablephone > .kc-status,
+.play-screen.clean .ftd-misses,
+.play-screen.clean .ftd-deckphone-head .kicker {
+  display: none;
+}
+
+.play-screen.clean .ar-status,
+.play-screen.clean .as .pl-status {
+  height: 40px;
+  min-height: 0;
+  padding: 0 14px;
+  justify-content: center;
+}
+
+.play-screen.clean .ar-status:not(.mine),
+.play-screen.clean .as .pl-status:not(.mine),
+.play-screen.clean .hr-status:not(.mine) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.play-screen.clean .ar-status:not(.mine) > *,
+.play-screen.clean .as .pl-status:not(.mine) > *,
+.play-screen.clean .hr-status:not(.mine) > .hr-status-text,
+.play-screen.clean .pl-player .pl-status:not(.mine) > .pl-status-text {
+  visibility: hidden;
+}
+
+/* Hose runter: someone saying STOP is still heard, whoever's turn it is. */
+.play-screen.clean .hr-status {
+  padding-block: 8px;
 }

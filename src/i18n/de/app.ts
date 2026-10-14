@@ -169,6 +169,9 @@ const app: Record<string, string> = {
   Vibration: 'Vibration',
   'Phone buzzes when you tap': 'Handy brummt beim Tippen',
   'Giant Mode': 'Riesenmodus',
+  'Clean table': 'Aufgeräumter Tisch',
+  'In games just the cards and the buttons you need': 'Im Spiel nur die Karten und die Buttons, die du brauchst',
+  'Show everything': 'Alles anzeigen',
   'Everything bigger. For later tonight.': 'Alles größer. Für später am Abend.',
   'Games you know': 'Spiele, die ihr kennt',
   'Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.':

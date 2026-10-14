@@ -36,6 +36,18 @@ export const HelpIcon = () => (
     <circle cx="12" cy="18.5" r="0.6" fill="currentColor" />
   </Icon>
 );
+/** Clean table on: corners pointing out (everything but the game goes). */
+export const CleanIcon = () => (
+  <Icon>
+    <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
+  </Icon>
+);
+/** Clean table off: corners pointing in (everything comes back). */
+export const UncleanIcon = () => (
+  <Icon>
+    <path d="M9 4v5H4M15 4v5h5M20 15h-5v5M4 15h5v5" />
+  </Icon>
+);
 export const SettingsIcon = () => (
   <Icon>
     <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />

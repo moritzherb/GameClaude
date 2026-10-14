@@ -46,6 +46,7 @@ const president: Record<string, string> = {
   passed: 'gepasst',
   'Swapping cards': 'Karten tauschen',
   '{name} leads': '{name} kommt raus',
+  'You lead': 'Du kommst raus',
   'You got: {cards}': 'Du hast bekommen: {cards}',
   'Out of cards! Watch the others fight it out.': 'Keine Karten mehr! Schau zu, wie die anderen es ausmachen.',
   'Give {cards}': '{cards} abgeben',
