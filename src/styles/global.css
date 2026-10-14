@@ -5093,7 +5093,8 @@ h3 {
   color: #2a1a0e;
   text-align: center;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
-  animation: mx-slip 0.4s var(--spring) 0.35s both;
+  /* Right after the cross or arrow (see .sw-mark). */
+  animation: mx-slip 0.4s var(--spring) 0.12s both;
 }
 
 .sw-result-name {
@@ -5138,7 +5139,8 @@ h3 {
   pointer-events: none;
   transform: translate(-50%, -50%);
   overflow: visible;
-  animation: sw-lost 0.45s var(--spring) 0.3s both;
+  /* Right as the pigs lie still (the throw counts a moment after they stop), stamped on fast. */
+  animation: sw-lost 0.28s var(--spring) both;
 }
 
 .sw-mark path {
@@ -5174,7 +5176,7 @@ h3 {
 .sw-again {
   --mark: #f6c21c;
   animation-name: sw-again;
-  animation-duration: 0.6s;
+  animation-duration: 0.45s;
 }
 
 @keyframes sw-lost {
@@ -7601,6 +7603,64 @@ h3 {
   font-size: calc(var(--cw) * 0.42);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
   pointer-events: none;
+}
+
+/*
+ * The board (and the middle, on the turn of the player opposite) turned upside down: nothing in it
+ * moves or fades on a layer of its own. iPhones leave a turned part's contents out while one of
+ * its pieces has such a layer: all the time with will-change, for a moment with every pop or nudge
+ * (the whole board blinked when the player opposite laid a card). So in there the cues are drawn
+ * instead: a ring that lights up, a pulsing outline.
+ */
+.tr-board.flipped .tr-slot.up .pcard-front {
+  animation: tr-laid 0.5s ease-out both;
+}
+
+@keyframes tr-laid {
+  from {
+    box-shadow: inset 0 0 0 1px #dcdfe4, 0 0 0 4px var(--accent), 0 2px 5px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.tr-board.flipped .tr-slot.pickable,
+.tr-middle.flipped .tr-stock.ready,
+.tr-middle.flipped .tr-discard.drop-here {
+  animation: tr-pulse 1.2s ease-in-out infinite;
+  outline: 3px solid transparent;
+  outline-offset: 2px;
+}
+
+@keyframes tr-pulse {
+  50% {
+    outline-color: var(--accent);
+  }
+}
+
+.tr-middle.flipped .tr-discard.drop-here {
+  animation-name: tr-pulse-bad;
+}
+
+@keyframes tr-pulse-bad {
+  50% {
+    outline-color: var(--bad);
+  }
+}
+
+.tr-middle.flipped .tr-discard.nope {
+  animation: tr-nope 0.3s ease;
+}
+
+@keyframes tr-nope {
+  50% {
+    outline: 3px solid var(--bad);
+    outline-offset: 2px;
+  }
+}
+
+.tr-middle.flipped .tr-hand-card,
+.tr-middle.flipped .tr-discard-card {
+  animation: none;
+  transition: none;
 }
 
 /* The middle: stock, discard pile, the card in hand and what happens. Its size follows the screen height. */
@@ -10803,9 +10863,9 @@ h3 {
   gap: 12px;
   padding: 12px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  /* Nearly solid: no blur of the table behind it (a blur is a layer of its own for iPhones,
+     redrawn with every move under it). */
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
   box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.55), inset 0 0 0 1px var(--line);
   animation: ar-pick-in 0.25s var(--spring) both;
 }
