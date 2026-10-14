@@ -5,6 +5,7 @@ import PlayingCard from '../../components/PlayingCard';
 import { t, tx } from '../../i18n';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, cheer, sfx } from '../../lib/fx';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
@@ -17,6 +18,7 @@ const TITLES = { color: tx('Red or black?'), 'higher-lower': tx('Higher or lower
 
 /** Bus ride on a Diamond (1-2-3-2-1) or Zigzag (1-2-1-2-1) board, driven bottom to top. */
 export default function BoardRide({ driver, mode, onFinish }: { driver: Player; mode: BoardMode; onFinish: (stats: RideStats) => void }) {
+  useTurnBubble(driver);
   const known = useApp().knows('bus-driver');
   const [board, setBoard] = useState<BoardState>(() => startBoard(mode));
   const [pick, setPick] = useState<number | null>(null);

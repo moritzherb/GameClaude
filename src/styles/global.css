@@ -160,12 +160,6 @@ html {
 }
 
 body {
-  /* A little film grain on the paper: a small ready-made tile in the background. (It used to be a
-     fixed layer over the whole screen drawn by an SVG filter: every tap or animation had iPhones
-     redraw it, and buttons and cards vanished for a moment meanwhile.) */
-  background:
-    url('data:image/png;base64,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') 0 0 / 48px 48px repeat,
-    var(--bg);
   overflow-x: hidden;
   /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
   -webkit-user-select: none;
@@ -206,6 +200,21 @@ textarea {
       min-height: calc(100dvh + env(safe-area-inset-top));
     }
   }
+}
+
+/*
+ * Film grain over everything (never catches taps): a fixed layer of its own over the screen. It
+ * was moved into the page's background for a while, and iPhones then left cards, buttons and the
+ * headline out for a moment whenever something moved: with the page itself plain, they don't. The
+ * grain is a small ready-made tile (not an SVG noise filter, which iPhones had to redraw).
+ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background: url('data:image/png;base64,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') 0 0 / 48px 48px repeat;
 }
 
 button,
@@ -1052,18 +1061,34 @@ h3 {
   min-height: 112px;
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: var(--shadow);
   text-align: left;
-  /* Two half-moon notches where the stub tears off. */
-  -webkit-mask:
-    radial-gradient(circle 8px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
-    radial-gradient(circle 8px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
-  mask:
-    radial-gradient(circle 8px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
-    radial-gradient(circle 8px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
-  transition: transform 0.18s var(--spring);
 }
 
+/* Two half-moon notches where the stub tears off: circles in the page's colour over the edges.
+   (They used to be cut out with a mask: costly to draw, and while the list scrolled iPhones left
+   whole strips of it blank.) */
+.ticket::before,
+.ticket::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--stub) - 8px);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+.ticket::before {
+  top: -8px;
+}
+
+.ticket::after {
+  bottom: -8px;
+}
+
+/* Pressed: a little smaller at once (no scaling animation: iPhones drew that blank for a moment). */
 .ticket:active {
   transform: scale(0.98);
 }
@@ -1957,6 +1982,50 @@ h3 {
   grid-template-columns: 40px 1fr 40px;
 }
 
+/* Who's on (the games' own line saying so is hidden): a small bubble between the corner buttons. */
+.turn-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 12px 0 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip) 22%, var(--surface));
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  vertical-align: middle;
+  animation: pop-in 0.3s var(--spring) both;
+}
+
+.turn-bubble-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--chip);
+  font-size: 0.85rem;
+}
+
+.turn-bubble-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-screen.clean > .top-bar .top-bar-title {
+  padding-top: 0;
+  display: flex;
+  justify-content: center;
+}
+
 .play-screen.clean > .top-bar .round-btn {
   width: 34px;
   height: 34px;
@@ -2340,9 +2409,10 @@ h3 {
   border-radius: var(--radius-sm);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
-  transition: transform 0.15s var(--spring);
 }
 
+/* Pressed: smaller at once, not over time (see .hs-suit.on: a scaling animation made iPhones draw
+   these blank for a moment). */
 .pick-chip:active {
   transform: scale(0.92);
 }
@@ -2922,9 +2992,9 @@ h3 {
   border-radius: var(--radius-sm);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
-  transition: transform 0.15s var(--spring);
 }
 
+/* Pressed: smaller at once (see .pick-chip:active). */
 .seg-btn:active {
   transform: scale(0.93);
 }
@@ -5023,7 +5093,8 @@ h3 {
   color: #2a1a0e;
   text-align: center;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
-  animation: mx-slip 0.4s var(--spring) 0.35s both;
+  /* Right after the cross or arrow (see .sw-mark). */
+  animation: mx-slip 0.4s var(--spring) 0.12s both;
 }
 
 .sw-result-name {
@@ -5068,7 +5139,8 @@ h3 {
   pointer-events: none;
   transform: translate(-50%, -50%);
   overflow: visible;
-  animation: sw-lost 0.45s var(--spring) 0.3s both;
+  /* Right as the pigs lie still (the throw counts a moment after they stop), stamped on fast. */
+  animation: sw-lost 0.28s var(--spring) both;
 }
 
 .sw-mark path {
@@ -5104,7 +5176,7 @@ h3 {
 .sw-again {
   --mark: #f6c21c;
   animation-name: sw-again;
-  animation-duration: 0.6s;
+  animation-duration: 0.45s;
 }
 
 @keyframes sw-lost {
@@ -7124,17 +7196,18 @@ h3 {
   font-size: 1.3rem;
   box-shadow: inset 0 0 0 1px #dcdfe4;
   opacity: 0.45;
-  transition: transform 0.15s var(--spring), opacity 0.15s ease;
 }
 
 .hs-suit.red {
   color: var(--card-red);
 }
 
+/* Picked: full colour and a ring, switched at once. No scaling or fading over time: an iPhone
+   gives a button its own layer for that, and drew it (and the one picked before) blank for a
+   moment. */
 .hs-suit.on {
   opacity: 1;
   box-shadow: 0 0 0 3px var(--accent);
-  transform: scale(1.06);
 }
 
 .hs-tally-suit {
@@ -7530,6 +7603,64 @@ h3 {
   font-size: calc(var(--cw) * 0.42);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
   pointer-events: none;
+}
+
+/*
+ * The board (and the middle, on the turn of the player opposite) turned upside down: nothing in it
+ * moves or fades on a layer of its own. iPhones leave a turned part's contents out while one of
+ * its pieces has such a layer: all the time with will-change, for a moment with every pop or nudge
+ * (the whole board blinked when the player opposite laid a card). So in there the cues are drawn
+ * instead: a ring that lights up, a pulsing outline.
+ */
+.tr-board.flipped .tr-slot.up .pcard-front {
+  animation: tr-laid 0.5s ease-out both;
+}
+
+@keyframes tr-laid {
+  from {
+    box-shadow: inset 0 0 0 1px #dcdfe4, 0 0 0 4px var(--accent), 0 2px 5px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.tr-board.flipped .tr-slot.pickable,
+.tr-middle.flipped .tr-stock.ready,
+.tr-middle.flipped .tr-discard.drop-here {
+  animation: tr-pulse 1.2s ease-in-out infinite;
+  outline: 3px solid transparent;
+  outline-offset: 2px;
+}
+
+@keyframes tr-pulse {
+  50% {
+    outline-color: var(--accent);
+  }
+}
+
+.tr-middle.flipped .tr-discard.drop-here {
+  animation-name: tr-pulse-bad;
+}
+
+@keyframes tr-pulse-bad {
+  50% {
+    outline-color: var(--bad);
+  }
+}
+
+.tr-middle.flipped .tr-discard.nope {
+  animation: tr-nope 0.3s ease;
+}
+
+@keyframes tr-nope {
+  50% {
+    outline: 3px solid var(--bad);
+    outline-offset: 2px;
+  }
+}
+
+.tr-middle.flipped .tr-hand-card,
+.tr-middle.flipped .tr-discard-card {
+  animation: none;
+  transition: none;
 }
 
 /* The middle: stock, discard pile, the card in hand and what happens. Its size follows the screen height. */
@@ -9924,7 +10055,8 @@ h3 {
 .player-avatar .avatar-photo,
 .home-me .avatar-photo,
 .profile-avatar .avatar-photo,
-.as-seat-avatar .avatar-photo {
+.as-seat-avatar .avatar-photo,
+.turn-bubble-avatar .avatar-photo {
   width: 100%;
   height: 100%;
 }
@@ -10731,9 +10863,9 @@ h3 {
   gap: 12px;
   padding: 12px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  /* Nearly solid: no blur of the table behind it (a blur is a layer of its own for iPhones,
+     redrawn with every move under it). */
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
   box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.55), inset 0 0 0 1px var(--line);
   animation: ar-pick-in 0.25s var(--spring) both;
 }
@@ -11128,9 +11260,10 @@ h3 {
  * this turn). Explanations are off as well (a clean table counts as a game you know).
  */
 
-/* Kings Cup: only the circle, the card and the asks (pick a mate, set a rule). */
+/* Kings Cup: only the circle, the card and the asks (pick a mate, set a rule). What was just
+   picked or written (or who just became Question Master) shows until the next card. */
 .play-screen.clean .kc > .kc-status,
-.play-screen.clean .kc-chip:not(.ask) {
+.play-screen.clean .kc-chip:not(.ask, .settle) {
   display: none;
 }
 

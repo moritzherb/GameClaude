@@ -6,6 +6,7 @@ import { t } from '../../i18n';
 import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
@@ -141,6 +142,7 @@ export function TrashTable({
   }, [phase, lost]);
 
   const player = two[g.turn];
+  useTurnBubble(phase === 'round-over' || phase === 'game-over' ? null : player);
   // A move on this phone: the card glides from where it was touched. A move from the other phone:
   // work out where the card in play came from (the stock, the discard pile or a slot).
   const own = useRef(false);
@@ -473,10 +475,12 @@ function HeldCard({
   const { ref, drag, handlers } = useCardDrag({ rotated, onDrop, onStart: () => window.clearTimeout(autoTimer.current) });
   const sign = rotated ? -1 : 1;
 
-  // Glide in from where the card came from, already showing its face.
+  // Glide in from where the card came from, already showing its face. Not in the middle turned
+  // around: a moving card inside it gets a layer of its own, and iPhones then leave things out of
+  // the turned part for a moment (see the .flipped rules in global.css).
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || !fly || typeof el.animate !== 'function') return;
+    if (!el || !fly || rotated || typeof el.animate !== 'function') return;
     const r = el.getBoundingClientRect();
     const dx = (fly.x - (r.left + r.width / 2)) * sign;
     const dy = (fly.y - (r.top + r.height / 2)) * sign;
@@ -498,7 +502,8 @@ function HeldCard({
     autoTimer.current = window.setTimeout(() => {
       const el = ref.current;
       const pile = document.querySelector('[data-drop="discard"]');
-      if (!el || !pile || typeof el.animate !== 'function') return tossRef.current?.();
+      // Turned around (see the glide above): straight onto the pile, without sliding there.
+      if (!el || !pile || rotated || typeof el.animate !== 'function') return tossRef.current?.();
       const a = el.getBoundingClientRect();
       const b = pile.getBoundingClientRect();
       const dx = (b.left + b.width / 2 - (a.left + a.width / 2)) * sign;

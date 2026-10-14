@@ -8,6 +8,7 @@ import TopBar from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { markPlayed } from '../lib/recent';
+import { TurnContext, type TurnPlayer } from '../lib/turn';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useRoom } from '../net/RoomProvider';
@@ -19,6 +20,8 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   const { settings } = useApp();
   const [showRules, setShowRules] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  // Who's on, named by the game: a bubble in the bar on a clean table.
+  const [turn, setTurn] = useState<TurnPlayer | null>(null);
   useWakeLock();
   // Everyone in the room: a game played to its end counts for them on this phone too.
   const crew = useMemo(
@@ -55,12 +58,14 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
 
   return (
     <main className={`screen play-screen${settings.clean ? ' clean' : ''}`}>
-      <GameBar game={game} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
+      <GameBar game={game} turn={turn} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}
 
       <CrewContext.Provider value={crew}>
-        <Game />
+        <TurnContext.Provider value={setTurn}>
+          <Game />
+        </TurnContext.Provider>
       </CrewContext.Provider>
 
       <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>

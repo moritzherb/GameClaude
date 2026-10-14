@@ -50,57 +50,66 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
   const known = useApp().knows('bus-driver');
   const [mode, setMode] = useState<RideMode>('classic');
   const [started, setStarted] = useState(false);
-  // "Start the ride": the bus pulls up and takes the driver away first.
+  // "Start the ride": the bus pulls up and takes the driver away first. The ride starts under the
+  // bus while it fades out, so the road picker never shows through again.
   const [boarding, setBoarding] = useState(false);
-  const board = useCallback(() => {
-    setBoarding(false);
-    setStarted(true);
-  }, []);
+  const ride = useCallback(() => setStarted(true), []);
+  const boarded = useCallback(() => setBoarding(false), []);
   const [stats, setStats] = useState<RideStats | null>(null);
 
   if (stats) return <RideFinish driver={driver} stats={stats} onPlayAgain={onPlayAgain} onExit={onExit} />;
+
+  const current = MODES.find((m) => m.id === mode)!;
+  // In the same place either way, so the bus doesn't start over when the ride appears under it.
+  const bus = boarding && <Boarding driver={driver} road={t(current.name)} onRide={ride} onDone={boarded} />;
   if (started) {
-    return mode === 'classic' ? (
-      <ClassicRide driver={driver} onFinish={setStats} />
-    ) : (
-      <BoardRide key={mode} driver={driver} mode={mode} onFinish={setStats} />
+    return (
+      <>
+        {mode === 'classic' ? (
+          <ClassicRide driver={driver} onFinish={setStats} />
+        ) : (
+          <BoardRide key={mode} driver={driver} mode={mode} onFinish={setStats} />
+        )}
+        {bus}
+      </>
     );
   }
 
-  const current = MODES.find((m) => m.id === mode)!;
   return (
-    <div className="bd">
-      <div className="driver-hero pop-in">
-        <span className="driver-bus">🚌</span>
-        <span className="bd-avatar xl" style={{ background: driver.color }}>
-          <Avatar avatar={driver.avatar} photo={driver.photo} />
-        </span>
-      </div>
-      <div className="bd-head center">
-        <span className="kicker">{t('Part 3 · The bus ride')}</span>
-        <h2 className="bd-title big">{t('{name} drives the bus', { name: driver.name })}</h2>
-      </div>
-
-      <section className="section">
-        <h3 className="section-title">{t('Which road?')}</h3>
-        <div className="seg three">
-          {MODES.map((m) => (
-            <Tap key={m.id} className={`seg-btn size-btn${m.id === mode ? ' active' : ''}`} onClick={() => setMode(m.id)} ariaLabel={t(m.name)}>
-              <MiniLayout rows={m.layout} />
-              <span className="seg-main">{t(m.name)}</span>
-            </Tap>
-          ))}
+    <>
+      <div className="bd">
+        <div className="driver-hero pop-in">
+          <span className="driver-bus">🚌</span>
+          <span className="bd-avatar xl" style={{ background: driver.color }}>
+            <Avatar avatar={driver.avatar} photo={driver.photo} />
+          </span>
         </div>
-        {!known && <p className="lead">{t(current.explain)}</p>}
-      </section>
+        <div className="bd-head center">
+          <span className="kicker">{t('Part 3 · The bus ride')}</span>
+          <h2 className="bd-title big">{t('{name} drives the bus', { name: driver.name })}</h2>
+        </div>
 
-      <div className="sticky-action">
-        <BigButton size="xl" onClick={() => setBoarding(true)}>
-          {t('Start the ride')}
-        </BigButton>
+        <section className="section">
+          <h3 className="section-title">{t('Which road?')}</h3>
+          <div className="seg three">
+            {MODES.map((m) => (
+              <Tap key={m.id} className={`seg-btn size-btn${m.id === mode ? ' active' : ''}`} onClick={() => setMode(m.id)} ariaLabel={t(m.name)}>
+                <MiniLayout rows={m.layout} />
+                <span className="seg-main">{t(m.name)}</span>
+              </Tap>
+            ))}
+          </div>
+          {!known && <p className="lead">{t(current.explain)}</p>}
+        </section>
+
+        <div className="sticky-action">
+          <BigButton size="xl" onClick={() => setBoarding(true)}>
+            {t('Start the ride')}
+          </BigButton>
+        </div>
       </div>
-      {boarding && <Boarding driver={driver} road={t(current.name)} onDone={board} />}
-    </div>
+      {bus}
+    </>
   );
 }
 
