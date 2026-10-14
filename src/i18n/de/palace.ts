@@ -47,7 +47,8 @@ const palace: Record<string, string> = {
   'Everyone picks their face-up cards': 'Alle wählen ihre aufgedeckten Karten',
   'Cleared away: {n}': 'Verbrannt: {n}',
   'Choose your face-up cards on your phone': 'Wählt eure aufgedeckten Karten auf dem Handy',
-  'Waiting for the others… ({n} still choosing)': 'Warte auf die anderen… ({n} wählen noch)',
+  'Waiting for the others…': 'Warte auf die anderen…',
+  '{n} still choosing': '{n} wählen noch',
   'Pick 3 cards to lay face up': 'Wähl 3 Karten zum Aufdecken',
   'Usually your best: high cards, 2s, 3s and 10s. You play them once your hand is gone.':
     'Meist deine besten: hohe Karten, 2er, 3er und 10er. Du spielst sie, sobald deine Hand leer ist.',

@@ -346,10 +346,12 @@ function TableView({ view }: { view: PhoneView }) {
 
       <div className="pl-status">
         <span className="pl-status-text">{view.phase === 'setup' ? t('Choose your face-up cards on your phone') : turnText(view)}</span>
-        {last && (
+        {last ? (
           <span key={view.log.length + JSON.stringify(last)} className="pl-last pop-in">
             {entryText(last, view)}
           </span>
+        ) : (
+          <span className="pl-last" />
         )}
       </div>
     </div>
@@ -479,13 +481,20 @@ function Setup({ view, act }: { view: PhoneView; act: (a: Act) => void }) {
   if (mine.ready) {
     return (
       <div className="pl pl-player fill">
-        <div className="pl-status">
-          <span className="pl-status-text">{t('Waiting for the others… ({n} still choosing)', { n: waiting })}</span>
+        <div className={`pl-status pl-setup-status${known ? '' : ' teach'}`}>
+          <span className="pl-status-text">{t('Waiting for the others…')}</span>
+          <span className="pl-status-sub">{t('{n} still choosing', { n: waiting })}</span>
         </div>
         <div className="pl-mine">
           <Palace3 up={mine.up} down={mine.down} />
         </div>
         <HandSpread cards={hand} />
+        {/* The button's room stays, so the table doesn't grow once you're done. */}
+        <div className="pl-actions" aria-hidden="true">
+          <BigButton size="xl" disabled className="pl-gone">
+            {t('Lay them face up')}
+          </BigButton>
+        </div>
       </div>
     );
   }
@@ -498,9 +507,9 @@ function Setup({ view, act }: { view: PhoneView; act: (a: Act) => void }) {
 
   return (
     <div className="pl pl-player fill">
-      <div className="pl-status mine">
+      <div className={`pl-status pl-setup-status mine${known ? '' : ' teach'}`}>
         <span className="pl-status-text">{t('Pick 3 cards to lay face up')}</span>
-        {!known && <span className="pl-status-sub">{t('Usually your best: high cards, 2s, 3s and 10s. You play them once your hand is gone.')}</span>}
+        <span className="pl-status-sub">{known ? null : t('Usually your best: high cards, 2s, 3s and 10s. You play them once your hand is gone.')}</span>
       </div>
       <div className="pl-mine">
         <Palace3 up={[...chosen, null, null, null].slice(0, TABLE)} down={mine.down} />
@@ -597,7 +606,8 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
           </span>
         </div>
         <span className="pl-status-text">{headline}</span>
-        {last && (!myTurn || view.again) && <span className="pl-status-sub">{entryText(last, view)}</span>}
+        {/* Always there, empty or not: the table below keeps its size from turn to turn. */}
+        <span className="pl-status-sub">{last && (!myTurn || view.again) ? entryText(last, view) : null}</span>
       </div>
 
       <div className="pl-mine">
@@ -621,7 +631,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
         empty={zone === 'up' ? t('Hand empty: play your face-up cards') : zone === 'down' ? t('Hand empty: play your face-down cards, blind') : undefined}
       />
 
-      <div className="pl-actions">
+      <div className={`pl-actions pl-turn-actions${known ? '' : ' teach'}`}>
         {myTurn && !connected ? (
           <BigButton variant="glass" disabled>
             {t('Reconnecting…')}
