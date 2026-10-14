@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import BigButton from '../components/BigButton';
 import { CrewContext } from '../components/Finished';
-import { HelpIcon } from '../components/Icons';
+import GameBar from '../components/GameBar';
 import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
-import TopBar, { RoundButton } from '../components/TopBar';
+import TopBar from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { markPlayed } from '../lib/recent';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useRoom } from '../net/RoomProvider';
+import { useApp } from '../state/AppState';
 
 /** Shell for games played with every phone: same escape and rules buttons as offline games. */
 export default function OnlinePlay({ game }: { game: GameDefinition }) {
   const room = useRoom();
+  const { settings } = useApp();
   const [showRules, setShowRules] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   useWakeLock();
@@ -52,17 +54,8 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   }
 
   return (
-    <main className="screen play-screen">
-      <TopBar
-        title={`${game.emoji} ${t(game.name)}`}
-        onBack={() => setConfirmExit(true)}
-        icon="close"
-        right={
-          <RoundButton label={t('Rules')} onClick={() => setShowRules(true)}>
-            <HelpIcon />
-          </RoundButton>
-        }
-      />
+    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`}>
+      <GameBar game={game} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}
 

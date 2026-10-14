@@ -297,7 +297,7 @@ function Table({
                 <span className="as-trick-by">{seats[top.by]?.name}</span>
               </div>
             ) : (
-              <span className="as-empty">{g.phase === 'exchange' ? t('Swapping cards') : t('{name} leads', { name: me === g.turn ? t('You') : seats[g.turn]?.name })}</span>
+              <span className="as-empty">{g.phase === 'exchange' ? t('Swapping cards') : me === g.turn ? t('You lead') : t('{name} leads', { name: seats[g.turn]?.name ?? '' })}</span>
             )}
           </div>
 

@@ -9,6 +9,7 @@ interface Props {
   onBack?: () => void;
   icon?: 'back' | 'close';
   right?: ReactNode;
+  className?: string;
 }
 
 export function RoundButton({ onClick, label, children, accent }: { onClick: () => void; label: string; children: ReactNode; accent?: boolean }) {
@@ -29,9 +30,9 @@ export function RoundButton({ onClick, label, children, accent }: { onClick: () 
 }
 
 /** Same layout on every screen: escape hatch top-left, title in the middle, extras on the right. */
-export default function TopBar({ title, onBack, icon = 'back', right }: Props) {
+export default function TopBar({ title, onBack, icon = 'back', right, className }: Props) {
   return (
-    <header className="top-bar">
+    <header className={`top-bar${className ? ` ${className}` : ''}`}>
       <div className="top-bar-side">
         {onBack && (
           <RoundButton onClick={onBack} label={icon === 'back' ? t('Back') : t('Close')}>

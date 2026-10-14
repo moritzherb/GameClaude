@@ -6,16 +6,17 @@ import { buzz, fxSettings, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 import { useApp } from '../state/AppState';
 
-type Toggle = 'sound' | 'haptics' | 'bigMode';
+type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean';
 
 const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'sound', emoji: '🔊', label: tx('Sounds'), hint: tx('Boops, ticks and fanfares') },
   { key: 'haptics', emoji: '📳', label: tx('Vibration'), hint: tx('Phone buzzes when you tap') },
   { key: 'bigMode', emoji: '🔍', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
+  { key: 'clean', emoji: '🃏', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
 ];
 
 export default function Settings() {
-  const { settings, updateSettings, knows, setKnown } = useApp();
+  const { settings, updateSettings, markedKnown, setKnown } = useApp();
   const withExplanations = GAMES.filter((g) => g.explains && (g.component || g.online));
 
   return (
@@ -50,7 +51,7 @@ export default function Settings() {
         </div>
 
         {OPTIONS.map((o) => {
-          const on = settings[o.key];
+          const on = !!settings[o.key];
           return (
             <button
               key={o.key}
@@ -61,7 +62,7 @@ export default function Settings() {
               onClick={() => {
                 updateSettings({ [o.key]: !on });
                 // Apply immediately so the feedback reflects the new state (sound ON = you hear it).
-                if (o.key !== 'bigMode') fxSettings[o.key] = !on;
+                if (o.key === 'sound' || o.key === 'haptics') fxSettings[o.key] = !on;
                 sfx.pop();
                 buzz();
               }}
@@ -84,7 +85,7 @@ export default function Settings() {
         <p className="fine-print">{t('Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.')}</p>
         <div className="settings-list">
           {withExplanations.map((g) => {
-            const on = knows(g.id);
+            const on = markedKnown(g.id);
             return (
               <button
                 key={g.id}

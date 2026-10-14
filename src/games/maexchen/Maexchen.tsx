@@ -167,7 +167,8 @@ function MaexchenTable({
   return (
     <div className="mx fill">
       {decided && <Finished game="maexchen" />}
-      <div className="mx-status">
+      {/* Who drinks how much stays up even on a clean table (class verdict). */}
+      <div className={`mx-status${r.phase === 'reveal' && r.verdict ? ' verdict' : ''}`}>
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
             <Avatar avatar={who.avatar} photo={who.photo} />
