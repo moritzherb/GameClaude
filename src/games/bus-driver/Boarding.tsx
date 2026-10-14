@@ -10,10 +10,14 @@ const BOARDING_MS = 3300;
 /**
  * Before the ride: a bus pulls up, opens its door, the driver hops on, the door shuts and the bus
  * drives off, out of the screen and into the ride. A tap skips it.
+ *
+ * The ride starts underneath while the picture fades out (onRide), so what shows through is the
+ * ride, never the screen it was started from; onDone when it's gone.
  */
-export default function Boarding({ driver, road, onDone }: { driver: Player; road: string; onDone: () => void }) {
+export default function Boarding({ driver, road, onRide, onDone }: { driver: Player; road: string; onRide: () => void; onDone: () => void }) {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onRide();
       onDone();
       return;
     }
@@ -23,16 +27,26 @@ export default function Boarding({ driver, road, onDone }: { driver: Player; roa
       buzz(15);
     }, BOARDING_MS * 0.34);
     const go = window.setTimeout(() => buzz([20, 30, 40]), BOARDING_MS * 0.74);
+    // Where the fade-out begins (88%, see the boarding keyframes).
+    const ride = window.setTimeout(onRide, BOARDING_MS * 0.88);
     const done = window.setTimeout(onDone, BOARDING_MS);
     return () => {
       window.clearTimeout(door);
       window.clearTimeout(go);
+      window.clearTimeout(ride);
       window.clearTimeout(done);
     };
-  }, [onDone]);
+  }, [onRide, onDone]);
 
   return (
-    <button type="button" className="boarding" onClick={onDone} aria-label={t('{name} gets on the bus', { name: driver.name })}>
+    <button
+      type="button"
+      className="boarding"
+      onClick={() => {
+        onRide();
+        onDone();
+      }}
+      aria-label={t('{name} gets on the bus', { name: driver.name })}>
       <span className="boarding-text">
         <span className="kicker">{road}</span>
         <span className="boarding-title">{t('{name} gets on the bus', { name: driver.name })}</span>
