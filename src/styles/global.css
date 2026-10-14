@@ -120,8 +120,19 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  /* No bounce or pull-to-reload of the browser's own: the app does its own pull down on home. */
-  overscroll-behavior: none;
+}
+
+/*
+ * No bounce or pull-to-reload of the browser's own on a phone: the app does its own pull down on
+ * home. Phones and tablets only (a finger, no mouse): in Safari on a computer the page then didn't
+ * scroll with the mouse wheel or trackpad at all (with any wheel listener on the page, and React
+ * always adds one).
+ */
+@media (hover: none) and (pointer: coarse) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
 }
 
 /*
@@ -7678,7 +7689,8 @@ h3 {
 }
 
 .tr-middle.flipped .tr-hand-card,
-.tr-middle.flipped .tr-discard-card {
+.tr-middle.flipped .tr-discard-card,
+.tr-middle.flipped .tr-status-hint.tr-warn {
   animation: none;
   transition: none;
 }
@@ -7689,6 +7701,9 @@ h3 {
   position: relative;
   z-index: 5; /* a dragged card goes over both boards */
   flex: none;
+  /* Always this tall, whatever the line beside the cards says: it used to grow and shrink with
+     its text (75 to 135px), and both boards changed size with it on every turn. */
+  height: max(calc(var(--mw) * 1.4 + 12px), 6.75rem);
   display: grid;
   grid-template-columns: auto auto auto 1fr;
   align-items: center;
@@ -7824,11 +7839,15 @@ h3 {
 .tr-status {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* Never squeeze the lines into each other: the middle row grows instead. */
+/* Never squeeze the lines into each other: each has its room (at most three lines of the text and
+   three of the hint), the middle row keeps its height. */
 .tr-status > * {
   flex-shrink: 0;
 }
@@ -7841,15 +7860,23 @@ h3 {
 .tr-status-text {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 1rem;
   line-height: 1.1;
   text-transform: uppercase;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tr-status-hint {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tr-status-hint.tr-warn {
