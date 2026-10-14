@@ -124,11 +124,22 @@ body {
 
 /*
  * No bounce or pull-to-reload of the browser's own on a phone: the app does its own pull down on
- * home. Phones and tablets only (a finger, no mouse): in Safari on a computer the page then didn't
- * scroll with the mouse wheel or trackpad at all (with any wheel listener on the page, and React
- * always adds one).
+ * home. Only where there is one to stop, because overscroll-behavior on the page can keep the page
+ * from scrolling at all: in Safari on a computer it didn't scroll with the mouse wheel or trackpad
+ * (with any wheel listener on the page, and React always adds one), and the app on an Android home
+ * screen didn't scroll either. So: iPhones and iPads (the bounce), and Android phones in a browser
+ * tab (pull-to-reload). An Android home-screen app has neither.
  */
 @media (hover: none) and (pointer: coarse) {
+  @supports (-webkit-touch-callout: none) {
+    html,
+    body {
+      overscroll-behavior: none;
+    }
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (display-mode: browser) {
   html,
   body {
     overscroll-behavior: none;
