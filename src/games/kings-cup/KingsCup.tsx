@@ -9,6 +9,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { unfill } from '../../lib/noAutofill';
 import { t, tx } from '../../i18n';
 import { shuffle } from '../../lib/random';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { layRing, SLOT_WIDTH, type Slot } from './ring';
@@ -74,6 +75,7 @@ export default function KingsCup({ players, exit }: GameProps) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const player = players[s.turn % players.length];
+  useTurnBubble(s.over ? null : player);
   const byId = (id: string) => players.find((p) => p.id === id);
   const lastKing = s.current && isKing(s.current) && s.kings === 4;
   const rule = s.current ? (lastKing ? LAST_KING_RULE : CARD_RULES[s.current.value]) : null;

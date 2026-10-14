@@ -6,6 +6,7 @@ import { t } from '../../i18n';
 import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
@@ -141,6 +142,7 @@ export function TrashTable({
   }, [phase, lost]);
 
   const player = two[g.turn];
+  useTurnBubble(phase === 'round-over' || phase === 'game-over' ? null : player);
   // A move on this phone: the card glides from where it was touched. A move from the other phone:
   // work out where the card in play came from (the stock, the discard pile or a slot).
   const own = useRef(false);

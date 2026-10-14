@@ -5,6 +5,7 @@ import Sheet from '../../components/Sheet';
 import { t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { byId, DECK, GLASS_ID, STANDING_RULES, type TaskCard } from './cards';
@@ -117,6 +118,7 @@ function Table({
   byPlayer: (id: string | null) => GameProps['players'][number] | undefined;
 }) {
   const player = players[s.turn % players.length];
+  useTurnBubble(player);
   const left = s.cards.length - s.drawn;
   const [slapping, setSlapping] = useState(false);
   const timer = useRef<number>(undefined);

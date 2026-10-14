@@ -5,6 +5,7 @@ import PlayingCard from '../../components/PlayingCard';
 import { t } from '../../i18n';
 import type { Card } from '../../lib/cards';
 import { buzz, cheer, sfx } from '../../lib/fx';
+import { useTurnBubble } from '../../lib/turn';
 import type { Player } from '../../state/AppState';
 import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
 import CardRow from './CardRow';
@@ -24,6 +25,7 @@ interface Reveal {
 }
 
 export default function ClassicRide({ driver, onFinish }: { driver: Player; onFinish: (stats: RideStats) => void }) {
+  useTurnBubble(driver);
   const [ride, setRide] = useState<RideState>(() => startRide());
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const answered = useRef(false);

@@ -5,6 +5,7 @@ import Tap from '../../components/Tap';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import mat from './mat.webp';
@@ -81,6 +82,7 @@ function MaexchenTable({
   const next = (r.turn + 1) % n;
   // Whoever decides now: in 'pass' the next player (believe or lift), otherwise the one at turn.
   const who = players[r.phase === 'pass' ? next : r.verdict ? r.verdict.loser : r.turn];
+  useTurnBubble(who);
   const open = r.phase === 'reveal';
   const mustLift = r.phase === 'pass' && claim?.value === MAEXCHEN;
   // Rounds go on and on: the game counts once a first round is decided.

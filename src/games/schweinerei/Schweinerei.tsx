@@ -6,6 +6,7 @@ import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
+import { useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Pig from './Pigs';
@@ -182,6 +183,7 @@ interface Flight {
 
 function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; players: GameProps['players']; known: boolean }) {
   const who = players[g.turn];
+  useTurnBubble(who);
   const th = g.last;
   const table = useRef<HTMLDivElement>(null);
   const pigEls = useRef<(HTMLSpanElement | null)[]>([]);
