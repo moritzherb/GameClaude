@@ -272,11 +272,13 @@ function HostTable({ view }: { view: PlayerView }) {
     <div className="hr hr-host fill">
       <Seats view={view} myId="" />
       <div className="hr-status">
-        <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
+        <div className="hr-status-top">
+          <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
+          {stopper && <span className="hr-stop-banner">✋ {t('{name} said STOP', { name: stopper.name })}</span>}
+        </div>
         <span className="hr-status-text">
           {dealerPhase ? t('{name} deals and checks their cards…', { name: dealer?.name ?? '' }) : t('{name}’s turn', { name: turnSeat?.name ?? '' })}
         </span>
-        {stopper && <span className="hr-stop-banner">✋ {t('{name} said STOP', { name: stopper.name })}</span>}
       </div>
       <section className="hr-felt big">
         <span className="hr-zone-label">{t('Middle')}</span>
@@ -335,13 +337,14 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
       <Seats view={view} myId={myId} />
 
       <div className={`hr-status${myTurn ? ' mine' : ''}`}>
-        <span className="hr-status-round">
-          {t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}
-        </span>
+        {/* STOP sits next to the round, so the line never pushes the table down. */}
+        <div className="hr-status-top">
+          <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
+          {stopper && (
+            <span className="hr-stop-banner">✋ {stopper.id === myId ? t('You said STOP') : t('{name} said STOP', { name: stopper.name })}</span>
+          )}
+        </div>
         <span className="hr-status-text">{headline}</span>
-        {stopper && (
-          <span className="hr-stop-banner">✋ {stopper.id === myId ? t('You said STOP') : t('{name} said STOP', { name: stopper.name })}</span>
-        )}
       </div>
 
       {/* While the dealer decides, the others see the middle still face down (as on the table phone). */}
@@ -416,24 +419,29 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
             </>
           )}
 
-          {myTurn && !connected && (
-            <BigButton variant="glass" disabled>
-              {t('Reconnecting…')}
-            </BigButton>
-          )}
-
-          {myTurn && connected && (
-            <div className="hr-actions">
-              {dealerPhase ? (
-                <>
-                  <BigButton size="xl" onClick={() => send({ type: 'keep' })}>
-                    {t('Keep these')}
-                  </BigButton>
-                  <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
-                    {t('Put them in the middle')}
-                  </BigButton>
-                  {!known && <p className="fine-print center">{t('In the middle, you must play the next three cards instead, whatever they are.')}</p>}
-                </>
+          {deciding ? (
+            connected ? (
+              <div className="hr-actions">
+                <BigButton size="xl" onClick={() => send({ type: 'keep' })}>
+                  {t('Keep these')}
+                </BigButton>
+                <BigButton variant="glass" onClick={() => send({ type: 'toss' })}>
+                  {t('Put them in the middle')}
+                </BigButton>
+                {!known && <p className="fine-print center">{t('In the middle, you must play the next three cards instead, whatever they are.')}</p>}
+              </div>
+            ) : (
+              <BigButton variant="glass" disabled>
+                {t('Reconnecting…')}
+              </BigButton>
+            )
+          ) : (
+            // The buttons' room stays when it isn't your turn: the middle above keeps its size.
+            <div className={`hr-actions hr-turn-actions${view.allowPass ? ' with-pass' : ''}${known ? '' : ' teach'}`}>
+              {!myTurn ? null : !connected ? (
+                <BigButton variant="glass" disabled>
+                  {t('Reconnecting…')}
+                </BigButton>
               ) : pickHand !== null && pickMiddle !== null ? (
                 <BigButton size="xl" onClick={() => send({ type: 'swap1', hand: pickHand, middle: pickMiddle })}>
                   {t('Swap {mine} ↔ {middle}', { mine: cardName(view.hand[pickHand]), middle: cardName(view.middle[pickMiddle]) })}
@@ -555,7 +563,8 @@ function Lives({ seat }: { seat: Seat }) {
 
 function LastMove({ log, seats, myId }: { log: LogEntry[]; seats: Seat[]; myId: string }) {
   const last = log.at(-1);
-  if (!last) return null;
+  // An empty line before the first move: the table above keeps its size once there is one.
+  if (!last) return <p className="hr-last" />;
   // "You" and "{name}" are separate texts: other languages conjugate differently.
   const me = last.by === myId;
   const name = seats.find((s) => s.id === last.by)?.name ?? t('Someone');

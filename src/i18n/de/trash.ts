@@ -24,7 +24,7 @@ const trash: Record<string, string> = {
   // Playing
   '{name}: draw a card': '{name}: Karte ziehen',
   'Take the discard': 'Vom Ablagestapel nehmen',
-  'Tap the stock. Or the discard pile, if you can use its card.': 'Tipp auf den Stapel. Oder auf den Ablagestapel, wenn du die Karte brauchen kannst.',
+  'Tap the stock. Or the discard pile, if you can use its card.': 'Tipp auf den Stapel. Oder auf die Ablage, wenn du ihre Karte brauchst.',
 
   // Round over
   'Round {n}': 'Runde {n}',
@@ -38,7 +38,7 @@ const trash: Record<string, string> = {
   'Drag the card onto its slot': 'Schieb die Karte auf ihren Platz',
   'Jack! Drag it onto any face-down slot': 'Bube! Schieb ihn auf einen beliebigen verdeckten Platz',
   'No use: drag it onto the discard pile': 'Bringt nichts: Schieb sie auf den Ablagestapel',
-  'Swap it for your Jack, or drag it onto the discard pile': 'Tausch sie gegen deinen Buben oder schieb sie auf den Ablagestapel',
+  'Swap it for your Jack, or drag it onto the discard pile': 'Gegen deinen Buben tauschen oder ablegen',
   'Not there: this card goes into slot {slot}': 'Nicht dort: Die Karte gehört auf Platz {slot}',
   'That one is already face up': 'Die liegt schon offen',
   'That’s not your side': 'Das ist nicht deine Seite',

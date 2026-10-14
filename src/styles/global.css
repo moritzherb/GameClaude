@@ -120,8 +120,30 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  /* No bounce or pull-to-reload of the browser's own: the app does its own pull down on home. */
-  overscroll-behavior: none;
+}
+
+/*
+ * No bounce or pull-to-reload of the browser's own on a phone: the app does its own pull down on
+ * home. Only where there is one to stop, because overscroll-behavior on the page can keep the page
+ * from scrolling at all: in Safari on a computer it didn't scroll with the mouse wheel or trackpad
+ * (with any wheel listener on the page, and React always adds one), and the app on an Android home
+ * screen didn't scroll either. So: iPhones and iPads (the bounce), and Android phones in a browser
+ * tab (pull-to-reload). An Android home-screen app has neither.
+ */
+@media (hover: none) and (pointer: coarse) {
+  @supports (-webkit-touch-callout: none) {
+    html,
+    body {
+      overscroll-behavior: none;
+    }
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (display-mode: browser) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
 }
 
 /*
@@ -6113,6 +6135,23 @@ h3 {
   padding-bottom: 0;
 }
 
+/* The question and the result take turns in a box of fixed height: the piles above never change size. */
+.ftd-tablephone .ftd-turn {
+  flex: none;
+  height: 150px;
+}
+
+.ftd-tablephone .ftd-ask-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.ftd-tablephone .ftd-ask-sub:empty {
+  display: none;
+}
+
 .ftd-tablephone .ftd-turn .bd-result {
   flex: 1;
   min-width: 0;
@@ -7678,7 +7717,8 @@ h3 {
 }
 
 .tr-middle.flipped .tr-hand-card,
-.tr-middle.flipped .tr-discard-card {
+.tr-middle.flipped .tr-discard-card,
+.tr-middle.flipped .tr-status-hint.tr-warn {
   animation: none;
   transition: none;
 }
@@ -7689,6 +7729,9 @@ h3 {
   position: relative;
   z-index: 5; /* a dragged card goes over both boards */
   flex: none;
+  /* Always this tall, whatever the line beside the cards says: it used to grow and shrink with
+     its text (75 to 135px), and both boards changed size with it on every turn. */
+  height: max(calc(var(--mw) * 1.4 + 12px), 6.75rem);
   display: grid;
   grid-template-columns: auto auto auto 1fr;
   align-items: center;
@@ -7824,11 +7867,15 @@ h3 {
 .tr-status {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* Never squeeze the lines into each other: the middle row grows instead. */
+/* Never squeeze the lines into each other: each has its room (at most three lines of the text and
+   three of the hint), the middle row keeps its height. */
 .tr-status > * {
   flex-shrink: 0;
 }
@@ -7841,15 +7888,23 @@ h3 {
 .tr-status-text {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 1rem;
   line-height: 1.1;
   text-transform: uppercase;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tr-status-hint {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tr-status-hint.tr-warn {
@@ -8605,13 +8660,32 @@ h3 {
   box-shadow: none;
 }
 
+/* The round and a STOP share one line of fixed height, and the headline always has room for two lines:
+   the table below never changes size. */
+.hr-status-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+}
+
 .hr-status-round {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.82rem;
   font-weight: 600;
   opacity: 0.75;
 }
 
 .hr-status-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: 2.2em;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.38rem;
@@ -8621,14 +8695,19 @@ h3 {
 }
 
 .hr-stop-banner {
-  align-self: flex-start;
-  margin-top: 4px;
-  padding: 4px 12px;
+  flex: none;
+  max-width: 65%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: auto;
+  padding: 3px 10px;
   border-radius: 999px;
   background: var(--bad);
   color: var(--on-color);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
+  line-height: 1.2;
   animation: pop-in 0.4s var(--spring);
 }
 
@@ -8707,6 +8786,13 @@ h3 {
 }
 
 .hr-last {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  flex: none;
+  height: 2.7em;
+  line-height: 1.35;
   color: var(--muted);
   font-weight: 500;
   text-align: center;
@@ -8716,6 +8802,34 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* A player's buttons have the same room on every turn, theirs or not: the middle never changes size. */
+.hr-turn-actions {
+  flex: none;
+  justify-content: flex-end;
+  height: 60px;
+}
+
+.hr-turn-actions.with-pass {
+  height: calc(2 * 54px + 10px);
+}
+
+.hr-turn-actions.teach {
+  height: calc(60px + 10px + 2.6 * 0.9rem);
+}
+
+.hr-turn-actions.with-pass.teach {
+  height: calc(2 * 54px + 10px + 10px + 2.6 * 0.9rem);
+}
+
+.hr-turn-actions .hr-hint {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.3;
 }
 
 /* The middle of the table: green felt, so it never gets mixed up with your own cards. */
@@ -8742,6 +8856,35 @@ h3 {
 
 .hr-felt-cards .pcard-lg {
   --cw: clamp(76px, calc((100vw - 100px) / 3), 104px);
+}
+
+/* A player's status: tighter than the table phone's, so the middle keeps its room. */
+.hr-player .hr-status {
+  padding: 10px 14px;
+}
+
+.hr-player .hr-status-top {
+  height: 22px;
+}
+
+.hr-player .hr-status-text {
+  font-size: 1.2rem;
+}
+
+/* Phones of medium height: the last move and the hints give their room to the middle. */
+@media (max-height: 820px) {
+  .hr-player .hr-last,
+  .hr-player .hr-hint {
+    display: none;
+  }
+
+  .hr-player .hr-turn-actions.teach {
+    height: 60px;
+  }
+
+  .hr-player .hr-turn-actions.with-pass.teach {
+    height: calc(2 * 54px + 10px);
+  }
 }
 
 /* A player's phone fills the screen: the middle shrinks on small phones, grows on big ones. */
@@ -9684,6 +9827,72 @@ h3 {
   font-size: 0.9rem;
 }
 
+/* A player's phone keeps its table the same size from turn to turn: the lines above it and the buttons below it have fixed room. */
+.pl-player .pl-status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pl-player .pl-status-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: calc(2 * 1.3em);
+  line-height: 1.3;
+}
+
+.pl-player .pl-setup-status .pl-status-sub {
+  -webkit-line-clamp: 1;
+  height: 1.3em;
+}
+
+.pl-player .pl-setup-status.teach .pl-status-sub {
+  -webkit-line-clamp: 3;
+  height: calc(3 * 1.3em);
+}
+
+.pl-turn-actions {
+  height: 56px;
+  min-height: 0;
+}
+
+.pl-turn-actions.teach {
+  height: calc(56px + 8px + 3 * 1.25 * 0.85rem);
+}
+
+.pl-turn-actions .pl-hint {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 0.85rem;
+  line-height: 1.25;
+}
+
+.pl-gone {
+  visibility: hidden;
+}
+
+/* The table phone too: the turn and the last move each have fixed room under the felt. */
+.pl-table > .pl-status .pl-status-text,
+.pl-table > .pl-status .pl-last {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.pl-table > .pl-status .pl-status-text {
+  height: 2.2em;
+}
+
+.pl-table > .pl-status .pl-last {
+  height: 2.6em;
+  line-height: 1.3;
+}
+
 /* Short phones: tighter, so the hand keeps its room. */
 @media (max-height: 700px) {
   .pl-player {
@@ -9963,6 +10172,14 @@ h3 {
 @media (max-height: 700px) {
   .pl-player .pl-hint {
     display: none;
+  }
+
+  .as .pl-hint {
+    display: none;
+  }
+
+  .pl-turn-actions.teach {
+    height: 56px;
   }
 }
 
@@ -10433,9 +10650,30 @@ h3 {
 }
 
 .as-got {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
   margin: 0;
+  color: #fff;
   text-align: center;
   font-weight: 700;
+}
+
+/* President's status: one line for the turn, fixed room for the last move. */
+.as .pl-status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.as .pl-status-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: calc(2 * 1.3em);
+  line-height: 1.3;
 }
 
 .as .pl-hand {

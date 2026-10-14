@@ -251,12 +251,8 @@ function Table({
       {(g.round > 1 || g.phase === 'done') && <Finished game="president" />}
       <div className={`pl-status${myTurn || owe ? ' mine' : ''}`}>
         <span className="pl-status-text">{headline}</span>
-        {last && g.phase !== 'done' && <span className="pl-status-sub">{entryText(last, seats)}</span>}
-        {g.phase === 'play' && !known && myTurn && (
-          <span className="pl-status-sub">
-            {top ? t('Play {n}× one value higher than {rank}. Passing costs a sip.', { n: top.cards.length, rank: rankLabel(top.cards[0].value) }) : t('Lead one card or several of one value.')}
-          </span>
-        )}
+        {/* Always there, empty or not: the table below keeps its size from turn to turn. */}
+        <span className="pl-status-sub">{last && g.phase !== 'done' ? entryText(last, seats) : null}</span>
       </div>
 
       <div className="as-seats">
@@ -299,13 +295,13 @@ function Table({
             ) : (
               <span className="as-empty">{g.phase === 'exchange' ? t('Swapping cards') : me === g.turn ? t('You lead') : t('{name} leads', { name: seats[g.turn]?.name ?? '' })}</span>
             )}
+            {/* On the table, not under it: the table keeps its size. */}
+            {me >= 0 && g.got[me]?.length > 0 && g.phase === 'exchange' && (
+              <p className="as-got">
+                {t('You got: {cards}', { cards: g.got[me].map(cardName).join(' ') })}
+              </p>
+            )}
           </div>
-
-          {me >= 0 && g.got[me]?.length > 0 && g.phase === 'exchange' && (
-            <p className="as-got">
-              {t('You got: {cards}', { cards: g.got[me].map(cardName).join(' ') })}
-            </p>
-          )}
 
           {me >= 0 && (
             <HandSpread
@@ -317,7 +313,7 @@ function Table({
             />
           )}
 
-          <div className="pl-actions">
+          <div className={`pl-actions pl-turn-actions${known ? '' : ' teach'}`}>
             {(myTurn || owe) && !connected ? (
               <BigButton variant="glass" disabled>
                 {t('Reconnecting…')}
@@ -338,6 +334,11 @@ function Table({
                 )}
               </div>
             ) : null}
+            {g.phase === 'play' && !known && myTurn && connected && (
+              <p className="pl-hint">
+                {top ? t('Play {n}× one value higher than {rank}. Passing costs a sip.', { n: top.cards.length, rank: rankLabel(top.cards[0].value) }) : t('Lead one card or several of one value.')}
+              </p>
+            )}
           </div>
         </>
       )}
