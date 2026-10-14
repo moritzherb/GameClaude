@@ -64,7 +64,8 @@ export default function KingsCup({ players, exit }: GameProps) {
   const [ruleDraft, setRuleDraft] = useState('');
   // The sheet open over the table: everything in play, picking a mate (8) or writing a rule (Jack).
   const [sheet, setSheet] = useState<'effects' | 'mate' | 'rule' | null>(null);
-  // Mate or rule just set: its pill shrinks from the big ask down to the others' size.
+  // Mate or rule just set: its pill shrinks from the big ask down to the others' size (and, on a
+  // clean table, it's the one pill that shows, until the next card).
   const [justSet, setJustSet] = useState<'mate' | 'rule' | null>(null);
   const drawing = useRef(false);
   const timer = useRef<number>(undefined);
@@ -186,7 +187,7 @@ export default function KingsCup({ players, exit }: GameProps) {
         {/* Small pills in a strip that is always kept free above the circle: nothing ever moves. */}
         <div className="kc-chips">
           {questionMaster && (
-            <button type="button" className="kc-chip" aria-label={t('{name} is Question Master', { name: questionMaster.name })} onClick={() => setSheet('effects')}>
+            <button type="button" className={`kc-chip${s.current?.value === 12 ? ' settle' : ''}`} aria-label={t('{name} is Question Master', { name: questionMaster.name })} onClick={() => setSheet('effects')}>
               <span aria-hidden="true">❓</span>
               <span className="kc-chip-text">{questionMaster.name}</span>
             </button>

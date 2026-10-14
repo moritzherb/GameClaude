@@ -11128,9 +11128,10 @@ h3 {
  * this turn). Explanations are off as well (a clean table counts as a game you know).
  */
 
-/* Kings Cup: only the circle, the card and the asks (pick a mate, set a rule). */
+/* Kings Cup: only the circle, the card and the asks (pick a mate, set a rule). What was just
+   picked or written (or who just became Question Master) shows until the next card. */
 .play-screen.clean .kc > .kc-status,
-.play-screen.clean .kc-chip:not(.ask) {
+.play-screen.clean .kc-chip:not(.ask, .settle) {
   display: none;
 }
 
