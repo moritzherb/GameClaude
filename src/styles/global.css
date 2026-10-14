@@ -1061,18 +1061,34 @@ h3 {
   min-height: 112px;
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: var(--shadow);
   text-align: left;
-  /* Two half-moon notches where the stub tears off. */
-  -webkit-mask:
-    radial-gradient(circle 8px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
-    radial-gradient(circle 8px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
-  mask:
-    radial-gradient(circle 8px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
-    radial-gradient(circle 8px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
-  transition: transform 0.18s var(--spring);
 }
 
+/* Two half-moon notches where the stub tears off: circles in the page's colour over the edges.
+   (They used to be cut out with a mask: costly to draw, and while the list scrolled iPhones left
+   whole strips of it blank.) */
+.ticket::before,
+.ticket::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--stub) - 8px);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+.ticket::before {
+  top: -8px;
+}
+
+.ticket::after {
+  bottom: -8px;
+}
+
+/* Pressed: a little smaller at once (no scaling animation: iPhones drew that blank for a moment). */
 .ticket:active {
   transform: scale(0.98);
 }
