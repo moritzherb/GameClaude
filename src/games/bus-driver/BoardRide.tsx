@@ -7,7 +7,7 @@ import { cardName, type Card } from '../../lib/cards';
 import { buzz, cheer, sfx } from '../../lib/fx';
 import { useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
-import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
+import Answers, { ONWARD_MS, Verdict, VERDICT_DELAY_MS } from './Answers';
 import { allowedSlots, answerBoard, BOARD_QUESTIONS, BOARD_ROWS, startBoard, type BoardMode, type BoardState, type BoardStep } from './board';
 import type { Guess } from './logic';
 import type { RideStats } from './RideFinish';
@@ -65,6 +65,15 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
     setStep(null);
   };
 
+  // Right, and more rows to go: the next question comes by itself, no button.
+  const onward = !!step && step.outcome === 'correct' && !board.done;
+  useEffect(() => {
+    if (!onward) return;
+    const id = window.setTimeout(next, VERDICT_DELAY_MS + ONWARD_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onward, step]);
+
   let verdict = null;
   let nextLabel = '';
   if (step) {
@@ -75,7 +84,6 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
       verdict = (
         <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next row: {question}', { question: t(TITLES[questions[row + 1]]) })} />
       );
-      nextLabel = t('Next row →');
     } else {
       verdict = (
         <Verdict
@@ -155,9 +163,11 @@ export default function BoardRide({ driver, mode, onFinish }: { driver: Player; 
         {step ? (
           <>
             {verdict}
-            <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
-              {nextLabel}
-            </BigButton>
+            {!onward && (
+              <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
+                {nextLabel}
+              </BigButton>
+            )}
           </>
         ) : slot === null ? (
           <p className="notice center bd-foot-note">
