@@ -3302,12 +3302,18 @@ h3 {
   }
 }
 
-/* Every card of the pyramid and of the ride's board on a layer of its own, for good. Otherwise
-   the phone moves cards on and off layers whenever another one turns or the next one starts to
-   nudge, and redrawn that way their ranks and suits shift by a hair (on iPhones it shows). */
-.pyramid .pcard,
+/* Every card of the ride's board on a layer of its own, for good. Otherwise the phone moves cards
+   on and off layers whenever another one turns or the next one starts to nudge, and redrawn that
+   way their ranks and suits shift by a hair (on iPhones it shows). */
 .board .pcard {
   will-change: transform;
+}
+
+/* Not so in the pyramid: with a layer for each of its cards, iPhones left whole rows out (the top
+   ones, and for good). Instead the card that moves (nudges, turns, or has the bubble at it) lies
+   over all the others, so no other card ever has to go on a layer because of it, and none shifts. */
+.pyramid-slot:has(.pcard.waiting, .pcard.turning, .pyr-bubble) {
+  z-index: 2;
 }
 
 .bd-pyr .pyramid-badge {
