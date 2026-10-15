@@ -18,6 +18,9 @@ import Pyramid from './Pyramid';
 import Tiebreak from './Tiebreak';
 import Avatar from '../../components/Avatar';
 
+/** How long the verdict stays before the next player is on (the bar on the button fills meanwhile; see .bd-auto-next). */
+const AUTO_NEXT_MS = 2200;
+
 interface Seat {
   player: Player;
   hand: Card[];
@@ -115,6 +118,14 @@ export default function BusDriver({ players, exit }: GameProps) {
       }
     }, VERDICT_DELAY_MS);
   };
+
+  // After the verdict, the next player is on by themselves (a tap on the button skips the wait).
+  useEffect(() => {
+    if (!s.reveal) return;
+    const id = window.setTimeout(next, VERDICT_DELAY_MS + AUTO_NEXT_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.reveal]);
 
   const next = () => {
     answered.current = false;
@@ -344,7 +355,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         {reveal ? (
           <>
             <ResultBanner result={reveal.result} />
-            <BigButton size="xl" variant="light" onClick={next}>
+            <BigButton size="xl" variant="light" className="bd-auto-next" onClick={next}>
               {nextLabel} →
             </BigButton>
           </>
