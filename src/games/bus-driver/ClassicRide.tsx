@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard from '../../components/PlayingCard';
@@ -7,7 +7,7 @@ import type { Card } from '../../lib/cards';
 import { buzz, cheer, sfx } from '../../lib/fx';
 import { useTurnBubble } from '../../lib/turn';
 import type { Player } from '../../state/AppState';
-import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
+import Answers, { ONWARD_MS, Verdict, VERDICT_DELAY_MS } from './Answers';
 import CardRow from './CardRow';
 import type { RideStats } from './RideFinish';
 import { QUESTIONS, type Guess, type Result } from './logic';
@@ -58,6 +58,15 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
     setReveal(null);
   };
 
+  // Right, and more questions to go: the next one comes by itself, no button.
+  const onward = !!reveal && reveal.result.outcome === 'correct' && !ride.done;
+  useEffect(() => {
+    if (!onward) return;
+    const id = window.setTimeout(next, VERDICT_DELAY_MS + ONWARD_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onward, reveal]);
+
   // Which question is on screen: the one just answered, or the next one.
   const q = reveal ? reveal.shown.length - 1 : ride.streak.length;
   const question = questions[q];
@@ -74,7 +83,6 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
       verdict = (
         <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next: {question}', { question: t(questions[q + 1].title) })} />
       );
-      nextLabel = t('Next question →');
     } else {
       const { sips, outcome } = reveal.result;
       verdict = (
@@ -128,9 +136,11 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
         {reveal ? (
           <>
             {verdict}
-            <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
-              {nextLabel}
-            </BigButton>
+            {!onward && (
+              <BigButton size="xl" variant={failed ? 'primary' : 'light'} onClick={next}>
+                {nextLabel}
+              </BigButton>
+            )}
           </>
         ) : (
           <Answers questionId={question.id} onAnswer={answer} />

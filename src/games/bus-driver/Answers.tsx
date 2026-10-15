@@ -64,6 +64,8 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
  * and lies there on its own for a moment (the stamp's animation-delay in the CSS is the same).
  */
 export const VERDICT_DELAY_MS = 650;
+/** On the ride, how long a right answer's verdict stays before the next question comes by itself. */
+export const ONWARD_MS = 1500;
 
 /**
  * Right or wrong: a big stamp pops up over the table once the card has turned, with the sips to
