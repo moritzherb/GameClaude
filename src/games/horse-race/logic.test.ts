@@ -57,6 +57,37 @@ describe('Horse race', () => {
     expect(step(r)).toBe(r);
   });
 
+  it('an Ace nobody bet on is through, and the race goes on', () => {
+    let r: Race = { ...race([c('clubs', 2)], [c('hearts'), c('hearts'), c('spades'), c('hearts'), c('spades'), c('spades')]), backed: ['spades'] };
+    r = step(r); // hearts row 1
+    r = step(r); // side: clubs row 1
+    r = step(r); // hearts past the line, but nobody bet on hearts
+    expect(r.winner).toBeNull();
+    expect(r.through).toEqual(['hearts']);
+    expect(r.note).toBe('through');
+    r = step(r); // spades row 1
+    expect(r.note).toBeNull();
+    r = step(r); // another heart: hearts is through already, nothing moves
+    expect(r.note).toBe('done');
+    expect(r.pos.hearts).toBe(2);
+    r = step(r); // spades past the line: somebody bet on it, it wins
+    expect(r.winner).toBe('spades');
+  });
+
+  it('every Ace can win when nobody says who bet', () => {
+    expect(newRace(6, newDeck()).backed).toEqual(['hearts', 'diamonds', 'spades', 'clubs']);
+  });
+
+  it('a race with bets always ends before the deck runs out', () => {
+    for (let i = 0; i < 300; i++) {
+      for (const rows of [5, 8]) {
+        let r = newRace(rows, undefined, [(['hearts', 'diamonds', 'spades', 'clubs'] as const)[i % 4]]);
+        for (let n = 0; n < 200 && !r.winner; n++) r = step(r);
+        expect(r.winner).toBe(r.backed[0]);
+      }
+    }
+  });
+
   it('a winning bet gives out twice the stake', () => {
     expect(winnings(4)).toBe(8);
     expect(winnings(1)).toBe(2);
