@@ -42,7 +42,7 @@ export default function HorseRace({ players, exit }: GameProps) {
   useEffect(() => {
     if (!auto || !race || race.winner) return;
     const sideWithBackers = race.last?.kind === 'side' && players.some((p) => bets[p.id] === (race.last as { by: Suit }).by);
-    const id = window.setTimeout(() => go(), sideWithBackers ? AUTO_MS * 2.5 : AUTO_MS);
+    const id = window.setTimeout(() => go(), sideWithBackers || race.note === 'through' ? AUTO_MS * 2.5 : AUTO_MS);
     return () => window.clearTimeout(id);
   });
 
@@ -133,7 +133,7 @@ export default function HorseRace({ players, exit }: GameProps) {
         </section>
 
         <div className="sticky-action">
-          <BigButton size="xl" disabled={!allIn} onClick={() => setRace(newRace(rows))}>
+          <BigButton size="xl" disabled={!allIn} onClick={() => setRace(newRace(rows, undefined, SUITS.filter((s) => players.some((p) => bets[p.id] === s))))}>
             {allIn ? t('And they’re off!') : t('Everyone needs a horse')}
           </BigButton>
         </div>
@@ -144,7 +144,7 @@ export default function HorseRace({ players, exit }: GameProps) {
   function go() {
     if (!race || race.winner) return;
     const next = step(race);
-    if (next.last?.kind === 'side') {
+    if (next.last?.kind === 'side' || next.note === 'through') {
       sfx.pop();
       buzz([30, 30, 30]);
     } else {
@@ -212,6 +212,7 @@ export default function HorseRace({ players, exit }: GameProps) {
   /* ---------- The race ---------- */
   const s = race.last;
   const sideBackers = s?.kind === 'side' ? backers(s.by) : [];
+  const suitName = s ? t(SUIT_NAME[s.card.suit]) : '';
 
   return (
     <div className="hs fill" style={{ '--rows': race.rows } as CSSProperties}>
@@ -227,16 +228,32 @@ export default function HorseRace({ players, exit }: GameProps) {
             </span>
             <span className="hs-now-text">
               <span className="hs-now-title">
-                {s.kind === 'side' ? t('Row {row}: side card!', { row: s.row }) : t('{suit} moves up', { suit: t(SUIT_NAME[s.card.suit]) })}
+                {s.kind === 'side'
+                  ? t('Row {row}: side card!', { row: s.row })
+                  : race.note === 'through'
+                    ? t('{suit} is through!', { suit: suitName })
+                    : race.note === 'done'
+                      ? t('{suit} is through already', { suit: suitName })
+                      : t('{suit} moves up', { suit: suitName })}
               </span>
               <span className="hs-now-sub">
-                {s.kind === 'side'
-                  ? sideBackers.length
-                    ? (sipsForRow(s.row) === 1 ? t('{names} give out {n} sip', { names: sideBackers.map((p) => p.name).join(' & '), n: 1 }) : t('{names} give out {n} sips', { names: sideBackers.map((p) => p.name).join(' & '), n: sipsForRow(s.row) }))
-                    : t('{suit} moves up', { suit: t(SUIT_NAME[s.card.suit]) })
-                  : !known && race.log.length < 3
-                    ? t('The first Ace into a row turns its side card over.')
-                    : null}
+                {s.kind === 'side' && sideBackers.length
+                  ? sipsForRow(s.row) === 1
+                    ? t('{names} give out {n} sip', { names: sideBackers.map((p) => p.name).join(' & '), n: 1 })
+                    : t('{names} give out {n} sips', { names: sideBackers.map((p) => p.name).join(' & '), n: sipsForRow(s.row) })
+                  : race.note === 'through'
+                    ? s.kind === 'side'
+                      ? t('{suit} is through. Nobody bet on it, so the race goes on.', { suit: suitName })
+                      : t('Nobody bet on it, so the race goes on.')
+                    : race.note === 'done'
+                      ? s.kind === 'side'
+                        ? t('{suit} is through already', { suit: suitName })
+                        : t('Nothing moves.')
+                      : s.kind === 'side'
+                        ? t('{suit} moves up', { suit: suitName })
+                        : !known && race.log.length < 3
+                          ? t('The first Ace into a row turns its side card over.')
+                          : null}
               </span>
             </span>
           </>
@@ -282,7 +299,7 @@ function Track({ race, backers }: { race: Race; backers: (s: Suit) => Player[] }
       {SUITS.map((s, lane) => (
         <span
           key={s}
-          className="hs-ace"
+          className={`hs-ace${race.through.includes(s) ? ' through' : ''}`}
           style={
             {
               '--lane': lane,

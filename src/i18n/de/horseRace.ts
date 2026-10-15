@@ -53,6 +53,14 @@ const horseRace: Record<string, string> = {
   'Winners give out twice their stake, everyone else drinks theirs.':
     'Die Gewinner verteilen das Doppelte ihres Einsatzes, alle anderen trinken ihren Einsatz.',
   'Race again': 'Neues Rennen',
+  // An Ace nobody bet on crosses the line: the race goes on.
+  'An Ace nobody bet on doesn’t win: it’s through, and the race goes on until an Ace somebody bet on crosses the line.':
+    'Ein Ass, auf das keiner gesetzt hat, gewinnt nicht: Es ist durch, und das Rennen geht weiter, bis ein Ass ins Ziel kommt, auf das jemand gesetzt hat.',
+  '{suit} is through!': '{suit} ist durch!',
+  '{suit} is through already': '{suit} ist schon durch',
+  'Nobody bet on it, so the race goes on.': 'Keiner hat drauf gesetzt, also geht das Rennen weiter.',
+  '{suit} is through. Nobody bet on it, so the race goes on.': '{suit} ist durch. Keiner hat drauf gesetzt, also geht das Rennen weiter.',
+  'Nothing moves.': 'Nichts bewegt sich.',
 };
 
 export default horseRace;

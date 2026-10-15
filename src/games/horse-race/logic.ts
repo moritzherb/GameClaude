@@ -12,6 +12,8 @@ import { shuffle } from '../../lib/random';
  *   the Ace that reached the row gives out sips: as many as the row number.
  * - The first Ace past the top row wins. Its backers give out twice the sips they staked;
  *   everyone who bet on another suit drinks their stake.
+ * - An Ace nobody bet on doesn't win: it's through, and the race goes on until an Ace
+ *   somebody bet on crosses the line. Its cards from then on move nothing.
  */
 
 export const ROW_OPTIONS = [5, 6, 7, 8];
@@ -33,13 +35,19 @@ export interface Race {
   queue: { row: number; by: Suit }[];
   last: Step | null;
   winner: Suit | null;
+  /** The suits somebody bet on: only those can win. */
+  backed: Suit[];
+  /** Aces nobody bet on that are past the finish line, first one first. */
+  through: Suit[];
+  /** What the last card did besides moving an Ace up: took an Ace nobody bet on through, or moved nothing (its Ace was through already). */
+  note: 'through' | 'done' | null;
   /** Every card turned over so far (newest last), for the history strip. */
   log: Step[];
 }
 
 const ACE = 14;
 
-export function newRace(rows = DEFAULT_ROWS, deck: Card[] = shuffle(newDeck())): Race {
+export function newRace(rows = DEFAULT_ROWS, deck: Card[] = shuffle(newDeck()), backed: Suit[] = [...SUITS]): Race {
   const rest = deck.filter((c) => c.value !== ACE);
   return {
     rows,
@@ -49,15 +57,24 @@ export function newRace(rows = DEFAULT_ROWS, deck: Card[] = shuffle(newDeck())):
     queue: [],
     last: null,
     winner: null,
+    backed,
+    through: [],
+    note: null,
     log: [],
   };
 }
 
 /** Move an Ace up one row; queue the side card if it's the first to get there. */
 function advance(r: Race, suit: Suit): Race {
+  // Through already: it stays past the line.
+  if (r.pos[suit] > r.rows) return { ...r, note: 'done' };
   const at = r.pos[suit] + 1;
   const pos = { ...r.pos, [suit]: at };
-  if (at > r.rows) return { ...r, pos, winner: suit, queue: [] };
+  if (at > r.rows) {
+    if (r.backed.includes(suit)) return { ...r, pos, winner: suit, queue: [] };
+    // Nobody bet on it: it's through, and the race goes on.
+    return { ...r, pos, through: [...r.through, suit], note: 'through' };
+  }
   const side = r.side[at - 1];
   const queued = r.queue.some((q) => q.row === at);
   return { ...r, pos, queue: !side.open && !queued ? [...r.queue, { row: at, by: suit }] : r.queue };
@@ -70,13 +87,13 @@ export function step(r: Race): Race {
   if (next) {
     const card = r.side[next.row - 1].card;
     const s: Step = { kind: 'side', card, row: next.row, by: next.by };
-    const opened = { ...r, queue, side: r.side.map((x, i) => (i === next.row - 1 ? { ...x, open: true } : x)), last: s, log: [...r.log, s] };
+    const opened: Race = { ...r, note: null, queue, side: r.side.map((x, i) => (i === next.row - 1 ? { ...x, open: true } : x)), last: s, log: [...r.log, s] };
     return advance(opened, card.suit);
   }
   const [card, ...deck] = r.deck;
   if (!card) return r;
   const s: Step = { kind: 'draw', card };
-  return advance({ ...r, deck, last: s, log: [...r.log, s] }, card.suit);
+  return advance({ ...r, note: null, deck, last: s, log: [...r.log, s] }, card.suit);
 }
 
 /** Sips the backers of an Ace give out when it turns over the side card in this row. */

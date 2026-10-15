@@ -6,7 +6,7 @@ import VoteGame, { names, Verdict, Voters, type Round } from '../vote/VoteGame';
 import { TREATMENTS } from './cards';
 
 type Vote = 'treat' | 'bare';
-const OPTIONS = ['treat', 'bare'] as const;
+const OPTIONS = ['bare', 'treat'] as const;
 
 const EMOJI: Record<string, string> = { princess: '👸', king: '🤴' };
 const treatment = (who: string) => (who === 'king' ? t('King Treatment') : t('Princess Treatment'));
@@ -15,7 +15,7 @@ function Card({ round, small }: { round: Round; small?: boolean }) {
   return (
     <div className={`vt-card pt-card${small ? ' small' : ''}`}>
       {!small && <span className="vt-card-emoji">{EMOJI[round.who]}</span>}
-      <span className="vt-card-title">{t('{treatment} or Bare Minimum?', { treatment: treatment(round.who) })}</span>
+      <span className="vt-card-title">{t('Bare Minimum or {treatment}?', { treatment: treatment(round.who) })}</span>
       <span className="vt-card-text">{t(round.text)}</span>
     </div>
   );
@@ -24,13 +24,13 @@ function Card({ round, small }: { round: Round; small?: boolean }) {
 function Ballot({ round, vote }: { round: Round; vote: (v: Vote) => void }) {
   return (
     <div className="pt-choices">
-      <button type="button" className="pt-choice treat" onClick={() => vote('treat')}>
-        <span className="pt-choice-emoji">{EMOJI[round.who]}</span>
-        <span className="pt-choice-label">{treatment(round.who)}</span>
-      </button>
       <button type="button" className="pt-choice bare" onClick={() => vote('bare')}>
         <span className="pt-choice-emoji">😐</span>
         <span className="pt-choice-label">{t('Bare Minimum')}</span>
+      </button>
+      <button type="button" className="pt-choice treat" onClick={() => vote('treat')}>
+        <span className="pt-choice-emoji">{EMOJI[round.who]}</span>
+        <span className="pt-choice-label">{treatment(round.who)}</span>
       </button>
     </div>
   );
@@ -80,7 +80,7 @@ export default function Treatment(props: GameProps) {
         { id: 'mixed', emoji: '👑', label: t('Both'), mixed: true },
       ]}
       modeTitle={t('Princess or King?')}
-      intro={t('A card shows something someone does for you. Everyone votes in secret: Treatment or Bare Minimum? The minority drinks.')}
+      intro={t('A card shows something someone does for you. Everyone votes in secret: Bare Minimum or Treatment? The minority drinks.')}
       Card={Card}
       Ballot={Ballot}
       judge={judge}

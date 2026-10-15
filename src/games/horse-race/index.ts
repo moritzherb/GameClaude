@@ -19,6 +19,7 @@ const horseRace: GameDefinition = {
     tx('The first Ace into a row turns that row’s side card over, and the Ace of its suit moves up too, before the next card from the deck.'),
     tx('Whoever bet on the Ace that turned the side card over gives out sips: as many as the row number.'),
     tx('The first Ace past the top row wins. Its backers give out twice the sips they staked; everyone else drinks their stake.'),
+    tx('An Ace nobody bet on doesn’t win: it’s through, and the race goes on until an Ace somebody bet on crosses the line.'),
   ],
   component: HorseRace,
 };

@@ -15,7 +15,7 @@ const princessTreatment: GameDefinition = {
   rules: [
     tx('Pick at the start: Princess, King, or both.'),
     tx('A card shows something someone does for you. The one whose turn it is reads it out.'),
-    tx('Pass the phone round: everyone taps in secret, Treatment or Bare Minimum.'),
+    tx('Pass the phone round: everyone taps in secret, Bare Minimum or Treatment.'),
     tx('Then the phone shows who voted what. The minority drinks 2.'),
     tx('A tie: everyone drinks 1. All agreed: nobody drinks.'),
     tx('Next card, next reader, until the cards run out.'),

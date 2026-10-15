@@ -7377,6 +7377,11 @@ h3 {
   transition: transform 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
+/* Through, but nobody bet on it: it waits past the line, faded, while the race goes on. */
+.hs-ace.through {
+  opacity: 0.45;
+}
+
 .hs-ace .pcard-face {
   backface-visibility: visible;
 
