@@ -65,8 +65,7 @@ export default function KingsCup({ players, exit }: GameProps) {
   const [ruleDraft, setRuleDraft] = useState('');
   // The sheet open over the table: everything in play, picking a mate (8) or writing a rule (Jack).
   const [sheet, setSheet] = useState<'effects' | 'mate' | 'rule' | null>(null);
-  // Mate or rule just set: its pill shrinks from the big ask down to the others' size (and, on a
-  // clean table, it's the one pill that shows, until the next card).
+  // Mate or rule just set: its pill shrinks from the big ask down to the others' size.
   const [justSet, setJustSet] = useState<'mate' | 'rule' | null>(null);
   const drawing = useRef(false);
   const timer = useRef<number>(undefined);

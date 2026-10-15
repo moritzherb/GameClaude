@@ -11,8 +11,8 @@ const busDriver: Record<string, string> = {
     'Runde 2 · Höher oder tiefer als deine erste Karte? Gleicher Wert: doppelt trinken.',
   'Round 3 · Inside or outside your first two cards? Hitting one of their values: drink double.':
     'Runde 3 · Innerhalb oder außerhalb deiner ersten beiden Karten? Triffst du genau einen ihrer Werte: doppelt trinken.',
-  'Round 4 · Will the suit be one you already have?': 'Runde 4 · Hast du die Farbe schon auf der Hand?',
-  'Risky mode adds Round 5 · Guess the exact suit.': 'Der Risiko-Modus legt Runde 5 drauf · Rate die genaue Farbe.',
+  'Round 4 · Will the suit be one you already have?': 'Runde 4 · Hast du das Symbol schon auf der Hand?',
+  'Risky mode adds Round 5 · Guess the exact suit.': 'Der Risiko-Modus legt Runde 5 drauf · Rate das genaue Symbol.',
   'Right: give out as many sips as the round number. Wrong: drink them yourself.':
     'Richtig: Verteil so viele Schlucke wie die Rundennummer. Falsch: Trink sie selbst.',
   'Part 2 · The rest of the deck becomes a pyramid (5-4-3-2-1 by default), flipped from the bottom row up.':
@@ -23,7 +23,7 @@ const busDriver: Record<string, string> = {
     'Wer am Ende die meisten Karten hat, fährt Bus. Bei Gleichstand gibt’s ein Stechen: Jeder bekommt eine neue Karte, der Stapel wird aufgedeckt, und wessen Wert zuletzt kommt, der fährt.',
   'Part 3 · The bus ride, three roads to pick from:': 'Teil 3 · Die Busfahrt, drei Strecken zur Wahl:',
   'Classic: all five questions (including Which suit?) on a fresh deck, all in a row.':
-    'Klassisch: alle fünf Fragen (inklusive „Welche Farbe?“) mit frischem Deck, alle am Stück.',
+    'Klassisch: alle fünf Fragen (inklusive „Welches Symbol?“) mit frischem Deck, alle am Stück.',
   'Diamond 1-2-3-2-1: red or black on the bottom card, then higher or lower row by row. Follow the road: only cards touching the one you picked below.':
     'Raute 1-2-3-2-1: Rot oder Schwarz bei der untersten Karte, dann Reihe für Reihe höher oder tiefer. Bleib auf der Straße: nur Karten, die deine gewählte Karte darunter berühren.',
   '1-2-1-2-1: single cards red or black, pairs higher or lower (pick one).':
@@ -40,10 +40,10 @@ const busDriver: Record<string, string> = {
   'Inside or outside?': 'Innerhalb oder außerhalb?',
   'Will the next card land between your two cards or outside of them? Hitting one of their values exactly means double sips!':
     'Landet die nächste Karte zwischen deinen beiden Karten oder außerhalb? Triffst du genau einen ihrer Werte, gibt’s doppelte Schlucke!',
-  'Got it already?': 'Hast du die Farbe schon?',
-  'Will the next card have a suit you already hold?': 'Hat die nächste Karte eine Farbe, die du schon auf der Hand hast?',
-  'Which suit?': 'Welche Farbe?',
-  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant! Rate die genaue Farbe der nächsten Karte. Chance: eins zu vier.',
+  'Got it already?': 'Hast du das Symbol schon?',
+  'Will the next card have a suit you already hold?': 'Hat die nächste Karte ein Symbol, das du schon auf der Hand hast?',
+  'Which suit?': 'Welches Symbol?',
+  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant! Rate das genaue Symbol der nächsten Karte. Chance: eins zu vier.',
 
   /* ---------- Answer buttons ---------- */
   Red: 'Rot',
@@ -66,7 +66,7 @@ const busDriver: Record<string, string> = {
   Dealer: 'Geber',
   'Pick a random dealer': 'Zufälligen Geber wählen',
   'Risky mode': 'Risiko-Modus',
-  'Adds a 5th question: guess the exact suit.': 'Mit 5. Frage: Rate die genaue Farbe.',
+  'Adds a 5th question: guess the exact suit.': 'Mit 5. Frage: Rate das genaue Symbol.',
   'Deal the cards': 'Karten austeilen',
   'Part 1 done': 'Teil 1 geschafft',
   'Everyone’s got their cards.': 'Alle haben ihre Karten.',
