@@ -325,7 +325,8 @@ function PyramidCards({ game, nextRow, onFlip, bubble }: { game: Game; nextRow: 
                   onClick={onFlip}
                   aria-label={idx === game.flips ? t('Flip this card') : undefined}
                 >
-                  <PlayingCard card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={cardStyle} />
+                  {/* A new card when the size changes: iPhones left resized cards on their own layers blank. */}
+                  <PlayingCard key={cw} card={game.cards[idx]} faceUp={idx < game.flips} waiting={idx === game.flips} style={cardStyle} />
                   {laidCount > 0 && <span className="pyramid-badge">{laidCount}</span>}
                   {bubble?.index === idx && (
                     <span key={`${idx}-${bubble.text}`} className={`pyr-bubble${bubble.hit ? ' hit' : ''}${r === game.rows - 1 ? ' below' : ''}`}>

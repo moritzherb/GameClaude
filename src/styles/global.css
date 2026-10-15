@@ -3182,9 +3182,18 @@ h3 {
 .bd-pyr .pyramid {
   flex: 1 1 0;
   min-height: 180px;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   padding: 10px;
+}
+
+/* Centred, but if it's ever taller than its room, the top rows stay in view (it runs off below). */
+.bd-pyr .pyramid-row:first-child {
+  margin-top: auto;
+}
+
+.bd-pyr .pyramid-row:last-child {
+  margin-bottom: auto;
 }
 
 /* At the card just turned: what it means (sips per card laid, or that nobody has one). */
@@ -3265,6 +3274,32 @@ h3 {
 
 .bd-pyr .pyramid-row {
   grid-template-columns: 30px 1fr 30px;
+}
+
+/* The answer's verdict stays a moment, then the next player is on: a bar fills along the button
+   meanwhile (0.65s for the card to turn, then 2.2s; see AUTO_NEXT_MS in BusDriver.tsx). */
+.bd-auto-next {
+  position: relative;
+  overflow: hidden;
+}
+
+.bd-auto-next::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: currentColor;
+  opacity: 0.3;
+  transform-origin: left;
+  animation: bd-auto-next 2.2s linear 0.65s both;
+}
+
+@keyframes bd-auto-next {
+  from {
+    transform: scaleX(0);
+  }
 }
 
 /* Every card of the pyramid and of the ride's board on a layer of its own, for good. Otherwise
@@ -11523,10 +11558,9 @@ h3 {
  * this turn). Explanations are off as well (a clean table counts as a game you know).
  */
 
-/* Kings Cup: only the circle, the card and the asks (pick a mate, set a rule). What was just
-   picked or written (or who just became Question Master) shows until the next card. */
-.play-screen.clean .kc > .kc-status,
-.play-screen.clean .kc-chip:not(.ask, .settle) {
+/* Kings Cup: the circle, the card, and the pills above it: the asks (pick a mate, set a rule) and
+   what's in play all game (mates, the rule, the Question Master), like a note on a real table. */
+.play-screen.clean .kc > .kc-status {
   display: none;
 }
 
