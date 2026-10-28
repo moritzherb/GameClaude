@@ -7,7 +7,10 @@
     <meta name="theme-color" content="#10110e" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Not black-translucent: since iOS 27 that lays a frosted blur over the top of the page. With the
+         default bar the page starts below the clock, and the bar takes the page's colour (see .top-edge
+         in global.css). iOS reads this once, when the app is added to the home screen. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="prost!" />
     <meta name="description" content="Drinking games for parties and pregaming." />
     <!-- Icons carry a version (?v=) so phones fetch the new file instead of a cached old one. Bump it with every icon change. -->
@@ -17,6 +20,7 @@
     <title>prost!</title>
   </head>
   <body>
+    <div class="top-edge" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

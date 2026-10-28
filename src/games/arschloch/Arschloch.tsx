@@ -289,7 +289,7 @@ function Table({
       </div>
 
       <div className="ar-table">
-        <div className="ar-ring">
+        <div className={`ar-ring${o.draw ? ' drawing' : ''}`}>
           <div className="kc-slots">
             {slots.map((slot, i) =>
               g.ring[i] ? (
