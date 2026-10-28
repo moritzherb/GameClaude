@@ -208,18 +208,49 @@ textarea {
   -webkit-touch-callout: default;
 }
 
-/* Opened from the iPhone home screen, 100vh/100dvh come up short by the status
-   bar's height and iOS paints the leftover strip at the bottom black. Stretch
-   the page (and every screen) down to the real bottom edge. Only there: other phones (Android)
-   already size the page right, and the extra height would let every screen scroll. */
+/* Opened from the iPhone home screen, 100vh/100dvh don't match the app's window: under the old
+   translucent status bar (apps added before it changed) they came up short by the bar and iOS
+   painted the strip left at the bottom black; under the default one they take the bar in, and every
+   screen would scroll by that much. So the page goes by the window's own height there (--app-h, see
+   lib/appHeight.ts), plus the status bar where the page reaches under it (the translucent one).
+   Only there: other phones (Android) already size the page right. */
 @media (display-mode: standalone) {
   @supports (-webkit-touch-callout: none) {
     html {
-      min-height: calc(100% + env(safe-area-inset-top));
+      min-height: calc(var(--app-h, 100%) + env(safe-area-inset-top));
     }
 
     .screen {
-      min-height: calc(100dvh + env(safe-area-inset-top));
+      min-height: calc(var(--app-h, 100dvh) + env(safe-area-inset-top));
+    }
+  }
+}
+
+/*
+ * iOS 27 lays a frosted blur over the top of a home-screen app, past the status bar into the page,
+ * unless something solid is fixed at the very top. This strip is that: iOS takes its colour for the
+ * status bar (from the style, not from what's drawn), and its background is clipped to text it
+ * doesn't have, so nothing shows and taps go through. Hidden any other way (display, opacity,
+ * visibility), iOS would pass over it. Works with the default status bar only (see index.html).
+ */
+.top-edge {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    .top-edge {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 2147483647;
+      height: 11px;
+      background-color: var(--bg);
+      -webkit-background-clip: text;
+      background-clip: text;
+      pointer-events: none;
     }
   }
 }
@@ -1054,6 +1085,15 @@ h3 {
   height: 100dvh;
   min-height: 0;
   padding-bottom: 0;
+}
+
+/* On the iPhone home screen: the window's own height (see the page's height at the top). */
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    .screen.library {
+      height: calc(var(--app-h, 100dvh) + env(safe-area-inset-top));
+    }
+  }
 }
 
 .library-scroll {
@@ -7712,7 +7752,8 @@ h3 {
  * moves or fades on a layer of its own. iPhones leave a turned part's contents out while one of
  * its pieces has such a layer: all the time with will-change, for a moment with every pop or nudge
  * (the whole board blinked when the player opposite laid a card). So in there the cues are drawn
- * instead: a ring that lights up, a pulsing outline.
+ * instead: a ring that lights up, a pulsing outline. The outline pulses in a few steps, not
+ * smoothly: every change is the board drawn again, and smoothly that was every frame.
  */
 .tr-board.flipped .tr-slot.up .pcard-front {
   animation: tr-laid 0.5s ease-out both;
@@ -7727,7 +7768,7 @@ h3 {
 .tr-board.flipped .tr-slot.pickable,
 .tr-middle.flipped .tr-stock.ready,
 .tr-middle.flipped .tr-discard.drop-here {
-  animation: tr-pulse 1.2s ease-in-out infinite;
+  animation: tr-pulse 1.2s steps(3, jump-none) infinite;
   outline: 3px solid transparent;
   outline-offset: 2px;
 }
@@ -7982,27 +8023,14 @@ h3 {
 
 /* ---------- Confetti ---------- */
 
+/* One canvas over the screen (drawn in lib/fx.ts). */
 .confetti-layer {
   position: fixed;
   inset: 0;
   z-index: 100;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  overflow: hidden;
-}
-
-.confetti-layer i {
-  position: absolute;
-  top: -20px;
-  width: 9px;
-  height: 14px;
-  border-radius: 2px;
-  animation: confetti-fall linear forwards;
-}
-
-@keyframes confetti-fall {
-  to {
-    transform: translate(var(--drift), 110vh) rotate(var(--spin));
-  }
 }
 
 /* ---------- Motion ---------- */
@@ -9011,16 +9039,25 @@ h3 {
   min-width: 0;
   min-height: 0;
   position: relative;
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+/* The ring pulsing round it: an element of its own that only fades in and out. A pulsing shadow on
+   the panel itself had the whole panel, cards and all, drawn again every frame. */
+.hr-decide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
   animation: hr-decide-ring 1.6s ease-in-out infinite;
 }
 
 @keyframes hr-decide-ring {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
-  }
   50% {
-    box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent);
+    opacity: 1;
   }
 }
 
@@ -10994,14 +11031,19 @@ h3 {
   height: calc(19 * var(--qw));
 }
 
-/* Your turn to draw: the circle breathes, inviting a tap. */
+/* Your turn to draw: the cards glow and the circle breathes, inviting a tap. The circle breathes as
+   one (a pulsing glow on every card had them all drawn again every frame). */
 .kc-slot.ar-pickable {
+  box-shadow: inset 0 0 0 calc(0.65 * var(--qw)) #fff, 0 0 0 calc(0.8 * var(--qw)) color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.ar-ring.drawing .kc-slots {
   animation: ar-breathe 1.8s ease-in-out infinite;
 }
 
 @keyframes ar-breathe {
   50% {
-    box-shadow: inset 0 0 0 calc(0.65 * var(--qw)) #fff, 0 0 0 calc(0.8 * var(--qw)) color-mix(in srgb, var(--accent) 45%, transparent);
+    transform: scale(1.025);
   }
 }
 

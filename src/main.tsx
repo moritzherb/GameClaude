@@ -5,6 +5,7 @@ import './styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { watchAppHeight } from './lib/appHeight';
 import { watchBoxes } from './lib/boxes';
 import { watchForUpdates } from './lib/update';
 import { RoomProvider } from './net/RoomProvider';
@@ -43,6 +44,9 @@ function fontsReady() {
   const fonts = Promise.all([document.fonts.load('1em "Big Shoulders Display Variable"'), document.fonts.load('1em "Archivo Variable"')]);
   return Promise.race([fonts, new Promise((done) => window.setTimeout(done, 1000))]).catch(() => {});
 }
+
+// The window's real height for the CSS (an iPhone home-screen app gets 100dvh wrong).
+watchAppHeight();
 
 // The game tables' sizes for the CSS (instead of container queries, see lib/boxes.ts): watching
 // before the first render, so the first picture has them.

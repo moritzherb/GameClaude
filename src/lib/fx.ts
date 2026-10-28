@@ -50,22 +50,55 @@ export const sfx = {
 
 const CONFETTI_COLORS = ['#c5f235', '#ffd23f', '#ff8a3d', '#4be3a5', '#f3efe4', '#ff7eb6'];
 
+/**
+ * Confetti, drawn on one canvas over the screen. It used to be a little element per bit, each
+ * falling on a layer of its own: ninety layers at once, the moment something great happened, and
+ * iPhones let the screen under them flicker.
+ */
 export function confetti(amount = 90) {
-  const layer = document.createElement('div');
-  layer.className = 'confetti-layer';
-  for (let i = 0; i < amount; i++) {
-    const bit = document.createElement('i');
-    bit.style.left = `${Math.random() * 100}%`;
-    bit.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
-    bit.style.animationDelay = `${Math.random() * 0.35}s`;
-    bit.style.animationDuration = `${1.6 + Math.random() * 1.4}s`;
-    bit.style.setProperty('--drift', `${(Math.random() - 0.5) * 200}px`);
-    bit.style.setProperty('--spin', `${(Math.random() - 0.5) * 1440}deg`);
-    if (i % 3 === 0) bit.style.borderRadius = '50%';
-    layer.appendChild(bit);
-  }
-  document.body.appendChild(layer);
-  setTimeout(() => layer.remove(), 3400);
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.className = 'confetti-layer';
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  ctx.scale(dpr, dpr);
+  // Each bit falls from just above the screen to below it, drifting and spinning on the way.
+  const bits = Array.from({ length: amount }, (_, i) => ({
+    x: Math.random() * w,
+    delay: Math.random() * 350,
+    duration: 1600 + Math.random() * 1400,
+    drift: (Math.random() - 0.5) * 200,
+    spin: (Math.random() - 0.5) * 8 * Math.PI,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    round: i % 3 === 0,
+  }));
+  document.body.appendChild(canvas);
+  const start = performance.now();
+  const frame = (now: number) => {
+    ctx.clearRect(0, 0, w, h);
+    let falling = false;
+    for (const b of bits) {
+      const t = Math.min(1, Math.max(0, (now - start - b.delay) / b.duration));
+      if (t < 1) falling = true;
+      ctx.save();
+      ctx.translate(b.x + b.drift * t, -13 + 1.1 * h * t);
+      ctx.rotate(b.spin * t);
+      ctx.fillStyle = b.color;
+      ctx.beginPath();
+      if (b.round) ctx.ellipse(0, 0, 4.5, 7, 0, 0, 2 * Math.PI);
+      else ctx.rect(-4.5, -7, 9, 14);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (falling) requestAnimationFrame(frame);
+    else canvas.remove();
+  };
+  requestAnimationFrame(frame);
 }
 
 /** "Something great happened", heard and felt: the fanfare and a happy buzz. */
