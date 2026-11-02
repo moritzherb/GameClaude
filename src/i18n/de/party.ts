@@ -98,7 +98,7 @@ const party: Record<string, string> = {
   'Same number': 'Gleiche Zahl',
   Different: 'Verschieden',
   'Hands out! The fewer drink 2.': 'Hände raus! Die Wenigeren trinken 2.',
-  'Hands behind your backs: 3, 2, 1': 'Hände hinter den Rücken: 3, 2, 1',
+  'Count down: 3, 2, 1': 'Runterzählen: 3, 2, 1',
   '{side} up: right! {name} gives out 2': '{side} oben: richtig! {name} verteilt 2',
   '{side} up: wrong! {name} drinks 2': '{side} oben: falsch! {name} trinkt 2',
   Lid: 'Deckel',

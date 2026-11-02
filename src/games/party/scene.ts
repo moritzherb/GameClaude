@@ -329,7 +329,7 @@ export class Scene {
           x: x + (rnd() - 0.5) * 0.4,
           y: y + (rnd() - 0.5) * 0.3,
           emoji: this.theme.decor[Math.floor(rnd() * this.theme.decor.length)],
-          size: 0.42 + rnd() * 0.18,
+          size: 0.3 + rnd() * 0.12,
         });
       }
     }

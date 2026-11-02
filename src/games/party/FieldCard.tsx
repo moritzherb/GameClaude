@@ -415,7 +415,7 @@ function HandsCard({ f, pos, lander, chosen, onDone }: Sub) {
       <div className="pt-card-actions">
         {stage === 'ready' && (
           <BigButton size="xl" onClick={() => setStage('count')}>
-            {t('Hands behind your backs: 3, 2, 1')}
+            {t('Count down: 3, 2, 1')}
           </BigButton>
         )}
         {stage === 'now' && (
