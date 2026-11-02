@@ -9,7 +9,7 @@ import { PawnIcon } from './bits';
 import type { Board } from './boards';
 import { PAWNS, type PawnDef } from './pawns';
 
-const THEME_EMOJI: Record<string, string> = { west: '🌵', beach: '🌴', classic: '🎲' };
+const THEME_EMOJI: Record<string, string> = { west: '🌵' };
 
 interface Props {
   players: Player[];

@@ -22,6 +22,8 @@ interface Props {
   field: Field;
   pos: number;
   g: Game;
+  /** For a bridge back or tunnel: the field it leads to. */
+  target?: number;
   players: Player[];
   lander: Player;
   /** Picked with Choose one: done where you stand, no Ace for it. */
@@ -36,7 +38,7 @@ const names = (list: Player[]) => {
 };
 
 /** The card for the field a player lands on: what to do, and the little games played right there. */
-export default function FieldCard({ field: f, pos, g, players, lander, chosen, onDone, onChoose }: Props) {
+export default function FieldCard({ field: f, pos, g, target, players, lander, chosen, onDone, onChoose }: Props) {
   const info = FIELDS[f.kind];
   const n = param(f);
   const byId = (id: string) => players.find((p) => p.id === id)!;
@@ -123,7 +125,7 @@ export default function FieldCard({ field: f, pos, g, players, lander, chosen, o
   }
 
   return (
-    <Card f={f} pos={pos} lander={lander} chosen={chosen} text={info.text(n, right.name)}>
+    <Card f={f} pos={pos} lander={lander} chosen={chosen} text={info.text(f.kind === 'back-bridge' || f.kind === 'mole' ? (target ?? -1) : n, right.name)}>
       {body}
       <div className="pt-card-actions">
         {canAce && (

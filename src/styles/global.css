@@ -13114,3 +13114,88 @@ h3 {
     animation: none;
   }
 }
+
+.pt-kind:disabled {
+  opacity: 0.45;
+}
+
+/* Back to the pawn after looking round the board. */
+.pt-back-btn {
+  flex: none;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 800;
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+}
+
+/* A finger moves the camera round the board, two fingers zoom: the page itself doesn't move. */
+.pt-canvas {
+  touch-action: none;
+}
+
+/* The big die, thrown onto the middle of the board: a cube in 3D. */
+.pt-cube-stage {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  perspective: 700px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pt-cube-stage.on {
+  opacity: 1;
+  transition-duration: 0.08s;
+}
+
+.pt-cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.pt-cube-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 6px;
+  padding: 15px;
+  border-radius: 18px;
+  background: #fbf9f3;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12), inset 0 -6px 12px rgba(0, 0, 0, 0.12);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.pt-cube-face.front {
+  transform: translateZ(48px);
+}
+
+.pt-cube-face.back {
+  transform: rotateY(180deg) translateZ(48px);
+}
+
+.pt-cube-face.right {
+  transform: rotateY(90deg) translateZ(48px);
+}
+
+.pt-cube-face.left {
+  transform: rotateY(-90deg) translateZ(48px);
+}
+
+.pt-cube-face.top {
+  transform: rotateX(90deg) translateZ(48px);
+}
+
+.pt-cube-face.bottom {
+  transform: rotateX(-90deg) translateZ(48px);
+}

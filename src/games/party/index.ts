@@ -5,7 +5,7 @@ import Party from './Party';
 const party: GameDefinition = {
   id: 'party',
   name: tx('Party'),
-  emoji: '🎉',
+  emoji: '♟️',
   tagline: tx('A board game: roll, move, do what the field says.'),
   color: 'var(--c-orange)',
   categories: ['party', 'dice'],
