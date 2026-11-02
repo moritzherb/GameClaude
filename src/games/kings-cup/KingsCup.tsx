@@ -250,7 +250,7 @@ export default function KingsCup({ players, exit }: GameProps) {
               ),
             )}
           </div>
-          <KingCrown kings={s.kings} />
+          <KingCrown kings={s.kings} crowning={!!lastKing} />
           {!s.current && !known && <span className="kc-ring-hint">{t('Pick any card')}</span>}
           {s.current && rule && <Reveal key={52 - left} card={s.current} rule={rule} finale={!!lastKing} from={from.current} />}
         </div>
@@ -406,8 +406,12 @@ function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; fina
   );
 }
 
-/** A crown in the middle while someone picks: it idles gently, and each King drawn lights one of its four tips. */
-function KingCrown({ kings }: { kings: number }) {
+/**
+ * A crown in the middle while someone picks: it idles gently, and each King drawn lights one of its
+ * four tips. The 4th King gets it: once that card has landed, the crown hops onto it, and with the
+ * next card it goes back to the middle, all four tips lit.
+ */
+function KingCrown({ kings, crowning }: { kings: number; crowning: boolean }) {
   const tips = [
     [13, 30],
     [37, 20],
@@ -415,7 +419,7 @@ function KingCrown({ kings }: { kings: number }) {
     [87, 30],
   ];
   return (
-    <span className="kc-crown-wrap" role="img" aria-label={t('{n} of 4 Kings drawn', { n: kings })}>
+    <span className={`kc-crown-wrap${crowning ? ' crowning' : ''}`} role="img" aria-label={t('{n} of 4 Kings drawn', { n: kings })}>
       <span className="kc-crown-glow" />
       <svg className="kc-crown" viewBox="0 0 100 100">
         <path className="kc-crown-body" d="M18 70 13 32 27 49 37 22 50 47 63 22 73 49 87 32 82 70z" />

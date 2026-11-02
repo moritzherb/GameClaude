@@ -4027,11 +4027,30 @@ h3 {
   width: calc(36 * var(--qw));
   height: calc(36 * var(--qw));
   transform: translate(-50%, -56%);
-  transition: opacity 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.6s var(--spring);
 }
 
 .kc-ring.revealing .kc-crown-wrap {
   opacity: 0;
+}
+
+/* The 4th King: the crown stays, waits for the card to land under it, then hops onto its top edge
+   (over the card, so nothing under it goes on a layer of its own). */
+.kc-ring.revealing .kc-crown-wrap.crowning {
+  z-index: 4;
+  opacity: 1;
+  pointer-events: none;
+  transform: translate(-50%, calc(-57 * var(--qw))) rotate(-8deg) scale(0.7);
+  transition:
+    opacity 0.2s ease,
+    transform 0.7s var(--spring) 0.8s;
+}
+
+.kc-ring.revealing .kc-crown-wrap.crowning .kc-crown,
+.kc-ring.revealing .kc-crown-wrap.crowning .kc-crown-glow {
+  animation-play-state: running;
 }
 
 .kc-ring.revealing .kc-crown,
