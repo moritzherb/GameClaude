@@ -27,7 +27,6 @@ const party: Record<string, string> = {
   Pawns: 'Spielfiguren',
   '{name}’s pawn': 'Spielfigur von {name}',
   'Wild West': 'Wilder Westen',
-  'Beach Party': 'Strandparty',
 
   // Pawns
   Pink: 'Pink',

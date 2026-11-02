@@ -36,6 +36,8 @@ const SLOTS = [
 ];
 /** How far the camera stands from the point it looks at, following a pawn; its angle from straight down. */
 const FOLLOW_DIST = 7.5;
+/** How close it zooms in on the pawn: the fields round it big enough to read at a glance. */
+const ZOOM = 1.45;
 const FOLLOW_TILT = 1.0;
 const MIN_DIST = 4.6;
 /** The camera looks this far ahead of the pawn, so you see where it's going. */
@@ -142,7 +144,7 @@ export class Scene {
   private insetBottom = 0;
   private spots: Spot[] = [];
   private board: Board | null = null;
-  private theme: Theme = THEMES.classic;
+  private theme: Theme = THEMES.west;
   private labels: string[] = [];
   private textures: HTMLCanvasElement[] = [];
   private decor: { x: number; y: number; emoji: string; size: number }[] = [];
@@ -370,9 +372,9 @@ export class Scene {
       const v = this.pawns.find((q) => q.id === id);
       return v ? this.home(v) : this.where(id);
     })();
-    // Across, the camera only goes half way to the pawn: the board stays more or less in the middle.
+    // Across, the camera goes most of the way to the pawn: its field in the middle, the board's edge near.
     const mid = ((this.board?.cols ?? 5) - 1) / 2;
-    this.goal = { x: mid + (p.x - mid) * 0.55, y: p.y + AHEAD, dist: FOLLOW_DIST, tilt: FOLLOW_TILT };
+    this.goal = { x: mid + (p.x - mid) * 0.8, y: p.y + AHEAD, dist: FOLLOW_DIST, tilt: FOLLOW_TILT };
   }
 
   private setAway(on: boolean) {
@@ -464,7 +466,7 @@ export class Scene {
   /* ---------- The camera ---------- */
 
   private focal() {
-    return (FOLLOW_DIST * this.w) / ((this.board?.cols ?? 5) + 0.6);
+    return ((FOLLOW_DIST * this.w) / ((this.board?.cols ?? 5) + 0.6)) * ZOOM;
   }
 
   /** How a camera shows the board: world point (and height above the board) to the screen. */

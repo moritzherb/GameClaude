@@ -73,7 +73,7 @@ export function jumps(fields: Field[], cols: number): Record<number, number> {
   return out;
 }
 
-export type ThemeId = 'west' | 'beach' | 'classic';
+export type ThemeId = 'west';
 
 export interface Theme {
   /** The board's colour near the start and far away at the finish. */
@@ -86,8 +86,6 @@ export interface Theme {
 
 export const THEMES: Record<ThemeId, Theme> = {
   west: { near: '#f3cf8a', far: '#e58f52', decor: ['🌵', '🌵', '💀', '🐎', '🪨', '🌵', '🦂', '🤠'], river: '#4aa3d8' },
-  beach: { near: '#f7e2a6', far: '#8fd3ef', decor: ['🌴', '🍹', '🐚', '⛱️', '🦀', '🌴', '🏐', '🍉'], river: '#3fb7e0' },
-  classic: { near: '#f1ebdf', far: '#d9cdf2', decor: ['🎲', '🍾', '🥂', '🎉', '🍻', '🪩'], river: '#5aa7e6' },
 };
 
 export interface Board {
@@ -104,6 +102,7 @@ export interface Board {
 
 const F = (kind: FieldKind, n?: number) => field(kind, n);
 
+/** The board the game comes with: every kind of field on it (your own boards start from it). */
 export const BOARDS: Board[] = [
   {
     id: 'west',
@@ -119,36 +118,6 @@ export const BOARDS: Board[] = [
       F('shop'), F('prison'), F('cheek'), F('toilet'), F('give', 5), F('shots', 3),
       F('snail'), F('roll-back'), F('girls'), F('boys'), F('swap-drink'), F('mate'),
       F('hands'), F('clock', 1), F('age', 0), F('ex'), F('tschick'), F('goal'),
-    ],
-  },
-  {
-    id: 'beach',
-    name: tx('Beach Party'),
-    theme: 'beach',
-    cols: 5,
-    fields: [
-      F('start'), F('shots', 1), F('shots', 2), F('give', 2), F('rule'), F('ex'),
-      F('boys'), F('mate'), F('waterfall'), F('swap-drink'), F('choose'), F('bridge', 1),
-      F('girls'), F('chance'), F('tschick'), F('leader'), F('mole'), F('safe'),
-      F('snus'), F('shots', 3), F('three-six-nine'), F('twins'), F('back-bridge'), F('ace'),
-      F('mystery'), F('hands'), F('silence'), F('duel'), F('roll-again'), F('prison'),
-      F('shop'), F('clock', 1), F('seats'), F('give', 5), F('snail'), F('bridge', 0),
-      F('double'), F('toilet'), F('cheek'), F('roll-back'), F('shots', 2), F('goal'),
-    ],
-  },
-  {
-    id: 'classic',
-    name: tx('Classic'),
-    theme: 'classic',
-    cols: 4,
-    fields: [
-      F('start'), F('give', 2), F('rps'), F('shots', 1), F('safe'),
-      F('toilet'), F('clock', 0), F('ace'), F('girls'), F('roll-again'),
-      F('boys'), F('rule'), F('age', 0), F('back-bridge'), F('snail'),
-      F('mate'), F('leader'), F('waterfall'), F('three-six-nine'), F('prison'),
-      F('give', 5), F('reverse'), F('ex'), F('hands'), F('bridge', 0),
-      F('shots', 2), F('duel'), F('silence'), F('roll-back'), F('safe'),
-      F('mystery'), F('age', 1), F('chance'), F('swap-drink'), F('shots', 1), F('goal'),
     ],
   },
 ];
