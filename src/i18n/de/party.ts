@@ -52,7 +52,8 @@ const party: Record<string, string> = {
   Alien: 'Alien',
 
   // Playing
-  'Field {n} of {total}': 'Feld {n} von {total}',
+  'Field {n} of {total} · {field}': 'Feld {n} von {total} · {field}',
+  'At the start · {total} fields to go': 'Am Start · {total} Felder bis ins Ziel',
   'In prison: only a 6 gets you out': 'Im Gefängnis: Nur eine 6 holt dich raus',
   'At the bridge: a 1 or 2 gets you over': 'An der Brücke: Mit 1 oder 2 kommst du rüber',
   'At the bridge: a 5 or 6 gets you over': 'An der Brücke: Mit 5 oder 6 kommst du rüber',
@@ -129,7 +130,6 @@ const party: Record<string, string> = {
   Moving: 'Ziehen',
   Odd: 'Ungerade',
   Even: 'Gerade',
-  '{n} back': '{n} zurück',
 
   // The fields
   'Everyone starts here.': 'Hier starten alle.',
@@ -199,7 +199,8 @@ const party: Record<string, string> = {
   'Drink 1, or roll: a 5 or 6 passes double to the next player (2, then 4, 8 …), who takes it or rolls on. Miss the roll and you drink it all.':
     'Trink 1 oder würfle: Mit 5 oder 6 geht das Doppelte an den Nächsten (2, dann 4, 8 …), der trinkt oder weiterwürfelt. Wer es nicht schafft, trinkt alles.',
   'Bridge back': 'Brücke zurück',
-  'Over this bridge you go, {n} fields back.': 'Über diese Brücke geht’s {n} Felder zurück.',
+  'Over the bridge you go, back to field {n}.': 'Über die Brücke geht’s zurück auf Feld {n}.',
+  'Over the bridge you go, back to the field across the water.': 'Über die Brücke geht’s zurück auf das Feld auf der anderen Seite des Wassers.',
   'Choose one': 'Choose one',
   'Pick a field from the board and do what it says. You stay where you are.': 'Such dir ein Feld vom Brett aus und mach, was dort steht. Du bleibst, wo du bist.',
   '3-6-9': '3-6-9',
@@ -234,9 +235,12 @@ const party: Record<string, string> = {
   'Swap drinks with the player on your right.': 'Tausch dein Getränk mit deinem rechten Nachbarn.',
   'Swap seats with the player on your right. The order of play changes with you.': 'Tausch den Platz mit deinem rechten Nachbarn. Die Reihenfolge ändert sich mit.',
   'Give the player on your right a smack on the bum. Only if they say yes!': 'Gib deinem rechten Nachbarn einen Klaps auf den Hintern. Nur wenn er oder sie einverstanden ist!',
-  'Mole · {n} back': 'Maulwurf · {n} zurück',
   Mole: 'Maulwurf',
-  'The mole dug a tunnel: through it you go, {n} fields back.': 'Der Maulwurf hat einen Tunnel gegraben: Durch den geht’s {n} Felder zurück.',
+  'The mole dug a tunnel: through it you go, back to field {n}.': 'Der Maulwurf hat einen Tunnel gegraben: Durch den geht’s zurück auf Feld {n}.',
+  'The mole dug a tunnel: through it you go, a few rows back.': 'Der Maulwurf hat einen Tunnel gegraben: Durch den geht’s ein paar Reihen zurück.',
+  'Back to field {n}': 'Zurück auf Feld {n}',
+  'Not here: there’s no field across the water.': 'Hier nicht: Auf der anderen Seite des Wassers liegt kein Feld.',
+  'Not here: there’s no field for a tunnel to lead to.': 'Hier nicht: Hier gibt es kein Feld, zu dem ein Tunnel führen kann.',
   'Pick a drinking mate: whenever one of you drinks, the other drinks too.': 'Such dir einen Trinkpartner aus: Immer wenn einer von euch trinkt, trinkt der andere mit.',
   'Palm or back': 'Blatt-Blatt-Blatt',
   'Everyone hides a hand behind their back. On 3, 2, 1 it comes out, palm up or back of the hand up. The fewer drink 2.':

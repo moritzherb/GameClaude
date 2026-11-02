@@ -71,7 +71,10 @@ export interface FieldInfo {
   label: (n: number) => string;
   /** On the card when someone lands there (translated). */
   title: (n: number) => string;
-  /** What to do (translated). `right`: the name of the player on the lander's right (if known). */
+  /**
+   * What to do (translated). `n`: the field's setting; for a bridge back or tunnel, the field it
+   * leads to (-1: not known). `right`: the name of the player on the lander's right (if known).
+   */
   text: (n: number, right: string) => string;
   /** An Ace up the sleeve skips it. */
   ace?: boolean;
@@ -99,7 +102,6 @@ const C = {
 };
 
 const evenOdd: FieldParam = { values: [0, 1], def: 0, label: (n) => (n ? t('Odd') : t('Even')) };
-const back: FieldParam = { values: [3, 4, 5, 6, 7, 8, 10, 12], def: 6, label: (n) => t('{n} back', { n }) };
 
 export const FIELDS: Record<FieldKind, FieldInfo> = {
   start: {
@@ -306,14 +308,13 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   'back-bridge': {
-    emoji: '↩️',
+    emoji: '🌉',
     color: C.wood,
     group: 'move',
-    label: (n) => t('{n} back', { n }),
+    label: () => t('Bridge back'),
     title: () => t('Bridge back'),
-    text: (n) => t('Over this bridge you go, {n} fields back.', { n }),
+    text: (n) => (n >= 0 ? t('Over the bridge you go, back to field {n}.', { n }) : t('Over the bridge you go, back to the field across the water.')),
     ace: true,
-    param: back,
   },
   choose: {
     emoji: '🍀',
@@ -456,11 +457,10 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     emoji: '🕳️',
     color: C.brown,
     group: 'move',
-    label: (n) => t('Mole · {n} back', { n }),
+    label: () => t('Mole'),
     title: () => t('Mole'),
-    text: (n) => t('The mole dug a tunnel: through it you go, {n} fields back.', { n }),
+    text: (n) => (n >= 0 ? t('The mole dug a tunnel: through it you go, back to field {n}.', { n }) : t('The mole dug a tunnel: through it you go, a few rows back.')),
     ace: true,
-    param: back,
   },
   mate: {
     emoji: '🤝',

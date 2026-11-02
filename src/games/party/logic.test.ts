@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { BOARDS, layout } from './boards';
+import { BOARDS, jumps, jumpTarget, layout } from './boards';
 import { field, FIELDS, KINDS, type Field } from './fields';
-import { duel, inTurnOrder, jumpTarget, keepsUp, leaders, newGame, nextTurn, reverse, rightOf, swapSeats, trailers, walk, walkBack } from './logic';
+import { duel, inTurnOrder, keepsUp, leaders, newGame, nextTurn, reverse, rightOf, swapSeats, trailers, walk, walkBack } from './logic';
 
 const plain = (n: number): Field[] => Array.from({ length: n }, (_, i) => field(i === 0 ? 'start' : i === n - 1 ? 'goal' : 'safe'));
 
@@ -34,11 +34,26 @@ describe('boards', () => {
     expect(KINDS.filter((k) => !used.has(k))).toEqual([]);
   });
 
-  it('only send back as far as the start', () => {
-    for (const b of BOARDS)
+  it('have somewhere to go from every bridge back and tunnel', () => {
+    for (const b of BOARDS) {
+      const to = jumps(b.fields, b.cols);
       b.fields.forEach((f, i) => {
-        if (f.kind === 'back-bridge' || f.kind === 'mole') expect(jumpTarget(b.fields, i)).toBeGreaterThanOrEqual(0);
+        if (f.kind === 'back-bridge' || f.kind === 'mole') expect(to[i]).toBeLessThan(i);
       });
+    }
+  });
+
+  it('cross a bridge back to the field across the water, and tunnel straight back a few rows', () => {
+    const spots = layout(48, 5);
+    // Field 21 lies at x 1 in the fourth row; across the water from it, field 13.
+    expect(jumpTarget(spots, 21, 'back-bridge')).toBe(13);
+    // Not from the first row, nor from a field between two rows (a field, not water, lies before it).
+    expect(jumpTarget(spots, 3, 'back-bridge')).toBeNull();
+    expect(jumpTarget(spots, 11, 'back-bridge')).toBeNull();
+    // Nor where the field between two rows lies in the way.
+    expect(jumpTarget(spots, 6, 'back-bridge')).toBeNull();
+    expect(jumpTarget(spots, 27, 'mole')).toBe(15);
+    expect(jumpTarget(spots, 8, 'mole')).toBe(2);
   });
 
   it('give every field a label and a text in English', () => {

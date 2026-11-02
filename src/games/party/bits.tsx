@@ -35,21 +35,71 @@ export function Die({ value, rolling, big }: { value: number | null; rolling?: b
   );
 }
 
-/** Roll a die: tumbles a moment, then lands. Resolves with the number. */
+/** Roll a die: tumbles a moment, then lands. Resolves with the number. `flip` counts the rolls. */
 export function useRoll() {
-  const [die, setDie] = useState<{ value: number | null; rolling: boolean }>({ value: null, rolling: false });
+  const [die, setDie] = useState<{ value: number | null; rolling: boolean; flip: number }>({ value: null, rolling: false, flip: 0 });
   const roll = (value = 1 + Math.floor(Math.random() * 6)) =>
     new Promise<number>((done) => {
       sfx.tick();
-      setDie({ value, rolling: true });
+      setDie((d) => ({ value, rolling: true, flip: d.flip + 1 }));
       window.setTimeout(() => {
-        setDie({ value, rolling: false });
+        setDie((d) => ({ ...d, value, rolling: false }));
         buzz(20);
         sfx.pop();
         window.setTimeout(() => done(value), 350);
       }, 750);
     });
-  return { die, roll, reset: () => setDie({ value: null, rolling: false }) };
+  return { die, roll };
+}
+
+/** Which face shows which number, and how the cube turns to put a number in front. */
+const CUBE: { face: string; n: number; turn: [number, number] }[] = [
+  { face: 'front', n: 1, turn: [0, 0] },
+  { face: 'back', n: 6, turn: [0, 180] },
+  { face: 'right', n: 3, turn: [0, -90] },
+  { face: 'left', n: 4, turn: [0, 90] },
+  { face: 'top', n: 2, turn: [-90, 0] },
+  { face: 'bottom', n: 5, turn: [90, 0] },
+];
+
+/** The big die in the middle of the board: thrown in, tumbling, and landing on the number. */
+export function BigDie({ value, flip }: { value: number | null; flip: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !value || !flip) return;
+    setShown(true);
+    const [rx, ry] = CUBE.find((c) => c.n === value)!.turn;
+    const tilt = 'rotateX(-20deg) rotateY(25deg)';
+    const a = el.animate(
+      [
+        { transform: `translateY(170px) ${tilt} rotateX(0deg) rotateY(0deg) scale(0.45)` },
+        { transform: `translateY(-50px) ${tilt} rotateX(${rx / 2 + 400}deg) rotateY(${ry / 2 + 520}deg) scale(1.05)`, offset: 0.55 },
+        { transform: `translateY(8px) ${tilt} rotateX(${rx + 720}deg) rotateY(${ry + 1080}deg) scale(1)`, offset: 0.85 },
+        { transform: `translateY(0) ${tilt} rotateX(${rx + 720}deg) rotateY(${ry + 1080}deg) scale(1)` },
+      ],
+      { duration: 820, easing: 'cubic-bezier(0.25, 0.7, 0.35, 1)', fill: 'forwards' },
+    );
+    const hide = window.setTimeout(() => setShown(false), 1900);
+    return () => {
+      window.clearTimeout(hide);
+      a.cancel();
+    };
+  }, [flip, value]);
+  return (
+    <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
+      <span ref={ref} className="pt-cube">
+        {CUBE.map((c) => (
+          <span key={c.face} className={`pt-cube-face ${c.face}`}>
+            {Array.from({ length: 9 }, (_, i) => (
+              <span key={i} className={`pt-pip${PIPS[c.n].includes(i) ? ' on' : ''}`} />
+            ))}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
 }
 
 /** A pawn's picture. */

@@ -7,11 +7,11 @@ import { getLang, t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useTurnBubble } from '../../lib/turn';
 import type { Player } from '../../state/AppState';
-import { Die, PawnIcon, useRoll } from './bits';
-import type { Board } from './boards';
+import { BigDie, Die, PawnIcon, useRoll } from './bits';
+import { jumps, type Board } from './boards';
 import FieldCard, { type Outcome } from './FieldCard';
 import { FIELDS, param, type Field } from './fields';
-import { current, finish, jumpTarget, newGame, nextTurn, setPawn, walk, walkBack, type Game } from './logic';
+import { current, finish, newGame, nextTurn, setPawn, walk, walkBack, type Game } from './logic';
 import type { PawnDef } from './pawns';
 import { Scene } from './scene';
 
@@ -39,7 +39,8 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     setG(x);
   };
   const [phase, setPhase] = useState<Phase>({ kind: 'turn' });
-  const [overview, setOverview] = useState(false);
+  // The camera's off the pawn: moved by a finger, or showing the whole board.
+  const [away, setAway] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
   const { die, roll } = useRoll();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -50,6 +51,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   const me = byId(current(g));
   const pawn = g.pawns[me.id];
   const last = finish(g);
+  const targets = useMemo(() => jumps(board.fields, board.cols), [board]);
   useTurnBubble(phase.kind === 'over' ? null : me);
 
   // The board's scene: made once, told about the board in the current language.
@@ -58,6 +60,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     const c = canvas.current;
     if (!c) return;
     const s = new Scene(c);
+    s.onAway = setAway;
     scene.current = s;
     const ro = new ResizeObserver(() => s.resize());
     ro.observe(c);
@@ -127,7 +130,6 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     const x = gRef.current;
     const id = current(x);
     const p = x.pawns[id];
-    setOverview(false);
     scene.current?.follow(id);
     setPhase({ kind: 'busy' });
     const v = await roll();
@@ -165,8 +167,8 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     commit(x);
     if (o.then === 'travel' && !o.ace) {
       setPhase({ kind: 'busy' });
-      const to = jumpTarget(x.fields, pos);
-      await scene.current?.travel(id, pos, to, f.kind === 'mole');
+      const to = targets[pos] ?? pos;
+      await scene.current?.travel(id, to, f.kind === 'mole');
       commit(setPawn(gRef.current, id, { pos: to }));
       return next();
     }
@@ -223,7 +225,11 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   }
 
   const need = pawn.gate ? (param(g.fields[pawn.pos]) ? t('Roll a 1 or 2') : t('Roll a 5 or 6')) : null;
-  let status = t('Field {n} of {total}', { n: pawn.pos, total: last });
+  const here = g.fields[pawn.pos];
+  let status =
+    pawn.pos === 0
+      ? t('At the start · {total} fields to go', { total: last })
+      : t('Field {n} of {total} · {field}', { n: pawn.pos, total: last, field: `${FIELDS[here.kind].emoji} ${FIELDS[here.kind].title(param(here))}` });
   if (pawn.jailed) status = t('In prison: only a 6 gets you out');
   else if (pawn.gate) status = param(g.fields[pawn.pos]) ? t('At the bridge: a 1 or 2 gets you over') : t('At the bridge: a 5 or 6 gets you over');
 
@@ -239,19 +245,33 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          className={`round-btn pt-view-btn${overview ? ' on' : ''}`}
-          aria-label={overview ? t('Back to the pawn') : t('Whole board')}
-          onClick={() => {
-            sfx.tick();
-            scene.current?.setOverview(!overview);
-            setOverview(!overview);
-          }}
-        >
-          {overview ? '🎯' : '🗺️'}
-        </button>
+        {away ? (
+          <button
+            type="button"
+            className="pt-back-btn pop-in"
+            onClick={() => {
+              sfx.tick();
+              scene.current?.follow(current(gRef.current));
+            }}
+          >
+            🎯 {t('Back to the pawn')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="round-btn pt-view-btn"
+            aria-label={t('Whole board')}
+            onClick={() => {
+              sfx.tick();
+              scene.current?.showAll();
+            }}
+          >
+            🗺️
+          </button>
+        )}
       </div>
+
+      <BigDie value={die.value} flip={die.flip} />
 
       <div ref={panel} className="pt-panel">
         {phase.kind === 'field' ? (
@@ -261,6 +281,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
             chosen={!!phase.chosen}
             pos={phase.pos}
             g={g}
+            target={targets[phase.pos]}
             players={players}
             lander={me}
             onDone={(o) => resolve(o, phase.pos, phase.chosen ?? phase.field)}

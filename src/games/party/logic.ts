@@ -1,4 +1,4 @@
-import { param, type Field } from './fields';
+import type { Field } from './fields';
 
 /** A player's pawn on the board. */
 export interface Pawn {
@@ -71,9 +71,6 @@ export function walkBack(from: number, steps: number): number[] {
   for (let pos = from - 1; pos >= Math.max(0, from - steps); pos--) out.push(pos);
   return out;
 }
-
-/** Where a bridge back or the mole's tunnel takes you. */
-export const jumpTarget = (fields: Field[], pos: number) => Math.max(0, pos - param(fields[pos]));
 
 export function setPawn(g: Game, id: string, pawn: Partial<Pawn>): Game {
   return { ...g, pawns: { ...g.pawns, [id]: { ...g.pawns[id], ...pawn } } };

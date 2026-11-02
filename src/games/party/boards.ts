@@ -36,6 +36,43 @@ export function layout(count: number, cols: number): Spot[] {
   return out;
 }
 
+/**
+ * Where a bridge back or the mole's tunnel on field `i` takes you, or null if there's nowhere to go
+ * from there. A bridge crosses the water to the field right across it in the row before (with
+ * nothing but water between them); the tunnel goes under the board to the field straight back
+ * a few rows (the nearest at least three rows back, else two).
+ */
+export function jumpTarget(spots: Spot[], i: number, kind: FieldKind): number | null {
+  const s = spots[i];
+  if (!s) return null;
+  const at = (x: number, y: number) => spots.findIndex((p) => p.x === x && p.y === y);
+  if (kind === 'back-bridge') {
+    if (s.link || at(s.x, s.y - 1) >= 0) return null;
+    const j = at(s.x, s.y - 2);
+    return j >= 0 ? j : null;
+  }
+  if (kind === 'mole') {
+    for (let y = s.y - 3; y >= 0; y--) {
+      const j = at(s.x, y);
+      if (j >= 0) return j;
+    }
+    const j = at(s.x, s.y - 2);
+    return j >= 0 && j < i - 1 ? j : null;
+  }
+  return null;
+}
+
+/** Every bridge back and tunnel on a board: field → where it takes you. */
+export function jumps(fields: Field[], cols: number): Record<number, number> {
+  const spots = layout(fields.length, cols);
+  const out: Record<number, number> = {};
+  fields.forEach((f, i) => {
+    const to = jumpTarget(spots, i, f.kind);
+    if (to != null) out[i] = to;
+  });
+  return out;
+}
+
 export type ThemeId = 'west' | 'beach' | 'classic';
 
 export interface Theme {
@@ -77,8 +114,8 @@ export const BOARDS: Board[] = [
       F('start'), F('shots', 1), F('shots', 2), F('rule'), F('ex'), F('bridge', 0),
       F('give', 2), F('rps'), F('ace'), F('clock', 0), F('waterfall'), F('safe'),
       F('twins'), F('mystery'), F('leader'), F('snus'), F('seats'), F('bridge', 1),
-      F('chance'), F('reverse'), F('double'), F('back-bridge', 6), F('choose'), F('tschick'),
-      F('three-six-nine'), F('age', 1), F('duel'), F('mole', 7), F('silence'), F('roll-again'),
+      F('chance'), F('reverse'), F('double'), F('back-bridge'), F('choose'), F('tschick'),
+      F('three-six-nine'), F('age', 1), F('duel'), F('mole'), F('silence'), F('roll-again'),
       F('shop'), F('prison'), F('cheek'), F('toilet'), F('give', 5), F('shots', 3),
       F('snail'), F('roll-back'), F('girls'), F('boys'), F('swap-drink'), F('mate'),
       F('hands'), F('clock', 1), F('age', 0), F('ex'), F('tschick'), F('goal'),
@@ -92,8 +129,8 @@ export const BOARDS: Board[] = [
     fields: [
       F('start'), F('shots', 1), F('shots', 2), F('give', 2), F('rule'), F('ex'),
       F('boys'), F('mate'), F('waterfall'), F('swap-drink'), F('choose'), F('bridge', 1),
-      F('girls'), F('chance'), F('tschick'), F('leader'), F('safe'), F('mole', 6),
-      F('snus'), F('shots', 3), F('three-six-nine'), F('twins'), F('ace'), F('back-bridge', 5),
+      F('girls'), F('chance'), F('tschick'), F('leader'), F('mole'), F('safe'),
+      F('snus'), F('shots', 3), F('three-six-nine'), F('twins'), F('back-bridge'), F('ace'),
       F('mystery'), F('hands'), F('silence'), F('duel'), F('roll-again'), F('prison'),
       F('shop'), F('clock', 1), F('seats'), F('give', 5), F('snail'), F('bridge', 0),
       F('double'), F('toilet'), F('cheek'), F('roll-back'), F('shots', 2), F('goal'),
@@ -107,7 +144,7 @@ export const BOARDS: Board[] = [
     fields: [
       F('start'), F('give', 2), F('rps'), F('shots', 1), F('safe'),
       F('toilet'), F('clock', 0), F('ace'), F('girls'), F('roll-again'),
-      F('boys'), F('rule'), F('age', 0), F('snail'), F('back-bridge', 4),
+      F('boys'), F('rule'), F('age', 0), F('back-bridge'), F('snail'),
       F('mate'), F('leader'), F('waterfall'), F('three-six-nine'), F('prison'),
       F('give', 5), F('reverse'), F('ex'), F('hands'), F('bridge', 0),
       F('shots', 2), F('duel'), F('silence'), F('roll-back'), F('safe'),
@@ -131,10 +168,14 @@ interface Stored {
 function fromStored(s: Stored): Board | null {
   const base = BOARDS.find((b) => b.id === s.base);
   if (!base || typeof s.id !== 'string' || !Array.isArray(s.fields) || s.fields.length !== base.fields.length) return null;
+  const spots = layout(base.fields.length, base.cols);
   const fields = s.fields.map((f, i) => {
     if (i === 0) return field('start');
     if (i === base.fields.length - 1) return field('goal');
-    return f && f.kind in FIELDS && f.kind !== 'start' && f.kind !== 'goal' ? field(f.kind, f.n) : field('safe');
+    if (!f || !(f.kind in FIELDS) || f.kind === 'start' || f.kind === 'goal') return field('safe');
+    // A bridge back or a tunnel where there's nowhere to go (boards saved before they had to lead somewhere).
+    if ((f.kind === 'back-bridge' || f.kind === 'mole') && jumpTarget(spots, i, f.kind) == null) return field('safe');
+    return field(f.kind, f.n);
   });
   return { id: s.id, name: String(s.name || '').slice(0, 40), theme: base.theme, cols: base.cols, fields, custom: true, base: base.id };
 }

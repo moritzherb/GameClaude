@@ -3,7 +3,7 @@ import BigButton from '../../components/BigButton';
 import Sheet from '../../components/Sheet';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
-import { layout, type Board } from './boards';
+import { jumpTarget, layout, type Board } from './boards';
 import { field, FIELDS, GROUPS, KINDS, param, type Field } from './fields';
 
 interface Props {
@@ -123,21 +123,34 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
             {GROUPS.map((group) => (
               <div key={group.id} className="pt-kind-group">
                 <span className="pt-kind-group-title">{t(group.label)}</span>
-                {KINDS.filter((k) => FIELDS[k].group === group.id).map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    className={`pt-kind${f.kind === k ? ' on' : ''}`}
-                    style={{ '--field': FIELDS[k].color } as CSSProperties}
-                    onClick={() => set(editing, field(k, f.kind === k ? f.n : undefined))}
-                  >
-                    <span className="pt-kind-emoji">{FIELDS[k].emoji}</span>
-                    <span className="pt-kind-text">
-                      <span className="pt-kind-title">{FIELDS[k].title(FIELDS[k].param?.def ?? 0)}</span>
-                      <span className="pt-kind-sub">{FIELDS[k].text(FIELDS[k].param?.def ?? 0, '')}</span>
-                    </span>
-                  </button>
-                ))}
+                {KINDS.filter((k) => FIELDS[k].group === group.id).map((k) => {
+                  // A bridge back or a tunnel has to lead somewhere from here.
+                  const jump = k === 'back-bridge' || k === 'mole';
+                  const to = jump ? jumpTarget(spots, editing, k) : null;
+                  const sub = !jump
+                    ? FIELDS[k].text(FIELDS[k].param?.def ?? 0, '')
+                    : to != null
+                      ? t('Back to field {n}', { n: to })
+                      : k === 'mole'
+                        ? t('Not here: there’s no field for a tunnel to lead to.')
+                        : t('Not here: there’s no field across the water.');
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      className={`pt-kind${f.kind === k ? ' on' : ''}`}
+                      style={{ '--field': FIELDS[k].color } as CSSProperties}
+                      disabled={jump && to == null}
+                      onClick={() => set(editing, field(k, f.kind === k ? f.n : undefined))}
+                    >
+                      <span className="pt-kind-emoji">{FIELDS[k].emoji}</span>
+                      <span className="pt-kind-text">
+                        <span className="pt-kind-title">{FIELDS[k].title(FIELDS[k].param?.def ?? 0)}</span>
+                        <span className="pt-kind-sub">{sub}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             ))}
           </div>
