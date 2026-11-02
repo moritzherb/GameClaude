@@ -10,6 +10,7 @@ import kingsCup from './kings-cup';
 import klatschen from './klatschen';
 import maexchen from './maexchen';
 import palace from './palace';
+import party from './party';
 import princessTreatment from './princess-treatment';
 import schweinerei from './schweinerei';
 import speed from './speed';
@@ -18,7 +19,7 @@ import trash from './trash';
 import whoDrinks from './who-drinks';
 
 /** Every game in the app. New games get imported and added here. */
-export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, klatschen, fuckTheDealer, fiveThousand, maexchen, schweinerei, speed, palace, president, arschloch, horseRace, trash, whoDrinks, princessTreatment, tenBut];
+export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, klatschen, fuckTheDealer, fiveThousand, maexchen, schweinerei, speed, palace, president, arschloch, horseRace, trash, whoDrinks, princessTreatment, tenBut, party];
 
 export function findGame(id: string | undefined) {
   return GAMES.find((g) => g.id === id);
