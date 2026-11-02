@@ -1,4 +1,4 @@
-import { jumps, layout, THEMES, type Board, type Spot, type Theme } from './boards';
+import { cellKey, jumps, THEMES, type Board, type Cell, type Theme } from './boards';
 import { FIELDS } from './fields';
 import { EMOJI_FONT, pawnSprite, shade, SPRITE_H, type PawnDef } from './pawns';
 
@@ -38,6 +38,10 @@ const SLOTS = [
 const FOLLOW_DIST = 7.5;
 /** How close it zooms in on the pawn: the fields round it big enough to read at a glance. */
 const ZOOM = 1.45;
+/** A board this many fields wide fills the screen's width (at the zoom above, a little less). */
+const SCREEN_COLS = 5.6;
+/** Round the map, the board reaches this far beyond its cells. */
+const MARGIN = 0.25;
 const FOLLOW_TILT = 1.0;
 const MIN_DIST = 4.6;
 /** The camera looks this far ahead of the pawn, so you see where it's going. */
@@ -142,16 +146,18 @@ export class Scene {
   private h = 0;
   private insetTop = 0;
   private insetBottom = 0;
-  private spots: Spot[] = [];
+  private spots: Cell[] = [];
   private board: Board | null = null;
-  private theme: Theme = THEMES.west;
+  private theme: Theme = THEMES.classic;
   private labels: string[] = [];
   private textures: HTMLCanvasElement[] = [];
   private decor: { x: number; y: number; emoji: string; size: number }[] = [];
-  /** Water: rivers right across the board, and patches under a bridge. */
-  private rivers: number[] = [];
-  private water: { x0: number; y0: number; x1: number; y1: number }[] = [];
-  private links: { from: number; to: number; tunnel: boolean }[] = [];
+  /** Cells with water, and with the mole's tunnels; bridges back (field to field, over water). */
+  private water = new Set<string>();
+  private tunnels = new Set<string>();
+  private bridges: { from: number; to: number }[] = [];
+  /** Fields a tunnel leads from or to: the tunnel runs right up to them. */
+  private tunnelEnds = new Set<string>();
   private pawns: PawnView[] = [];
   private current: string | null = null;
   /** Where each pawn is drawn right now: it glides to its place on a field. */
@@ -226,21 +232,19 @@ export class Scene {
   setBoard(board: Board, labels: string[]) {
     this.board = board;
     this.theme = THEMES[board.theme];
-    this.spots = layout(board.fields.length, board.cols);
+    this.spots = board.spots;
     this.labels = labels;
-    const fields = board.fields;
-    // A bridge between two rows crosses a river right across the board; one within a row, a stream.
-    this.rivers = this.spots.filter((s, i) => s.link && fields[i].kind === 'bridge').map((s) => s.y);
-    this.water = [];
-    this.spots.forEach((s, i) => {
-      if (fields[i].kind === 'bridge' && !s.link) this.water.push({ x0: s.x - 0.42, x1: s.x + 0.42, y0: s.y - 1.05, y1: s.y + 1.05 });
-    });
-    this.links = Object.entries(jumps(fields, board.cols)).map(([from, to]) => ({ from: +from, to, tunnel: fields[+from].kind === 'mole' }));
-    // Under a bridge back: the water between the two fields.
-    for (const l of this.links) {
-      if (l.tunnel) continue;
-      const s = this.spots[l.from];
-      this.water.push({ x0: s.x - 0.56, x1: s.x + 0.56, y0: s.y - 1.6, y1: s.y - 0.4 });
+    this.water = new Set(board.water.map(cellKey));
+    this.tunnels = new Set(board.tunnels.map(cellKey));
+    const to = jumps(board);
+    this.bridges = Object.entries(to)
+      .filter(([from]) => board.fields[+from].kind === 'back-bridge')
+      .map(([from, j]) => ({ from: +from, to: j }));
+    this.tunnelEnds = new Set();
+    for (const [from, j] of Object.entries(to)) {
+      if (board.fields[+from].kind !== 'mole') continue;
+      this.tunnelEnds.add(cellKey(board.spots[+from]));
+      this.tunnelEnds.add(cellKey(board.spots[j]));
     }
     this.placeDecor();
     this.buildTextures();
@@ -384,18 +388,15 @@ export class Scene {
   }
 
   private placeDecor() {
-    const taken = new Set(this.spots.map((s) => `${s.x},${s.y}`));
-    const wet = (x: number, y: number) => this.rivers.includes(y) || this.water.some((w) => x > w.x0 - 0.2 && x < w.x1 + 0.2 && y > w.y0 - 0.2 && y < w.y1 + 0.2);
-    const top = this.spots[this.spots.length - 1]?.y ?? 0;
-    const cols = this.board?.cols ?? 5;
+    const b = this.board!;
+    const taken = new Set([...this.spots.map(cellKey), ...this.water, ...this.tunnels]);
     this.decor = [];
-    let seed = this.board!.id.split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
+    let seed = b.id.split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
     const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) % 10000) / 10000;
-    for (let y = 1; y <= top; y += 2) {
-      for (let x = 0; x < cols; x++) {
-        if (taken.has(`${x},${y}`) || rnd() < 0.35) continue;
-        const d = { x: x + (rnd() - 0.5) * 0.4, y: y + (rnd() - 0.5) * 0.3, emoji: this.theme.decor[Math.floor(rnd() * this.theme.decor.length)], size: 0.3 + rnd() * 0.12 };
-        if (!wet(d.x, d.y)) this.decor.push(d);
+    for (let y = 0; y < b.rows; y++) {
+      for (let x = 0; x < b.cols; x++) {
+        if (taken.has(cellKey({ x, y })) || rnd() < 0.72) continue;
+        this.decor.push({ x: x + (rnd() - 0.5) * 0.4, y: y + (rnd() - 0.5) * 0.3, emoji: this.theme.decor[Math.floor(rnd() * this.theme.decor.length)], size: 0.3 + rnd() * 0.12 });
       }
     }
   }
@@ -449,24 +450,22 @@ export class Scene {
     this.takeOver();
     const F = this.focal();
     const c = this.cam;
-    const top = this.spots[this.spots.length - 1]?.y ?? 0;
     c.x = Math.max(-1, Math.min(this.board.cols, c.x - (dx * c.dist) / F));
-    c.y = Math.max(-1, Math.min(top + 1, c.y + (dy * c.dist) / (F * Math.cos(c.tilt))));
+    c.y = Math.max(-1, Math.min(this.board.rows, c.y + (dy * c.dist) / (F * Math.cos(c.tilt))));
     this.invalidate();
   }
 
   private zoom(f: number) {
     if (!this.board) return;
     this.takeOver();
-    const top = this.spots[this.spots.length - 1]?.y ?? 0;
-    this.cam.dist = Math.max(MIN_DIST, Math.min(Math.max(20, top * 2.2), this.cam.dist * f));
+    this.cam.dist = Math.max(MIN_DIST, Math.min(Math.max(20, this.board.rows * 2.2), this.cam.dist * f));
     this.invalidate();
   }
 
   /* ---------- The camera ---------- */
 
   private focal() {
-    return ((FOLLOW_DIST * this.w) / ((this.board?.cols ?? 5) + 0.6)) * ZOOM;
+    return ((FOLLOW_DIST * this.w) / SCREEN_COLS) * ZOOM;
   }
 
   /** How a camera shows the board: world point (and height above the board) to the screen. */
@@ -486,17 +485,24 @@ export class Scene {
     return { sin, cos, F, cx, cy, project };
   }
 
+  /** The board's edges, round its cells. */
+  private mat() {
+    const b = this.board!;
+    return { x0: -0.5 - MARGIN, x1: b.cols - 0.5 + MARGIN, y0: -0.5 - MARGIN - 0.5, y1: b.rows - 0.5 + MARGIN };
+  }
+
   /** The camera that shows the whole board in the room between what lies over the canvas. */
   private fitAll(): Cam {
     if (!this.board || !this.w) return this.cam;
     const tilt = 0.55;
-    const top = this.spots[this.spots.length - 1]?.y ?? 0;
+    const top = this.board.rows;
     const x = (this.board.cols - 1) / 2;
+    const m = this.mat();
     const corners: Point[] = [
-      { x: -0.95, y: -1.1 },
-      { x: this.board.cols - 0.05, y: -1.1 },
-      { x: this.board.cols - 0.05, y: top + 1 },
-      { x: -0.95, y: top + 1 },
+      { x: m.x0, y: m.y0 },
+      { x: m.x1, y: m.y0 },
+      { x: m.x1, y: m.y1 },
+      { x: m.x0, y: m.y1 },
     ];
     const roomTop = this.insetTop + 8;
     const roomBottom = this.h - this.insetBottom - 8;
@@ -575,7 +581,10 @@ export class Scene {
       ctx.fill();
     } else if (f.kind === 'bridge') {
       // Planks across the way over, rails along it.
-      const across = this.spots[i]?.link;
+      // Planks across the way over: the way runs up the board when the fields before and after lie above or below.
+      const here = this.spots[i];
+      const near = [this.spots[i - 1], this.spots[i + 1]].filter(Boolean);
+      const across = !!here && near.some((n) => n.x === here.x);
       ctx.strokeStyle = shade(info.color, -0.35);
       ctx.lineWidth = 3;
       for (let k = m + 16; k < TEX; k += 22) {
@@ -754,12 +763,10 @@ export class Scene {
     ctx.fillRect(0, 0, w, h);
 
     // The board itself.
-    const top = this.spots[this.spots.length - 1]?.y ?? 0;
-    const x0 = -0.95;
-    const x1 = board.cols - 0.05;
-    if (poly([{ x: x0, y: -1.6 }, { x: x1, y: -1.6 }, { x: x1, y: top + 1 }, { x: x0, y: top + 1 }])) {
-      const near = project(0, Math.max(-1.6, nearY));
-      const far = project(0, top + 1);
+    const m = this.mat();
+    if (poly([{ x: m.x0, y: m.y0 }, { x: m.x1, y: m.y0 }, { x: m.x1, y: m.y1 }, { x: m.x0, y: m.y1 }])) {
+      const near = project(0, Math.max(m.y0, nearY));
+      const far = project(0, m.y1);
       const grad = ctx.createLinearGradient(0, near?.sy ?? h, 0, far?.sy ?? 0);
       grad.addColorStop(0, this.theme.near);
       grad.addColorStop(1, this.theme.far);
@@ -770,17 +777,47 @@ export class Scene {
       ctx.stroke();
     }
 
-    // Water: rivers right across, streams under a bridge field, the water under a bridge back.
-    const waves = (x0w: number, x1w: number, y0w: number, y1w: number) => {
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = 1.5;
-      const rows = Math.max(1, Math.round((y1w - y0w) / 0.3));
-      for (let k = 1; k <= rows; k++) {
-        const yy = y0w + ((y1w - y0w) * k) / (rows + 1);
-        let started = false;
+    // Water, cell by cell: neighbouring cells run into one another, round corners where it ends.
+    const wet = [...this.water].map((k) => k.split(',').map(Number) as [number, number]).filter(([, y]) => y + 0.6 >= nearY);
+    const isWet = (x: number, y: number) => this.water.has(`${x},${y}`);
+    const pond = (x: number, y: number, grow: number) => {
+      const r = 0.34;
+      const pts: Point[] = [];
+      // Corners in turn (near left, near right, far right, far left), rounded where nothing wet meets them.
+      const corners = [
+        { cx: -1, cy: -1, a: Math.PI },
+        { cx: 1, cy: -1, a: Math.PI * 1.5 },
+        { cx: 1, cy: 1, a: 0 },
+        { cx: -1, cy: 1, a: Math.PI / 2 },
+      ];
+      for (const c of corners) {
+        const px = x + c.cx * (0.5 + grow);
+        const py = y + c.cy * (0.5 + grow);
+        if (!isWet(x + c.cx, y) && !isWet(x, y + c.cy)) {
+          for (let k = 0; k <= 3; k++) {
+            const ang = c.a + (k / 3) * (Math.PI / 2);
+            pts.push({ x: px - c.cx * r + Math.cos(ang) * r, y: py - c.cy * r + Math.sin(ang) * r });
+          }
+        } else pts.push({ x: px, y: py });
+      }
+      return poly(pts);
+    };
+    ctx.fillStyle = shade(this.theme.water, -0.25);
+    for (const [x, y] of wet) if (pond(x, y, 0.06)) ctx.fill();
+    ctx.fillStyle = this.theme.water;
+    for (const [x, y] of wet) if (pond(x, y, 0.004)) ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1.5;
+    for (const [x, y] of wet) {
+      // Waves along the way the water runs.
+      const along = isWet(x, y - 1) || isWet(x, y + 1) ? !(isWet(x - 1, y) || isWet(x + 1, y)) : false;
+      for (const k of [-0.2, 0.18]) {
         ctx.beginPath();
-        for (let x = x0w + 0.08; x <= x1w - 0.05; x += 0.12) {
-          const p = project(x, Math.max(nearY, yy + Math.sin(x * 5 + k * 2) * 0.04));
+        let started = false;
+        for (let t = -0.4; t <= 0.41; t += 0.1) {
+          const wx = along ? x + k + Math.sin((y + t) * 6) * 0.04 : x + t;
+          const wy = along ? y + t : y + k + Math.sin((x + t) * 6) * 0.04;
+          const p = project(wx, Math.max(nearY, wy));
           if (!p) continue;
           if (started) ctx.lineTo(p.sx, p.sy);
           else ctx.moveTo(p.sx, p.sy);
@@ -788,27 +825,10 @@ export class Scene {
         }
         ctx.stroke();
       }
-    };
-    for (const ry of this.rivers) {
-      if (ry + 0.5 < nearY) continue;
-      if (!poly([{ x: x0, y: ry - 0.48 }, { x: x1, y: ry - 0.48 }, { x: x1, y: ry + 0.48 }, { x: x0, y: ry + 0.48 }])) continue;
-      ctx.fillStyle = this.theme.river;
-      ctx.fill();
-      waves(x0, x1, ry - 0.4, ry + 0.4);
-    }
-    for (const wt of this.water) {
-      if (wt.y1 < nearY) continue;
-      if (!poly([{ x: wt.x0, y: wt.y0 }, { x: wt.x1, y: wt.y0 }, { x: wt.x1, y: wt.y1 }, { x: wt.x0, y: wt.y1 }])) continue;
-      ctx.fillStyle = this.theme.river;
-      ctx.fill();
-      ctx.strokeStyle = shade(this.theme.river, -0.3);
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      waves(wt.x0, wt.x1, wt.y0, wt.y1);
     }
 
-    // The mole's tunnels run under the board: only the bits between fields show.
-    for (const l of this.links) if (l.tunnel) this.drawTunnel(l, project);
+    // The mole's tunnels: a trail of dug-up earth from cell to cell (round corners too), right up to the fields it joins.
+    this.drawTunnels(project, nearY);
 
     // Fields, the far ones first: a little block each, the picture on top.
     const order = this.spots.map((_, i) => i).sort((a, b) => this.spots[b].y - this.spots[a].y);
@@ -823,7 +843,7 @@ export class Scene {
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
     // Bridges back, over the water between two fields.
-    for (const l of this.links) if (!l.tunnel) this.drawBridge(l, project);
+    for (const l of this.bridges) this.drawBridge(l, project);
 
     // The field whoever is on stands on: a ring round it.
     const on = this.current ? this.pawns.find((p) => p.id === this.current) : null;
@@ -945,23 +965,26 @@ export class Scene {
     ctx.fillText(text, x, y - h / 2 + 1);
   }
 
-  /** A short wooden bridge from a field over the water to the field across it. */
+  /** A wooden bridge from a field straight over the water to the field across it. */
   private drawBridge(l: { from: number; to: number }, project: (x: number, y: number, up?: number) => Proj | null) {
     const { ctx } = this;
     const a = this.spot(l.from);
     const b = this.spot(l.to);
+    const dx = Math.sign(b.x - a.x);
+    const dy = Math.sign(b.y - a.y);
     const half = 0.17;
-    const ya = a.y - 0.36;
-    const yb = b.y + 0.36;
-    const n = 8;
+    const from = { x: a.x + dx * 0.36, y: a.y + dy * 0.36 };
+    const to = { x: b.x - dx * 0.36, y: b.y - dy * 0.36 };
+    const n = Math.max(4, Math.round(Math.hypot(to.x - from.x, to.y - from.y) * 5));
     const left: Proj[] = [];
     const right: Proj[] = [];
     for (let i = 0; i <= n; i++) {
-      const y = lerp(ya, yb, i / n);
+      const x = lerp(from.x, to.x, i / n);
+      const y = lerp(from.y, to.y, i / n);
       // A slight arch over the water.
       const up = SLAB + Math.sin((Math.PI * i) / n) * 0.12;
-      const pl = project(a.x - half, y, up);
-      const pr = project(a.x + half, y, up);
+      const pl = project(x - dy * half, y + dx * half, up);
+      const pr = project(x + dy * half, y - dx * half, up);
       if (!pl || !pr) return;
       left.push(pl);
       right.push(pr);
@@ -988,23 +1011,47 @@ export class Scene {
     }
   }
 
-  /** The mole's tunnel: dug-up earth between the fields, straight back under the board. */
-  private drawTunnel(l: { from: number; to: number }, project: (x: number, y: number, up?: number) => Proj | null) {
+  /** The mole's tunnels: from each tunnel cell, a band of earth towards each neighbour it joins. */
+  private drawTunnels(project: (x: number, y: number, up?: number) => Proj | null, nearY: number) {
     const { ctx } = this;
-    const a = this.spot(l.from);
-    const b = this.spot(l.to);
-    const pa = project(a.x, a.y);
-    const pb = project(b.x, b.y);
-    if (!pa || !pb) return;
-    ctx.setLineDash([Math.max(3, pa.s * 0.06), Math.max(3, pa.s * 0.05)]);
+    const dirs = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ];
     ctx.lineCap = 'round';
-    ctx.lineWidth = Math.max(2, ((pa.s + pb.s) / 2) * 0.09);
-    ctx.strokeStyle = 'rgba(92,60,34,0.8)';
-    ctx.beginPath();
-    ctx.moveTo(pa.sx, pa.sy);
-    ctx.lineTo(pb.sx, pb.sy);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    for (const k of this.tunnels) {
+      const [x, y] = k.split(',').map(Number);
+      if (y + 0.6 < nearY) continue;
+      const c = project(x, y);
+      if (!c) continue;
+      const ends: Proj[] = [];
+      for (const d of dirs) {
+        const n = `${x + d.x},${y + d.y}`;
+        const reach = this.tunnels.has(n) ? 0.5 : this.tunnelEnds.has(n) ? 0.62 : 0;
+        if (!reach) continue;
+        const p = project(x + d.x * reach, y + d.y * reach);
+        if (p) ends.push(p);
+      }
+      for (const [color, width] of [
+        ['#8a5a34', 0.3],
+        ['#5c3a1f', 0.12],
+      ] as const) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(2, c.s * width);
+        ctx.beginPath();
+        if (!ends.length) {
+          ctx.moveTo(c.sx - 0.5, c.sy);
+          ctx.lineTo(c.sx + 0.5, c.sy);
+        }
+        for (const e of ends) {
+          ctx.moveTo(c.sx, c.sy);
+          ctx.lineTo(e.sx, e.sy);
+        }
+        ctx.stroke();
+      }
+    }
     ctx.lineCap = 'butt';
   }
 }
