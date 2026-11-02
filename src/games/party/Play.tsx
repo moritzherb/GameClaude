@@ -51,7 +51,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   const me = byId(current(g));
   const pawn = g.pawns[me.id];
   const last = finish(g);
-  const targets = useMemo(() => jumps(board.fields, board.cols), [board]);
+  const targets = useMemo(() => jumps(board), [board]);
   useTurnBubble(phase.kind === 'over' ? null : me);
 
   // The board's scene: made once, told about the board in the current language.

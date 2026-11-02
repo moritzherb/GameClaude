@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOARDS, jumps, jumpTarget, layout } from './boards';
+import { BOARDS, fromStored, jumps, jumpTarget, layout, toStored, type Board } from './boards';
 import { field, FIELDS, KINDS, type Field } from './fields';
 import { duel, inTurnOrder, keepsUp, leaders, newGame, nextTurn, reverse, rightOf, swapSeats, trailers, walk, walkBack } from './logic';
 
@@ -36,24 +36,39 @@ describe('boards', () => {
 
   it('have somewhere to go from every bridge back and tunnel', () => {
     for (const b of BOARDS) {
-      const to = jumps(b.fields, b.cols);
+      const to = jumps(b);
       b.fields.forEach((f, i) => {
         if (f.kind === 'back-bridge' || f.kind === 'mole') expect(to[i]).toBeLessThan(i);
       });
     }
   });
 
-  it('cross a bridge back to the field across the water, and tunnel straight back a few rows', () => {
-    const spots = layout(48, 5);
-    // Field 21 lies at x 1 in the fourth row; across the water from it, field 13.
-    expect(jumpTarget(spots, 21, 'back-bridge')).toBe(13);
-    // Not from the first row, nor from a field between two rows (a field, not water, lies before it).
-    expect(jumpTarget(spots, 3, 'back-bridge')).toBeNull();
-    expect(jumpTarget(spots, 11, 'back-bridge')).toBeNull();
-    // Nor where the field between two rows lies in the way.
-    expect(jumpTarget(spots, 6, 'back-bridge')).toBeNull();
-    expect(jumpTarget(spots, 27, 'mole')).toBe(15);
-    expect(jumpTarget(spots, 8, 'mole')).toBe(2);
+  it('cross a bridge back over the water, and follow a tunnel round its corners', () => {
+    const board = BOARDS[0];
+    // Field 21: across the river from it, field 13.
+    expect(jumpTarget(board, 21, 'back-bridge')).toBe(13);
+    // Field 28: the tunnel runs down the side to field 16 (passing 17 and 18 on the way).
+    expect(jumpTarget(board, 28, 'mole')).toBe(16);
+    // No water next to it, no tunnel next to it: nowhere to go.
+    expect(jumpTarget(board, 26, 'back-bridge')).toBeNull();
+    expect(jumpTarget(board, 26, 'mole')).toBeNull();
+    // A tunnel that turns a corner.
+    const g = { spots: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }], water: [], tunnels: [{ x: 1, y: 2 }, { x: 0, y: 2 }, { x: 0, y: 1 }] };
+    expect(jumpTarget(g, 4, 'mole')).toBe(0);
+  });
+
+  it('save and load a board of your own, and drop a broken one', () => {
+    const own: Board = { ...BOARDS[0], id: 'own', name: 'Mine', custom: true };
+    const back = fromStored(JSON.parse(JSON.stringify(toStored(own))));
+    expect(back?.spots).toEqual(own.spots);
+    expect(back?.fields).toEqual(own.fields);
+    expect(back?.water).toEqual(own.water);
+    // A gap in the path.
+    const broken = toStored(own);
+    broken.path.splice(5, 1);
+    expect(fromStored(broken)).toBeNull();
+    // Saved the old way (only the fields of the board the game came with): still there.
+    expect(fromStored({ id: 'old', name: 'Old', base: 'west', fields: BOARDS[0].fields })?.spots).toEqual(BOARDS[0].spots);
   });
 
   it('give every field a label and a text in English', () => {

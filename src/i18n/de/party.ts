@@ -26,7 +26,6 @@ const party: Record<string, string> = {
   'Make your own from this board': 'Eigenes Brett daraus bauen',
   Pawns: 'Spielfiguren',
   '{name}’s pawn': 'Spielfigur von {name}',
-  'Wild West': 'Wilder Westen',
 
   // Pawns
   Pink: 'Pink',
@@ -118,9 +117,27 @@ const party: Record<string, string> = {
   // The board editor
   'My board': 'Mein Brett',
   Name: 'Name',
-  'Tap a field to put another one there. Start and finish stay where they are.': 'Tipp auf ein Feld, um ein anderes dort hinzusetzen. Start und Ziel bleiben, wo sie sind.',
-  'Save board': 'Brett speichern',
   'Delete board': 'Brett löschen',
+  Path: 'Weg',
+  Fields: 'Felder',
+  Water: 'Wasser',
+  Tunnel: 'Tunnel',
+  Erase: 'Radierer',
+  'Tap next to the end of the path to lay the next field; tap the last field to take it away.':
+    'Tipp neben das Ende des Wegs, um das nächste Feld zu legen; tipp aufs letzte Feld, um es wieder wegzunehmen.',
+  'Tap a field to put another kind there. Start and finish stay at the ends.': 'Tipp auf ein Feld, um dort eine andere Art hinzusetzen. Start und Ziel bleiben an den Enden.',
+  'Tap cells to put water there (or take it away). A field on water is a bridge over it.': 'Tipp auf Zellen, um dort Wasser hinzusetzen (oder wegzunehmen). Ein Feld auf Wasser ist eine Brücke darüber.',
+  'Tap cells beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.':
+    'Tipp auf Zellen neben dem Weg, um den Tunnel des Maulwurfs zu graben. Er führt vom Maulwurf-Feld zum hintersten Feld, das er erreicht.',
+  'Tap to take water and tunnel away, or the last field of the path.': 'Tipp, um Wasser und Tunnel wegzunehmen, oder das letzte Feld des Wegs.',
+  'At least {n} fields': 'Mindestens {n} Felder',
+  'Save board · {n} fields': 'Brett speichern · {n} Felder',
+  'Start the path over': 'Weg neu anfangen',
+  'Start the path over?': 'Weg neu anfangen?',
+  'The path and its fields go; water and tunnels stay.': 'Der Weg und seine Felder verschwinden, Wasser und Tunnel bleiben.',
+  'Not here yet: dig a tunnel next to this field (Tunnel tool).': 'Hier noch nicht: Grab einen Tunnel neben diesem Feld (Werkzeug Tunnel).',
+  'Not here yet: put water next to this field, with a field before it across the water.':
+    'Hier noch nicht: Setz Wasser neben dieses Feld, mit einem früheren Feld auf der anderen Seite.',
   'Field {n}': 'Feld {n}',
   'You drink': 'Du trinkst',
   'You give': 'Du verteilst',
@@ -238,8 +255,6 @@ const party: Record<string, string> = {
   'The mole dug a tunnel: through it you go, back to field {n}.': 'Der Maulwurf hat einen Tunnel gegraben: Durch den geht’s zurück auf Feld {n}.',
   'The mole dug a tunnel: through it you go, a few rows back.': 'Der Maulwurf hat einen Tunnel gegraben: Durch den geht’s ein paar Reihen zurück.',
   'Back to field {n}': 'Zurück auf Feld {n}',
-  'Not here: there’s no field across the water.': 'Hier nicht: Auf der anderen Seite des Wassers liegt kein Feld.',
-  'Not here: there’s no field for a tunnel to lead to.': 'Hier nicht: Hier gibt es kein Feld, zu dem ein Tunnel führen kann.',
   'Pick a drinking mate: whenever one of you drinks, the other drinks too.': 'Such dir einen Trinkpartner aus: Immer wenn einer von euch trinkt, trinkt der andere mit.',
   'Palm or back': 'Blatt-Blatt-Blatt',
   'Everyone hides a hand behind their back. On 3, 2, 1 it comes out, palm up or back of the hand up. The fewer drink 2.':

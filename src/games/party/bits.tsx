@@ -90,6 +90,10 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
   return (
     <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
       <span ref={ref} className="pt-cube">
+        {/* A solid core: through the faces' round edges you see die, not the board. */}
+        <span className="pt-cube-core" />
+        <span className="pt-cube-core x" />
+        <span className="pt-cube-core y" />
         {CUBE.map((c) => (
           <span key={c.face} className={`pt-cube-face ${c.face}`}>
             {Array.from({ length: 9 }, (_, i) => (

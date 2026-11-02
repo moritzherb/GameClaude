@@ -31,7 +31,7 @@ function pawnsFor(ids: string[]): Record<string, PawnDef> {
 /** Party: a board game. Pick a board and pawns, roll, move, and do what the field says. */
 export default function Party({ players, exit }: GameProps) {
   const [boards, setBoards] = useState(allBoards);
-  const [boardId, setBoardId] = useState(() => load<string>('party-board', 'west'));
+  const [boardId, setBoardId] = useState(() => load<string>('party-board', 'classic'));
   const [pawns, setPawns] = useState(() => pawnsFor(players.map((p) => p.id)));
   const [editing, setEditing] = useState<{ board: Board; asNew: boolean } | null>(null);
   const [game, setGame] = useState(0);
@@ -57,7 +57,7 @@ export default function Party({ players, exit }: GameProps) {
             : () => {
                 deleteBoard(editing.board.id);
                 setBoards(allBoards());
-                setBoardId('west');
+                setBoardId('classic');
                 setEditing(null);
               }
         }
