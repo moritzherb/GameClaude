@@ -11810,7 +11810,8 @@ h3 {
 /*
  * The two card games for talking (Princess/King Treatment, He's a 10/10 but…): one card on the
  * table, as big as the screen allows, to read out across the table. Princess/King: two heads
- * below it, one tap for everyone. Prefixes: vt- (both), ph- (princess/king), tn- (ten).
+ * below it (bare minimum, the card's treatment), one tap for everyone. Prefixes: vt- (both),
+ * ph- (princess/king), tn- (ten).
  */
 .vt {
   display: flex;
@@ -11858,14 +11859,16 @@ h3 {
 }
 
 .vt-card {
+  /* Made smaller (CardGame's useFit) until a long statement fits a small card. */
+  --fit: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 18px;
+  gap: calc(18px * var(--fit));
   min-height: 0;
   height: 100%;
-  padding: 28px 22px;
+  padding: calc(28px * var(--fit)) 22px;
   border: 4px solid #151612;
   border-radius: 26px;
   background:
@@ -11883,20 +11886,26 @@ h3 {
   --card-b: #ff7eb6;
 }
 
+/* A King Treatment card is gold, so the table sees at once which question it is. */
+.ph-card.king {
+  --card-a: #ffe9a3;
+  --card-b: #ffc94a;
+}
+
 .tn-card {
   --card-a: #d9c6ff;
   --card-b: #a98bff;
 }
 
 .vt-card-emoji {
-  font-size: clamp(3rem, 15vw, 4.6rem);
+  font-size: calc(clamp(3rem, 15vw, 4.6rem) * var(--fit));
   line-height: 1;
 }
 
 .vt-card-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(1.15rem, 5.4vw, 1.55rem);
+  font-size: calc(clamp(1.15rem, 5.4vw, 1.55rem) * max(var(--fit), 0.8));
   line-height: 1;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -11905,7 +11914,7 @@ h3 {
 
 /* The statement: read out across the table. */
 .vt-card-text {
-  font-size: clamp(1.9rem, 9vw, 2.9rem);
+  font-size: calc(clamp(1.9rem, 9vw, 2.9rem) * var(--fit));
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.01em;
@@ -11919,7 +11928,7 @@ h3 {
   gap: 8px;
 }
 
-/* ---------- Princess/King: the two heads ---------- */
+/* ---------- Princess/King: the two heads (bare minimum left, the treatment right) ---------- */
 .ph-choices {
   position: relative;
   display: grid;
@@ -11957,6 +11966,11 @@ h3 {
   color: #151612;
 }
 
+.ph-head.bare.on {
+  background: #c3ccd8;
+  color: #151612;
+}
+
 .ph-head.on {
   transform: scale(1.04);
 }
@@ -11968,12 +11982,20 @@ h3 {
 
 .ph-art {
   display: block;
-  width: min(100%, 132px);
+  /* Smaller on short screens, so the card keeps its room. */
+  width: min(100%, 132px, 16vh);
+  width: min(100%, 132px, 16svh);
   animation: ph-sway 3.2s ease-in-out infinite;
 }
 
 .ph-head.king .ph-art {
   animation-duration: 3.8s;
+  animation-direction: alternate-reverse;
+}
+
+/* The bored one sways slower. */
+.ph-head.bare .ph-art {
+  animation-duration: 4.6s;
   animation-direction: alternate-reverse;
 }
 
@@ -12034,13 +12056,40 @@ h3 {
   }
 }
 
-/* Tapped: the crown hops. */
-.ph-crown {
+/* The bored one's dots tick on, one after the other (in steps, too). */
+.ph-dots circle {
+  opacity: 0.15;
+  animation: ph-dot 2.4s steps(1, end) infinite;
+}
+
+.ph-dots .b {
+  animation-delay: 0.4s;
+}
+
+.ph-dots .c {
+  animation-delay: 0.8s;
+}
+
+@keyframes ph-dot {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  30%,
+  80% {
+    opacity: 1;
+  }
+}
+
+/* Tapped: the crown hops (the bored one raises its eyebrows). */
+.ph-crown,
+.ph-brows {
   transform-box: fill-box;
   transform-origin: 50% 100%;
 }
 
-.ph-head.on .ph-crown {
+.ph-head.on .ph-crown,
+.ph-head.on .ph-brows {
   animation: ph-hop 0.6s var(--spring);
 }
 
@@ -12056,15 +12105,19 @@ h3 {
 .ph-label {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  text-align: center;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
-/* What the table settled on, stamped over the heads. */
+/* What the table settled on, stamped in the gap between the card and the heads (over neither's
+   text: the card's edge, the heads' padding). */
 .ph-verdict {
   position: absolute;
   left: 50%;
-  top: -14px;
+  top: -12px;
   padding: 6px 14px;
   border: 3px solid #151612;
   border-radius: 999px;
@@ -12076,21 +12129,22 @@ h3 {
   text-transform: uppercase;
   white-space: nowrap;
   box-shadow: 3px 3px 0 #151612;
-  transform: translate(-50%, -100%) rotate(-3deg);
+  transform: translate(-50%, -50%) rotate(-3deg);
   animation: ph-stamp 0.4s var(--spring) both;
   pointer-events: none;
 }
 
 @keyframes ph-stamp {
   from {
-    transform: translate(-50%, -100%) rotate(-3deg) scale(1.6);
+    transform: translate(-50%, -50%) rotate(-3deg) scale(1.6);
     opacity: 0;
   }
 }
 
 .ph-summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 12px;
 }
 
@@ -12112,6 +12166,10 @@ h3 {
   background: #ffd34d;
 }
 
+.ph-summary-side.bare {
+  background: #c3ccd8;
+}
+
 .ph-summary-n {
   font-family: var(--font-display);
   font-weight: 900;
@@ -12121,14 +12179,21 @@ h3 {
 
 .ph-summary-label {
   font-weight: 700;
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ph-art,
   .ph-eyes,
   .ph-spark,
-  .ph-head.on .ph-crown {
+  .ph-dots circle,
+  .ph-head.on .ph-crown,
+  .ph-head.on .ph-brows {
     animation: none;
+  }
+
+  .ph-dots circle {
+    opacity: 1;
   }
 }
 

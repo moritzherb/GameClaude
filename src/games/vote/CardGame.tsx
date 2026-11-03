@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import Finished from '../../components/Finished';
@@ -38,8 +38,34 @@ export interface CardGameProps<C> extends GameProps {
   Card: (p: { round: Round }) => ReactNode;
   /** One tap for the whole table (no going round): without it, the card is just for talking about. */
   Choice?: (p: { round: Round; chosen: C | null; choose: (c: C) => void }) => ReactNode;
-  /** What the table chose over the game, on the last screen. */
-  Summary?: (p: { picks: C[] }) => ReactNode;
+  /** What the table chose over the game, on the last screen (`mode`: the mode's id, '' without modes). */
+  Summary?: (p: { picks: C[]; mode: string }) => ReactNode;
+}
+
+/**
+ * Shrinks the card's type (CSS --fit) until the statement fits the card, so a long one on a small
+ * phone isn't cut off. Again for every card, and when the screen changes size.
+ */
+function useFit(stage: RefObject<HTMLDivElement | null>, card: unknown) {
+  useLayoutEffect(() => {
+    const el = stage.current;
+    if (!el) return;
+    const fit = () => {
+      const c = el.querySelector<HTMLElement>('.vt-card');
+      if (!c) return;
+      let f = 1;
+      c.style.setProperty('--fit', '1');
+      while (c.scrollHeight > c.clientHeight + 1 && f > 0.5) {
+        f = Math.round((f - 0.05) * 100) / 100;
+        c.style.setProperty('--fit', String(f));
+      }
+    };
+    fit();
+    if (typeof ResizeObserver === 'undefined') return;
+    const watch = new ResizeObserver(fit);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [stage, card]);
 }
 
 interface State<C> {
@@ -55,7 +81,7 @@ interface State<C> {
 /**
  * The two card games for talking (Princess/King Treatment, He's a 10/10 but…): a card goes on the
  * table, big, the one whose turn it is reads it out, everyone talks about it. Princess/King: the
- * table settles it with one tap. Then the next card, the next reader.
+ * table settles it with one tap, bare minimum or treatment. Then the next card, the next reader.
  */
 export default function CardGame<C>(props: CardGameProps<C>) {
   const { game, players, exit, cards, modes, Card, Choice, Summary } = props;
@@ -73,6 +99,8 @@ export default function CardGame<C>(props: CardGameProps<C>) {
 
   const reader = s && !s.over ? players[s.round.reader % players.length] : null;
   useTurnBubble(reader);
+  const stage = useRef<HTMLDivElement>(null);
+  useFit(stage, s && !s.over ? s.drawn : null);
 
   /* ---------- Before the game: who the cards are about ---------- */
   if (!s) {
@@ -123,7 +151,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
           <span className="kicker">{t('Game over')}</span>
           <h2 className="bd-title big">{t('All cards played!')}</h2>
         </div>
-        {Summary && <Summary picks={s.picks} />}
+        {Summary && <Summary picks={s.picks} mode={s.mode} />}
         <div className="sticky-action stack">
           <BigButton onClick={() => setS(deal(s.mode))}>{t('Play again')}</BigButton>
           <BigButton variant="glass" onClick={exit}>
@@ -153,7 +181,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
         )}
         <span className="vt-count">{t('{n} of {total}', { n: s.drawn, total: s.deck.length })}</span>
       </div>
-      <div className="vt-stage">
+      <div ref={stage} className="vt-stage">
         <div key={s.drawn} className="vt-card-in">
           <Card round={s.round} />
         </div>

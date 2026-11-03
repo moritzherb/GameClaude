@@ -8,9 +8,15 @@ const voteGames: Record<string, string> = {
 
   // Princess/King Treatment
   'Princess/King Treatment': 'Princess/King Treatment',
-  'Princess or King Treatment? One tap settles it.': 'Princess oder King Treatment? Ein Tipp entscheidet.',
-  'Talk it over, then tap once for the whole table: Princess or King Treatment?': 'Redet drüber, dann tippt ihr einmal für alle: Princess oder King Treatment?',
-  'Princess or King Treatment?': 'Princess oder King Treatment?',
+  'Bare Minimum or Princess Treatment? One tap settles it.': 'Bare Minimum oder Princess Treatment? Ein Tipp entscheidet.',
+  'Talk it over, then tap once for the whole table: just the Bare Minimum, or real Princess (or King) Treatment?':
+    'Redet drüber, dann tippt ihr einmal für alle: nur Bare Minimum oder echtes Princess (oder King) Treatment?',
+  'A card shows something someone does for you. Just the Bare Minimum, or real Princess (or King) Treatment? Talk it over, one tap settles it.':
+    'Eine Karte zeigt, was jemand für dich tut. Nur Bare Minimum oder echtes Princess (oder King) Treatment? Redet drüber, ein Tipp entscheidet.',
+  'Bare Minimum or Princess Treatment?': 'Bare Minimum oder Princess Treatment?',
+  'Bare Minimum or King Treatment?': 'Bare Minimum oder King Treatment?',
+  'Whose treatment?': 'Wessen Treatment?',
+  'Bare Minimum': 'Bare Minimum',
   'A card shows something someone does for you. The one whose turn it is reads it out.': 'Eine Karte zeigt, was jemand für dich tut. Wer dran ist, liest sie vor.',
   'Next card, next reader, until the cards run out.': 'Nächste Karte, nächster Vorleser, bis die Karten aus sind.',
   'Princess Treatment': 'Princess Treatment',
