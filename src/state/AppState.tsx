@@ -2,6 +2,7 @@ import { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } f
 import { setLang, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
+import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
 import { usePersistentState } from '../lib/storage';
 
 export interface Player {
@@ -35,6 +36,10 @@ export interface Settings {
   known?: string[];
   /** App language. English is the default (and missing in older saves). */
   lang?: Lang;
+  /** The app's look: the new one (missing: new) or the classic one. Only the look: games play the same. */
+  look?: Look;
+  /** In the new look, whose home screen: the phone's own (missing: auto), or always iPhone / Android. */
+  phone?: PhoneSetting;
 }
 
 export const AVATARS = [
@@ -107,6 +112,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [ageConfirmed, setAgeConfirmed] = usePersistentState('age-ok', false);
   // Set before the children render, so every t() call below uses the chosen language.
   setLang(settings.lang ?? 'en');
+  // Also before the children render (and measure themselves): the look, and whose home screen.
+  if (typeof document !== 'undefined') {
+    document.documentElement.dataset.look = lookFor(settings.look);
+    document.documentElement.dataset.os = platformFor(settings.phone);
+  }
+
+  // The browser's bar (Android) and the strip under the clock take the look's ground colour.
+  const look = lookFor(settings.look);
+  useLayoutEffect(() => {
+    if (look !== 'pop') return;
+    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const before = metas.map((m) => m.content);
+    metas.forEach((m) => (m.content = m.media.includes('dark') ? '#20211c' : '#ece8dd'));
+    return () => metas.forEach((m, i) => (m.content = before[i]));
+  }, [look]);
 
   // Before the screen is drawn: with big text on, the first picture mustn't show it small.
   useLayoutEffect(() => {

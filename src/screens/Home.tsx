@@ -19,8 +19,15 @@ import { navigate, paths } from '../lib/router';
 import { useProfile } from '../net/profile';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
+import PopHome from '../home/PopHome';
+import { useLook } from '../home/usePlatform';
 
+/** Home: in the new look the phone's own home screen, in the classic look the poster and the line-up. */
 export default function Home() {
+  return useLook() === 'pop' ? <PopHome /> : <ClassicHome />;
+}
+
+function ClassicHome() {
   const { players } = useApp();
   const { profile } = useProfile();
   const room = useRoom();

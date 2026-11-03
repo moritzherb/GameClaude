@@ -282,6 +282,26 @@ const app: Record<string, string> = {
     'Verschieb das Foto, zoom mit zwei Fingern oder dem Regler. Was im Kreis ist, sehen die anderen.',
   Zoom: 'Zoom',
   'Use photo': 'Foto übernehmen',
+  // The new look: home is the phone's own home screen (src/home)
+  Treatment: 'Treatment',
+  Horses: 'Pferde',
+  'The Dealer': 'Der Dealer',
+  Dock: 'Dock',
+  'Search games': 'Spiele suchen',
+  Search: 'Suchen',
+  Suggestions: 'Vorschläge',
+  'No game called “{q}”': 'Kein Spiel namens „{q}“',
+  'Page {n}': 'Seite {n}',
+  'App Library': 'App-Mediathek',
+  // Settings: the look
+  Look: 'Look',
+  New: 'Neu',
+  'Only the look: every game plays the same': 'Nur der Look: Jedes Spiel läuft gleich',
+  'Home screen': 'Startseite',
+  'Like your phone’s own': 'Wie die deines Handys',
+  Auto: 'Auto',
+  iPhone: 'iPhone',
+  Android: 'Android',
 };
 
 export default app;

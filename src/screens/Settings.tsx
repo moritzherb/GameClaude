@@ -6,6 +6,7 @@ import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
+import { lookFor, type Look, type PhoneSetting } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
 import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
@@ -18,6 +19,43 @@ const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'bigMode', emoji: '🔍', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
   { key: 'clean', emoji: '🃏', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
 ];
+
+/** The app's look. Only the look: every game plays the same in both. */
+const LOOKS: { id: Look; label: string }[] = [
+  { id: 'pop', label: tx('New') },
+  { id: 'classic', label: tx('Classic') },
+];
+
+/** In the new look: whose home screen. */
+const PHONES: { id: PhoneSetting; label: string }[] = [
+  { id: 'auto', label: tx('Auto') },
+  { id: 'ios', label: tx('iPhone') },
+  { id: 'android', label: tx('Android') },
+];
+
+/** A row of two or three choices, one picked. */
+function Choice<T extends string>({ label, value, options, onPick }: { label: string; value: T; options: { id: T; label: string }[]; onPick: (id: T) => void }) {
+  return (
+    <span className="look-seg" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          role="radio"
+          aria-checked={value === o.id}
+          className={value === o.id ? 'active' : ''}
+          onClick={() => {
+            sfx.pop();
+            buzz();
+            onPick(o.id);
+          }}
+        >
+          {t(o.label)}
+        </button>
+      ))}
+    </span>
+  );
+}
 
 /** The privacy policy, on the website (in the store app: in the phone's browser). */
 function openPrivacy() {
@@ -68,6 +106,26 @@ export default function Settings() {
             ))}
           </span>
         </div>
+
+        <div className="setting-row look-row">
+          <span className="setting-emoji">🎨</span>
+          <span className="setting-text">
+            <span className="setting-label">{t('Look')}</span>
+            <span className="setting-hint">{t('Only the look: every game plays the same')}</span>
+          </span>
+          <Choice label={t('Look')} value={lookFor(settings.look)} options={LOOKS} onPick={(look) => updateSettings({ look })} />
+        </div>
+
+        {lookFor(settings.look) === 'pop' && (
+          <div className="setting-row look-row">
+            <span className="setting-emoji">📱</span>
+            <span className="setting-text">
+              <span className="setting-label">{t('Home screen')}</span>
+              <span className="setting-hint">{t('Like your phone’s own')}</span>
+            </span>
+            <Choice label={t('Home screen')} value={settings.phone ?? 'auto'} options={PHONES} onPick={(phone) => updateSettings({ phone })} />
+          </div>
+        )}
 
         {OPTIONS.map((o) => {
           const on = !!settings[o.key];
