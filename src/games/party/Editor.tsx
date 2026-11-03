@@ -82,14 +82,19 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const [naming, setNaming] = useState(false);
   const cols = MAX_COLS;
   const used = [...spots.map((c) => c.y), ...[...water, ...tunnels].map((k) => +k.split(',')[1])];
-  const fitRows = Math.min(MAX_ROWS, Math.max(10, (used.length ? Math.max(...used) : 0) + 3));
+  const top = used.length ? Math.max(...used) : 0;
+  /** What gets saved: the map to the top of what's on it and a little room (the game shows all of it). */
+  const savedRows = Math.min(MAX_ROWS, Math.max(10, top + 3));
+
+  // The map fills the room beside the tools: as many rows as fit with the cells as wide as they
+  // can be. It only grows (and its cells shrink) once the path nears its top.
+  const box = useRef<HTMLDivElement>(null);
+  const [room, setRoom] = useState({ w: 0, h: 0 });
+  const screenRows = room.w && room.h ? Math.max(8, Math.floor(room.h / Math.floor(room.w / MAX_COLS))) : 10;
+  const fitRows = Math.min(MAX_ROWS, Math.max(screenRows, top + 2));
   // While a finger draws, the map keeps its size (it grows once the finger lifts).
   const [heldRows, setHeldRows] = useState<number | null>(null);
   const rows = heldRows ?? fitRows;
-
-  // As big as the room beside the tools allows, whole cells.
-  const box = useRef<HTMLDivElement>(null);
-  const [room, setRoom] = useState({ w: 0, h: 0 });
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -275,13 +280,13 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   };
 
   const save = () => {
-    const keep = (k: string) => toCell(k).y < rows;
+    const keep = (k: string) => toCell(k).y < savedRows;
     onSave({
       id: asNew ? `own-${Date.now().toString(36)}` : board.id,
       name: name.trim() || t('My board'),
       theme: board.theme,
       cols,
-      rows,
+      rows: savedRows,
       spots,
       fields: kinds.map((f, i) => (i === 0 ? field('start') : f!)),
       water: [...water].filter(keep).map(toCell),
@@ -385,7 +390,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                       <span key={d} className={`pt-route ${d}`} />
                     ))}
                     {blank && (
-                      <span className="pt-cell-field empty">
+                      <span className="pt-cell-field blank">
                         <span className="pt-cell-n">{i}</span>
                       </span>
                     )}
