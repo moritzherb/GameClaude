@@ -1,34 +1,42 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AppDie from '../components/AppDie';
 import Avatar from '../components/Avatar';
-import GameCard from '../components/GameCard';
-import { ChevronIcon, PlusIcon, SettingsIcon } from '../components/Icons';
-import Logo from '../components/Logo';
-import Tap from '../components/Tap';
-import { RoundButton } from '../components/TopBar';
 import { findGame, GAMES, playableGames } from '../games/registry';
 import type { GameDefinition } from '../games/types';
-import { buzz, sfx } from '../lib/fx';
+import { AppButton, IconArt } from '../home/AppIcon';
+import Launcher from '../home/Launcher';
+import Search from '../home/Search';
+import Springboard from '../home/Springboard';
+import { usePlatform } from '../home/usePlatform';
 import { getLang, t } from '../i18n';
+import { buzz, sfx } from '../lib/fx';
 import { headlineFor } from '../lib/headline';
+import { launch, lastLaunched } from '../lib/launch';
+import { lineup } from '../lib/lineup';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
-import { lineup } from '../lib/lineup';
-import { usePullToRefresh } from '../lib/pullToRefresh';
 import { navigate, paths } from '../lib/router';
 import { useProfile } from '../net/profile';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
+/** The wallpaper's top colour, for the strip under the clock (light, dark). */
+const TOP = { ios: ['#1a8a53', '#0c4a2d'], android: ['#3a9c63', '#173f28'] } as const;
+
+/**
+ * Home is the phone's own home screen: an iPhone's on iPhones, a Pixel's on Android. The games
+ * are its apps; opening one grows its page out of the icon, as opening an app does.
+ */
 export default function Home() {
+  const os = usePlatform();
   const { players } = useApp();
   const { profile } = useProfile();
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
+  const [searching, setSearching] = useState(false);
   const [rolling, setRolling] = useState<GameDefinition | null>(null);
   const timer = useRef<number>(undefined);
   const landing = useRef<number>(undefined);
-
   useEffect(
     () => () => {
       window.clearInterval(timer.current);
@@ -37,22 +45,32 @@ export default function Home() {
     [],
   );
 
-  // The headline follows the night, so check the clock every minute while home is open.
-  const [hour, setHour] = useState(() => new Date().getHours());
+  // The strip under the clock and the browser's bar take the wallpaper's colour while home shows.
   useEffect(() => {
-    const clock = window.setInterval(() => setHour(new Date().getHours()), 60_000);
-    return () => window.clearInterval(clock);
-  }, []);
-  const lang = getLang();
-  const headline = headlineFor(hour, lang);
+    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const before = metas.map((m) => m.content);
+    metas.forEach((m) => (m.content = m.media.includes('dark') ? TOP[os][1] : TOP[os][0]));
+    return () => metas.forEach((m, i) => (m.content = before[i]));
+  }, [os]);
 
-  const randomGame = () => {
+  const [returning] = useState(() => lastLaunched());
+  // The last three games played on this phone, newest first.
+  const [recent] = useState(() => recentGames().map(findGame).filter((g): g is GameDefinition => !!g));
+  // Android shows a couple of rows on the home screen: the recent games, then a few at random.
+  const [favorites] = useState(() => {
+    const ids = [...recentGames(), ...lineup(GAMES.filter((g) => g.component || g.online).map((g) => g.id)), ...GAMES.map((g) => g.id)];
+    return [...new Set(ids)]
+      .map(findGame)
+      .filter((g): g is GameDefinition => !!g)
+      .slice(0, 8);
+  });
+
+  const shuffle = () => {
     const pool = playableGames();
-    if (!pool.length) return navigate(paths.games());
+    if (!pool.length || rolling) return;
     const target = pick(pool);
-    const showcase = GAMES.length > 1 ? GAMES : pool;
     let n = 0;
-    setRolling(pick(showcase));
+    setRolling(pick(GAMES));
     timer.current = window.setInterval(() => {
       n++;
       sfx.tick();
@@ -62,163 +80,53 @@ export default function Home() {
         setRolling(target);
         // Cleared if home goes away meanwhile (e.g. the host starts a game for the room).
         landing.current = window.setTimeout(() => {
+          launch(document.querySelector('.os-roulette .app-icon'), target, () => navigate(paths.game(target.id)));
           setRolling(null);
-          navigate(paths.game(target.id));
         }, 650);
-      } else {
-        setRolling(pick(showcase));
-      }
+      } else setRolling(pick(GAMES));
     }, 90);
   };
 
-  // The last three games played on this phone, newest first.
-  const [recent] = useState(() => recentGames().map(findGame).filter((g): g is GameDefinition => !!g));
-
-  // A few playable games, drawn at random every few hours, or right away when home is pulled down.
-  const drawLineup = (fresh = false) =>
-    lineup(
-      GAMES.filter((g) => g.component || g.online).map((g) => g.id),
-      undefined,
-      undefined,
-      fresh,
-    )
-      .map(findGame)
-      .filter((g): g is GameDefinition => !!g);
-  const [featured, setFeatured] = useState(() => drawLineup());
-  const [deal, setDeal] = useState(0);
-  const page = useRef<HTMLElement>(null);
-  const ptr = useRef<HTMLDivElement>(null);
-  usePullToRefresh(
-    () => {
-      setFeatured(drawLineup(true));
-      setDeal((n) => n + 1);
-      sfx.pop();
-    },
-    !rolling,
-    page,
-    ptr,
+  const dock = (
+    <>
+      <AppButton label={t('Shuffle')} color="#1f8f55" glyph={<AppDie size={30} />} onOpen={shuffle} />
+      <AppButton
+        label={(inRoom && room.code) || t('Together')}
+        color="#2a9d8f"
+        glyph="📱"
+        badge={inRoom ? room.members.filter((m) => m.online).length : undefined}
+        onOpen={() => navigate(paths.room)}
+      />
+      <AppButton label={t('Your profile')} color={profile.color} glyph={<Avatar avatar={profile.avatar} photo={profile.photo} />} onOpen={() => navigate(paths.profile)} />
+      <AppButton label={t('Settings')} color="#8e9a93" glyph="⚙️" onOpen={() => navigate(paths.settings)} />
+    </>
   );
 
-  // "Fri 09.10" / "Fr. 09.10"
-  const date = new Date()
-    .toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' })
-    .replace(',', '')
-    .replace('/', '.')
-    .replace(/\.$/, '');
+  const lang = getLang();
+  const headline = headlineFor(new Date().getHours(), lang);
+  const date = new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const closeSearch = useCallback(() => setSearching(false), []);
+  const common = { players, recent, returning, dock, onSearch: () => setSearching(true), onShuffle: shuffle };
 
   return (
     <>
-      {/* Pull to refresh: the die from the app icon comes down with the finger into the gap above the
-          page, turning, and spins while it refreshes. */}
-      <div ref={ptr} className="ptr" aria-hidden>
-        <span className="ptr-die">
-          <AppDie size={22} />
-        </span>
-      </div>
-      <main ref={page} className="screen home">
-        <header className="home-header">
-          <Logo />
-          <span className="home-date">{date}</span>
-          <Tap className="home-me" style={{ '--chip': profile.color } as CSSProperties} onClick={() => navigate(paths.profile)} ariaLabel={t('Your profile')}>
-            <Avatar avatar={profile.avatar} photo={profile.photo} />
-          </Tap>
-          <RoundButton label={t('Settings')} onClick={() => navigate(paths.settings)}>
-            <SettingsIcon />
-          </RoundButton>
-        </header>
-
-        <h1 className="poster-title">
-          {headline.top} <span className="hl">{headline.sticker}</span>
-        </h1>
-
-        <Tap className="crew fade-up" onClick={() => navigate(paths.players())}>
-          <span className="crew-count">{players.length || <PlusIcon />}</span>
-          <span className="crew-text">
-            <span className="crew-label">{t('The crew')}</span>
-            <span className="crew-sub">{players.length ? t('Tap to edit') : t('Who’s playing tonight?')}</span>
-          </span>
-          {players.length > 0 && (
-            <span className="avatar-stack">
-              {players.slice(0, 4).map((p) => (
-                <span key={p.id} style={{ background: p.color }}>
-                  <Avatar avatar={p.avatar} photo={p.photo} />
-                </span>
-              ))}
-              {players.length > 4 && <span className="more">+{players.length - 4}</span>}
-            </span>
-          )}
-          <span className="crew-chevron">
-            <ChevronIcon />
-          </span>
-        </Tap>
-
-        <div className="quick-row fade-up">
-          <Tap className="quick quick-shuffle" onClick={randomGame}>
-            <span className="quick-icon" aria-hidden>
-              🎲
-            </span>
-            <span className="quick-title">{t('Shuffle')}</span>
-            <span className="quick-sub">{t('We pick, you play')}</span>
-          </Tap>
-          <Tap className={`quick quick-room${inRoom ? ' live' : ''}`} onClick={() => navigate(paths.room)}>
-            <span className="quick-icon" aria-hidden>
-              📱
-            </span>
-            <span className="quick-title">{inRoom ? room.code : t('Together')}</span>
-            <span className="quick-sub">
-              {inRoom ? t('{n} phones live', { n: room.members.filter((m) => m.online).length }) : t('Every phone joins')}
-            </span>
-          </Tap>
+      {os === 'android' ? (
+        <Launcher {...common} favorites={favorites} date={date} headline={`${headline.top} ${headline.sticker}`} />
+      ) : (
+        <Springboard {...common} />
+      )}
+      {searching && <Search suggestions={recent.length ? recent : favorites.slice(0, 4)} onClose={closeSearch} />}
+      {rolling && (
+        <div className="os-roulette" aria-live="polite">
+          <div className="os-roulette-card">
+            <IconArt color={rolling.color} size="lg">
+              {rolling.emoji}
+            </IconArt>
+            <span className="os-roulette-name">{t(rolling.name)}</span>
+          </div>
+          <span className="os-roulette-caption">{t('Picking your game…')}</span>
         </div>
-
-        {recent.length > 0 && (
-          <section className="section fade-up">
-            <div className="section-head">
-              <h2 className="section-title">{t('Last played')}</h2>
-            </div>
-            <div className="recent-row">
-              {recent.map((g) => (
-                <Tap
-                  key={g.id}
-                  className="recent-tile"
-                  style={{ '--card-bg': g.color } as CSSProperties}
-                  ariaLabel={t(g.name)}
-                  onClick={() => navigate(paths.game(g.id))}
-                >
-                  <span className="recent-emoji" aria-hidden>
-                    {g.emoji}
-                  </span>
-                </Tap>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section className="section">
-          <div className="section-head">
-            <h2 className="section-title">{t('The line-up')}</h2>
-            <Tap className="all-games-pill" onClick={() => navigate(paths.games())}>
-              {t('All games')}
-              <ChevronIcon />
-            </Tap>
-          </div>
-          <div className={`ticket-list${deal ? ' dealt' : ''}`} key={deal}>
-            {featured.map((g) => (
-              <GameCard key={g.id} game={g} tagline={false} onOpen={() => navigate(paths.game(g.id))} />
-            ))}
-          </div>
-        </section>
-
-        {rolling && (
-          <div className="roulette-overlay">
-            <div className="roulette-card" style={{ '--card-bg': rolling.color } as CSSProperties}>
-              <div className="roulette-emoji">{rolling.emoji}</div>
-              <div className="roulette-name">{t(rolling.name)}</div>
-            </div>
-            <div className="roulette-caption">{t('Picking your game…')}</div>
-          </div>
-        )}
-      </main>
+      )}
     </>
   );
 }

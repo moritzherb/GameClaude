@@ -6,6 +6,7 @@ import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
+import type { Look } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
 import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
@@ -17,6 +18,13 @@ const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'haptics', emoji: '📳', label: tx('Vibration'), hint: tx('Phone buzzes when you tap') },
   { key: 'bigMode', emoji: '🔍', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
   { key: 'clean', emoji: '🃏', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
+];
+
+/** Whose home screen the app wears. */
+const LOOKS: { id: Look; label: string }[] = [
+  { id: 'auto', label: tx('Auto') },
+  { id: 'ios', label: tx('iPhone') },
+  { id: 'android', label: tx('Android') },
 ];
 
 /** The privacy policy, on the website (in the store app: in the phone's browser). */
@@ -64,6 +72,32 @@ export default function Settings() {
                 }}
               >
                 <Flag lang={l.id} />
+              </button>
+            ))}
+          </span>
+        </div>
+
+        <div className="setting-row look-row">
+          <span className="setting-emoji">📱</span>
+          <span className="setting-text">
+            <span className="setting-label">{t('Home screen')}</span>
+            <span className="setting-hint">{t('Looks like your phone’s own')}</span>
+          </span>
+          <span className="look-seg" role="radiogroup" aria-label={t('Home screen')}>
+            {LOOKS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="radio"
+                aria-checked={(settings.look ?? 'auto') === l.id}
+                className={(settings.look ?? 'auto') === l.id ? 'active' : ''}
+                onClick={() => {
+                  sfx.pop();
+                  buzz();
+                  updateSettings({ look: l.id });
+                }}
+              >
+                {t(l.label)}
               </button>
             ))}
           </span>

@@ -3,6 +3,7 @@ import { setLang, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { usePersistentState } from '../lib/storage';
+import { platformFor, type Look } from '../lib/platform';
 
 export interface Player {
   id: string;
@@ -35,6 +36,8 @@ export interface Settings {
   known?: string[];
   /** App language. English is the default (and missing in older saves). */
   lang?: Lang;
+  /** Whose home screen the app looks like: the phone's own (missing: auto), or always iPhone / Android. */
+  look?: Look;
 }
 
 export const AVATARS = [
@@ -107,6 +110,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [ageConfirmed, setAgeConfirmed] = usePersistentState('age-ok', false);
   // Set before the children render, so every t() call below uses the chosen language.
   setLang(settings.lang ?? 'en');
+  // Also before the children render (and measure themselves): whose home screen the app wears.
+  if (typeof document !== 'undefined') document.documentElement.dataset.os = platformFor(settings.look);
 
   // Before the screen is drawn: with big text on, the first picture mustn't show it small.
   useLayoutEffect(() => {

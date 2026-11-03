@@ -282,6 +282,22 @@ const app: Record<string, string> = {
     'Verschieb das Foto, zoom mit zwei Fingern oder dem Regler. Was im Kreis ist, sehen die anderen.',
   Zoom: 'Zoom',
   'Use photo': 'Foto übernehmen',
+
+  // Home screen (src/home): the phone's own
+  Dock: 'Dock',
+  'Search games': 'Spiele suchen',
+  Search: 'Suchen',
+  Suggestions: 'Vorschläge',
+  'No game called “{q}”': 'Kein Spiel namens „{q}“',
+  'Page {n}': 'Seite {n}',
+  'App Library': 'App-Mediathek',
+  Kind: 'Art',
+  Phones: 'Handys',
+  Auto: 'Auto',
+  iPhone: 'iPhone',
+  Android: 'Android',
+  'Home screen': 'Startseite',
+  'Looks like your phone’s own': 'Sieht aus wie die deines Handys',
 };
 
 export default app;
