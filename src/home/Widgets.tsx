@@ -7,7 +7,7 @@ import { t } from '../i18n';
 import { launch } from '../lib/launch';
 import { navigate, paths } from '../lib/router';
 import type { Player } from '../state/AppState';
-import { GameGlyph } from './AppIcon';
+import { GameGlyph, glyphsOf } from './AppIcon';
 
 /** The crew's faces, overlapping a little. */
 function Faces({ players }: { players: Player[] }) {
@@ -66,7 +66,7 @@ export function LastWidget({ game, onShuffle }: { game: GameDefinition | null; o
       className="widget w-last"
       style={{ '--c': game.color } as CSSProperties}
       ariaLabel={`${t('Last played')}: ${t(game.name)}`}
-      onClick={(e) => launch(e.currentTarget.querySelector('.w-pop'), game, () => navigate(paths.game(game.id)))}
+      onClick={(e) => launch(e.currentTarget, game, () => navigate(paths.game(game.id)), glyphsOf(game))}
     >
       <span className="w-kicker">{t('Last played')}</span>
       <span className="w-pop" aria-hidden>

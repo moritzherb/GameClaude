@@ -81,7 +81,7 @@ html[data-look='pop'] body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(120% 60% at 50% 0%, var(--pop-glow), transparent 75%), var(--bg);
+  background: radial-gradient(120% 40% at 50% 46%, var(--pop-glow), transparent 80%), var(--bg);
 }
 
 html[data-look='pop'] body::after {
@@ -329,7 +329,7 @@ html[data-look='pop'] .os-home {
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
-  padding: max(12px, env(safe-area-inset-top)) 20px max(10px, env(safe-area-inset-bottom));
+  padding: max(18px, env(safe-area-inset-top)) 20px max(10px, env(safe-area-inset-bottom));
   gap: 0;
 }
 
@@ -657,6 +657,11 @@ html[data-os='android'] .app-icon.sm {
   scroll-snap-stop: always;
 }
 
+.sb-page .os-grid,
+.la-grid {
+  align-content: space-evenly;
+}
+
 .sb-page .os-grid {
   flex: 1;
   min-height: 0;
@@ -865,9 +870,9 @@ html[data-os='android'] .lib-box .app-icon {
 
 /* ---------- Android ---------- */
 
-.os-home.android {
+html[data-look='pop'] .os-home.android {
   --ic: 58px;
-  gap: 14px;
+  gap: 16px;
 }
 
 .la-glance {
@@ -1074,6 +1079,101 @@ html[data-os='android'] .lib-box .app-icon {
   display: none;
 }
 
+/* ---------- Moving apps: hold one until they wiggle, then drag (home/useHomeEdit.ts) ---------- */
+
+.os-home.editing .os-grid.movable .app {
+  touch-action: none;
+}
+
+.os-home.editing .os-grid.movable .app:not(.lifted) .app-icon {
+  animation: app-jiggle 0.26s ease-in-out infinite alternate;
+}
+
+.os-home.editing .os-grid.movable .app:nth-child(2n) .app-icon {
+  animation-duration: 0.23s;
+  animation-delay: -0.12s;
+}
+
+.os-home.editing .os-grid.movable .app:nth-child(3n) .app-icon {
+  animation-duration: 0.29s;
+  animation-delay: -0.07s;
+}
+
+@keyframes app-jiggle {
+  from {
+    transform: rotate(-1.8deg);
+  }
+  to {
+    transform: rotate(1.8deg);
+  }
+}
+
+/* The app being dragged: its place stays empty, a copy follows the finger, lifted. */
+.app.lifted {
+  opacity: 0;
+}
+
+.app-ghost {
+  position: fixed;
+  z-index: 500;
+  margin: 0;
+  pointer-events: none;
+}
+
+.app-ghost .app-icon {
+  transform: scale(1.14);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.4), 0 4px 8px rgba(0, 0, 0, 0.35), 0 22px 28px -10px rgba(0, 0, 0, 0.8);
+}
+
+.app-ghost .app-label {
+  opacity: 0;
+}
+
+.app-ghost.landing {
+  transition:
+    left 0.2s cubic-bezier(0.2, 0.85, 0.25, 1),
+    top 0.2s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.app-ghost.landing .app-icon {
+  transform: none;
+  transition: transform 0.2s;
+}
+
+/* Dragging: the pages stay where they are (they turn only at the side of the screen). */
+.os-home.dragging .sb-pages {
+  overflow-x: hidden;
+  scroll-snap-type: none;
+}
+
+.os-done {
+  justify-content: center;
+  padding: 0 28px;
+  background: var(--pop-lime);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 3px 8px rgba(0, 0, 0, 0.45);
+  color: #151612;
+  font: 700 15px/1 var(--font-body);
+  animation: pop-in 0.25s var(--spring) both;
+}
+
+.la-search.os-done {
+  font-size: 16px;
+}
+
+/* All games (Android): closing slides it back down. */
+.la-drawer {
+  transition: transform 0.23s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.la-drawer-wrap.closing {
+  background: transparent;
+  transition: background 0.23s;
+}
+
+.la-drawer-wrap.closing .la-drawer {
+  transform: translateY(100%) !important;
+}
+
 /* ---------- Search: Spotlight on the iPhone, the search bar's page on Android ---------- */
 
 .os-search {
@@ -1188,57 +1288,34 @@ html[data-os='android'] .os-search-field {
   color: rgba(243, 239, 228, 0.75);
 }
 
-/* ---------- Opening a game: the icon grows to fill the screen ---------- */
+/* ---------- Opening a game: the icon grows over home into the game's splash (lib/launch.ts) ---------- */
 
 .launch-veil {
+  --c: #6d6a5f;
   position: fixed;
-  inset: 0;
-  z-index: 90;
+  z-index: 1000;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  line-height: 1;
+  background: radial-gradient(130% 120% at 25% 10%, oklch(from var(--c) calc(l * 0.93) calc(c * 1.05) h) 0%, oklch(from var(--c) calc(l * 0.76) c h) 60%, oklch(from var(--c) calc(l * 0.68) calc(c * 0.95) h) 100%);
+  transition:
+    left 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    top 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    width 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    height 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    border-radius 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    font-size 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    opacity 0.32s ease;
+}
+
+.launch-veil.done {
+  opacity: 0;
   pointer-events: none;
-  background: oklch(from var(--c) calc(l * 0.78) c h);
-  transform-origin: var(--lx) var(--ly);
-  animation: launch-veil 0.56s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
 }
 
 .launch-emoji {
-  font-size: 110px;
-  line-height: 1;
-  filter: drop-shadow(0 16px 12px rgba(0, 0, 0, 0.4));
-  animation: launch-emoji 0.56s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
-}
-
-@keyframes launch-veil {
-  0% {
-    transform: scale(var(--ls));
-    border-radius: 120px;
-    opacity: 1;
-  }
-  48% {
-    transform: scale(1);
-    border-radius: 0;
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    border-radius: 0;
-    opacity: 0;
-  }
-}
-
-@keyframes launch-emoji {
-  0% {
-    transform: scale(0.6);
-  }
-  48% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 0;
-  }
+  filter: drop-shadow(0 0.14em 0.1em rgba(0, 0, 0, 0.4));
 }
 
 /* ---------- Settings: the look ---------- */
@@ -1284,13 +1361,8 @@ html[data-look='pop'] .look-seg button.active {
 @media (prefers-reduced-motion: reduce) {
   html[data-look='pop'] .os-home.back,
   .app.returning .app-icon,
-  .launch-veil,
-  .launch-emoji,
-  .la-drawer {
+  .la-drawer,
+  .os-home.editing .os-grid.movable .app .app-icon {
     animation: none !important;
-  }
-
-  .launch-veil {
-    display: none;
   }
 }

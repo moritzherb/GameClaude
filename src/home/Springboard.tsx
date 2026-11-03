@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { SearchIcon } from '../components/Icons';
 import Tap from '../components/Tap';
-import { GAMES } from '../games/registry';
 import { CATEGORIES, type Category, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
 import type { Player } from '../state/AppState';
 import { GameApp, GameGlyph, IconArt } from './AppIcon';
+import { useHomeEdit } from './useHomeEdit';
 import { useRows } from './useRows';
+import { GAMES } from '../games/registry';
 import { CrewWidget, LastWidget } from './Widgets';
 
 export interface HomeProps {
@@ -19,6 +20,9 @@ export interface HomeProps {
   dock: ReactNode;
   onSearch: () => void;
   onShuffle: () => void;
+  /** The games in the order the user arranged them, and how to keep a new order. */
+  games: GameDefinition[];
+  onOrder: (ids: string[]) => void;
 }
 
 /**
@@ -26,12 +30,14 @@ export interface HomeProps {
  * the rest on the next page and the App Library last. The search pill sits above the dock and
  * shows the page dots while swiping.
  */
-export default function Springboard({ players, recent, returning, dock, onSearch, onShuffle }: HomeProps) {
+export default function Springboard({ players, recent, returning, dock, onSearch, onShuffle, games, onOrder }: HomeProps) {
   const grid = useRef<HTMLDivElement>(null);
   const rows = useRows(grid, 2, 4);
   const first = rows * 4;
-  const pages = [GAMES.slice(0, first), GAMES.slice(first)].filter((p, i) => i === 0 || p.length);
+  const pages = [games.slice(0, first), games.slice(first)].filter((p, i) => i === 0 || p.length);
   const pager = useRef<HTMLDivElement>(null);
+  const main = useRef<HTMLElement>(null);
+  const edit = useHomeEdit(main, games.map((g) => g.id), onOrder, pager);
   const [page, setPage] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const idle = useRef<number>(undefined);
@@ -39,7 +45,7 @@ export default function Springboard({ players, recent, returning, dock, onSearch
 
   // Back from a game on the second page: that page again.
   useLayoutEffect(() => {
-    const at = GAMES.findIndex((g) => g.id === returning);
+    const at = games.findIndex((g) => g.id === returning);
     const el = pager.current;
     if (el && at >= first) el.scrollLeft = el.clientWidth;
   }, [first, returning]);
@@ -55,9 +61,9 @@ export default function Springboard({ players, recent, returning, dock, onSearch
   const count = pages.length + 1;
 
   return (
-    <main className={`screen os-home ios${returning ? ' back' : ''}`}>
+    <main ref={main} className={`screen os-home ios${returning ? ' back' : ''}${edit.editing ? ' editing' : ''}`} {...edit.handlers}>
       <div className="sb-pages" ref={pager} onScroll={onScroll}>
-        {pages.map((games, i) => (
+        {pages.map((list, i) => (
           <section key={i} className="sb-page" aria-label={t('Page {n}', { n: i + 1 })}>
             {i === 0 && (
               <div className="sb-widgets">
@@ -65,8 +71,8 @@ export default function Springboard({ players, recent, returning, dock, onSearch
                 <LastWidget game={recent[0] ?? null} onShuffle={onShuffle} />
               </div>
             )}
-            <div className="os-grid" ref={i === 0 ? grid : undefined}>
-              {games.map((g) => (
+            <div className="os-grid movable" ref={i === 0 ? grid : undefined}>
+              {list.map((g) => (
                 <GameApp key={g.id} game={g} returning={g.id === returning} />
               ))}
             </div>
@@ -84,17 +90,24 @@ export default function Springboard({ players, recent, returning, dock, onSearch
           </div>
         </section>
       </div>
-      <button type="button" className={`sb-search${swiping ? ' paging' : ''}`} onClick={onSearch} aria-label={t('Search')}>
-        <span className="sb-search-label">
-          <SearchIcon />
-          {t('Search')}
-        </span>
-        <span className="sb-dots" aria-hidden>
-          {Array.from({ length: count }, (_, i) => (
-            <i key={i} className={i === page ? 'on' : ''} />
-          ))}
-        </span>
-      </button>
+      {/* While moving apps, Done takes the search pill's place. */}
+      {edit.editing ? (
+        <button type="button" className="sb-search os-done" onClick={edit.done}>
+          {t('Done')}
+        </button>
+      ) : (
+        <button type="button" className={`sb-search${swiping ? ' paging' : ''}`} onClick={onSearch} aria-label={t('Search')}>
+          <span className="sb-search-label">
+            <SearchIcon />
+            {t('Search')}
+          </span>
+          <span className="sb-dots" aria-hidden>
+            {Array.from({ length: count }, (_, i) => (
+              <i key={i} className={i === page ? 'on' : ''} />
+            ))}
+          </span>
+        </button>
+      )}
       <nav className="sb-dock" aria-label={t('Dock')}>
         {dock}
       </nav>

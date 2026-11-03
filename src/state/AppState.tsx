@@ -118,14 +118,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.os = platformFor(settings.phone);
   }
 
-  // The browser's bar (Android) and the strip under the clock take the look's ground colour.
+  // The browser's bar (Android) and the strip under the clock take the look's ground colour
+  // (index.html has the new look's).
   const look = lookFor(settings.look);
   useLayoutEffect(() => {
-    if (look !== 'pop') return;
-    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
-    const before = metas.map((m) => m.content);
-    metas.forEach((m) => (m.content = m.media.includes('dark') ? '#20211c' : '#ece8dd'));
-    return () => metas.forEach((m, i) => (m.content = before[i]));
+    const [light, dark] = look === 'pop' ? ['#ece8dd', '#20211c'] : ['#f1ede3', '#10110e'];
+    document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => (m.content = m.media.includes('dark') ? dark : light));
   }, [look]);
 
   // Before the screen is drawn: with big text on, the first picture mustn't show it small.

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import BigButton from '../components/BigButton';
 import { gameNumber } from '../components/GameCard';
 import Intensity from '../components/Intensity';
@@ -8,7 +8,6 @@ import { playerRange, type GameDefinition } from '../games/types';
 import { GameGlyph } from '../home/AppIcon';
 import { useLook } from '../home/usePlatform';
 import { t } from '../i18n';
-import { takeLaunch, type LaunchFrom } from '../lib/launch';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -24,36 +23,16 @@ function cardName(name: string) {
   return { text, longest };
 }
 
-/** Opened from the home screen (new look): the page grows out of the icon, like an app opening. */
-function LaunchVeil({ from, game }: { from: LaunchFrom; game: GameDefinition }) {
-  const [done, setDone] = useState(false);
-  if (done) return null;
-  return (
-    <div
-      className="launch-veil"
-      aria-hidden
-      style={{ '--lx': `${from.x}px`, '--ly': `${from.y}px`, '--ls': from.scale, '--c': game.color } as CSSProperties}
-      onAnimationEnd={(e) => e.target === e.currentTarget && setDone(true)}
-    >
-      <span className="launch-emoji">
-        <GameGlyph game={game} />
-      </span>
-    </div>
-  );
-}
-
 export default function GameDetail({ game }: { game: GameDefinition }) {
   const { players } = useApp();
   const pop = useLook() === 'pop';
-  const [from] = useState(takeLaunch);
   const missing = Math.max(0, game.minPlayers - players.length);
   const tooMany = !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
   const range = playerRange(game);
   const name = cardName(t(game.name));
 
   return (
-    <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}${from ? ' launching' : ''}`}>
-      {from && <LaunchVeil from={from} game={game} />}
+    <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}`}>
       {/* New look: back to the home screen the game was opened from. */}
       <TopBar onBack={() => navigate(pop ? paths.home : paths.games())} />
 

@@ -17,6 +17,9 @@ const SECOND: Record<string, string> = { 'princess-treatment': '🤴' };
 
 export const shortName = (game: GameDefinition) => t(SHORT[game.id] ?? game.name);
 
+/** The emoji on a game's icon and splash. */
+export const glyphsOf = (game: GameDefinition) => (SECOND[game.id] ? [game.emoji, SECOND[game.id]] : [game.emoji]);
+
 /** A game's emoji for its icon (two of them for Princess/King). */
 export function GameGlyph({ game }: { game: GameDefinition }) {
   const second = SECOND[game.id];
@@ -100,7 +103,7 @@ export function GameApp({ game, returning }: { game: GameDefinition; returning?:
       color={game.color}
       glyph={<GameGlyph game={game} />}
       returning={returning}
-      onOpen={(icon) => launch(icon, game, () => navigate(paths.game(game.id)))}
+      onOpen={(icon) => launch(icon, game, () => navigate(paths.game(game.id)), glyphsOf(game))}
     />
   );
 }
