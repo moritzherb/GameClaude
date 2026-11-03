@@ -1,3 +1,5 @@
+import { STORE_EMOJI } from '../i18n/store';
+import { storeSafe } from '../lib/native';
 import type { GameDefinition } from './types';
 import arschloch from './arschloch';
 import president from './president';
@@ -19,7 +21,10 @@ import trash from './trash';
 import whoDrinks from './who-drinks';
 
 /** Every game in the app. New games get imported and added here. */
-export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, klatschen, fuckTheDealer, fiveThousand, maexchen, schweinerei, speed, palace, president, arschloch, horseRace, trash, whoDrinks, princessTreatment, tenBut, party];
+export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, klatschen, fuckTheDealer, fiveThousand, maexchen, schweinerei, speed, palace, president, arschloch, horseRace, trash, whoDrinks, princessTreatment, tenBut, party].map(
+  // The store app: no swearing or pants in the icons (names: i18n/store.ts).
+  (g) => (storeSafe && STORE_EMOJI[g.emoji] ? { ...g, emoji: STORE_EMOJI[g.emoji] } : g),
+);
 
 export function findGame(id: string | undefined) {
   return GAMES.find((g) => g.id === id);

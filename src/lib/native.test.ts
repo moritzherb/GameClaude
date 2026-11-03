@@ -4,11 +4,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 async function load(inApp: boolean) {
   vi.resetModules();
   const classes = new Set<string>();
+  const listen = { addEventListener: () => {}, removeEventListener: () => {} };
   vi.stubGlobal('window', {
     __PROST_NATIVE__: inApp ? { platform: 'ios', version: '1.0.0', storeSafe: true } : undefined,
     location: { hash: '#/' },
+    ...listen,
   });
-  vi.stubGlobal('document', { documentElement: { classList: { add: (...c: string[]) => c.forEach((x) => classes.add(x)) } } });
+  vi.stubGlobal('document', { documentElement: { classList: { add: (...c: string[]) => c.forEach((x) => classes.add(x)) } }, ...listen });
   const native = await import('./native');
   const { FIELDS } = await import('../games/party/fields');
   return { native, FIELDS, classes };
@@ -30,6 +32,13 @@ describe('store app', () => {
     expect(all).not.toMatch(/🚬|snus|tschick|cigar|tobacco/i);
     expect(FIELDS.tschick.label(0)).toBe('Box flip');
     expect(FIELDS.snus.label(0)).toBe('Tin flip');
+  });
+
+  it('shows no swearing, pants or shots in the icons', async () => {
+    const { FIELDS } = await load(true);
+    const { GAMES } = await import('../games/registry');
+    const icons = [...GAMES.map((g) => g.emoji), ...Object.values(FIELDS).map((f) => f.emoji)].join(' ');
+    expect(icons).not.toMatch(/🚬|🥃|🍑|👖|🤬|💩/u);
   });
 
   it('keeps the website as it is', async () => {

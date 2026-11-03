@@ -188,9 +188,6 @@ const party: Record<string, string> = {
   'Is your age an odd number? Then drink 2.': 'Ist dein Alter eine ungerade Zahl? Dann trink 2.',
   'Is your age an even number? Then drink 2.': 'Ist dein Alter eine gerade Zahl? Dann trink 2.',
   'Tschick flip': 'Tschick-Flip',
-  'Box flip': 'Schachtel-Flip',
-  'Everyone flips the box in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.':
-    'Alle werfen reihum die Schachtel, du zuerst. Liegt sie flach: 1 Schluck, auf der Seite: 2, aufrecht: 3. Jeder Wurf muss gleich gut oder besser sein als der davor. Die Schlucke sammeln sich: Wer es nicht schafft, trinkt alle.',
   'Everyone flips the pack in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.':
     'Alle werfen reihum die Packung, du zuerst. Liegt sie flach: 1 Schluck, auf der Seite: 2, aufrecht: 3. Jeder Wurf muss gleich gut oder besser sein als der davor. Die Schlucke sammeln sich: Wer es nicht schafft, trinkt alle.',
   'Bridge 1–2': 'Brücke 1–2',
@@ -212,7 +209,6 @@ const party: Record<string, string> = {
   'First place drinks': 'Der Erste trinkt',
   'Whoever is furthest along drinks 2. Several in front: all of them.': 'Wer am weitesten ist, trinkt 2. Sind mehrere vorne, trinken alle.',
   'Snus flip': 'Snus-Wurf',
-  'Tin flip': 'Dosen-Wurf',
   'Share this board': 'Brett teilen',
   'Friends load it in Party with this code:': 'Freunde laden es in Party mit diesem Code:',
   'My prost! Party board “{name}”. Code: {code}': 'Mein prost!-Party-Brett „{name}“. Code: {code}',

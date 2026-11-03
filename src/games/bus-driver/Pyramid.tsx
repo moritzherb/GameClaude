@@ -109,7 +109,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
 
         <section className="section">
           <h3 className="section-title">{t('Sips per row')}</h3>
-          <div className="seg three">
+          <div className={`seg ${SIP_MODES.length === 3 ? 'three' : 'two'}`}>
             {SIP_MODES.map((m) => (
               <Tap key={m.id} className={`seg-btn${m.id === sipMode ? ' active' : ''}`} onClick={() => setSipMode(m.id)}>
                 <span className="seg-main">{t(m.label)}</span>

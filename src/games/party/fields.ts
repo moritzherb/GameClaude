@@ -122,7 +122,8 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Only an exact roll gets you in. Too many, and you walk the rest back.'),
   },
   shots: {
-    emoji: '🥃',
+    // In the store app these are sips (i18n/store.ts), and look like it.
+    emoji: storeSafe ? '🍺' : '🥃',
     color: C.yellow,
     group: 'drink',
     label: (n) => (n === 1 ? t('Shot') : t('{n} shots', { n })),
@@ -208,17 +209,15 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
     param: evenOdd,
   },
-  // In the store app no tobacco anywhere (App Store rule 1.4.3): the same game with a plain box.
+  // In the store app no tobacco (App Store rule 1.4.3): a plain box, see i18n/store.ts.
   tschick: {
     emoji: storeSafe ? '📦' : '🚬',
     color: C.red,
     group: 'game',
-    label: () => (storeSafe ? t('Box flip') : t('Tschick flip')),
-    title: () => (storeSafe ? t('Box flip') : t('Tschick flip')),
+    label: () => t('Tschick flip'),
+    title: () => t('Tschick flip'),
     text: () =>
-      storeSafe
-        ? t('Everyone flips the box in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.')
-        : t('Everyone flips the pack in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.'),
+      t('Everyone flips the pack in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.'),
     choose: true,
   },
   bridge: {
@@ -235,7 +234,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Roll 1 or 2') : t('Roll 5 or 6')) },
   },
   mystery: {
-    emoji: '🧪',
+    emoji: storeSafe ? '🎭' : '🧪',
     color: C.indigo,
     group: 'drink',
     label: () => t('Mystery shot'),
@@ -278,8 +277,8 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     emoji: '⭐',
     color: C.cream,
     group: 'game',
-    label: () => (storeSafe ? t('Tin flip') : t('Snus flip')),
-    title: () => (storeSafe ? t('Tin flip') : t('Snus flip')),
+    label: () => t('Snus flip'),
+    title: () => t('Snus flip'),
     text: () => t('Call it, lid or bottom, then flip the tin like a coin. Right: give out 2. Wrong: drink 2.'),
     ace: true,
     choose: true,
@@ -338,7 +337,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   cheek: {
-    emoji: '🍑',
+    emoji: storeSafe ? '🙌' : '🍑',
     color: C.pink,
     group: 'game',
     label: () => t('Cheek'),
