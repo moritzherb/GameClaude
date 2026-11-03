@@ -16,3 +16,24 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+
+  # The store app (mobile/): the web app built into one file, then bundled for iOS and Android.
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: mobile
+      - run: npm run check
+        working-directory: mobile
+        env:
+          CI: 1
+          EXPO_NO_TELEMETRY: 1

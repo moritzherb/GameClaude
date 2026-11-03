@@ -1,4 +1,5 @@
 import { t, tx } from '../../i18n';
+import { storeSafe } from '../../lib/native';
 
 /** Every kind of field on a Party board. */
 export type FieldKind =
@@ -207,14 +208,17 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
     param: evenOdd,
   },
+  // In the store app no tobacco anywhere (App Store rule 1.4.3): the same game with a plain box.
   tschick: {
-    emoji: '🚬',
+    emoji: storeSafe ? '📦' : '🚬',
     color: C.red,
     group: 'game',
-    label: () => t('Tschick flip'),
-    title: () => t('Tschick flip'),
+    label: () => (storeSafe ? t('Box flip') : t('Tschick flip')),
+    title: () => (storeSafe ? t('Box flip') : t('Tschick flip')),
     text: () =>
-      t('Everyone flips the pack in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.'),
+      storeSafe
+        ? t('Everyone flips the box in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.')
+        : t('Everyone flips the pack in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.'),
     choose: true,
   },
   bridge: {
@@ -274,8 +278,8 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     emoji: '⭐',
     color: C.cream,
     group: 'game',
-    label: () => t('Snus flip'),
-    title: () => t('Snus flip'),
+    label: () => (storeSafe ? t('Tin flip') : t('Snus flip')),
+    title: () => (storeSafe ? t('Tin flip') : t('Snus flip')),
     text: () => t('Call it, lid or bottom, then flip the tin like a coin. Right: give out 2. Wrong: drink 2.'),
     ace: true,
     choose: true,
