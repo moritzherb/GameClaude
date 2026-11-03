@@ -1,4 +1,5 @@
 import { tx } from '../../i18n';
+import { storeSafe } from '../../lib/native';
 import { newDeck, type Card } from '../../lib/cards';
 import { shuffle } from '../../lib/random';
 
@@ -21,7 +22,8 @@ export const SIP_MODES: { id: SipMode; label: string }[] = [
   { id: 'normal', label: tx('Normal') },
   { id: 'double', label: tx('Tipsy ×2') },
   { id: 'plus2', label: tx('Tipsy +2') },
-];
+  // The store app leaves out the doubling one (up to 32 sips a card).
+].filter((m) => !storeSafe || m.id !== 'double') as { id: SipMode; label: string }[];
 
 /**
  * Sips a card in this row is worth (row 0 = bottom).

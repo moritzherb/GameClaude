@@ -8,6 +8,8 @@ export interface Pawn {
   jailed: boolean;
   /** At a bridge, waiting to cross it. */
   gate: boolean;
+  /** Over the bridge it stands on (at its far end, about to roll on). */
+  crossed?: boolean;
   /** Aces up the sleeve, each good for skipping one field. */
   aces: number;
 }

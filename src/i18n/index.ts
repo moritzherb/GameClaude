@@ -9,7 +9,9 @@
  * Every string passed to t()/tx() needs an entry in src/i18n/de/*.ts; i18n.test.ts checks that.
  * Missing entries fall back to English.
  */
+import { storeSafe } from '../lib/native';
 import de from './de';
+import { STORE } from './store';
 
 export type Lang = 'en' | 'de';
 export type Vars = Record<string, string | number>;
@@ -31,8 +33,10 @@ export function getLang(): Lang {
   return current;
 }
 
-export function translate(lang: Lang, text: string, vars?: Vars): string {
-  const out = lang === 'de' ? (de[text] ?? text) : text;
+/** `store`: the store app's wording (i18n/store.ts) where it differs. */
+export function translate(lang: Lang, text: string, vars?: Vars, store = storeSafe): string {
+  const swap = store ? STORE[text] : undefined;
+  const out = swap ? swap[lang] : lang === 'de' ? (de[text] ?? text) : text;
   return vars ? out.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : out;
 }
 

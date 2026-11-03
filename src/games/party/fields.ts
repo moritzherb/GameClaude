@@ -1,4 +1,5 @@
 import { t, tx } from '../../i18n';
+import { storeSafe } from '../../lib/native';
 
 /** Every kind of field on a Party board. */
 export type FieldKind =
@@ -121,7 +122,8 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Only an exact roll gets you in. Too many, and you walk the rest back.'),
   },
   shots: {
-    emoji: '🥃',
+    // In the store app these are sips (i18n/store.ts), and look like it.
+    emoji: storeSafe ? '🍺' : '🥃',
     color: C.yellow,
     group: 'drink',
     label: (n) => (n === 1 ? t('Shot') : t('{n} shots', { n })),
@@ -207,8 +209,9 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
     param: evenOdd,
   },
+  // In the store app no tobacco (App Store rule 1.4.3): a plain box, see i18n/store.ts.
   tschick: {
-    emoji: '🚬',
+    emoji: storeSafe ? '📦' : '🚬',
     color: C.red,
     group: 'game',
     label: () => t('Tschick flip'),
@@ -231,7 +234,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Roll 1 or 2') : t('Roll 5 or 6')) },
   },
   mystery: {
-    emoji: '🧪',
+    emoji: storeSafe ? '🎭' : '🧪',
     color: C.indigo,
     group: 'drink',
     label: () => t('Mystery shot'),
@@ -334,7 +337,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   cheek: {
-    emoji: '🍑',
+    emoji: storeSafe ? '🙌' : '🍑',
     color: C.pink,
     group: 'game',
     label: () => t('Cheek'),

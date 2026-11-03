@@ -1,9 +1,13 @@
 // Sound, vibration and confetti. Kept outside React so any game can call them directly.
 
+import { isNative, toNative } from './native';
+
 export const fxSettings = { sound: true, haptics: true };
 
 export function buzz(pattern: number | number[] = 15) {
   if (!fxSettings.haptics) return;
+  // In the store app: the phone's real haptics (iPhones have no navigator.vibrate at all).
+  if (isNative) return toNative({ type: 'haptic', pattern: Array.isArray(pattern) ? pattern : [pattern] });
   try {
     navigator.vibrate?.(pattern);
   } catch {

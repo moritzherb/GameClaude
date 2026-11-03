@@ -3,6 +3,7 @@ import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
+import { storeSafe } from '../../lib/native';
 import { cardName, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
@@ -173,7 +174,7 @@ export default function HoseRunter() {
       return (
         <div className="hr">
           <div className="connecting">
-            <div className="connecting-emoji">👖</div>
+            <div className="connecting-emoji">{storeSafe ? '🎯' : '👖'}</div>
             <h2 className="bd-title">{t('Pants Down')}</h2>
             <p className="lead">{host ? t('Waiting for {name} to deal…', { name: host.name }) : t('Waiting for the host to deal…')}</p>
           </div>
@@ -524,7 +525,7 @@ function CardButton({ card, selected, disabled, onClick }: { card: Card; selecte
 }
 
 function ScoreBadge({ score }: { score: Score }) {
-  const label = { feuer: `🔥 ${t('Fire')}`, hose: `👖 ${t('Pants Down')}`, triple: '30½', suit: '' }[score.kind];
+  const label = { feuer: `🔥 ${t('Fire')}`, hose: `${storeSafe ? '🎯' : '👖'} ${t('Pants Down')}`, triple: '30½', suit: '' }[score.kind];
   return label ? <span className={`hr-badge ${score.kind}`}>{label}</span> : null;
 }
 

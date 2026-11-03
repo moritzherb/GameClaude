@@ -44,7 +44,6 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   const [showEffects, setShowEffects] = useState(false);
   const { die, roll } = useRoll();
   const canvas = useRef<HTMLCanvasElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
   const top = useRef<HTMLDivElement>(null);
   const scene = useRef<Scene | null>(null);
   const byId = useCallback((id: string) => players.find((p) => p.id === id)!, [players]);
@@ -77,7 +76,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     );
   }, [board, lang]);
   const views = useMemo(
-    () => players.map((p) => ({ id: p.id, pawn: pawns[p.id], pos: g.pawns[p.id].pos, name: p.name, gate: g.pawns[p.id].gate })),
+    () => players.map((p) => ({ id: p.id, pawn: pawns[p.id], pos: g.pawns[p.id].pos, name: p.name, gate: g.pawns[p.id].gate, crossed: g.pawns[p.id].crossed })),
     [players, pawns, g.pawns],
   );
   useLayoutEffect(() => {
@@ -87,12 +86,13 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   useLayoutEffect(() => {
     scene.current?.follow(current(gRef.current), true);
   }, []);
-  // What lies over the board at its top and bottom: the pawn stays in view between.
+  // The pawn stays in view above the cards and the die, at the same height whatever shows there:
+  // the room kept free at the bottom is fixed (the cards' heights would move the board every time).
   useLayoutEffect(() => {
-    const update = () => scene.current?.setInsets(top.current?.offsetHeight ?? 0, panel.current?.offsetHeight ?? 0);
+    const update = () => scene.current?.setInsets(top.current?.offsetHeight ?? 0, Math.round((canvas.current?.clientHeight ?? 700) * 0.4));
     const ro = new ResizeObserver(update);
     if (top.current) ro.observe(top.current);
-    if (panel.current) ro.observe(panel.current);
+    if (canvas.current) ro.observe(canvas.current);
     update();
     return () => ro.disconnect();
   }, []);
@@ -122,7 +122,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     setPhase({ kind: 'busy' });
     await scene.current?.hop(id, path, () => sfx.tick());
     const pos = path[path.length - 1];
-    commit(setPawn(gRef.current, id, { pos }));
+    commit(setPawn(gRef.current, id, { pos, crossed: false }));
     land(id, pos);
   };
 
@@ -143,7 +143,8 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     if (p.gate) {
       const need = param(x.fields[p.pos]) ? [1, 2] : [5, 6];
       if (need.includes(v)) {
-        commit(setPawn(gRef.current, id, { gate: false }));
+        commit(setPawn(gRef.current, id, { gate: false, crossed: true }));
+        await scene.current?.cross(id);
         setPhase({ kind: 'note', emoji: '🌉', title: t('Over you go!'), text: t('Roll again to move on.'), then: 'again' });
       } else setPhase({ kind: 'note', emoji: '🍻', title: t('Not this time: drink 1 and wait.'), then: 'next' });
       return;
@@ -152,11 +153,16 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   };
 
   /** The Ace, played on the prison or the bridge before rolling: free to go. */
-  const aceOut = () => {
+  const aceOut = async () => {
     const id = current(gRef.current);
     const p = gRef.current.pawns[id];
-    commit(setPawn(gRef.current, id, { aces: p.aces - 1, jailed: false, gate: false }));
+    commit(setPawn(gRef.current, id, { aces: p.aces - 1, jailed: false, gate: false, crossed: p.gate }));
     sfx.pop();
+    if (p.gate) {
+      setPhase({ kind: 'busy' });
+      await scene.current?.cross(id);
+      setPhase({ kind: 'turn' });
+    }
   };
 
   const resolve = async (o: Outcome, pos: number, f: Field) => {
@@ -176,7 +182,14 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
       const path = walkBack(pos, o.steps);
       if (path.length) return move(id, path);
     }
-    if (o.then === 'again') return setPhase({ kind: 'turn' });
+    if (o.then === 'again') {
+      // Over the bridge: across it to its far end, then roll again.
+      if (f.kind === 'bridge') {
+        setPhase({ kind: 'busy' });
+        await scene.current?.cross(id);
+      }
+      return setPhase({ kind: 'turn' });
+    }
     next();
   };
 
@@ -273,7 +286,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
 
       <BigDie value={die.value} flip={die.flip} />
 
-      <div ref={panel} className="pt-panel">
+      <div className="pt-panel">
         {phase.kind === 'field' ? (
           <FieldCard
             key={`${phase.pos}-${phase.chosen?.kind ?? ''}`}

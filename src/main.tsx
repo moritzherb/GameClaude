@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { watchAppHeight } from './lib/appHeight';
 import { watchBoxes } from './lib/boxes';
+import { isNative, toNative, watchScreens } from './lib/native';
 import { watchForUpdates } from './lib/update';
 import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
@@ -52,7 +53,7 @@ watchAppHeight();
 // before the first render, so the first picture has them.
 watchBoxes();
 
-void fontsReady().then(() =>
+void fontsReady().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <AppProvider>
@@ -61,10 +62,14 @@ void fontsReady().then(() =>
         </RoomProvider>
       </AppProvider>
     </StrictMode>,
-  ),
-);
+  );
+  // The store app keeps its splash screen up until the first screen is drawn.
+  if (isNative) requestAnimationFrame(() => requestAnimationFrame(() => toNative({ type: 'ready' })));
+});
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// The store app brings its own copy of the app (and its updates come through the store).
+if (isNative) watchScreens();
+else if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });

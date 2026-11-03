@@ -3,7 +3,9 @@ import { t } from '../i18n';
 import { rememberPeople } from '../lib/people';
 import { buzz, sfx } from '../lib/fx';
 import { load } from '../lib/storage';
+import { cloudOn } from './cloud';
 import { newRoomCode, peerIdFor, type Member, type Profile, type ToGuest, type ToHost } from './protocol';
+import { SUPABASE_LINE } from './realtime';
 import { DataConnection, Peer, type PeerError } from './relay';
 import { forgetSavedGames } from './saved';
 
@@ -79,8 +81,11 @@ function savedRoom(): SavedRoom | null {
   }
 }
 
-/** Optional own message servers (used for local testing); otherwise the public ones in relay.ts. */
-const servers = (import.meta.env.VITE_RELAY_SERVERS as string | undefined)?.split(',').filter(Boolean);
+/**
+ * The rooms server: our Supabase project when the app is built with it, else the public MQTT
+ * servers in relay.ts. VITE_RELAY_SERVERS sets other ones (local tests: ws://… MQTT, or "supabase").
+ */
+const servers = (import.meta.env.VITE_RELAY_SERVERS as string | undefined)?.split(',').filter(Boolean) ?? (cloudOn ? [SUPABASE_LINE] : undefined);
 
 function friendlyError(err: PeerError, code: string | null) {
   switch (err.type) {

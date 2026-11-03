@@ -4,8 +4,10 @@ import BigButton from '../../components/BigButton';
 import Sheet from '../../components/Sheet';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
+import { cloudOn } from '../../net/cloud';
 import type { Player } from '../../state/AppState';
 import { PawnIcon } from './bits';
+import { FetchBoardSheet, ShareBoardSheet } from './BoardCode';
 import type { Board } from './boards';
 import { PAWNS, type PawnDef } from './pawns';
 
@@ -19,12 +21,16 @@ interface Props {
   pawns: Record<string, PawnDef>;
   onPawns: (p: Record<string, PawnDef>) => void;
   onEdit: (b: Board, asNew: boolean) => void;
+  /** A board someone shared, loaded by its code: save it and pick it. */
+  onShared: (b: Board) => void;
   onStart: () => void;
 }
 
 /** Before the game: which board, and everyone's pawn. */
-export default function Setup({ players, boards, boardId, onBoard, pawns, onPawns, onEdit, onStart }: Props) {
+export default function Setup({ players, boards, boardId, onBoard, pawns, onPawns, onEdit, onShared, onStart }: Props) {
   const [picking, setPicking] = useState<Player | null>(null);
+  const [sharing, setSharing] = useState<Board | null>(null);
+  const [fetching, setFetching] = useState(false);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
 
   const pick = (p: Player, def: PawnDef) => {
@@ -70,7 +76,30 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
           <button type="button" className="text-btn pt-link" onClick={() => onEdit(board, true)}>
             ＋ {t('Make your own from this board')}
           </button>
+          {cloudOn && board.custom && (
+            <button type="button" className="text-btn pt-link" onClick={() => setSharing(board)}>
+              📤 {t('Share this board')}
+            </button>
+          )}
+          {cloudOn && (
+            <button type="button" className="text-btn pt-link" onClick={() => setFetching(true)}>
+              📥 {t('Board from a code')}
+            </button>
+          )}
         </div>
+        {cloudOn && (
+          <>
+            <ShareBoardSheet board={sharing} onClose={() => setSharing(null)} />
+            <FetchBoardSheet
+              open={fetching}
+              onClose={() => setFetching(false)}
+              onBoard={(b) => {
+                setFetching(false);
+                onShared(b);
+              }}
+            />
+          </>
+        )}
       </section>
 
       <section className="section">

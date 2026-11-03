@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import { t, tx } from '../../i18n';
+import { storeSafe } from '../../lib/native';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
 import { Countdown, Die, Pack, PickPlayer, SnusTin, useRoll } from './bits';
@@ -255,7 +256,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
         {made == null ? (
           <>
             {canAce && (
-              <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'again', ace: true, update: (x) => setPawn(x, lander.id, { gate: false }) })}>
+              <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'again', ace: true, update: (x) => setPawn(x, lander.id, { gate: false, crossed: true }) })}>
                 🂡 {t('Play your Ace')}
               </button>
             )}
@@ -264,7 +265,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
             </BigButton>
           </>
         ) : made ? (
-          <BigButton size="xl" onClick={() => onDone({ then: 'again', update: (x) => setPawn(x, lander.id, { gate: false }) })}>
+          <BigButton size="xl" onClick={() => onDone({ then: 'again', update: (x) => setPawn(x, lander.id, { gate: false, crossed: true }) })}>
             {t('Roll again')}
           </BigButton>
         ) : (
@@ -538,12 +539,13 @@ function DoubleCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: Pl
   const [step, setStep] = useState(0);
   const [end, setEnd] = useState<{ who: Player; n: number } | null>(null);
   const who = order[step % order.length];
-  const n = 2 ** step;
+  // In the store app it stops doubling at 4 (no runaway rounds).
+  const n = storeSafe ? Math.min(4, 2 ** step) : 2 ** step;
   return (
     <Card f={f} pos={pos} lander={lander} chosen={chosen} text={step ? undefined : textOf(f)}>
       <div className="pt-double">
         <span className="pt-double-n">{n}</span>
-        <span className="pt-double-who">{t('{name}: drink {n}, or roll a 5 or 6 to pass on {m}', { name: who.name, n, m: n * 2 })}</span>
+        <span className="pt-double-who">{t('{name}: drink {n}, or roll a 5 or 6 to pass on {m}', { name: who.name, n, m: storeSafe ? Math.min(4, n * 2) : n * 2 })}</span>
       </div>
       <div className="pt-dice">
         <Die value={die.value} rolling={die.rolling} big />

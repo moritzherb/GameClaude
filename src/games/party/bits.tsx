@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import Avatar from '../../components/Avatar';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
+import { storeSafe } from '../../lib/native';
 import type { Player } from '../../state/AppState';
 import type { Toss } from './logic';
 import { pawnSprite, SPRITE_H, type PawnDef } from './pawns';
@@ -184,7 +185,7 @@ const POSE: Record<Toss, { rx: number; rz: number; y: number }> = {
   3: { rx: 0, rz: 0, y: 37 },
 };
 
-/** A pack of cigarettes, flipped into the air; it lands flat, on its side or upright. */
+/** A pack of cigarettes (a plain box in the store app), flipped into the air; it lands flat, on its side or upright. */
 export function Pack({ toss, flip }: { toss: Toss | null; flip: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
@@ -210,11 +211,11 @@ export function Pack({ toss, flip }: { toss: Toss | null; flip: number }) {
       <span ref={ref} className="pt-pack" style={{ transform: `translateY(${rest.y}px) rotateX(${rest.rx}deg) rotateZ(${rest.rz}deg)` }}>
         <span className="pt-pack-face front">
           <span className="pt-pack-top" />
-          <span className="pt-pack-name">TSCHICK</span>
+          <span className="pt-pack-name">{storeSafe ? 'PROST' : 'TSCHICK'}</span>
         </span>
         <span className="pt-pack-face back">
           <span className="pt-pack-top" />
-          <span className="pt-pack-name">TSCHICK</span>
+          <span className="pt-pack-name">{storeSafe ? 'PROST' : 'TSCHICK'}</span>
         </span>
         <span className="pt-pack-face left" />
         <span className="pt-pack-face right" />
@@ -225,7 +226,7 @@ export function Pack({ toss, flip }: { toss: Toss | null; flip: number }) {
   );
 }
 
-/** A tin of snus, flipped like a coin: it lands lid up or bottom up. */
+/** A tin of snus (a plain tin in the store app), flipped like a coin: it lands lid up or bottom up. */
 export function SnusTin({ lid, flip }: { lid: boolean | null; flip: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
@@ -247,7 +248,7 @@ export function SnusTin({ lid, flip }: { lid: boolean | null; flip: number }) {
       <span ref={ref} className="pt-snus" style={{ transform: `rotateX(${lid === false ? 180 : 0}deg)` }}>
         <span className="pt-snus-face lid">
           <span className="pt-snus-star">★</span>
-          <span className="pt-snus-name">SNUS</span>
+          <span className="pt-snus-name">{storeSafe ? 'PROST' : 'SNUS'}</span>
         </span>
         <span className="pt-snus-face bottom">
           <span className="pt-snus-ring" />

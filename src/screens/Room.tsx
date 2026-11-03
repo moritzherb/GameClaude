@@ -14,6 +14,7 @@ import { useProfile } from '../net/profile';
 import { normalizeCode } from '../net/protocol';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
+import { isNative, toNative } from '../lib/native';
 
 /** Link that opens the app straight on the join screen for this room. */
 function joinLink(code: string) {
@@ -191,6 +192,10 @@ function Lobby() {
   const share = async () => {
     const url = joinLink(code);
     try {
+      if (isNative) {
+        toNative({ type: 'share', title: t('prost! room'), text: t('Join my prost! room: {code}', { code }), url });
+        return;
+      }
       if (navigator.share) {
         await navigator.share({ title: t('prost! room'), text: t('Join my prost! room: {code}', { code }), url });
         return;

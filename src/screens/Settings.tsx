@@ -1,9 +1,13 @@
+import { useEffect, useState } from 'react';
+import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
 import TopBar from '../components/TopBar';
 import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
+import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
 import { navigate, paths } from '../lib/router';
+import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
 
 type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean';
@@ -15,8 +19,23 @@ const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'clean', emoji: '🃏', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
 ];
 
+/** The privacy policy, on the website (in the store app: in the phone's browser). */
+function openPrivacy() {
+  const url = new URL('privacy.html', window.location.href.split('#')[0]).href;
+  if (isNative) toNative({ type: 'open', url });
+  else window.open(url, '_blank', 'noopener');
+}
+
+/** Whether the store app offers the ad privacy choices (the law asks for them in some places, e.g. the EU). */
+function useAdChoices() {
+  const [shown, setShown] = useState(privacyOptions);
+  useEffect(() => onNative((msg) => msg.type === 'ads' && setShown(msg.privacyOptions)), []);
+  return isNative && shown;
+}
+
 export default function Settings() {
   const { settings, updateSettings, markedKnown, setKnown } = useApp();
+  const adChoices = useAdChoices();
   const withExplanations = GAMES.filter((g) => g.explains && (g.component || g.online));
 
   return (
@@ -109,6 +128,30 @@ export default function Settings() {
               </button>
             );
           })}
+        </div>
+      </section>
+
+      {cloudOn && <CloudBackup />}
+
+      <section className="section">
+        <h2 className="section-title">{t('Privacy')}</h2>
+        <div className="settings-list">
+          <button type="button" className="setting-row" onClick={openPrivacy}>
+            <span className="setting-emoji">🔒</span>
+            <span className="setting-text">
+              <span className="setting-label">{t('Privacy policy')}</span>
+              <span className="setting-hint">{t('What the app keeps and why')}</span>
+            </span>
+          </button>
+          {adChoices && (
+            <button type="button" className="setting-row" onClick={() => toNative({ type: 'privacy' })}>
+              <span className="setting-emoji">🎯</span>
+              <span className="setting-text">
+                <span className="setting-label">{t('Ad choices')}</span>
+                <span className="setting-hint">{t('Change what the ads may use')}</span>
+              </span>
+            </button>
+          )}
         </div>
       </section>
 

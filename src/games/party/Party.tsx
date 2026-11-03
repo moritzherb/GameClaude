@@ -82,6 +82,12 @@ export default function Party({ players, exit }: GameProps) {
         save('party-pawns', { ...load<Record<string, string>>('party-pawns', {}), ...Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v.id])) });
       }}
       onEdit={(b, asNew) => setEditing({ board: b, asNew })}
+      onShared={(b) => {
+        saveBoard(b);
+        setBoards(allBoards());
+        setBoardId(b.id);
+        save('party-board', b.id);
+      }}
       onStart={() => setGame(1)}
     />
   );
