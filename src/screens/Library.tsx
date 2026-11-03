@@ -1,25 +1,28 @@
 import { useEffect, useRef } from 'react';
+import GameCard from '../components/GameCard';
 import TopBar from '../components/TopBar';
 import { GAMES } from '../games/registry';
 import { CATEGORIES, type CategoryId } from '../games/types';
-import { GameApp } from '../home/AppIcon';
-import { usePlatform } from '../home/usePlatform';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 
-/** All games, or one kind of them, like a folder opened on the home screen. */
 export default function Library({ category }: { category: CategoryId | null }) {
-  const os = usePlatform();
-  const games = GAMES.filter((g) => !category || g.categories.includes(category));
+  // Playable games first, "coming soon" ones after.
+  const games = GAMES.filter((g) => !category || g.categories.includes(category)).sort(
+    (a, b) => Number(!a.component && !a.online) - Number(!b.component && !b.online),
+  );
   const current = CATEGORIES.find((c) => c.id === category);
 
   // Bring the picked category into view. Only the strip scrolls: scrollIntoView would also move
   // the whole page on iPhones.
   const strip = useRef<HTMLDivElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
+  // Another category: its games from the top.
+  const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    panel.current?.scrollTo(0, 0);
+    list.current?.scrollTo(0, 0);
+  }, [category]);
+  useEffect(() => {
     const box = strip.current;
     const on = box?.querySelector<HTMLElement>('.chip.active');
     if (!box || !on) return;
@@ -45,19 +48,22 @@ export default function Library({ category }: { category: CategoryId | null }) {
   );
 
   return (
-    <main className={`screen os-folder ${os}`}>
-      <div className="wallpaper" aria-hidden />
+    <main className="screen library">
       <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="os-folder-title">{current ? t(current.label) : t('All games')}</h1>
+      <h1 className="large-title">{current ? t(current.label) : t('All games')}</h1>
+
       <div className="chips" ref={strip}>
         {chip(null, t('All'))}
         {CATEGORIES.map((c) => chip(c.id, t(c.label)))}
       </div>
-      <div className="os-folder-panel" ref={panel}>
-        <div className="os-grid">
+
+      {/* Only the games scroll (title and categories stay put), with a scroll bar beside them. */}
+      <div className="library-scroll" ref={list}>
+        <div className="ticket-list">
           {games.map((g) => (
-            <GameApp key={g.id} game={g} />
+            <GameCard key={g.id} game={g} onOpen={() => navigate(paths.game(g.id))} />
           ))}
+          <div className="ticket-more">{t('More games on the way')}</div>
         </div>
       </div>
     </main>

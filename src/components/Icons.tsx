@@ -61,14 +61,3 @@ export const PhoneIcon = () => (
     <path d="M10.5 18.5h3" />
   </Icon>
 );
-export const SearchIcon = () => (
-  <Icon strokeWidth={2.2}>
-    <circle cx="10.5" cy="10.5" r="6.5" />
-    <path d="M15.5 15.5 20 20" />
-  </Icon>
-);
-export const ChevronUpIcon = () => (
-  <Icon>
-    <path d="M6 15l6-6 6 6" />
-  </Icon>
-);
