@@ -1,6 +1,6 @@
 import { tx } from '../../i18n';
 
-/** Something someone does for you: Princess (or King) Treatment, or just the bare minimum? */
+/** Something someone does for you: just the bare minimum, or Princess (or King) Treatment? */
 export const TREATMENTS: string[] = [
   tx('Paying for dinner on the first date'),
   tx('Holding the door open for you'),

@@ -1,10 +1,16 @@
 /*
- * The two buttons of Princess/King Treatment: a princess's head and a king's head, drawn here so
- * they look the same on every phone. They sway, blink now and then and the princess's tiara
- * sparkles (CSS in global.css, .ph-…); the one tapped hops, the other steps back.
+ * The buttons of Princess/King Treatment: an unimpressed face for the bare minimum, a princess's
+ * or a king's head for the treatment, drawn here so they look the same on every phone. They sway,
+ * blink now and then, the tiara sparkles and the bored one's dots tick on (CSS in global.css,
+ * .ph-…); the one tapped hops, the other steps back.
  */
 
+import type { ReactElement } from 'react';
+
+/** Who a card's treatment is for. */
 export type Royal = 'princess' | 'king';
+/** What the table settles on: just the bare minimum, or the treatment. */
+export type Verdict = 'bare' | Royal;
 
 const SKIN = '#ffd8bd';
 const CHEEK = '#ff8fa3';
@@ -40,6 +46,35 @@ function Princess() {
       <g className="ph-sparkles" fill="#fff6b0">
         <path className="ph-spark a" d="M96 20 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 Z" />
         <path className="ph-spark b" d="M22 34 l1.5 4.5 l4.5 1.5 l-4.5 1.5 l-1.5 4.5 l-1.5 -4.5 l-4.5 -1.5 l4.5 -1.5 Z" />
+      </g>
+    </svg>
+  );
+}
+
+/** Not impressed: eyes half shut, one eyebrow up, a flat mouth, and dots ticking on. */
+function Meh() {
+  return (
+    <svg className="ph-svg" viewBox="0 0 120 130" aria-hidden="true">
+      <circle cx="60" cy="72" r="32" fill={SKIN} />
+      {/* Short hair. */}
+      <path d="M27 68 C24 40 41 29 60 29 C80 29 97 41 93 68 C88 56 80 50 71 52 C63 45 51 46 45 53 C38 51 31 57 27 68 Z" fill="#59606b" />
+      <circle cx="41" cy="84" r="6" fill={CHEEK} opacity="0.25" />
+      <circle cx="79" cy="84" r="6" fill={CHEEK} opacity="0.25" />
+      {/* Half-shut eyes: the lower half of each, under a lid. */}
+      <g className="ph-eyes">
+        <path d="M41 73 a6 6 0 0 0 12 0 Z" fill={EYE} />
+        <path d="M67 73 a6 6 0 0 0 12 0 Z" fill={EYE} />
+        <path d="M39.5 73 h15 M65.5 73 h15" stroke={EYE} strokeWidth="2.6" strokeLinecap="round" />
+      </g>
+      <g className="ph-brows">
+        <path d="M39 64 L55 65" stroke="#3f444c" strokeWidth="4" strokeLinecap="round" />
+        <path d="M65 61 L81 55" stroke="#3f444c" strokeWidth="4" strokeLinecap="round" />
+      </g>
+      <path d="M50 93 L71 91" stroke="#b0485a" strokeWidth="3.4" strokeLinecap="round" />
+      <g className="ph-dots" fill="#dfe4ea">
+        <circle className="a" cx="94" cy="26" r="3.6" />
+        <circle className="b" cx="104" cy="22" r="3.6" />
+        <circle className="c" cx="114" cy="18" r="3.6" />
       </g>
     </svg>
   );
@@ -81,12 +116,17 @@ function King() {
   );
 }
 
+const ART: Record<Verdict, () => ReactElement> = { bare: Meh, princess: Princess, king: King };
+
 /** One head as a big button. `chosen`: what the table settled on (null: not yet). */
-export function Head({ who, label, chosen, onPick }: { who: Royal; label: string; chosen: Royal | null; onPick: (r: Royal) => void }) {
+export function Head({ who, label, chosen, onPick }: { who: Verdict; label: string; chosen: Verdict | null; onPick: (v: Verdict) => void }) {
   const state = chosen == null ? '' : chosen === who ? ' on' : ' off';
+  const Art = ART[who];
   return (
     <button type="button" className={`ph-head ${who}${state}`} aria-pressed={chosen === who} onClick={() => onPick(who)}>
-      <span className="ph-art">{who === 'princess' ? <Princess /> : <King />}</span>
+      <span className="ph-art">
+        <Art />
+      </span>
       <span className="ph-label">{label}</span>
     </button>
   );

@@ -10,11 +10,23 @@ import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
+/**
+ * A game's name for the big card: it may break after a slash between words ("Princess/ King", not "10/ 10"), and the longest
+ * word decides how small the type has to get so that no word sticks out of the card. A word past
+ * the card's rounded, clipped edge can make iPhones drop the card's whole content.
+ */
+function cardName(name: string) {
+  const text = name.replace(/(?<=\p{L})\/(?=\p{L})/gu, '/\u200b');
+  const longest = Math.max(...text.split(/[\s\u200b]+/).map((w) => [...w].length));
+  return { text, longest };
+}
+
 export default function GameDetail({ game }: { game: GameDefinition }) {
   const { players } = useApp();
   const missing = Math.max(0, game.minPlayers - players.length);
   const tooMany = !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
   const range = playerRange(game);
+  const name = cardName(t(game.name));
 
   return (
     <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}`}>
@@ -25,7 +37,9 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
         <span className="detail-emoji" aria-hidden>
           {game.emoji}
         </span>
-        <h1 className="detail-name">{t(game.name)}</h1>
+        <h1 className="detail-name" style={{ '--longest': name.longest } as CSSProperties}>
+          {name.text}
+        </h1>
         <p className="detail-tagline">{t(game.tagline)}</p>
       </section>
 
