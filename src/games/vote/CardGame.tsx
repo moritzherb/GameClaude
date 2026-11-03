@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import Finished from '../../components/Finished';
@@ -36,7 +36,10 @@ export interface CardGameProps<C> extends GameProps {
   intro?: string;
   /** The card, big: the statement to read out. */
   Card: (p: { round: Round }) => ReactNode;
-  /** One tap for the whole table (no going round): without it, the card is just for talking about. */
+  /**
+   * One tap for the whole table (no going round), and the next card follows by itself. Without it,
+   * the card is just for talking about, and a Next button deals the next one.
+   */
   Choice?: (p: { round: Round; chosen: C | null; choose: (c: C) => void }) => ReactNode;
   /** What the table chose over the game, on the last screen (`mode`: the mode's id, '' without modes). */
   Summary?: (p: { picks: C[]; mode: string }) => ReactNode;
@@ -68,6 +71,9 @@ function useFit(stage: RefObject<HTMLDivElement | null>, card: unknown) {
   }, [stage, card]);
 }
 
+/** How long the table's tap stays on screen (the stamp, the hop) before the next card. */
+const CHOSEN_MS = 900;
+
 interface State<C> {
   deck: string[];
   drawn: number;
@@ -97,10 +103,34 @@ export default function CardGame<C>(props: CardGameProps<C>) {
   // Without anything to pick first, the first card is on the table right away.
   const [s, setS] = useState<State<C> | null>(() => (modes ? null : deal('')));
 
+  /** The next card (with the next reader), or the end once the cards are out. */
+  const advance = (prev: State<C>): State<C> => {
+    const picks = prev.chosen != null ? [...prev.picks, prev.chosen] : prev.picks;
+    if (prev.drawn >= prev.deck.length) return { ...prev, picks, chosen: null, over: true };
+    return {
+      ...prev,
+      drawn: prev.drawn + 1,
+      round: { text: prev.deck[prev.drawn], who: whoFor(prev.mode), reader: (prev.round.reader + 1) % players.length },
+      chosen: null,
+      picks,
+    };
+  };
+
   const reader = s && !s.over ? players[s.round.reader % players.length] : null;
   useTurnBubble(reader);
   const stage = useRef<HTMLDivElement>(null);
   useFit(stage, s && !s.over ? s.drawn : null);
+
+  // Tapped: a moment for the stamp, then the next card by itself (another tap in that moment
+  // changes the choice and starts the moment again).
+  const card = s && !s.over ? s.drawn : 0;
+  const chosen = s?.chosen ?? null;
+  useEffect(() => {
+    if (!Choice || !card || chosen == null) return;
+    const id = setTimeout(() => setS((prev) => (prev && !prev.over && prev.drawn === card ? advance(prev) : prev)), CHOSEN_MS);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- advance only reads what the card key pins
+  }, [Choice, card, chosen]);
 
   /* ---------- Before the game: who the cards are about ---------- */
   if (!s) {
@@ -132,15 +162,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
   const next = () => {
     sfx.pop();
     buzz(10);
-    const picks = s.chosen != null ? [...s.picks, s.chosen] : s.picks;
-    if (s.drawn >= s.deck.length) return setS({ ...s, picks, chosen: null, over: true });
-    setS({
-      ...s,
-      drawn: s.drawn + 1,
-      round: { text: s.deck[s.drawn], who: whoFor(s.mode), reader: (s.round.reader + 1) % players.length },
-      chosen: null,
-      picks,
-    });
+    setS(advance(s));
   };
 
   if (s.over) {
@@ -162,7 +184,6 @@ export default function CardGame<C>(props: CardGameProps<C>) {
     );
   }
 
-  const ready = !Choice || s.chosen != null;
   return (
     <div className="vt fill">
       {/* Counted as played from the second card on. */}
@@ -197,11 +218,13 @@ export default function CardGame<C>(props: CardGameProps<C>) {
           }}
         />
       )}
-      <div className="vt-next">
-        <BigButton size="xl" variant={ready ? 'primary' : 'glass'} disabled={!ready} onClick={next}>
-          {s.drawn >= s.deck.length ? t('Finish game') : t('Next')}
-        </BigButton>
-      </div>
+      {!Choice && (
+        <div className="vt-next">
+          <BigButton size="xl" onClick={next}>
+            {s.drawn >= s.deck.length ? t('Finish game') : t('Next')}
+          </BigButton>
+        </div>
+      )}
     </div>
   );
 }
