@@ -82,6 +82,18 @@ const party: Record<string, string> = {
   'Mates with {name}': 'Trinkpartner: {name}',
   Fewer: 'Weniger',
   More: 'Mehr',
+  'Draw the path with your finger, from the start on; draw back to take fields away. Tap a field to choose what it is.':
+    'Zieh den Weg mit dem Finger, vom Start aus; zieh zurück, um Felder wegzunehmen. Tipp ein Feld an, um es festzulegen.',
+  'Swipe over cells to put water there (or take it away). A field on water is a bridge over it.':
+    'Wisch über Zellen, um dort Wasser hinzusetzen (oder wegzunehmen). Ein Feld auf Wasser ist eine Brücke darüber.',
+  'Swipe beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.':
+    'Wisch neben dem Weg, um den Tunnel des Maulwurfs zu graben. Er führt vom Maulwurf-Feld zum hintersten Feld, das er erreicht.',
+  'Swipe to take water and tunnels away, or along the path from its end to take fields away.':
+    'Wisch, um Wasser und Tunnel wegzunehmen, oder vom Ende den Weg entlang, um Felder wegzunehmen.',
+  Tools: 'Werkzeuge',
+  Random: 'Zufall',
+  'Save · {n} fields': 'Speichern · {n} Felder',
+  'Name your board': 'Wie heißt dein Brett?',
   'Drink {n}, then give out {n}.': 'Trink {n}, dann verteil {n}.',
   Bought: 'Gekauft',
   'Over you go!': 'Du bist drüben!',
@@ -123,18 +135,10 @@ const party: Record<string, string> = {
   Water: 'Wasser',
   Tunnel: 'Tunnel',
   Erase: 'Radierer',
-  'Lay empty fields: tap next to the end of the path for the next one; tap the last one to take it away.':
-    'Leg leere Felder: Tipp neben das Ende des Wegs für das nächste; tipp aufs letzte, um es wieder wegzunehmen.',
-  'Tap an empty field to fill it (or a full one to change it). The finish goes on the last field, at the end.':
-    'Tipp auf ein leeres Feld, um es zu füllen (oder auf ein volles, um es zu ändern). Das Ziel kommt zum Schluss aufs letzte Feld.',
   'The path ends here: the finish.': 'Hier endet der Weg: das Ziel.',
   'Fill the empty fields at random': 'Leere Felder zufällig füllen',
   'Still {n} empty fields': 'Noch {n} leere Felder',
   'Put the finish on the last field': 'Setz das Ziel aufs letzte Feld',
-  'Tap cells to put water there (or take it away). A field on water is a bridge over it.': 'Tipp auf Zellen, um dort Wasser hinzusetzen (oder wegzunehmen). Ein Feld auf Wasser ist eine Brücke darüber.',
-  'Tap cells beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.':
-    'Tipp auf Zellen neben dem Weg, um den Tunnel des Maulwurfs zu graben. Er führt vom Maulwurf-Feld zum hintersten Feld, das er erreicht.',
-  'Tap to take water and tunnel away, or the last field of the path.': 'Tipp, um Wasser und Tunnel wegzunehmen, oder das letzte Feld des Wegs.',
   'At least {n} fields': 'Mindestens {n} Felder',
   'Save board · {n} fields': 'Brett speichern · {n} Felder',
   'Start the path over': 'Weg neu anfangen',

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import BigButton from '../../components/BigButton';
 import Sheet from '../../components/Sheet';
 import { t, tx } from '../../i18n';
@@ -7,14 +7,13 @@ import { pick } from '../../lib/random';
 import { cellKey, jumps, jumpTarget, MAX_COLS, MAX_ROWS, MIN_FIELDS, type Board, type Cell } from './boards';
 import { field, FIELDS, GROUPS, KINDS, param, type Field, type FieldKind } from './fields';
 
-type Tool = 'path' | 'fields' | 'water' | 'tunnel' | 'erase';
+type Tool = 'path' | 'water' | 'tunnel' | 'erase';
 
 const TOOLS: { id: Tool; emoji: string; label: string; hint: string }[] = [
-  { id: 'path', emoji: '👣', label: tx('Path'), hint: tx('Lay empty fields: tap next to the end of the path for the next one; tap the last one to take it away.') },
-  { id: 'fields', emoji: '🎯', label: tx('Fields'), hint: tx('Tap an empty field to fill it (or a full one to change it). The finish goes on the last field, at the end.') },
-  { id: 'water', emoji: '💧', label: tx('Water'), hint: tx('Tap cells to put water there (or take it away). A field on water is a bridge over it.') },
-  { id: 'tunnel', emoji: '🕳️', label: tx('Tunnel'), hint: tx('Tap cells beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.') },
-  { id: 'erase', emoji: '🧽', label: tx('Erase'), hint: tx('Tap to take water and tunnel away, or the last field of the path.') },
+  { id: 'path', emoji: '👣', label: tx('Path'), hint: tx('Draw the path with your finger, from the start on; draw back to take fields away. Tap a field to choose what it is.') },
+  { id: 'water', emoji: '💧', label: tx('Water'), hint: tx('Swipe over cells to put water there (or take it away). A field on water is a bridge over it.') },
+  { id: 'tunnel', emoji: '🕳️', label: tx('Tunnel'), hint: tx('Swipe beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.') },
+  { id: 'erase', emoji: '🧽', label: tx('Erase'), hint: tx('Swipe to take water and tunnels away, or along the path from its end to take fields away.') },
 ];
 
 /** Filling empty fields at random: any kind but those that have to lead somewhere. */
@@ -27,6 +26,26 @@ const SIDES = [
   { x: -1, y: 0, name: 'w' },
 ] as const;
 
+/** What the editor changes: the path, each field's kind (null: laid, not filled yet; the first is the start, the last the finish once it's set), water, tunnels. */
+interface Ed {
+  spots: Cell[];
+  kinds: (Field | null)[];
+  water: Set<string>;
+  tunnels: Set<string>;
+}
+
+/** One finger on the map: where it started and is now, and what it does on each cell it reaches. */
+interface Gesture {
+  id: number;
+  from: Cell;
+  at: Cell;
+  /** draw: the path on from its end · field: a tap on a field (to choose it) · add/remove: water or tunnel · erase */
+  mode: 'draw' | 'field' | 'add' | 'remove' | 'erase' | 'none';
+  changed: boolean;
+  /** The field the finger came down on. */
+  field: number | null;
+}
+
 interface Props {
   board: Board;
   /** Making a new board from this one (else changing it). */
@@ -37,29 +56,50 @@ interface Props {
 }
 
 /**
- * Your own board, cell by cell: lay the path, put fields on it, water and the mole's tunnels round
- * it. Water and tunnels join their neighbours, round corners too.
+ * Your own board, cell by cell: draw the path with a finger, tap its fields to fill them, swipe
+ * water and the mole's tunnels round it. Water and tunnels join their neighbours, round corners
+ * too. The whole map fits the screen (no scrolling), the tools down the left.
  */
 export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Props) {
   const [name, setName] = useState(asNew ? '' : board.name);
-  const [spots, setSpots] = useState<Cell[]>(board.spots);
-  /** Each field's kind; null: laid, not filled yet. The first is the start; the last is the finish once it's set. */
-  const [kinds, setKinds] = useState<(Field | null)[]>(board.fields);
-  const [water, setWater] = useState(() => new Set(board.water.map(cellKey)));
-  const [tunnels, setTunnels] = useState(() => new Set(board.tunnels.map(cellKey)));
+  const [ed, setEd] = useState<Ed>(() => ({
+    spots: board.spots,
+    kinds: board.fields,
+    water: new Set(board.water.map(cellKey)),
+    tunnels: new Set(board.tunnels.map(cellKey)),
+  }));
+  // Gestures read and change the newest state right away, a step per cell the finger crosses.
+  const live = useRef(ed);
+  const commit = (next: Ed) => {
+    live.current = next;
+    setEd(next);
+  };
+  const { spots, kinds, water, tunnels } = ed;
   const [tool, setTool] = useState<Tool>('path');
   const [editing, setEditing] = useState<number | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [more, setMore] = useState(false);
+  const [naming, setNaming] = useState(false);
   const cols = MAX_COLS;
   const used = [...spots.map((c) => c.y), ...[...water, ...tunnels].map((k) => +k.split(',')[1])];
-  const rows = Math.min(MAX_ROWS, Math.max(10, (used.length ? Math.max(...used) : 0) + 3));
-  // The start lies at the bottom of the map: open with it in view.
-  const grid = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const el = grid.current;
+  const fitRows = Math.min(MAX_ROWS, Math.max(10, (used.length ? Math.max(...used) : 0) + 3));
+  // While a finger draws, the map keeps its size (it grows once the finger lifts).
+  const [heldRows, setHeldRows] = useState<number | null>(null);
+  const rows = heldRows ?? fitRows;
+
+  // As big as the room beside the tools allows, whole cells.
+  const box = useRef<HTMLDivElement>(null);
+  const [room, setRoom] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = box.current;
     if (!el) return;
-    window.scrollTo(0, Math.max(0, el.getBoundingClientRect().bottom + window.scrollY - window.innerHeight + 150));
+    const measure = () => setRoom({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
+  const cell = Math.max(14, Math.floor(Math.min(room.w / cols, room.h / rows)));
 
   const at = useMemo(() => new Map(spots.map((c, i) => [cellKey(c), i])), [spots]);
   const last = spots.length - 1;
@@ -78,50 +118,160 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
     tunnelEnds.add(cellKey(spots[to]));
   }
   const end = spots[last];
-  const canExtend = (c: Cell) => !at.has(cellKey(c)) && (!end || Math.abs(end.x - c.x) + Math.abs(end.y - c.y) === 1);
+  const nextTo = (a: Cell, b: Cell) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
 
-  const shorten = () => {
-    setSpots(spots.slice(0, -1));
-    setKinds(kinds.slice(0, -1));
+  /* ---------- Changes, one cell at a time (on the newest state) ---------- */
+
+  const feel = () => {
     sfx.tick();
     buzz(8);
+  };
+
+  /** Lay the next field on the path (empty), if c is free and next to its end. */
+  const extend = (c: Cell) => {
+    const cur = live.current;
+    const k = cellKey(c);
+    const n = cur.spots.length;
+    if (cur.spots.some((s) => cellKey(s) === k) || (n && !nextTo(cur.spots[n - 1], c)) || c.y >= rows) return false;
+    const tunnelsNext = new Set(cur.tunnels);
+    tunnelsNext.delete(k);
+    commit({
+      ...cur,
+      spots: [...cur.spots, c],
+      // The finish only ever lies at the end: the field it was on is empty again.
+      kinds: [...cur.kinds.map((f, i) => (i === n - 1 && f?.kind === 'goal' ? null : f)), n ? null : field('start')],
+      tunnels: tunnelsNext,
+    });
+    feel();
+    return true;
+  };
+
+  /** Take the last field of the path away. */
+  const shorten = () => {
+    const cur = live.current;
+    if (!cur.spots.length) return false;
+    commit({ ...cur, spots: cur.spots.slice(0, -1), kinds: cur.kinds.slice(0, -1) });
+    feel();
+    return true;
+  };
+
+  const paint = (which: 'water' | 'tunnels', c: Cell, on: boolean) => {
+    const cur = live.current;
+    const k = cellKey(c);
+    if (cur[which].has(k) === on) return false;
+    if (which === 'tunnels' && on && cur.spots.some((s) => cellKey(s) === k)) return false;
+    const next = new Set(cur[which]);
+    if (on) next.add(k);
+    else next.delete(k);
+    commit({ ...cur, [which]: next });
+    feel();
+    return true;
   };
 
   const setKind = (i: number, next: Field) => {
-    sfx.tick();
-    buzz(8);
-    setKinds(kinds.map((x, k) => (k === i ? next : x)));
+    feel();
+    const cur = live.current;
+    commit({ ...cur, kinds: cur.kinds.map((x, k) => (k === i ? next : x)) });
   };
 
-  const tap = (c: Cell) => {
+  /* ---------- The finger on the map ---------- */
+
+  const gesture = useRef<Gesture | null>(null);
+  const gridEl = useRef<HTMLDivElement>(null);
+
+  const cellAt = (e: ReactPointerEvent): Cell | null => {
+    const r = gridEl.current?.getBoundingClientRect();
+    if (!r) return null;
+    const x = Math.floor((e.clientX - r.left) / cell);
+    const top = Math.floor((e.clientY - r.top) / cell);
+    if (x < 0 || x >= cols || top < 0 || top >= rows) return null;
+    return { x, y: rows - 1 - top };
+  };
+
+  /** What the finger does on one cell it reaches. */
+  const step = (c: Cell) => {
+    const g = gesture.current;
+    if (!g) return;
+    const cur = live.current;
+    const n = cur.spots.length;
+    if (g.mode === 'field') {
+      // Moved off the field it was on: no tap, nothing to do.
+      g.mode = 'none';
+      return;
+    }
+    if (g.mode === 'draw') {
+      // Back onto the field before the end: take the end away (drawing backwards undoes).
+      if (n > 1 && cellKey(cur.spots[n - 2]) === cellKey(c)) g.changed = shorten() || g.changed;
+      else g.changed = extend(c) || g.changed;
+    } else if (g.mode === 'add' || g.mode === 'remove') {
+      g.changed = paint(tool === 'water' ? 'water' : 'tunnels', c, g.mode === 'add') || g.changed;
+    } else if (g.mode === 'erase') {
+      const k = cellKey(c);
+      let did = paint('water', c, false);
+      did = paint('tunnels', c, false) || did;
+      if (n && cellKey(cur.spots[n - 1]) === k) did = shorten() || did;
+      g.changed = did || g.changed;
+    }
+  };
+
+  const onDown = (e: ReactPointerEvent) => {
+    const c = cellAt(e);
+    if (!c || gesture.current) return;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setHeldRows(rows);
+    const cur = live.current;
     const k = cellKey(c);
-    const i = at.get(k);
-    const toggle = (set: Set<string>, update: (s: Set<string>) => void) => {
-      const next = new Set(set);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      update(next);
-    };
+    const i = cur.spots.findIndex((s) => cellKey(s) === k);
+    const n = cur.spots.length;
+    const g: Gesture = { id: e.pointerId, from: c, at: c, mode: 'none', changed: false, field: i >= 0 ? i : null };
+    gesture.current = g;
     if (tool === 'path') {
-      if (i === last && last >= 0) return shorten();
-      if (i != null || (end && !canExtend(c))) return;
-      setSpots([...spots, c]);
-      // A new field, empty. The finish only ever lies at the end: the field it was on is empty again.
-      setKinds([...kinds.map((f, k) => (k === last && f?.kind === 'goal' ? null : f)), spots.length ? null : field('start')]);
-      if (tunnels.has(k)) toggle(tunnels, setTunnels);
-    } else if (tool === 'fields') {
-      if (i == null || i === 0) return;
-      setEditing(i);
-    } else if (tool === 'water') toggle(water, setWater);
-    else if (tool === 'tunnel') {
-      if (i != null) return;
-      toggle(tunnels, setTunnels);
-    } else if (water.has(k)) toggle(water, setWater);
-    else if (tunnels.has(k)) toggle(tunnels, setTunnels);
-    else if (i === last && last >= 0) return shorten();
-    else return;
-    sfx.tick();
-    buzz(8);
+      if (i === n - 1 && n > 0) {
+        g.mode = 'draw'; // from the end on (a tap on it: choose what it is)
+      } else if (i >= 0) {
+        g.mode = 'field'; // a tap: choose what it is
+      } else {
+        g.mode = 'draw';
+        g.changed = extend(c);
+      }
+    } else if (tool === 'water' || tool === 'tunnel') {
+      // The first cell says which way: put it there, or take it away.
+      const which = tool === 'water' ? 'water' : 'tunnels';
+      g.mode = cur[which].has(k) ? 'remove' : 'add';
+      if (tool === 'tunnel' && i >= 0) g.mode = 'field';
+      else g.changed = paint(which, c, g.mode === 'add');
+    } else {
+      g.mode = 'erase';
+      step(c);
+    }
+  };
+
+  const onMove = (e: ReactPointerEvent) => {
+    const g = gesture.current;
+    if (!g || e.pointerId !== g.id) return;
+    const c = cellAt(e);
+    if (!c || (c.x === g.at.x && c.y === g.at.y)) return;
+    // A quick finger skips cells: go there one cell at a time, so the path stays whole.
+    let { x, y } = g.at;
+    while (x !== c.x || y !== c.y) {
+      if (Math.abs(c.x - x) >= Math.abs(c.y - y)) x += Math.sign(c.x - x);
+      else y += Math.sign(c.y - y);
+      step({ x, y });
+    }
+    g.at = c;
+  };
+
+  const onUp = (e: ReactPointerEvent) => {
+    const g = gesture.current;
+    if (!g || e.pointerId !== g.id) return;
+    gesture.current = null;
+    setHeldRows(null);
+    // A tap on a field (not the start): what goes on it.
+    const tapped = !g.changed && g.at.x === g.from.x && g.at.y === g.from.y;
+    if (tapped && g.field != null && g.field > 0 && (g.mode === 'field' || g.mode === 'draw')) {
+      sfx.tick();
+      setEditing(g.field);
+    }
   };
 
   const save = () => {
@@ -144,7 +294,9 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const fillAtRandom = () => {
     sfx.pop();
     buzz(15);
-    setKinds(kinds.map((x, i) => (i === 0 || x || i === last ? x : field(pick(FRESH)))));
+    const cur = live.current;
+    const lastNow = cur.spots.length - 1;
+    commit({ ...cur, kinds: cur.kinds.map((x, i) => (i === 0 || x || i === lastNow ? x : field(pick(FRESH)))) });
   };
   // What's still missing before the board can be saved.
   const blocker =
@@ -158,13 +310,114 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const hint = TOOLS.find((x) => x.id === tool)!.hint;
 
   return (
-    <div className="bd pt-editor">
-      <section className="section">
-        <label className="section-title" htmlFor="pt-board-name">
-          {t('Name')}
-        </label>
+    <div className="pt-editor fill">
+      <div className="pt-ed-main">
+        <div className="pt-tools" role="radiogroup" aria-label={t('Tools')}>
+          {TOOLS.map((x) => (
+            <button
+              key={x.id}
+              type="button"
+              role="radio"
+              aria-checked={tool === x.id}
+              className={`pt-tool${tool === x.id ? ' on' : ''}`}
+              onClick={() => {
+                sfx.tick();
+                setTool(x.id);
+              }}
+            >
+              <span className="pt-tool-emoji">{x.emoji}</span>
+              <span className="pt-tool-label">{t(x.label)}</span>
+            </button>
+          ))}
+          {empty > 0 && spots.length > 2 && (
+            <button type="button" className="pt-tool extra" onClick={fillAtRandom} aria-label={t('Fill the empty fields at random')}>
+              <span className="pt-tool-emoji">🎲</span>
+              <span className="pt-tool-label">{t('Random')}</span>
+            </button>
+          )}
+          <button type="button" className="pt-tool extra" onClick={() => setMore(true)}>
+            <span className="pt-tool-emoji">⋯</span>
+            <span className="pt-tool-label">{t('More')}</span>
+          </button>
+        </div>
+
+        <div ref={box} className="pt-ed-board">
+          <div
+            ref={gridEl}
+            className={`pt-grid${cell < 30 ? ' small' : ''}`}
+            style={{ gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gridAutoRows: `${cell}px`, '--cell': `${cell}px` } as CSSProperties}
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            onPointerCancel={onUp}
+          >
+            {Array.from({ length: rows }, (_, r) => rows - 1 - r).map((y) =>
+              Array.from({ length: cols }, (_, x) => {
+                const c = { x, y };
+                const k = cellKey(c);
+                const i = at.get(k);
+                const near = (dx: number, dy: number, set: Set<string>) => set.has(`${x + dx},${y + dy}`);
+                // Water: round corners where nothing wet meets them.
+                const round = (a: [number, number], b: [number, number]) => (!near(...a, water) && !near(...b, water) ? '45%' : '0');
+                const waterStyle: CSSProperties = {
+                  borderTopLeftRadius: round([-1, 0], [0, 1]),
+                  borderTopRightRadius: round([1, 0], [0, 1]),
+                  borderBottomRightRadius: round([1, 0], [0, -1]),
+                  borderBottomLeftRadius: round([-1, 0], [0, -1]),
+                };
+                const here = i != null ? (i === 0 ? field('start') : kinds[i]) : null;
+                const blank = i != null && !here;
+                const next = tool === 'path' && i == null && (!end || nextTo(end, c));
+                // Where the path comes from and where it goes on: a line to each.
+                const links = i != null ? [spots[i - 1], spots[i + 1]].filter(Boolean).map((n) => (n.x > x ? 'e' : n.x < x ? 'w' : n.y > y ? 'n' : 's')) : [];
+                const jump = here && (here.kind === 'back-bridge' || here.kind === 'mole');
+                return (
+                  <div key={k} className={`pt-cell${next ? ' next' : ''}${i === last && last > 0 ? ' end' : ''}`}>
+                    {water.has(k) && <span className="pt-cell-water" style={waterStyle} />}
+                    {tunnels.has(k) && (
+                      <span className="pt-cell-tunnel">
+                        {SIDES.filter((d) => near(d.x, d.y, tunnels) || tunnelEnds.has(`${x + d.x},${y + d.y}`)).map((d) => (
+                          <span key={d.name} className={`pt-arm ${d.name}`} />
+                        ))}
+                      </span>
+                    )}
+                    {links.map((d) => (
+                      <span key={d} className={`pt-route ${d}`} />
+                    ))}
+                    {blank && (
+                      <span className="pt-cell-field empty">
+                        <span className="pt-cell-n">{i}</span>
+                      </span>
+                    )}
+                    {here && (
+                      <span className={`pt-cell-field${here.kind === 'start' || here.kind === 'goal' ? ' end' : ''}${jump && targets[i!] == null ? ' broken' : ''}`} style={{ '--field': FIELDS[here.kind].color } as CSSProperties}>
+                        {here.kind !== 'start' && here.kind !== 'goal' && <span className="pt-cell-n">{i}</span>}
+                        <span className="pt-cell-emoji">{FIELDS[here.kind].emoji}</span>
+                        {jump && <span className="pt-cell-to">{targets[i!] != null ? `→ ${targets[i!]}` : '⚠️'}</span>}
+                      </span>
+                    )}
+                    {next && <span className="pt-cell-plus">+</span>}
+                  </div>
+                );
+              }),
+            )}
+          </div>
+        </div>
+      </div>
+
+      <p className="fine-print pt-tool-hint">{t(hint)}</p>
+
+      <div className="pt-ed-actions">
+        <BigButton size="md" variant="glass" className="pt-ed-cancel" onClick={onCancel}>
+          {t('Cancel')}
+        </BigButton>
+        <BigButton size="md" onClick={() => setNaming(true)} disabled={!!blocker}>
+          {blocker ?? t('Save · {n} fields', { n: spots.length - 1 })}
+        </BigButton>
+      </div>
+
+      <Sheet open={naming} onClose={() => setNaming(false)} title={t('Name your board')} closeLabel={t('Cancel')}>
         <input
-          id="pt-board-name"
           type="search"
           className="add-player-input"
           value={name}
@@ -172,116 +425,42 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
           placeholder={t('My board')}
           autoComplete="off"
           enterKeyHint="done"
+          aria-label={t('Name')}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && save()}
         />
-      </section>
-
-      <div className="pt-tools" role="radiogroup">
-        {TOOLS.map((x) => (
-          <button
-            key={x.id}
-            type="button"
-            role="radio"
-            aria-checked={tool === x.id}
-            className={`pt-tool${tool === x.id ? ' on' : ''}`}
-            onClick={() => {
-              sfx.tick();
-              setTool(x.id);
-            }}
-          >
-            <span className="pt-tool-emoji">{x.emoji}</span>
-            <span className="pt-tool-label">{t(x.label)}</span>
-          </button>
-        ))}
-      </div>
-      <p className="fine-print pt-tool-hint">{t(hint)}</p>
-
-      <div ref={grid} className="pt-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-        {Array.from({ length: rows }, (_, r) => rows - 1 - r).map((y) =>
-          Array.from({ length: cols }, (_, x) => {
-            const c = { x, y };
-            const k = cellKey(c);
-            const i = at.get(k);
-            const near = (dx: number, dy: number, set: Set<string>) => set.has(`${x + dx},${y + dy}`);
-            // Water: round corners where nothing wet meets them.
-            const round = (a: [number, number], b: [number, number]) => (!near(...a, water) && !near(...b, water) ? '45%' : '0');
-            const waterStyle: CSSProperties = {
-              borderTopLeftRadius: round([-1, 0], [0, 1]),
-              borderTopRightRadius: round([1, 0], [0, 1]),
-              borderBottomRightRadius: round([1, 0], [0, -1]),
-              borderBottomLeftRadius: round([-1, 0], [0, -1]),
-            };
-            const here = i != null ? (i === 0 ? field('start') : kinds[i]) : null;
-            const blank = i != null && !here;
-            const next = tool === 'path' && i == null && canExtend(c);
-            // Where the path comes from and where it goes on: a line to each.
-            const links = i != null ? [spots[i - 1], spots[i + 1]].filter(Boolean).map((n) => (n.x > x ? 'e' : n.x < x ? 'w' : n.y > y ? 'n' : 's')) : [];
-            const jump = here && (here.kind === 'back-bridge' || here.kind === 'mole');
-            return (
-              <button key={k} type="button" className={`pt-cell${next ? ' next' : ''}`} aria-label={`${x + 1}, ${y + 1}`} onClick={() => tap(c)}>
-                {water.has(k) && <span className="pt-cell-water" style={waterStyle} />}
-                {tunnels.has(k) && (
-                  <span className="pt-cell-tunnel">
-                    {SIDES.filter((d) => near(d.x, d.y, tunnels) || tunnelEnds.has(`${x + d.x},${y + d.y}`)).map((d) => (
-                      <span key={d.name} className={`pt-arm ${d.name}`} />
-                    ))}
-                  </span>
-                )}
-                {links.map((d) => (
-                  <span key={d} className={`pt-route ${d}`} />
-                ))}
-                {blank && (
-                  <span className="pt-cell-field empty">
-                    <span className="pt-cell-n">{i}</span>
-                  </span>
-                )}
-                {here && (
-                  <span className={`pt-cell-field${here.kind === 'start' || here.kind === 'goal' ? ' end' : ''}${jump && targets[i!] == null ? ' broken' : ''}`} style={{ '--field': FIELDS[here.kind].color } as CSSProperties}>
-                    {here.kind !== 'start' && here.kind !== 'goal' && <span className="pt-cell-n">{i}</span>}
-                    <span className="pt-cell-emoji">{FIELDS[here.kind].emoji}</span>
-                    {jump && <span className="pt-cell-to">{targets[i!] != null ? `→ ${targets[i!]}` : '⚠️'}</span>}
-                  </span>
-                )}
-                {next && <span className="pt-cell-plus">+</span>}
-              </button>
-            );
-          }),
-        )}
-      </div>
-
-      <div className="sticky-action stack">
-        <BigButton size="xl" onClick={save} disabled={!!blocker}>
-          {blocker ?? t('Save board · {n} fields', { n: spots.length - 1 })}
+        <BigButton size="xl" onClick={save}>
+          {t('Save board · {n} fields', { n: spots.length - 1 })}
         </BigButton>
-        <div className="pt-editor-tools">
-          {empty > 0 && spots.length > 2 && (
-            <button type="button" className="text-btn pt-link" onClick={fillAtRandom}>
-              🎲 {t('Fill the empty fields at random')}
-            </button>
-          )}
-          <button type="button" className="text-btn pt-link" onClick={onCancel}>
-            {t('Cancel')}
-          </button>
+      </Sheet>
+
+      <Sheet open={more} onClose={() => setMore(false)} title={t('More')} closeLabel={t('Done')}>
+        <div className="stack">
           {spots.length > 0 && (
-            <button type="button" className="text-btn" onClick={() => setClearing(true)}>
+            <BigButton
+              variant="glass"
+              onClick={() => {
+                setMore(false);
+                setClearing(true);
+              }}
+            >
               {t('Start the path over')}
-            </button>
+            </BigButton>
           )}
           {onDelete && (
-            <button type="button" className="text-btn" onClick={onDelete}>
+            <BigButton variant="danger" onClick={onDelete}>
               {t('Delete board')}
-            </button>
+            </BigButton>
           )}
         </div>
-      </div>
+      </Sheet>
 
       <Sheet open={clearing} onClose={() => setClearing(false)} title={t('Start the path over?')} closeLabel={t('Cancel')}>
         <p className="fine-print">{t('The path and its fields go; water and tunnels stay.')}</p>
         <BigButton
           variant="danger"
           onClick={() => {
-            setSpots([]);
-            setKinds([]);
+            commit({ ...live.current, spots: [], kinds: [] });
             setTool('path');
             setClearing(false);
           }}
