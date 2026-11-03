@@ -1,5 +1,5 @@
 /*
- * The buttons of Princess/King Treatment: an unimpressed face for the bare minimum, a princess's
+ * The buttons of Princess/King Treatment: an unimpressed face in a hood for the bare minimum, a princess's
  * or a king's head for the treatment, drawn here so they look the same on every phone. They sway,
  * blink now and then, the tiara sparkles and the bored one's dots tick on (CSS in global.css,
  * .ph-…); the one tapped hops, the other steps back.
@@ -51,30 +51,37 @@ function Princess() {
   );
 }
 
-/** Not impressed: eyes half shut, one eyebrow up, a flat mouth, and dots ticking on. */
+/**
+ * Not impressed, and could be anyone: a face in a hoodie's hood (no hair, lashes or beard to
+ * tell), eyes half shut, one eyebrow up, a flat mouth, dots ticking on.
+ */
 function Meh() {
   return (
     <svg className="ph-svg" viewBox="0 0 120 130" aria-hidden="true">
-      <circle cx="60" cy="72" r="32" fill={SKIN} />
-      {/* Short hair. */}
-      <path d="M27 68 C24 40 41 29 60 29 C80 29 97 41 93 68 C88 56 80 50 71 52 C63 45 51 46 45 53 C38 51 31 57 27 68 Z" fill="#59606b" />
-      <circle cx="41" cy="84" r="6" fill={CHEEK} opacity="0.25" />
-      <circle cx="79" cy="84" r="6" fill={CHEEK} opacity="0.25" />
+      {/* The hood, its dark inside, the face in it. */}
+      <path d="M12 126 C8 98 10 70 19 51 C30 27 45 15 60 15 C75 15 90 27 101 51 C110 70 112 98 108 126 Z" fill="#6f7c8f" />
+      <ellipse cx="60" cy="76" rx="38" ry="43" fill="#3f4652" />
+      <circle cx="60" cy="78" r="30" fill={SKIN} />
+      <ellipse cx="60" cy="76" rx="38" ry="43" fill="none" stroke="#8d9aad" strokeWidth="5" />
+      {/* Drawstrings. */}
+      <path d="M47 117 L44 128 M73 117 L76 128" stroke="#e8ebf0" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="41" cy="88" r="5.5" fill={CHEEK} opacity="0.25" />
+      <circle cx="79" cy="88" r="5.5" fill={CHEEK} opacity="0.25" />
       {/* Half-shut eyes: the lower half of each, under a lid. */}
       <g className="ph-eyes">
-        <path d="M41 73 a6 6 0 0 0 12 0 Z" fill={EYE} />
-        <path d="M67 73 a6 6 0 0 0 12 0 Z" fill={EYE} />
-        <path d="M39.5 73 h15 M65.5 73 h15" stroke={EYE} strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M42 79 a6 6 0 0 0 12 0 Z" fill={EYE} />
+        <path d="M66 79 a6 6 0 0 0 12 0 Z" fill={EYE} />
+        <path d="M40.5 79 h15 M64.5 79 h15" stroke={EYE} strokeWidth="2.6" strokeLinecap="round" />
       </g>
       <g className="ph-brows">
-        <path d="M39 64 L55 65" stroke="#3f444c" strokeWidth="4" strokeLinecap="round" />
-        <path d="M65 61 L81 55" stroke="#3f444c" strokeWidth="4" strokeLinecap="round" />
+        <path d="M41 69 L55 70" stroke="#5b4636" strokeWidth="3.6" strokeLinecap="round" />
+        <path d="M65 67 L79 61" stroke="#5b4636" strokeWidth="3.6" strokeLinecap="round" />
       </g>
-      <path d="M50 93 L71 91" stroke="#b0485a" strokeWidth="3.4" strokeLinecap="round" />
+      <path d="M51 97 L70 95" stroke="#b0485a" strokeWidth="3.4" strokeLinecap="round" />
       <g className="ph-dots" fill="#dfe4ea">
-        <circle className="a" cx="94" cy="26" r="3.6" />
-        <circle className="b" cx="104" cy="22" r="3.6" />
-        <circle className="c" cx="114" cy="18" r="3.6" />
+        <circle className="a" cx="98" cy="20" r="3.6" />
+        <circle className="b" cx="107" cy="14" r="3.6" />
+        <circle className="c" cx="116" cy="8" r="3.6" />
       </g>
     </svg>
   );
