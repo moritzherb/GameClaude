@@ -45,7 +45,8 @@ beforeAll(async () => {
     alter default privileges in schema public grant all on functions to anon, authenticated;
   `);
   await db.exec(migration);
-});
+  // Starting Postgres (WASM) takes a few seconds, more on a busy machine.
+}, 60_000);
 
 const board = { id: 'b1', name: 'Mine', cols: 4, rows: 10, path: [], water: [], tunnels: [] };
 

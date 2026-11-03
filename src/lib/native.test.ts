@@ -39,7 +39,8 @@ describe('store app', () => {
     const { GAMES } = await import('../games/registry');
     const icons = [...GAMES.map((g) => g.emoji), ...Object.values(FIELDS).map((f) => f.emoji)].join(' ');
     expect(icons).not.toMatch(/🚬|🥃|🍑|👖|🤬|💩/u);
-  });
+    // Loads every game: give it time on a busy machine.
+  }, 30_000);
 
   it('keeps the website as it is', async () => {
     const { native, FIELDS } = await load(false);

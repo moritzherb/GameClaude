@@ -161,12 +161,17 @@ für die Räume und ohne Backup und Teilen. Für die Store-Version solltest du S
    - App: dieselben zwei Variablen in den Expo Environment variables (production).
    - Lokal: `.env.local` (Vorlage: `.env.example`).
 
-**Kosten der Räume:** Supabase zählt Realtime-Nachrichten. Ein Raum mit 4 Handys braucht im Leerlauf
-rund 3 Nachrichten pro Sekunde, mit 8 Handys etwa 10. Im Spiel ersetzen die Spielzüge die „bin noch da“-Meldungen.
-Der Free-Plan (2 Mio. Nachrichten/Monat, 200 gleichzeitige Verbindungen) reicht für den Start, etwa für einige
-hundert Spielstunden im Monat. Wächst die App, kommt der Pro-Plan (25 USD/Monat, 5 Mio. Nachrichten und 500
-Verbindungen inklusive). Die aktuellen Grenzen stehen unter
-[supabase.com/pricing](https://supabase.com/pricing). In *Reports → Realtime* siehst du die Nutzung.
+   **Wichtig:** Setz die Werte für Website **und** App. Nur dann treffen sich beide im selben Raum-Server. Ohne die
+   Werte nutzt eine Seite die öffentlichen MQTT-Server, und Handys mit App und Browser finden sich nicht.
+
+**Kosten der Räume:** Supabase zählt Realtime-Nachrichten, und zwar jede gesendete und jede zugestellte.
+Gemessen: Ein Raum mit 4 Handys braucht im Leerlauf rund 3 Nachrichten pro Sekunde, mit 8 Handys gut 7. Jede
+Verbindung hat einen eigenen Zweier-Kanal (Host und Gast), deshalb bekommt niemand die Nachrichten der anderen mit.
+Im Spiel ersetzen die Spielzüge die „bin noch da“-Meldungen. Der Free-Plan (2 Mio. Nachrichten im Monat, 200
+gleichzeitige Verbindungen) reicht damit für etwa 170 Stunden Vierer-Runden oder 75 Stunden Achter-Runden im Monat.
+Wächst die App, kommt der Pro-Plan (25 USD im Monat, 5 Mio. Nachrichten und 500 Verbindungen inklusive, danach
+etwa 2,50 USD je weitere Million). Die aktuellen Grenzen stehen unter [supabase.com/pricing](https://supabase.com/pricing),
+die eigene Nutzung unter *Reports → Realtime*.
 
 ## 7. Datenschutzerklärung (Du)
 
