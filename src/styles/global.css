@@ -7789,9 +7789,7 @@ h3 {
   }
 }
 
-.tr-board.flipped .tr-slot.pickable,
-.tr-middle.flipped .tr-stock.ready,
-.tr-middle.flipped .tr-discard.drop-here {
+.tr-board.flipped .tr-slot.pickable {
   animation: tr-pulse 1.2s steps(3, jump-none) infinite;
   outline: 3px solid transparent;
   outline-offset: 2px;
@@ -7800,27 +7798,6 @@ h3 {
 @keyframes tr-pulse {
   50% {
     outline-color: var(--accent);
-  }
-}
-
-.tr-middle.flipped .tr-discard.drop-here {
-  animation-name: tr-pulse-bad;
-}
-
-@keyframes tr-pulse-bad {
-  50% {
-    outline-color: var(--bad);
-  }
-}
-
-.tr-middle.flipped .tr-discard.nope {
-  animation: tr-nope 0.3s ease;
-}
-
-@keyframes tr-nope {
-  50% {
-    outline: 3px solid var(--bad);
-    outline-offset: 2px;
   }
 }
 
@@ -7847,8 +7824,40 @@ h3 {
   padding: 0 4px;
 }
 
+/*
+ * On the turn of the player opposite the middle faces them: each piece turned on its own, in
+ * reverse order, which looks the same as the whole row turned. The row itself isn't turned, so
+ * the stock can nudge (and the discard pile shake) just as for the player at the bottom: a moving
+ * piece inside a turned row made iPhones leave things out and stutter, and the stand-in for it (an
+ * outline blinking in steps) looked like lag. The nudge goes away from the player who is on.
+ */
 .tr-middle.flipped {
-  transform: rotate(180deg);
+  direction: rtl;
+}
+
+.tr-middle.flipped > * {
+  direction: ltr;
+  rotate: 180deg;
+}
+
+/* The piece with the card being dragged stays above its neighbours. */
+.tr-middle.flipped > :has(.dragging) {
+  z-index: 3;
+}
+
+.tr-middle.flipped .tr-stock.ready,
+.tr-middle.flipped .tr-discard.drop-here {
+  animation: tr-nudge-turned 1.4s ease-in-out infinite;
+}
+
+@keyframes tr-nudge-turned {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .tr-stock,
