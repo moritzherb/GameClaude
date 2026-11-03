@@ -1343,7 +1343,8 @@ h3 {
   flex-direction: column;
   justify-content: flex-end;
   min-height: 230px;
-  padding: 18px 16px 16px;
+  /* Room on top for the number, so a name over three lines doesn't run into it. */
+  padding: 46px 16px 16px;
   border-radius: var(--radius-lg);
   background: var(--card-bg);
   color: var(--on-color);
@@ -1371,13 +1372,17 @@ h3 {
 }
 
 .detail-name {
+  --longest: 8;
   position: relative;
   max-width: 85%;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.8rem, 15vw, 3.8rem);
+  /* Big, but never so big that the longest word sticks out of the card (about 0.5em a letter in
+     this type; the card is the screen less its gutters and padding, the name 85 % of that). */
+  font-size: min(clamp(2.8rem, 15vw, 3.8rem), calc((min(100vw, var(--max)) - 2 * var(--gutter) - 32px) * 0.85 / (var(--longest) * 0.53)));
   text-transform: uppercase;
   line-height: 0.86;
+  overflow-wrap: break-word;
 }
 
 .detail-tagline {
