@@ -45,6 +45,10 @@ function Shell() {
   const web = useRef<PageRef>(null);
   const pageReady = useRef(false);
   const [ads, setAds] = useState<AdsState>({ ready: false, privacyOptions: false });
+  // Ads (and their consent form, Apple's tracking question) only once the page shows and the age
+  // check is passed: nothing for anyone who said they're under age.
+  const [shown, setShown] = useState(false);
+  const [adult, setAdult] = useState(() => loadSaved()['prost:age-ok'] === 'true');
   const [playing, setPlaying] = useState(false);
   // A new WebView after the system ended its process (memory pressure): the page starts again.
   const [webKey, setWebKey] = useState(0);
@@ -66,17 +70,15 @@ function Shell() {
 
   const send = useCallback((msg: ToPage) => web.current?.injectJavaScript(toPageScript(msg)), []);
 
+  const adsAsked = useRef(false);
   useEffect(() => {
-    let alive = true;
-    startAds().then((state) => {
-      if (!alive) return;
+    if (!shown || !adult || adsAsked.current) return;
+    adsAsked.current = true;
+    void startAds().then((state) => {
       setAds(state);
       if (pageReady.current) send({ type: 'ads', privacyOptions: state.privacyOptions });
     });
-    return () => {
-      alive = false;
-    };
-  }, [send]);
+  }, [shown, adult, send]);
 
   // Android's back button: the page decides (close a sheet, the escape button, or leave the app).
   useEffect(() => {
@@ -95,8 +97,16 @@ function Shell() {
 
   // Never stuck behind the splash, whatever happens to the page.
   useEffect(() => {
-    const timer = setTimeout(() => SplashScreen.hide(), 4000);
+    const timer = setTimeout(() => {
+      SplashScreen.hide();
+      setShown(true);
+    }, 4000);
     return () => clearTimeout(timer);
+  }, []);
+
+  const restart = useCallback(() => {
+    pageReady.current = false;
+    setWebKey((k) => k + 1);
   }, []);
 
   const onMessage = useCallback(
@@ -107,6 +117,7 @@ function Shell() {
         case 'ready':
           pageReady.current = true;
           SplashScreen.hide();
+          setShown(true);
           send({ type: 'ads', privacyOptions: ads.privacyOptions });
           break;
         case 'haptic':
@@ -118,7 +129,9 @@ function Shell() {
           break;
         case 'share':
           void Share.share(
-            Platform.OS === 'ios' ? { message: msg.text, url: msg.url, title: msg.title } : { message: `${msg.text}\n${msg.url}`, title: msg.title },
+            Platform.OS === 'ios' && msg.url
+              ? { message: msg.text, url: msg.url, title: msg.title }
+              : { message: msg.url ? `${msg.text}\n${msg.url}` : msg.text, title: msg.title },
           ).catch(() => {});
           break;
         case 'screen':
@@ -140,26 +153,28 @@ function Shell() {
         case 'exit':
           BackHandler.exitApp();
           break;
+        case 'reload':
+          restart();
+          break;
         case 'store':
           if (typeof msg.key === 'string') setItem(msg.key, typeof msg.value === 'string' ? msg.value : null);
+          if (msg.key === 'prost:age-ok' && msg.value === 'true') setAdult(true);
           break;
         case 'store-all':
-          if (msg.items && typeof msg.items === 'object') replaceAll(msg.items);
+          if (msg.items && typeof msg.items === 'object') {
+            replaceAll(msg.items);
+            if (msg.items['prost:age-ok'] === 'true') setAdult(true);
+          }
           break;
       }
     },
-    [ads.privacyOptions, send],
+    [ads.privacyOptions, restart, send],
   );
 
   const onShouldStart = useCallback((req: ShouldStartLoadRequest) => {
     if (isOwnPage(req.url, WEB_URL)) return true;
     if (/^(https?|mailto|tel):/.test(req.url)) void Linking.openURL(req.url).catch(() => {});
     return false;
-  }, []);
-
-  const restart = useCallback(() => {
-    pageReady.current = false;
-    setWebKey((k) => k + 1);
   }, []);
 
   return (

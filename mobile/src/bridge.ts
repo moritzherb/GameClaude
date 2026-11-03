@@ -17,6 +17,7 @@ export type FromPage =
   | { type: 'privacy' }
   | { type: 'open'; url: string }
   | { type: 'exit' }
+  | { type: 'reload' }
   | { type: 'ready' }
   | { type: 'store'; key: string; value: string | null }
   | { type: 'store-all'; items: Record<string, string> };

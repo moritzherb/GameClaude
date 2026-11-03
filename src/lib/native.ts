@@ -30,6 +30,8 @@ export type ToNative =
   | { type: 'open'; url: string }
   /** The back button on the home screen: close the app. */
   | { type: 'exit' }
+  /** Start the page again (after a backup was brought in). */
+  | { type: 'reload' }
   | { type: 'ready' };
 
 export type FromNative = { type: 'back' } | { type: 'ads'; privacyOptions: boolean };

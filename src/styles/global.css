@@ -8301,6 +8301,41 @@ h3 {
   gap: 10px;
 }
 
+/* A code from the server (shared board, backup): big enough to read out across the table. */
+.cloud-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 6px;
+  padding: 16px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cloud-code-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.cloud-send {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.cloud-error {
+  margin-top: 10px;
+  color: var(--bad-ink);
+}
+
 .code-input {
   flex: 1;
   min-width: 0;

@@ -31,8 +31,7 @@
     "ios": "npm run web && expo run:ios",
     "typecheck": "tsc --noEmit",
     "check": "npm run web && tsc --noEmit && expo export --platform ios --platform android --output-dir dist",
-    "eas-build-post-install": "cd .. && npm ci --no-audit --no-fund && npm run build:app",
-    "update": "npm run web && eas update"
+    "eas-build-post-install": "cd .. && npm ci --no-audit --no-fund && npm run build:app"
   },
   "private": true
 }

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>prost! – Datenschutz &amp; Impressum</title>
+    <meta name="description" content="Datenschutzerklärung und Impressum der App prost! / Privacy policy of the prost! app." />
+    <!--
+      TEMPLATE: fill in every [ … ] before publishing the store app, and have it checked
+      (this is no legal advice). Keep it in step with what the app does (docs/STORE.md).
+    -->
+    <style>
+      :root {
+        --bg: #f1ede3;
+        --ink: #1c1d19;
+        --muted: #5d5f55;
+        --line: #d6d0c0;
+        --accent: #5f7d00;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #10110e;
+          --ink: #f1ede3;
+          --muted: #a5a796;
+          --line: #2c2e27;
+          --accent: #c6ef3a;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      h1 {
+        font-size: 2rem;
+        line-height: 1.1;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 1.2rem;
+        margin: 32px 0 6px;
+      }
+      h3 {
+        font-size: 1rem;
+        margin: 20px 0 4px;
+      }
+      p,
+      li {
+        overflow-wrap: anywhere;
+      }
+      a {
+        color: var(--accent);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      nav {
+        display: flex;
+        gap: 16px;
+        margin: 12px 0 8px;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 48px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>prost!</h1>
+      <p class="muted">Stand / Last updated: [Datum / date]</p>
+      <nav><a href="#de">Deutsch</a><a href="#en">English</a><a href="#impressum">Impressum</a></nav>
+
+      <section id="de" lang="de">
+        <h2>Datenschutzerklärung</h2>
+
+        <h3>Wer ist verantwortlich?</h3>
+        <p>[Vor- und Nachname]<br />[Straße Nr.], [PLZ Ort], [Land]<br />E-Mail: [E-Mail-Adresse]</p>
+
+        <h3>Was die App auf deinem Handy speichert</h3>
+        <p>
+          Spieler (Namen, Emoji, auf Wunsch ein kleines Profilfoto), Einstellungen, Statistiken und eigene Party-Bretter speichert die App nur auf deinem
+          Gerät. Die Store-App legt davon zusätzlich eine Kopie in ihrem eigenen App-Speicher ab, damit nichts verloren geht. Wir bekommen diese Daten
+          nicht. Löschen kannst du sie, indem du die App löschst (bzw. im Browser die Website-Daten).
+        </p>
+
+        <h3>Zusammen spielen (Räume)</h3>
+        <p>
+          Wenn du einen Raum eröffnest oder ihm beitrittst, laufen die Nachrichten zwischen den Handys über öffentliche MQTT-Server von HiveMQ
+          (broker.hivemq.com) und EMQX (broker.emqx.io). Übertragen werden: dein Spitzname, Emoji, Farbe, auf Wunsch dein kleines Profilfoto, eine
+          zufällige Geräte-Kennung, der Raum-Code und die Spielzüge. Die Verbindung ist verschlüsselt (TLS); gespeichert wird von uns nichts. Die
+          Betreiber dieser Server verarbeiten dabei technisch deine IP-Adresse. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (die Funktion, die du
+          nutzt).
+        </p>
+
+        <h3>Backup-Code und geteilte Bretter</h3>
+        <p>
+          Nur wenn du es nutzt: Für „Backup-Code erstellen“ und „Brett teilen“ meldet sich die App anonym bei unserem Server an (Supabase, Supabase Inc.,
+          Server in der EU: [Region, z. B. Frankfurt]). Es entsteht eine zufällige Kennung ohne E-Mail oder Namen. Gespeichert werden das Backup (deine
+          Spieler, Einstellungen, Statistiken, Bretter) bzw. das geteilte Brett. Vom Backup-Code speichern wir nur einen Hash. Unter Einstellungen →
+          „Meine Daten auf dem Server löschen“ löschst du beides jederzeit. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.
+        </p>
+
+        <h3>Werbung (nur in der App aus dem App Store / Google Play)</h3>
+        <p>
+          Die App zeigt Werbung von Google AdMob (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland). Im EWR, im Vereinigten
+          Königreich und in der Schweiz fragt die App dich vorher mit Googles Einwilligungsformular, ob personalisierte Werbung gezeigt werden darf
+          (Art. 6 Abs. 1 lit. a DSGVO). Auf dem iPhone fragt zusätzlich Apple, ob die App dich über Apps hinweg verfolgen darf. Dabei können
+          verarbeitet werden: die Werbe-ID deines Geräts (wenn du zustimmst), IP-Adresse, Geräte- und App-Informationen sowie Interaktionen mit der
+          Werbung. Deine Wahl änderst du jederzeit in der App unter Einstellungen → „Werbe-Einstellungen“ bzw. in den Einstellungen deines Handys.
+          Mehr dazu: <a href="https://policies.google.com/technologies/partner-sites">Wie Google Daten von Apps nutzt</a>,
+          <a href="https://policies.google.com/privacy">Datenschutzerklärung von Google</a>. Die Website zeigt keine Werbung.
+        </p>
+
+        <h3>Website</h3>
+        <p>
+          Die Website wird von GitHub Pages (GitHub Inc., USA) ausgeliefert, das zur Sicherheit IP-Adressen in Server-Protokollen verarbeitet. Schriften
+          und alles andere kommen vom selben Server; es gibt keine Analyse- oder Tracking-Werkzeuge.
+        </p>
+
+        <h3>Alter</h3>
+        <p>Die App ist für Erwachsene ab 18 Jahren (bzw. ab dem gesetzlichen Mindestalter für Alkohol in deinem Land).</p>
+
+        <h3>Deine Rechte</h3>
+        <p>
+          Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht,
+          eine Einwilligung jederzeit zu widerrufen. Du kannst dich bei einer Datenschutz-Aufsichtsbehörde beschweren. Schreib uns einfach:
+          [E-Mail-Adresse].
+        </p>
+      </section>
+
+      <hr />
+
+      <section id="en" lang="en">
+        <h2>Privacy policy</h2>
+
+        <h3>Who is responsible</h3>
+        <p>[Full name], [street], [postcode city], [country] · [e-mail address]</p>
+
+        <h3>What the app keeps on your phone</h3>
+        <p>
+          Players (names, emoji, optionally a small profile photo), settings, statistics and your own Party boards are stored on your device only. The
+          store app also keeps a copy in its own app storage so nothing gets lost. We don't receive this data. Deleting the app (or the website data in
+          your browser) deletes it.
+        </p>
+
+        <h3>Playing together (rooms)</h3>
+        <p>
+          When you host or join a room, messages between the phones pass through public MQTT servers run by HiveMQ (broker.hivemq.com) and EMQX
+          (broker.emqx.io): your nickname, emoji, colour, optionally your small profile photo, a random device ID, the room code and the game moves. The
+          connection is encrypted (TLS); we store nothing. The server operators technically process your IP address. Legal basis: Art. 6(1)(b) GDPR.
+        </p>
+
+        <h3>Backup codes and shared boards</h3>
+        <p>
+          Only if you use them: for "Make a backup code" and "Share this board" the app signs in anonymously to our server (Supabase, Supabase Inc.,
+          servers in the EU: [region]). That creates a random ID without e-mail or name. We store the backup (your players, settings, statistics,
+          boards) or the shared board; of a backup code only a hash. Settings → "Delete my data on the server" deletes both at any time. Legal basis:
+          Art. 6(1)(b) GDPR.
+        </p>
+
+        <h3>Ads (only in the app from the App Store / Google Play)</h3>
+        <p>
+          The app shows ads from Google AdMob (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland). In the EEA, the UK and
+          Switzerland the app first asks, with Google's consent form, whether personalised ads may be shown (Art. 6(1)(a) GDPR). On iPhones Apple also
+          asks whether the app may track you across apps. This may involve your device's advertising ID (if you allow it), IP address, device and app
+          information and interactions with ads. Change your choice any time in Settings → "Ad choices" or in your phone's settings. More:
+          <a href="https://policies.google.com/technologies/partner-sites">How Google uses information from apps</a>,
+          <a href="https://policies.google.com/privacy">Google's privacy policy</a>. The website shows no ads.
+        </p>
+
+        <h3>Website</h3>
+        <p>
+          The website is served by GitHub Pages (GitHub Inc., USA), which processes IP addresses in server logs for security. Fonts and everything else
+          come from the same server; there are no analytics or tracking tools.
+        </p>
+
+        <h3>Age</h3>
+        <p>The app is for adults aged 18 and over (or the legal drinking age where you live).</p>
+
+        <h3>Your rights</h3>
+        <p>
+          You have the right of access, rectification, erasure, restriction, data portability and objection, and may withdraw consent at any time. You
+          may complain to a data protection authority. Just write to us: [e-mail address].
+        </p>
+      </section>
+
+      <hr />
+
+      <section id="impressum" lang="de">
+        <h2>Impressum</h2>
+        <p>Angaben gemäß § 5 DDG</p>
+        <p>[Vor- und Nachname]<br />[Straße Nr.]<br />[PLZ Ort]<br />[Land]</p>
+        <p>E-Mail: [E-Mail-Adresse]</p>
+        <p>Verantwortlich für den Inhalt: [Vor- und Nachname], Anschrift wie oben.</p>
+      </section>
+    </main>
+  </body>
+</html>

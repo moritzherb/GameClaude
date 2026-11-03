@@ -45,6 +45,28 @@ To test locally without internet, run your own MQTT server with WebSocket suppor
 VITE_RELAY_SERVERS=ws://127.0.0.1:9001,ws://127.0.0.1:9002 npm run build
 ```
 
+## Store app (App Store, Google Play)
+
+`mobile/` is an Expo / React Native app that ships this web app inside, offline: `npm run build:app` builds the whole
+app into one HTML file (`mobile/web/`), the native shell shows it in a WebView and adds what a browser can't do well:
+AdMob ads (consent first, Apple's tracking prompt, interstitials only after a game, banners only on menus), real
+haptics, keeping the screen on, the share sheet, Android's back button and a copy of the saved data. In the app no
+Party field shows tobacco (App Store rule 1.4.3). The page side of the bridge is `src/lib/native.ts`.
+
+```bash
+cd mobile && npm ci
+npm run check        # build the web app for the store app, type check, bundle for iOS and Android
+```
+
+Builds and store uploads go through EAS. The step-by-step guide (accounts, AdMob, app-ads.txt, Supabase,
+store forms) is in [docs/STORE.md](docs/STORE.md) (German).
+
+## Backend (Supabase)
+
+Optional: with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set at build time, Settings offers a backup code
+(move everything to a new phone) and Party can share boards by code. Phones sign in anonymously. The schema and its
+access rules are in `supabase/migrations/`, tested against a real Postgres in `supabase/tests/` (part of `npm test`).
+
 ## How it's organised
 
 ```

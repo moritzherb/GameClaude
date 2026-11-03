@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
 import TopBar from '../components/TopBar';
 import { GAMES } from '../games/registry';
@@ -6,6 +7,7 @@ import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
 import { navigate, paths } from '../lib/router';
+import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
 
 type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean';
@@ -128,6 +130,8 @@ export default function Settings() {
           })}
         </div>
       </section>
+
+      {cloudOn && <CloudBackup />}
 
       <section className="section">
         <h2 className="section-title">{t('Privacy')}</h2>

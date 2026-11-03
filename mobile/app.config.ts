@@ -83,7 +83,8 @@ const config: ExpoConfig = {
     'expo-build-properties',
   ],
   extra: {
-    eas: { projectId: process.env.EAS_PROJECT_ID },
+    // From `npx eas-cli init` (docs/STORE.md): paste the project ID here.
+    eas: { projectId: process.env.EAS_PROJECT_ID ?? undefined },
   },
 };
 
