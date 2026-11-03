@@ -5433,27 +5433,30 @@ h3 {
   transition: transform 0.6s var(--ease);
 }
 
-/* The splash going in: a stream from above, as long as the beer rises. */
+/* The splash going in: a stream from above, as long as the beer rises. It runs down to the bottom of
+   the glass (behind the beer) and its tail follows it there; nothing of it goes past the glass. */
 .kl-glass-stream {
-  fill: #f2b233;
-  transform-box: fill-box;
-  transform-origin: 50% 0;
+  fill: none;
+  stroke: #f2b233;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 100 220;
   animation: kl-stream 0.9s ease-in-out both;
 }
 
 @keyframes kl-stream {
   from {
-    transform: scaleY(0);
+    stroke-dashoffset: 100;
   }
-  35% {
-    transform: scaleY(1);
+  40% {
+    stroke-dashoffset: 0;
     opacity: 1;
   }
-  80% {
+  85% {
     opacity: 1;
   }
   to {
-    transform: scaleY(1) translateY(30px);
+    stroke-dashoffset: -104;
     opacity: 0;
   }
 }
@@ -11712,6 +11715,21 @@ h3 {
 .play-screen.clean .kl-slap-hint,
 .play-screen.clean .kl-table-glass-count {
   display: none;
+}
+
+/* No room kept empty under the table: it reaches down to the bottom, so the stack and the glass sit
+   in the middle of the screen, and Next shows over the table's foot while a card is up. */
+.play-screen.clean .kl {
+  position: relative;
+}
+
+.play-screen.clean .kl > .sticky-action {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  padding: 0;
+  background: none;
 }
 
 /* Bus Driver: the cards, the question and everyone's hand. Row numbers, sips per row and
