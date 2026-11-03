@@ -61,6 +61,8 @@ export function LastWidget({ game, onShuffle }: { game: GameDefinition | null; o
       </Tap>
     );
   }
+  // It may break after a slash between words ("Princess/ King").
+  const name = t(game.name).replace(/(?<=\p{L})\/(?=\p{L})/gu, '/\u200b');
   return (
     <Tap
       className="widget w-last"
@@ -72,10 +74,15 @@ export function LastWidget({ game, onShuffle }: { game: GameDefinition | null; o
       <span className="w-pop" aria-hidden>
         <GameGlyph game={game} />
       </span>
-      <span className="w-title">{t(game.name)}</span>
+      <span className="w-title" style={{ '--longest': longestWord(name) } as CSSProperties}>
+        {name}
+      </span>
     </Tap>
   );
 }
+
+/** Characters in the longest word, for the size of the type. */
+const longestWord = (text: string) => Math.max(1, ...text.split(/[\s\u200b]+/).map((w) => [...w].length));
 
 /** A Material "cookie": a circle with nine soft bumps, as a clip-path. */
 const COOKIE = `polygon(${Array.from({ length: 72 }, (_, i) => {

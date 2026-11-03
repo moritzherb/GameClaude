@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
+import { PlusIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
@@ -8,6 +9,7 @@ import { buzz, fxSettings, sfx } from '../lib/fx';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
 import { lookFor, type Look, type PhoneSetting } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
+import { loadPhoto, readPhoto, savePhoto, WALLPAPERS } from '../lib/wallpaper';
 import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
 
@@ -54,6 +56,79 @@ function Choice<T extends string>({ label, value, options, onPick }: { label: st
         </button>
       ))}
     </span>
+  );
+}
+
+/** The home screen's wallpaper (new look): the ground, a made one, or a photo from the phone. */
+function WallpaperRow() {
+  const { settings, updateSettings } = useApp();
+  const [photo, setPhoto] = useState(loadPhoto);
+  const [busy, setBusy] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const current = settings.wallpaper ?? 'ground';
+  const pick = (wallpaper: string) => {
+    sfx.pop();
+    buzz();
+    updateSettings({ wallpaper });
+  };
+  return (
+    <div className="setting-row wall-row">
+      <span className="setting-emoji">🖼️</span>
+      <span className="setting-text">
+        <span className="setting-label">{t('Wallpaper')}</span>
+        <span className="setting-hint">{t('Behind the games on the home screen')}</span>
+      </span>
+      <span className="wall-options" role="radiogroup" aria-label={t('Wallpaper')}>
+        {WALLPAPERS.map((w) => (
+          <button
+            key={w.id}
+            type="button"
+            role="radio"
+            aria-checked={current === w.id}
+            aria-label={t(w.label)}
+            className={`wall-swatch${current === w.id ? ' active' : ''}`}
+            style={w.background ? { background: w.background } : undefined}
+            onClick={() => pick(w.id)}
+          />
+        ))}
+        {photo && (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={current === 'photo'}
+            aria-label={t('Your photo')}
+            className={`wall-swatch${current === 'photo' ? ' active' : ''}`}
+            style={{ background: `url("${photo.data}") center / cover` }}
+            onClick={() => pick('photo')}
+          />
+        )}
+        <button type="button" className="wall-swatch add" aria-label={t('Choose a photo')} disabled={busy} onClick={() => input.current?.click()}>
+          <PlusIcon />
+        </button>
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (!file) return;
+            setBusy(true);
+            try {
+              const p = await readPhoto(file);
+              savePhoto(p);
+              setPhoto(p);
+              pick('photo');
+            } catch {
+              // Not an image the phone can read: nothing changes.
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      </span>
+    </div>
   );
 }
 
@@ -126,6 +201,7 @@ export default function Settings() {
             <Choice label={t('Home screen')} value={settings.phone ?? 'auto'} options={PHONES} onPick={(phone) => updateSettings({ phone })} />
           </div>
         )}
+        {lookFor(settings.look) === 'pop' && <WallpaperRow />}
 
         {OPTIONS.map((o) => {
           const on = !!settings[o.key];

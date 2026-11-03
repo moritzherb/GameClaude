@@ -20,6 +20,8 @@ export interface HomeProps {
   dock: ReactNode;
   onSearch: () => void;
   onShuffle: () => void;
+  /** The wallpaper (lib/wallpaper.ts). */
+  wall: { background?: string; photo: boolean };
   /** The games in the order the user arranged them, and how to keep a new order. */
   games: GameDefinition[];
   onOrder: (ids: string[]) => void;
@@ -30,7 +32,7 @@ export interface HomeProps {
  * the rest on the next page and the App Library last. The search pill sits above the dock and
  * shows the page dots while swiping.
  */
-export default function Springboard({ players, recent, returning, dock, onSearch, onShuffle, games, onOrder }: HomeProps) {
+export default function Springboard({ players, recent, returning, dock, wall, onSearch, onShuffle, games, onOrder }: HomeProps) {
   const grid = useRef<HTMLDivElement>(null);
   const rows = useRows(grid, 2, 4);
   const first = rows * 4;
@@ -61,7 +63,12 @@ export default function Springboard({ players, recent, returning, dock, onSearch
   const count = pages.length + 1;
 
   return (
-    <main ref={main} className={`screen os-home ios${returning ? ' back' : ''}${edit.editing ? ' editing' : ''}`} {...edit.handlers}>
+    <main
+      ref={main}
+      className={`screen os-home ios${returning ? ' back' : ''}${edit.editing ? ' editing' : ''}${wall.background ? ' has-wall' : ''}${wall.photo ? ' wall-photo' : ''}`}
+      style={wall.background ? { background: wall.background } : undefined}
+      {...edit.handlers}
+    >
       <div className="sb-pages" ref={pager} onScroll={onScroll}>
         {pages.map((list, i) => (
           <section key={i} className="sb-page" aria-label={t('Page {n}', { n: i + 1 })}>

@@ -302,6 +302,16 @@ const app: Record<string, string> = {
   Auto: 'Auto',
   iPhone: 'iPhone',
   Android: 'Android',
+  // Settings: the home screen's wallpaper
+  Wallpaper: 'Hintergrund',
+  'Behind the games on the home screen': 'Hinter den Spielen auf der Startseite',
+  Standard: 'Standard',
+  Lime: 'Lime',
+  Dusk: 'Abend',
+  Ocean: 'Ozean',
+  Ember: 'Glut',
+  'Your photo': 'Dein Foto',
+  'Choose a photo': 'Foto wählen',
 };
 
 export default app;

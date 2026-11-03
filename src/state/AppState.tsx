@@ -4,6 +4,7 @@ import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
 import { usePersistentState } from '../lib/storage';
+import { GROUND, setThemeColor } from '../lib/themeColor';
 
 export interface Player {
   id: string;
@@ -40,6 +41,8 @@ export interface Settings {
   look?: Look;
   /** In the new look, whose home screen: the phone's own (missing: auto), or always iPhone / Android. */
   phone?: PhoneSetting;
+  /** The home screen's wallpaper (new look): a made one's id, 'photo', or missing for the plain ground. */
+  wallpaper?: string;
 }
 
 export const AVATARS = [
@@ -121,10 +124,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // The browser's bar (Android) and the strip under the clock take the look's ground colour
   // (index.html has the new look's).
   const look = lookFor(settings.look);
-  useLayoutEffect(() => {
-    const [light, dark] = look === 'pop' ? ['#ece8dd', '#20211c'] : ['#f1ede3', '#10110e'];
-    document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => (m.content = m.media.includes('dark') ? dark : light));
-  }, [look]);
+  useLayoutEffect(() => setThemeColor(GROUND[look][0], GROUND[look][1]), [look]);
 
   // Before the screen is drawn: with big text on, the first picture mustn't show it small.
   useLayoutEffect(() => {

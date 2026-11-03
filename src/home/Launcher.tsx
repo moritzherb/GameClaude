@@ -23,6 +23,7 @@ export default function Launcher({
   onOrder,
   returning,
   dock,
+  wall,
   date,
   onSearch,
   onShuffle,
@@ -37,7 +38,8 @@ export default function Launcher({
   return (
     <main
       ref={main}
-      className={`screen os-home android${returning ? ' back' : ''}${edit.editing ? ' editing' : ''}`}
+      className={`screen os-home android${returning ? ' back' : ''}${edit.editing ? ' editing' : ''}${wall.background ? ' has-wall' : ''}${wall.photo ? ' wall-photo' : ''}`}
+      style={wall.background ? { background: wall.background } : undefined}
       {...edit.handlers}
       onPointerDown={(e) => {
         start.current = e.pointerType === 'mouse' ? null : { x: e.clientX, y: e.clientY };

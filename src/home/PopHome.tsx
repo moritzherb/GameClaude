@@ -8,6 +8,8 @@ import { launch, lastLaunched } from '../lib/launch';
 import { lineup } from '../lib/lineup';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
+import { GROUND, setThemeColor } from '../lib/themeColor';
+import { loadPhoto, wallpaperFor } from '../lib/wallpaper';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
@@ -24,7 +26,15 @@ import { usePlatform } from './usePlatform';
  */
 export default function PopHome() {
   const os = usePlatform();
-  const { players } = useApp();
+  const { players, settings } = useApp();
+  // The wallpaper; while home shows, the strip under the clock takes the colour of its top edge.
+  const [photo] = useState(loadPhoto);
+  const wall = wallpaperFor(settings.wallpaper, photo);
+  useEffect(() => {
+    if (!wall.top) return;
+    setThemeColor(wall.top, wall.top);
+    return () => setThemeColor(GROUND.pop[0], GROUND.pop[1]);
+  }, [wall.top]);
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   const [searching, setSearching] = useState(false);
@@ -102,7 +112,7 @@ export default function PopHome() {
   // "Tue 3 Nov" / "Di. 3. Nov."
   const date = new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
   const closeSearch = useCallback(() => setSearching(false), []);
-  const common = { players, recent, returning, dock, onSearch: () => setSearching(true), onShuffle: shuffle };
+  const common = { players, recent, returning, dock, wall, onSearch: () => setSearching(true), onShuffle: shuffle };
 
   return (
     <>
