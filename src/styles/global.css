@@ -11886,10 +11886,10 @@ h3 {
   --card-b: #ff7eb6;
 }
 
-/* A King Treatment card is gold, so the table sees at once which question it is. */
+/* A King Treatment card is blue (Princess: pink), so the table sees at once which question it is. */
 .ph-card.king {
-  --card-a: #ffe9a3;
-  --card-b: #ffc94a;
+  --card-a: #bcdcff;
+  --card-b: #6cb6ff;
 }
 
 .tn-card {
@@ -11962,7 +11962,7 @@ h3 {
 }
 
 .ph-head.king.on {
-  background: #ffd34d;
+  background: var(--c-blue);
   color: #151612;
 }
 
@@ -12163,7 +12163,7 @@ h3 {
 }
 
 .ph-summary-side.king {
-  background: #ffd34d;
+  background: var(--c-blue);
 }
 
 .ph-summary-side.bare {
