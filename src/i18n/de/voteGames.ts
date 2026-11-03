@@ -1,42 +1,22 @@
-// German for the two voting games: Princess/King Treatment and He's a 10/10, but…
+// German for the two card games for talking: Princess/King Treatment and He's a 10/10, but…
 const voteGames: Record<string, string> = {
   // Both
   'reads it out': 'liest vor',
-  Vote: 'Abstimmen',
-  'Pass the phone round. Everyone votes in secret.': 'Gib das Handy reihum. Alle stimmen geheim ab.',
-  'Secret vote · {n} of {total}': 'Geheime Abstimmung · {n} von {total}',
-  '← Back to {name}': '← Zurück zu {name}',
-  '← Back to the card': '← Zurück zur Karte',
-  'Next card: {name} reads →': 'Nächste Karte: {name} liest →',
+  Next: 'Weiter',
   'All cards played!': 'Alle Karten gespielt!',
-  'That’s it!': 'Das war’s!',
-  'Who drank what': 'Wer wie viel getrunken hat',
-  Nobody: 'Niemand',
-  '{names} and {last}': '{names} und {last}',
   Mixed: 'Gemischt',
-  Both: 'Beides',
 
   // Princess/King Treatment
   'Princess/King Treatment': 'Princess/King Treatment',
-  'Royal treatment, or just the bare minimum?': 'Königlich behandelt oder nur das Bare Minimum?',
-  'Pick at the start: Princess, King, or both.': 'Wählt am Anfang: Princess, King oder beides.',
+  'Princess or King Treatment? One tap settles it.': 'Princess oder King Treatment? Ein Tipp entscheidet.',
+  'Talk it over, then tap once for the whole table: Princess or King Treatment?': 'Redet drüber, dann tippt ihr einmal für alle: Princess oder King Treatment?',
+  'Princess or King Treatment?': 'Princess oder King Treatment?',
   'A card shows something someone does for you. The one whose turn it is reads it out.': 'Eine Karte zeigt, was jemand für dich tut. Wer dran ist, liest sie vor.',
-  'Pass the phone round: everyone taps in secret, Bare Minimum or Treatment.': 'Gebt das Handy reihum: Alle tippen geheim, Bare Minimum oder Treatment.',
-  'Then the phone shows who voted what. The minority drinks 2.': 'Dann zeigt das Handy, wer was gewählt hat. Die Minderheit trinkt 2.',
-  'A tie: everyone drinks 1. All agreed: nobody drinks.': 'Unentschieden: Alle trinken 1. Alle einig: Keiner trinkt.',
   'Next card, next reader, until the cards run out.': 'Nächste Karte, nächster Vorleser, bis die Karten aus sind.',
   'Princess Treatment': 'Princess Treatment',
   'King Treatment': 'King Treatment',
-  'Bare Minimum': 'Bare Minimum',
-  'Bare Minimum or {treatment}?': 'Bare Minimum oder {treatment}?',
   Princess: 'Princess',
   King: 'King',
-  'Princess or King?': 'Princess oder King?',
-  'A card shows something someone does for you. Everyone votes in secret: Bare Minimum or Treatment? The minority drinks.':
-    'Eine Karte zeigt, was jemand für dich tut. Alle stimmen geheim ab: Bare Minimum oder Treatment? Die Minderheit trinkt.',
-  'The minority drinks {n}': 'Die Minderheit trinkt {n}',
-  'A tie! Everyone drinks {n}': 'Unentschieden! Alle trinken {n}',
-  'All agreed. Nobody drinks.': 'Alle einig. Keiner trinkt.',
 
   'Paying for dinner on the first date': 'Beim ersten Date das Essen zahlen',
   'Holding the door open for you': 'Dir die Tür aufhalten',
@@ -93,26 +73,16 @@ const voteGames: Record<string, string> = {
 
   // He's a 10/10, but…
   'He’s a 10/10, but…': 'Er ist eine 10/10, aber…',
+  'Then talk about it: still a 10, or not any more? Nothing to vote, nothing to count.': 'Dann redet drüber: noch eine 10 oder nicht mehr? Nichts abstimmen, nichts zählen.',
+  'A card says: a 10, but … Read it out and talk about it: still a 10? Then the next card.': 'Eine Karte sagt: eine 10, aber … Lest sie vor und redet drüber: noch eine 10? Dann die nächste Karte.',
   'Perfect. Except for one thing.': 'Perfekt. Bis auf eine Sache.',
   'Pick at the start: the cards are about him, her, or both.': 'Wählt am Anfang: Die Karten sind über ihn, über sie oder gemischt.',
   'A card says: he’s a 10, but … The one whose turn it is reads it out.': 'Eine Karte sagt: Er ist eine 10, aber … Wer dran ist, liest sie vor.',
-  'Pass the phone round: everyone taps in secret where that drops him, from 0 to 10.': 'Gebt das Handy reihum: Alle tippen geheim, auf welche Zahl er damit fällt, von 0 bis 10.',
-  'Then the phone shows everyone’s number and the average.': 'Dann zeigt das Handy alle Zahlen und den Schnitt.',
-  'Whoever is furthest from the average drinks 2. Several equally far: all of them. Everyone the same: nobody.':
-    'Wer am weitesten vom Schnitt weg ist, trinkt 2. Sind mehrere gleich weit weg, trinken alle davon. Alle gleich: Keiner trinkt.',
   'He’s a 10, but …': 'Er ist eine 10, aber …',
   'She’s a 10, but …': 'Sie ist eine 10, aber …',
-  'He drops to …': 'Er fällt auf …',
-  'She drops to …': 'Sie fällt auf …',
-  'That’s where he drops to.': 'Darauf fällt er.',
-  'That’s where she drops to.': 'Darauf fällt sie.',
-  'Furthest off drinks {n}': 'Am weitesten daneben trinkt {n}',
-  'All the same number. Nobody drinks.': 'Alle die gleiche Zahl. Keiner trinkt.',
   He: 'Er',
   She: 'Sie',
   'Who’s it about?': 'Um wen geht’s?',
-  'A card says: a 10, but … Everyone taps in secret where that drops them, from 0 to 10. Whoever is furthest from the average drinks.':
-    'Eine Karte sagt: eine 10, aber … Alle tippen geheim, auf welche Zahl das fällt, von 0 bis 10. Wer am weitesten vom Schnitt weg ist, trinkt.',
 
   'chews with their mouth open': 'schmatzt beim Essen',
   'replies to texts three days later': 'antwortet erst nach drei Tagen auf Nachrichten',

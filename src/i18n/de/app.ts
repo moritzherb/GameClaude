@@ -179,6 +179,7 @@ const app: Record<string, string> = {
   'We know it: no explanations': 'Kennen wir: keine Erklärungen',
   'Explanations on': 'Erklärungen an',
   'Play nice': 'Fair bleiben',
+  '{names} and {last}': '{names} und {last}',
   Privacy: 'Datenschutz',
   'New phone?': 'Neues Handy?',
   'Back up your players, boards, settings and stats under a code. On the new phone, bring them in with that code.':

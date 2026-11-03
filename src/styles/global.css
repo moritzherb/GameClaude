@@ -11803,8 +11803,9 @@ h3 {
 }
 
 /*
- * The two voting games (Princess/King Treatment, He's a 10/10 but…): a card on the table, the
- * phone goes round for a secret vote, then everyone's vote and who drinks.
+ * The two card games for talking (Princess/King Treatment, He's a 10/10 but…): one card on the
+ * table, as big as the screen allows, to read out across the table. Princess/King: two heads
+ * below it, one tap for everyone. Prefixes: vt- (both), ph- (princess/king), tn- (ten).
  */
 .vt {
   display: flex;
@@ -11829,28 +11830,24 @@ h3 {
   font-variant-numeric: tabular-nums;
 }
 
-/* The card's room: the rest of the screen, the card in the middle of it. */
+/* The card's room: the rest of the screen, the card filling it. */
 .vt-stage {
   flex: 1 1 0;
   min-height: 0;
   display: grid;
-  place-items: center;
-}
-
-.vt-stage.small {
-  flex: none;
+  place-items: stretch;
+  padding: 4px 6px 10px 2px;
 }
 
 .vt-card-in {
   display: grid;
-  place-items: center;
-  width: 100%;
-  animation: vt-deal 0.45s var(--spring) both;
+  min-height: 0;
+  animation: vt-deal 0.5s var(--spring) both;
 }
 
 @keyframes vt-deal {
   from {
-    transform: translateY(28px) rotate(-5deg) scale(0.9);
+    transform: translateY(40px) rotate(-6deg) scale(0.88);
     opacity: 0;
   }
 }
@@ -11858,406 +11855,280 @@ h3 {
 .vt-card {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 14px;
-  width: min(100%, 360px);
-  padding: 30px 22px;
+  gap: 18px;
+  min-height: 0;
+  height: 100%;
+  padding: 28px 22px;
   border: 4px solid #151612;
-  border-radius: 22px;
+  border-radius: 26px;
   background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.35) 1.3px, transparent 1.8px) 0 0 / 9px 9px,
-    var(--card);
+    radial-gradient(circle, rgba(255, 255, 255, 0.32) 1.3px, transparent 1.8px) 0 0 / 9px 9px,
+    linear-gradient(160deg, var(--card-a), var(--card-b));
   color: #151612;
   text-align: center;
   box-shadow: 8px 8px 0 #151612;
-  transform: rotate(-1.5deg);
+  transform: rotate(-1.2deg);
+  overflow: hidden;
 }
 
-.pt-card {
-  --card: var(--c-pink);
+.ph-card {
+  --card-a: #ffb3d1;
+  --card-b: #ff7eb6;
 }
 
-.tb-card {
-  --card: var(--c-lilac);
+.tn-card {
+  --card-a: #d9c6ff;
+  --card-b: #a98bff;
 }
 
 .vt-card-emoji {
-  font-size: 3.4rem;
+  font-size: clamp(3rem, 15vw, 4.6rem);
   line-height: 1;
 }
 
 .vt-card-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(1.25rem, 6vw, 1.6rem);
+  font-size: clamp(1.15rem, 5.4vw, 1.55rem);
   line-height: 1;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  opacity: 0.85;
 }
 
+/* The statement: read out across the table. */
 .vt-card-text {
-  font-size: clamp(1.25rem, 6vw, 1.55rem);
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: clamp(1.9rem, 9vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
-/* Over the ballot and the reveal: the same card, small and straight. */
-.vt-card.small {
-  width: 100%;
-  gap: 4px;
-  padding: 12px 14px;
-  border-width: 3px;
-  border-radius: 16px;
-  box-shadow: 4px 4px 0 #151612;
-  transform: none;
+.vt-next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.vt-card.small .vt-card-title {
-  font-size: 0.95rem;
+/* ---------- Princess/King: the two heads ---------- */
+.ph-choices {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.vt-card.small .vt-card-text {
-  font-size: 1.05rem;
-}
-
-.vt-under {
-  margin-top: 10px;
-}
-
-/* Whose turn it is to vote: big, so the phone goes to the right person. */
-.vt-voter {
+.ph-head {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 16px;
-  border-radius: var(--radius);
+  gap: 2px;
+  padding: 10px 8px 12px;
+  border-radius: 22px;
   background: var(--surface);
-  box-shadow: inset 0 0 0 3px var(--chip);
-  animation: vt-hand 0.35s var(--spring) both;
+  box-shadow: var(--shadow);
+  transition:
+    transform 0.25s var(--spring),
+    opacity 0.25s ease,
+    filter 0.25s ease,
+    background 0.25s ease;
 }
 
-@keyframes vt-hand {
+.ph-head:active {
+  transform: scale(0.96);
+}
+
+.ph-head.princess.on {
+  background: #ff7eb6;
+  color: #151612;
+}
+
+.ph-head.king.on {
+  background: #ffd34d;
+  color: #151612;
+}
+
+.ph-head.on {
+  transform: scale(1.04);
+}
+
+.ph-head.off {
+  opacity: 0.45;
+  filter: saturate(0.4);
+}
+
+.ph-art {
+  display: block;
+  width: min(100%, 132px);
+  animation: ph-sway 3.2s ease-in-out infinite;
+}
+
+.ph-head.king .ph-art {
+  animation-duration: 3.8s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes ph-sway {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(3deg);
+  }
+}
+
+.ph-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Blinking now and then (in steps: nothing moves in between). */
+.ph-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ph-blink 4.6s steps(1, end) infinite;
+}
+
+.ph-head.king .ph-eyes {
+  animation-delay: 1.7s;
+}
+
+@keyframes ph-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.12);
+  }
+}
+
+.ph-spark {
+  animation: ph-twinkle 2.2s steps(1, end) infinite;
+}
+
+.ph-spark.b {
+  animation-delay: 1.1s;
+}
+
+@keyframes ph-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* Tapped: the crown hops. */
+.ph-crown {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.ph-head.on .ph-crown {
+  animation: ph-hop 0.6s var(--spring);
+}
+
+@keyframes ph-hop {
+  30% {
+    transform: translateY(-9px) rotate(-8deg);
+  }
+  60% {
+    transform: translateY(0) rotate(4deg);
+  }
+}
+
+.ph-label {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+}
+
+/* What the table settled on, stamped over the heads. */
+.ph-verdict {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  padding: 6px 14px;
+  border: 3px solid #151612;
+  border-radius: 999px;
+  background: #fff;
+  color: #151612;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #151612;
+  transform: translate(-50%, -100%) rotate(-3deg);
+  animation: ph-stamp 0.4s var(--spring) both;
+  pointer-events: none;
+}
+
+@keyframes ph-stamp {
   from {
-    transform: translateX(48px);
+    transform: translate(-50%, -100%) rotate(-3deg) scale(1.6);
     opacity: 0;
   }
 }
 
-.vt-voter-avatar {
-  display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: var(--chip);
-  font-size: 2.4rem;
-  overflow: hidden;
-}
-
-.vt-voter-avatar .avatar-photo,
-.vt-voter-chip-avatar .avatar-photo,
-.tb-dot .avatar-photo {
-  width: 100%;
-  height: 100%;
-}
-
-.vt-voter-name {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 2rem;
-  line-height: 1.05;
-  text-transform: uppercase;
-}
-
-.vt-voter-sub {
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.vt-ballot {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.vt-undo {
-  color: var(--muted);
-}
-
-/* Princess/King Treatment: two big buttons. */
-.pt-choices {
+.ph-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.pt-choice {
+.ph-summary-side {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 150px;
-  padding: 16px 10px;
-  border: 3px solid #151612;
-  border-radius: var(--radius);
-  box-shadow: 5px 5px 0 #151612;
+  gap: 4px;
+  padding: 18px 10px;
+  border-radius: 20px;
   color: #151612;
+}
+
+.ph-summary-side.princess {
+  background: #ff7eb6;
+}
+
+.ph-summary-side.king {
+  background: #ffd34d;
+}
+
+.ph-summary-n {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.15rem;
-  line-height: 1.05;
-  text-transform: uppercase;
-  transition: scale 0.1s;
-}
-
-/* Pressed: smaller (scale, not transform: a transform on touch made iPhones swallow the tap). */
-.pt-choice:active,
-.tb-score:active {
-  scale: 0.94;
-}
-
-.pt-choice.treat {
-  background: var(--c-pink);
-}
-
-.pt-choice.bare {
-  background: #d9d4c7;
-}
-
-.pt-choice-emoji {
   font-size: 3rem;
   line-height: 1;
 }
 
-.pt-sides {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.pt-side {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.pt-side.drinks {
-  box-shadow: inset 0 0 0 3px var(--bad);
-}
-
-.pt-side-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pt-side-emoji {
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.pt-side-label {
-  flex: 1;
-  min-width: 0;
-  font-weight: 800;
-  font-size: 0.82rem;
-  line-height: 1.1;
-}
-
-.pt-side-n {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 1.7rem;
-  line-height: 1;
-}
-
-.vt-voters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.vt-voter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  max-width: 100%;
-  padding: 3px 9px 3px 3px;
-  border-radius: 999px;
-  background: var(--surface-2);
+.ph-summary-label {
   font-weight: 700;
-  font-size: 0.85rem;
 }
 
-.vt-voter-chip.drinks {
-  background: var(--bad);
-  color: var(--on-color);
+@media (prefers-reduced-motion: reduce) {
+  .ph-art,
+  .ph-eyes,
+  .ph-spark,
+  .ph-head.on .ph-crown {
+    animation: none;
+  }
 }
 
-.vt-voter-chip-avatar {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--chip);
-  font-size: 0.9rem;
-  overflow: hidden;
-}
-
-.vt-voter-chip-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.vt-nobody {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.vt-verdict {
-  padding: 14px 16px;
-  animation-delay: 0.2s;
-}
-
-/* He's a 10/10 but…: 0 to 10, in two rows (the 10 twice as wide). */
-.tb-ballot {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tb-ballot-title {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 1.4rem;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.tb-scores {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-}
-
-.tb-score {
-  height: 64px;
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 1.8rem;
-  transition: scale 0.1s;
-}
-
-.tb-score.ten {
-  grid-column: span 2;
-  background: var(--c-lilac);
-  color: #151612;
-  box-shadow: none;
-}
-
-.tb-average {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.tb-average-n {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 4.2rem;
-  line-height: 0.9;
-  font-variant-numeric: tabular-nums;
-  animation: pop-in 0.45s var(--spring) both;
-}
-
-.tb-average-n small {
-  margin-left: 2px;
-  font-size: 1.4rem;
-  opacity: 0.6;
-}
-
-.tb-average-sub {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-/* Everyone's number: a column per score, the people who gave it stacked over it. */
-.tb-spread {
-  display: grid;
-  grid-template-columns: repeat(11, 1fr);
-  align-items: end;
-  gap: 2px;
-  padding: 10px 6px 8px;
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.tb-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.tb-col-people {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: 3px;
-}
-
-.tb-dot {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--chip);
-  font-size: 0.85rem;
-  overflow: hidden;
-  box-shadow: 0 0 0 2px var(--surface);
-}
-
-.tb-dot.drinks {
-  box-shadow: 0 0 0 3px var(--bad);
-}
-
-.tb-col-n {
-  color: var(--muted);
-  font-weight: 800;
-  font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.tb-col.used .tb-col-n {
-  color: var(--ink);
-}
-
-/* Clean table: who reads is in the bar's bubble; no count, no how-to. */
-.play-screen.clean .vt-status,
-.play-screen.clean .vt-under,
-.play-screen.clean .vt-voter-sub {
+/* Clean table: who reads is in the bar's bubble; no count. */
+.play-screen.clean .vt-status {
   display: none;
 }
 
