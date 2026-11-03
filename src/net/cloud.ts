@@ -10,10 +10,10 @@ import { isNative, toNative } from '../lib/native';
  * A phone signs in anonymously the first time it needs to: no e-mail, no password.
  */
 
-const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-export const cloudOn = Boolean(URL && KEY);
+export const cloudOn = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 /** Where the sign-in is kept (not part of a backup: the new phone signs in on its own). */
 const AUTH_KEY = 'prost:cloud-auth';
@@ -21,7 +21,7 @@ const AUTH_KEY = 'prost:cloud-auth';
 let client: SupabaseClient | null = null;
 function db() {
   if (!cloudOn) throw new CloudError('off');
-  client ??= createClient(URL!, KEY!, { auth: { storageKey: AUTH_KEY, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  client ??= createClient(SUPABASE_URL!, SUPABASE_KEY!, { auth: { storageKey: AUTH_KEY, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
   return client;
 }
 

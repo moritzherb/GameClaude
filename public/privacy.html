@@ -94,11 +94,12 @@
 
         <h3>Zusammen spielen (Räume)</h3>
         <p>
-          Wenn du einen Raum eröffnest oder ihm beitrittst, laufen die Nachrichten zwischen den Handys über öffentliche MQTT-Server von HiveMQ
-          (broker.hivemq.com) und EMQX (broker.emqx.io). Übertragen werden: dein Spitzname, Emoji, Farbe, auf Wunsch dein kleines Profilfoto, eine
-          zufällige Geräte-Kennung, der Raum-Code und die Spielzüge. Die Verbindung ist verschlüsselt (TLS); gespeichert wird von uns nichts. Die
-          Betreiber dieser Server verarbeiten dabei technisch deine IP-Adresse. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (die Funktion, die du
-          nutzt).
+          Wenn du einen Raum eröffnest oder ihm beitrittst, laufen die Nachrichten zwischen den Handys über unseren Server bei Supabase (Supabase
+          Inc., Supabase Realtime, Server in der EU: [Region]). Übertragen werden: dein Spitzname, Emoji, Farbe, auf Wunsch dein kleines Profilfoto,
+          eine zufällige Geräte-Kennung, der Raum-Code und die Spielzüge. Die Verbindung ist verschlüsselt (TLS). Die Nachrichten werden nur
+          weitergereicht, nicht gespeichert; technisch wird dabei deine IP-Adresse verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (die
+          Funktion, die du nutzt). [Nur falls Supabase nicht eingerichtet ist: Dann laufen die Räume über öffentliche MQTT-Server von HiveMQ
+          (broker.hivemq.com) und EMQX (broker.emqx.io).]
         </p>
 
         <h3>Backup-Code und geteilte Bretter</h3>
@@ -154,9 +155,11 @@
 
         <h3>Playing together (rooms)</h3>
         <p>
-          When you host or join a room, messages between the phones pass through public MQTT servers run by HiveMQ (broker.hivemq.com) and EMQX
-          (broker.emqx.io): your nickname, emoji, colour, optionally your small profile photo, a random device ID, the room code and the game moves. The
-          connection is encrypted (TLS); we store nothing. The server operators technically process your IP address. Legal basis: Art. 6(1)(b) GDPR.
+          When you host or join a room, messages between the phones pass through our server at Supabase (Supabase Inc., Supabase Realtime, servers
+          in the EU: [region]): your nickname, emoji, colour, optionally your small profile photo, a random device ID, the room code and the game
+          moves. The connection is encrypted (TLS); messages are passed on, not stored, and your IP address is processed technically. Legal basis:
+          Art. 6(1)(b) GDPR. [Only if Supabase is not set up: rooms then use public MQTT servers run by HiveMQ (broker.hivemq.com) and EMQX
+          (broker.emqx.io).]
         </p>
 
         <h3>Backup codes and shared boards</h3>

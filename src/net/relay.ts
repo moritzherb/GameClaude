@@ -1,15 +1,20 @@
 /*
- * Phones in a room talk through public MQTT servers: each phone keeps a connection to the
- * servers and messages are passed along by them. Unlike a direct phone-to-phone link this
- * works whatever network each phone is on (two different Wi-Fis, mobile data, …).
+ * Phones in a room talk through servers: each phone keeps a connection to them and messages are
+ * passed along. Unlike a direct phone-to-phone link this works whatever network each phone is on
+ * (two different Wi-Fis, mobile data, …). The servers are our Supabase project (Realtime, see
+ * realtime.ts) when the app is built with it, otherwise public MQTT servers.
  *
  * The shape follows PeerJS (a Peer with an id, connections with open/data/close), which the
  * room code was first built on.
  */
 
 import { Mqtt } from './mqtt';
+import { RealtimeBus, SUPABASE_LINE } from './realtime';
 
-/** Each phone connects to all of these, so the room keeps working if one of them is down. */
+/** One connection to a server: an MQTT broker, or Supabase Realtime (same use, see realtime.ts). */
+type Bus = Mqtt | RealtimeBus;
+
+/** Without Supabase: each phone connects to all of these, so the room keeps working if one of them is down. */
 const DEFAULT_SERVERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt'];
 const PREFIX = 'prost-drinking-games/rooms/v1';
 const inbox = (id: string) => `${PREFIX}/${id}/in`;
@@ -77,6 +82,8 @@ export class DataConnection extends Emitter<{ open: []; data: [unknown]; close: 
   open = false;
   closed = false;
   heard = Date.now();
+  /** When we last sent something on it (data counts as "still here" too). */
+  said = 0;
   /** The server this connection's messages go out on. */
   line: Line | null = null;
   knocking?: number;
@@ -128,7 +135,7 @@ export class DataConnection extends Emitter<{ open: []; data: [unknown]; close: 
 /** One server connection. */
 interface Line {
   url: string;
-  mq: Mqtt | null;
+  mq: Bus | null;
   /** Subscribed to our inbox (and, for the host, holding the id). */
   ready: boolean;
   inbox: boolean;
@@ -231,7 +238,9 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
   /** @internal */
   sendOn(conn: DataConnection, k: Kind, d?: unknown) {
     const line = conn.line?.ready ? conn.line : this.lines.find((l) => l.ready);
-    if (line) this.post(line, conn.remote, { c: conn.id, f: this.id, k, d });
+    if (!line) return;
+    this.post(line, conn.remote, { c: conn.id, f: this.id, k, d });
+    conn.said = Date.now();
   }
 
   /** @internal */
@@ -262,11 +271,15 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
 
   private connectLine(line: Line) {
     if (this.destroyed || line.mq) return;
-    const mq = new Mqtt({
-      url: line.url,
-      // Dropped without a goodbye: the server frees our id for us.
-      will: this.listening ? { topic: claimTopic(this.id), payload: '', retain: true } : undefined,
-    });
+    const mq: Bus =
+      line.url === SUPABASE_LINE
+        ? // Dropped without a goodbye: the claim (presence) goes away by itself.
+          new RealtimeBus()
+        : new Mqtt({
+            url: line.url,
+            // Dropped without a goodbye: the server frees our id for us.
+            will: this.listening ? { topic: claimTopic(this.id), payload: '', retain: true } : undefined,
+          });
     line.mq = mq;
     mq.onReady = () => {
       mq.subscribe(inbox(this.id));
@@ -434,7 +447,9 @@ export class Peer extends Emitter<{ open: [string]; connection: [DataConnection]
         // Maybe it's our own connection that died without a sound (switched networks on the
         // road): find out now, and a dead one is replaced before the other phone counts as gone.
         if (now - c.heard > QUIET_MS) this.lines.forEach((l) => l.mq?.check());
-        this.sendOn(c, 'p');
+        // Nothing sent for a while: say "still here". Mid-game the moves already say it (and every
+        // message costs on the rooms server).
+        if (now - c.said >= PING_MS - 500) this.sendOn(c, 'p');
       }
     }
   }

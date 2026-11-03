@@ -31,8 +31,23 @@ Unterschiede in der App:
 - Der Bildschirm bleibt während eines Spiels an.
 - Teilen über das System-Menü.
 - Android-Zurück verhält sich wie der Knopf oben links: Er fragt im Spiel nach und schließt die App auf der Startseite.
-- **Kein Tabak** (Apple-Regel 1.4.3): Aus „Tschick-Flip“ wird „Schachtel-Flip“ 📦, aus „Snus-Wurf“ wird „Dosen-Wurf“.
-  Die Website bleibt, wie sie ist.
+- **Entschärfte Inhalte** (`src/i18n/store.ts`). Die Website bleibt, wie sie ist. In der App gilt:
+
+  | Website | App |
+  | --- | --- |
+  | Shots, „Exen“, „Glas leer“, „Trink aus“, „Ex!“ | Schlucke, „Großer Schluck“ = 3 Schlucke, „Trink 3!“ |
+  | Mystery Shot (gemixt) | Mystery-Aufgabe (harmlose Aufgabe oder 2 Schlucke) |
+  | Wasserfall | Prost-Runde (alle trinken 1) |
+  | King's Cup: Becher füllen und austrinken | Könige sind Toasts (alle 1), der 4. König: 3 Schlucke |
+  | Klatschen: Klatschglas füllen und auf ex | Klatschglas = 2, das 4. = 3 |
+  | Pyramide „×2“ (bis 32 Schlucke) | entfällt; „Nehmen oder Verdoppeln“ endet bei 4 |
+  | F*ck the Dealer 🤬, Arschloch 💩, Hose runter 👖 | Schlag den Dealer 🎴, Bettler 🃏, Einunddreißig 🎯 |
+  | Popo-Klaps 🍑 | High Five 🙌 |
+  | Tschick-Flip 🚬, Snus-Wurf | Schachtel-Flip 📦, Dosen-Wurf |
+
+  Dazu sagt die Altersabfrage gleich auf dem ersten Bildschirm: „Jeder Schluck darf auch Wasser oder Softdrink sein.“
+  Ein Test (`src/i18n/store.test.ts`) prüft jeden Text der App in beiden Sprachen. Ein neuer Text mit „Shot“, „Ex“
+  oder „Arschloch“ fällt dort durch, bis er eine Store-Fassung hat.
 
 ## 1. Konten (Du)
 
@@ -128,19 +143,30 @@ Mit eigener Domain (z. B. `prost-app.de`) gilt dasselbe: Die Datei gehört nach 
 
 ## 6. Supabase einrichten (Du, optional)
 
-Ohne Supabase funktioniert alles wie bisher, nur ohne „Backup-Code“ und „Brett teilen“.
+Supabase trägt drei Dinge: die **Online-Räume** (Supabase Realtime statt öffentlicher Test-Server), den
+„Backup-Code“ und „Brett teilen“. Ohne Supabase läuft die App weiter, dann aber mit den öffentlichen MQTT-Servern
+für die Räume und ohne Backup und Teilen. Für die Store-Version solltest du Supabase also einrichten.
 
 1. Projekt anlegen, Region **Frankfurt (eu-central-1)**.
 2. *SQL Editor*: den Inhalt von `supabase/migrations/20261103000000_init.sql` ausführen. Alternativ mit der
    Supabase-CLI: `supabase link` und dann `supabase db push`.
 3. *Authentication → Sign In / Providers*: **„Allow anonymous sign-ins“** einschalten. Empfohlen gegen Missbrauch:
    unter *Attack Protection* CAPTCHA aktivieren. Das braucht später noch einen Captcha-Token in `cloud.ts`.
-4. *Project Settings → API*: Projekt-URL und den **publishable/anon key** kopieren. Dieser Key ist öffentlich gedacht;
+4. *Realtime → Settings*: **„Allow public access“** muss an sein. Die Räume nutzen öffentliche Kanäle, und die
+   Raum-Codes sind zufällig.
+5. *Project Settings → API*: Projekt-URL und den **publishable/anon key** kopieren. Dieser Key ist öffentlich gedacht;
    die Regeln in der Datenbank schützen die Daten. Den Service-Role-Key gibst du **nie** heraus. Eintragen musst du beide Werte an drei Stellen:
    - Website: GitHub-Repo → *Settings → Secrets and variables → Actions → Variables*: `VITE_SUPABASE_URL`,
      `VITE_SUPABASE_ANON_KEY`.
    - App: dieselben zwei Variablen in den Expo Environment variables (production).
    - Lokal: `.env.local` (Vorlage: `.env.example`).
+
+**Kosten der Räume:** Supabase zählt Realtime-Nachrichten. Ein Raum mit 4 Handys braucht im Leerlauf
+rund 3 Nachrichten pro Sekunde, mit 8 Handys etwa 10. Im Spiel ersetzen die Spielzüge die „bin noch da“-Meldungen.
+Der Free-Plan (2 Mio. Nachrichten/Monat, 200 gleichzeitige Verbindungen) reicht für den Start, etwa für einige
+hundert Spielstunden im Monat. Wächst die App, kommt der Pro-Plan (25 USD/Monat, 5 Mio. Nachrichten und 500
+Verbindungen inklusive). Die aktuellen Grenzen stehen unter
+[supabase.com/pricing](https://supabase.com/pricing). In *Reports → Realtime* siehst du die Nutzung.
 
 ## 7. Datenschutzerklärung (Du)
 
@@ -194,13 +220,14 @@ In der Play Console:
 
 | Regel | Stand in der App |
 | --- | --- |
-| Apple 1.4.3: kein Tabak, kein Aufruf zu übermäßigem Alkohol | Tabak in der App entfernt. Altersabfrage 18+, „Fair bleiben“-Hinweise. **Restrisiko:** Felder wie „Exen“ oder „Shots“. Lehnt Apple ab, können wir sie in der App entschärfen. |
+| Apple 1.4.3: kein Tabak, kein Aufruf zu übermäßigem Alkohol | In der App kein Tabak, keine Shots, kein Exen, kein Mixen; höchstens 3 Schlucke am Stück, Pyramide ohne ×2. Altersabfrage 18+ mit „jeder Schluck darf auch Wasser sein“, „Fair bleiben“-Hinweise |
 | Apple 4.2: nicht nur eine verpackte Website | Spiele offline im Paket, dazu native Haptik, Teilen, Werbung, Zurück-Taste und Bildschirm an |
 | Apple 5.1.2 / ATT | Tracking-Frage vor personalisierter Werbung, Text in `app.config.ts` |
 | Apple 5.1.1: Datenschutz-Link in der App | Einstellungen → Datenschutz |
 | Apple 2.5.18 / 3.2.2: Werbung | Nicht im Spiel, schließbar, als Werbung erkennbar (Google-Formate) |
 | DSGVO / UMP | Einwilligung vor der ersten Anzeigenanfrage, änderbar unter Einstellungen → Werbe-Einstellungen |
-| AdMob: Alkohol | Laut Googles *Publisher Restrictions* bekommen Inhalte mit „unverantwortlichem Alkoholkonsum“ nur **eingeschränkte Werbung** (weniger Werbekunden). Das ist kein Verbot, kann aber den Umsatz drücken. Die App fordert nur Werbung bis Einstufung *MA* an. |
+| AdMob: Alkohol, Fluchen, Anzügliches | Googles *Publisher Restrictions* begrenzen die Werbung bei „unverantwortlichem Alkoholkonsum“, und viele Werbekunden schließen Fluchen und Anzügliches aus. Genau das ist in der App entschärft (siehe Tabelle oben). Die App fordert Werbung bis Einstufung *MA* an, also für Erwachsene, mit der größten Auswahl an Werbekunden. |
+| Store-Texte (Du) | Im Store-Eintrag „Partyspiele für Erwachsene“ schreiben, nicht „sich betrinken“. Screenshots ohne Shots oder Exen. Mehr Werbekunden bekommst du mit der Einwilligung: In AdMob die *IDFA-Erläuterung* für iOS einschalten. |
 | AdMob: ungültige Zugriffe | Test-Anzeigen in Entwicklung, nie selbst klicken |
 | Google Play: Familien-Richtlinie | Zielgruppe 18+, keine Kinder-Werbung (`tagForChildDirectedTreatment: false`) |
 

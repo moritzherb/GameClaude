@@ -26,9 +26,9 @@ Source: GitHub Actions*. Pull requests run the tests and the build (`.github/wor
 ## Play together (phones connected)
 
 One phone hosts a room and shows a 4-letter code and a QR code; the others scan it or type the code.
-Phones pass their messages through free public MQTT servers over WebSocket (`src/net/relay.ts`, a tiny
-client in `src/net/mqtt.ts`), so it works whatever network each phone is on. Every phone connects to two
-servers, so one being down doesn't stop the room. The host phone is in charge: guests send to the host, the host sends to
+Phones pass their messages through a server, so it works whatever network each phone is on (`src/net/relay.ts`).
+With Supabase set up (see Backend below) that's Supabase Realtime (`src/net/realtime.ts`: broadcast for messages,
+presence for who holds a room code); without it, two free public MQTT servers (a tiny client in `src/net/mqtt.ts`). The host phone is in charge: guests send to the host, the host sends to
 one or all guests (`src/net/RoomProvider.tsx`, `useRoom()`).
 
 - Guests that drop out (phone locked, Wi-Fi switch) reconnect automatically; a reloaded tab rejoins its room.
@@ -63,8 +63,8 @@ store forms) is in [docs/STORE.md](docs/STORE.md) (German).
 
 ## Backend (Supabase)
 
-Optional: with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set at build time, Settings offers a backup code
-(move everything to a new phone) and Party can share boards by code. Phones sign in anonymously. The schema and its
+Optional: with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set at build time, rooms run on Supabase Realtime,
+Settings offers a backup code (move everything to a new phone) and Party can share boards by code. Phones sign in anonymously. The schema and its
 access rules are in `supabase/migrations/`, tested against a real Postgres in `supabase/tests/` (part of `npm test`).
 
 ## How it's organised
