@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
 import Sheet from '../../components/Sheet';
 import { t, tx } from '../../i18n';
@@ -10,14 +10,14 @@ import { field, FIELDS, GROUPS, KINDS, param, type Field, type FieldKind } from 
 type Tool = 'path' | 'fields' | 'water' | 'tunnel' | 'erase';
 
 const TOOLS: { id: Tool; emoji: string; label: string; hint: string }[] = [
-  { id: 'path', emoji: '👣', label: tx('Path'), hint: tx('Tap next to the end of the path to lay the next field; tap the last field to take it away.') },
-  { id: 'fields', emoji: '🎯', label: tx('Fields'), hint: tx('Tap a field to put another kind there. Start and finish stay at the ends.') },
+  { id: 'path', emoji: '👣', label: tx('Path'), hint: tx('Lay empty fields: tap next to the end of the path for the next one; tap the last one to take it away.') },
+  { id: 'fields', emoji: '🎯', label: tx('Fields'), hint: tx('Tap an empty field to fill it (or a full one to change it). The finish goes on the last field, at the end.') },
   { id: 'water', emoji: '💧', label: tx('Water'), hint: tx('Tap cells to put water there (or take it away). A field on water is a bridge over it.') },
   { id: 'tunnel', emoji: '🕳️', label: tx('Tunnel'), hint: tx('Tap cells beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.') },
   { id: 'erase', emoji: '🧽', label: tx('Erase'), hint: tx('Tap to take water and tunnel away, or the last field of the path.') },
 ];
 
-/** New fields on the path: a kind at random (not one that has to lead somewhere). */
+/** Filling empty fields at random: any kind but those that have to lead somewhere. */
 const FRESH = KINDS.filter((k) => k !== 'back-bridge' && k !== 'mole' && k !== 'bridge');
 
 const SIDES = [
@@ -43,7 +43,8 @@ interface Props {
 export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Props) {
   const [name, setName] = useState(asNew ? '' : board.name);
   const [spots, setSpots] = useState<Cell[]>(board.spots);
-  const [kinds, setKinds] = useState<Field[]>(board.fields);
+  /** Each field's kind; null: laid, not filled yet. The first is the start; the last is the finish once it's set. */
+  const [kinds, setKinds] = useState<(Field | null)[]>(board.fields);
   const [water, setWater] = useState(() => new Set(board.water.map(cellKey)));
   const [tunnels, setTunnels] = useState(() => new Set(board.tunnels.map(cellKey)));
   const [tool, setTool] = useState<Tool>('path');
@@ -51,12 +52,22 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const [clearing, setClearing] = useState(false);
   const cols = MAX_COLS;
   const used = [...spots.map((c) => c.y), ...[...water, ...tunnels].map((k) => +k.split(',')[1])];
-  const rows = Math.min(MAX_ROWS, Math.max(12, board.rows, (used.length ? Math.max(...used) : 0) + 3));
+  const rows = Math.min(MAX_ROWS, Math.max(10, (used.length ? Math.max(...used) : 0) + 3));
+  // The start lies at the bottom of the map: open with it in view.
+  const grid = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = grid.current;
+    if (!el) return;
+    window.scrollTo(0, Math.max(0, el.getBoundingClientRect().bottom + window.scrollY - window.innerHeight + 150));
+  }, []);
 
   const at = useMemo(() => new Map(spots.map((c, i) => [cellKey(c), i])), [spots]);
   const last = spots.length - 1;
-  /** The fields as they'd be played: start and finish at the ends. */
-  const fields = kinds.map((f, i) => (i === 0 ? field('start') : i === last ? field('goal') : f));
+  /** The fields as they'd be played (an empty one as Safe), the start first. */
+  const fields = kinds.map((f, i) => (i === 0 ? field('start') : (f ?? field('safe'))));
+  /** Fields laid but not filled yet, between the start and the last one. */
+  const empty = kinds.filter((f, i) => i > 0 && i < last && !f).length;
+  const finished = last > 0 && kinds[last]?.kind === 'goal';
   const geometry = { spots, fields, water: [...water].map(toCell), tunnels: [...tunnels].map(toCell) };
   const targets = jumps(geometry);
   /** Fields a tunnel joins (the Mole field and where it leads). */
@@ -95,10 +106,11 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
       if (i === last && last >= 0) return shorten();
       if (i != null || (end && !canExtend(c))) return;
       setSpots([...spots, c]);
-      setKinds([...kinds, field(pick(FRESH))]);
+      // A new field, empty. The finish only ever lies at the end: the field it was on is empty again.
+      setKinds([...kinds.map((f, k) => (k === last && f?.kind === 'goal' ? null : f)), spots.length ? null : field('start')]);
       if (tunnels.has(k)) toggle(tunnels, setTunnels);
     } else if (tool === 'fields') {
-      if (i == null || i === 0 || i === last) return;
+      if (i == null || i === 0) return;
       setEditing(i);
     } else if (tool === 'water') toggle(water, setWater);
     else if (tool === 'tunnel') {
@@ -121,14 +133,28 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
       cols,
       rows,
       spots,
-      fields,
+      fields: kinds.map((f, i) => (i === 0 ? field('start') : f!)),
       water: [...water].filter(keep).map(toCell),
       tunnels: [...tunnels].filter((k) => keep(k) && !at.has(k)).map(toCell),
       custom: true,
     });
   };
 
-  const f = editing != null ? fields[editing] : null;
+  const f = editing != null ? (kinds[editing] ?? null) : null;
+  const fillAtRandom = () => {
+    sfx.pop();
+    buzz(15);
+    setKinds(kinds.map((x, i) => (i === 0 || x || i === last ? x : field(pick(FRESH)))));
+  };
+  // What's still missing before the board can be saved.
+  const blocker =
+    spots.length < MIN_FIELDS
+      ? t('At least {n} fields', { n: MIN_FIELDS })
+      : empty
+        ? t('Still {n} empty fields', { n: empty })
+        : !finished
+          ? t('Put the finish on the last field')
+          : null;
   const hint = TOOLS.find((x) => x.id === tool)!.hint;
 
   return (
@@ -170,7 +196,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
       </div>
       <p className="fine-print pt-tool-hint">{t(hint)}</p>
 
-      <div className="pt-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+      <div ref={grid} className="pt-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
         {Array.from({ length: rows }, (_, r) => rows - 1 - r).map((y) =>
           Array.from({ length: cols }, (_, x) => {
             const c = { x, y };
@@ -185,7 +211,8 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
               borderBottomRightRadius: round([1, 0], [0, -1]),
               borderBottomLeftRadius: round([-1, 0], [0, -1]),
             };
-            const here = i != null ? fields[i] : null;
+            const here = i != null ? (i === 0 ? field('start') : kinds[i]) : null;
+            const blank = i != null && !here;
             const next = tool === 'path' && i == null && canExtend(c);
             // Where the path comes from and where it goes on: a line to each.
             const links = i != null ? [spots[i - 1], spots[i + 1]].filter(Boolean).map((n) => (n.x > x ? 'e' : n.x < x ? 'w' : n.y > y ? 'n' : 's')) : [];
@@ -203,9 +230,14 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                 {links.map((d) => (
                   <span key={d} className={`pt-route ${d}`} />
                 ))}
+                {blank && (
+                  <span className="pt-cell-field empty">
+                    <span className="pt-cell-n">{i}</span>
+                  </span>
+                )}
                 {here && (
-                  <span className={`pt-cell-field${i === 0 || i === last ? ' end' : ''}${jump && targets[i!] == null ? ' broken' : ''}`} style={{ '--field': FIELDS[here.kind].color } as CSSProperties}>
-                    {i !== 0 && i !== last && <span className="pt-cell-n">{i}</span>}
+                  <span className={`pt-cell-field${here.kind === 'start' || here.kind === 'goal' ? ' end' : ''}${jump && targets[i!] == null ? ' broken' : ''}`} style={{ '--field': FIELDS[here.kind].color } as CSSProperties}>
+                    {here.kind !== 'start' && here.kind !== 'goal' && <span className="pt-cell-n">{i}</span>}
                     <span className="pt-cell-emoji">{FIELDS[here.kind].emoji}</span>
                     {jump && <span className="pt-cell-to">{targets[i!] != null ? `→ ${targets[i!]}` : '⚠️'}</span>}
                   </span>
@@ -218,10 +250,15 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
       </div>
 
       <div className="sticky-action stack">
-        <BigButton size="xl" onClick={save} disabled={spots.length < MIN_FIELDS}>
-          {spots.length < MIN_FIELDS ? t('At least {n} fields', { n: MIN_FIELDS }) : t('Save board · {n} fields', { n: spots.length - 1 })}
+        <BigButton size="xl" onClick={save} disabled={!!blocker}>
+          {blocker ?? t('Save board · {n} fields', { n: spots.length - 1 })}
         </BigButton>
         <div className="pt-editor-tools">
+          {empty > 0 && spots.length > 2 && (
+            <button type="button" className="text-btn pt-link" onClick={fillAtRandom}>
+              🎲 {t('Fill the empty fields at random')}
+            </button>
+          )}
           <button type="button" className="text-btn pt-link" onClick={onCancel}>
             {t('Cancel')}
           </button>
@@ -253,10 +290,27 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
         </BigButton>
       </Sheet>
 
-      <Sheet open={f != null} onClose={() => setEditing(null)} title={editing != null ? t('Field {n}', { n: editing }) : ''}>
-        {f && editing != null && (
+      <Sheet open={editing != null} onClose={() => setEditing(null)} title={editing != null ? t('Field {n}', { n: editing }) : ''}>
+        {editing != null && (
           <div className="pt-kinds">
-            {FIELDS[f.kind].param && (
+            {editing === last && (
+              <button
+                type="button"
+                className={`pt-kind pt-kind-goal${f?.kind === 'goal' ? ' on' : ''}`}
+                style={{ '--field': FIELDS.goal.color } as CSSProperties}
+                onClick={() => {
+                  setKind(editing, field('goal'));
+                  setEditing(null);
+                }}
+              >
+                <span className="pt-kind-emoji">{FIELDS.goal.emoji}</span>
+                <span className="pt-kind-text">
+                  <span className="pt-kind-title">{t('Finish')}</span>
+                  <span className="pt-kind-sub">{t('The path ends here: the finish.')}</span>
+                </span>
+              </button>
+            )}
+            {f && f.kind !== 'goal' && FIELDS[f.kind].param && (
               <div className="pt-param">
                 <span className="pt-param-title">
                   {FIELDS[f.kind].emoji} {FIELDS[f.kind].title(param(f))}
@@ -288,10 +342,10 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                     <button
                       key={k}
                       type="button"
-                      className={`pt-kind${f.kind === k ? ' on' : ''}`}
+                      className={`pt-kind${f?.kind === k ? ' on' : ''}`}
                       style={{ '--field': FIELDS[k].color } as CSSProperties}
                       disabled={jump && to == null}
-                      onClick={() => setKind(editing, field(k as FieldKind, f.kind === k ? f.n : undefined))}
+                      onClick={() => setKind(editing, field(k as FieldKind, f?.kind === k ? f.n : undefined))}
                     >
                       <span className="pt-kind-emoji">{FIELDS[k].emoji}</span>
                       <span className="pt-kind-text">

@@ -123,9 +123,14 @@ const party: Record<string, string> = {
   Water: 'Wasser',
   Tunnel: 'Tunnel',
   Erase: 'Radierer',
-  'Tap next to the end of the path to lay the next field; tap the last field to take it away.':
-    'Tipp neben das Ende des Wegs, um das nächste Feld zu legen; tipp aufs letzte Feld, um es wieder wegzunehmen.',
-  'Tap a field to put another kind there. Start and finish stay at the ends.': 'Tipp auf ein Feld, um dort eine andere Art hinzusetzen. Start und Ziel bleiben an den Enden.',
+  'Lay empty fields: tap next to the end of the path for the next one; tap the last one to take it away.':
+    'Leg leere Felder: Tipp neben das Ende des Wegs für das nächste; tipp aufs letzte, um es wieder wegzunehmen.',
+  'Tap an empty field to fill it (or a full one to change it). The finish goes on the last field, at the end.':
+    'Tipp auf ein leeres Feld, um es zu füllen (oder auf ein volles, um es zu ändern). Das Ziel kommt zum Schluss aufs letzte Feld.',
+  'The path ends here: the finish.': 'Hier endet der Weg: das Ziel.',
+  'Fill the empty fields at random': 'Leere Felder zufällig füllen',
+  'Still {n} empty fields': 'Noch {n} leere Felder',
+  'Put the finish on the last field': 'Setz das Ziel aufs letzte Feld',
   'Tap cells to put water there (or take it away). A field on water is a bridge over it.': 'Tipp auf Zellen, um dort Wasser hinzusetzen (oder wegzunehmen). Ein Feld auf Wasser ist eine Brücke darüber.',
   'Tap cells beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.':
     'Tipp auf Zellen neben dem Weg, um den Tunnel des Maulwurfs zu graben. Er führt vom Maulwurf-Feld zum hintersten Feld, das er erreicht.',

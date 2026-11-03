@@ -255,7 +255,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
         {made == null ? (
           <>
             {canAce && (
-              <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'again', ace: true, update: (x) => setPawn(x, lander.id, { gate: false }) })}>
+              <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'again', ace: true, update: (x) => setPawn(x, lander.id, { gate: false, crossed: true }) })}>
                 🂡 {t('Play your Ace')}
               </button>
             )}
@@ -264,7 +264,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
             </BigButton>
           </>
         ) : made ? (
-          <BigButton size="xl" onClick={() => onDone({ then: 'again', update: (x) => setPawn(x, lander.id, { gate: false }) })}>
+          <BigButton size="xl" onClick={() => onDone({ then: 'again', update: (x) => setPawn(x, lander.id, { gate: false, crossed: true }) })}>
             {t('Roll again')}
           </BigButton>
         ) : (

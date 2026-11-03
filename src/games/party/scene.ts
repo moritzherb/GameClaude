@@ -10,6 +10,8 @@ export interface PawnView {
   name: string;
   /** Waiting at a bridge: it stands at the near end. */
   gate?: boolean;
+  /** Over the bridge: at its far end. */
+  crossed?: boolean;
 }
 
 /** A field's size in field widths (the rest is the gap between fields). */
@@ -48,6 +50,13 @@ const MIN_DIST = 4.6;
 const AHEAD = 1.3;
 /** Seconds per field a pawn hops. */
 const STEP = 0.3;
+/** A bridge: half its length (it reaches a little onto the fields either side), half its width, how high it arches. */
+const BRIDGE_L = 0.56;
+const BRIDGE_W = 0.34;
+const BRIDGE_H = 0.2;
+/** Where on a bridge a pawn waits, and where it stands once over (along the bridge from its middle). */
+const BRIDGE_END = 0.42;
+const deckAt = (t: number) => SLAB + BRIDGE_H * (1 - (t / BRIDGE_L) ** 2);
 
 const DISPLAY = '"Big Shoulders Display Variable", Impact, sans-serif';
 const BODY = '"Archivo Variable", system-ui, sans-serif';
@@ -339,11 +348,18 @@ export class Scene {
   }
 
   /** The place on field `pos` for pawn `id` (with whoever else stands there). */
-  private place(id: string, pos: number, gate = false): Point {
+  private place(id: string, pos: number, crossed = false): Point {
     const here = this.pawns.filter((q) => q.id === id || (q.pos === pos && !this.moving.has(q.id)));
     const k = Math.max(0, here.findIndex((q) => q.id === id));
     const base = this.spot(pos);
     const kind = this.board?.fields[pos]?.kind;
+    if (kind === 'bridge') {
+      // On a bridge: waiting at its near end, or over at its far end; side by side across it.
+      const { d, n } = this.axis(pos);
+      const t = crossed ? BRIDGE_END : -BRIDGE_END;
+      const side = [0, 0.17, -0.17, 0.08, -0.08][k % 5];
+      return { x: base.x + d.x * t + n.x * side, y: base.y + d.y * t + n.y * side };
+    }
     let off: Point;
     if (kind === 'start' || kind === 'goal') {
       // No picture on the start and the finish: everyone round the middle.
@@ -354,12 +370,45 @@ export class Scene {
       const s = SLOTS[k % SLOTS.length];
       off = { x: s.x + Math.floor(k / SLOTS.length) * 0.06, y: s.y };
     }
-    if (gate) off = { x: off.x, y: off.y - 0.3 };
     return { x: base.x + off.x, y: base.y + off.y };
   }
 
   private home(p: PawnView): Point {
-    return this.place(p.id, p.pos, p.gate);
+    return this.place(p.id, p.pos, p.crossed);
+  }
+
+  /** Which way a bridge runs: from the field before it (d), and across it (n). */
+  private axis(pos: number) {
+    const c = this.spot(pos);
+    const prev = this.spots[pos - 1];
+    const next = this.spots[pos + 1];
+    let d = prev ? { x: c.x - prev.x, y: c.y - prev.y } : next ? { x: next.x - c.x, y: next.y - c.y } : { x: 0, y: 1 };
+    if (!d.x && !d.y) d = { x: 0, y: 1 };
+    return { d, n: { x: -d.y, y: d.x } };
+  }
+
+  /** Over the bridge: from its near end, up over the arch, to its far end. */
+  cross(id: string): Promise<void> {
+    const pawn = this.pawns.find((p) => p.id === id);
+    if (!pawn) return Promise.resolve();
+    const a = this.shown.get(id) ?? this.place(id, pawn.pos);
+    const b = this.place(id, pawn.pos, true);
+    return new Promise((done) => {
+      this.anims.push({
+        id,
+        duration: 1.2,
+        start: performance.now(),
+        stepped: 0,
+        done,
+        at: (t) => {
+          const k = easeInOut(t);
+          const along = -BRIDGE_END + 2 * BRIDGE_END * k;
+          // Little steps, over the arch.
+          return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), lift: deckAt(along) - SLAB + Math.abs(Math.sin(t * Math.PI * 6)) * 0.05, alpha: 1 };
+        },
+      });
+      this.invalidate();
+    });
   }
 
   private where(id: string): Point {
@@ -372,9 +421,10 @@ export class Scene {
   }
 
   private aim(id: string) {
+    // The middle of the pawn's field (not its own place on it): the camera doesn't drift once it lands.
     const p = this.moving.get(id) ?? (() => {
       const v = this.pawns.find((q) => q.id === id);
-      return v ? this.home(v) : this.where(id);
+      return v ? this.spot(v.pos) : this.where(id);
     })();
     // Across, the camera goes most of the way to the pawn: its field in the middle, the board's edge near.
     const mid = ((this.board?.cols ?? 5) - 1) / 2;
@@ -835,15 +885,18 @@ export class Scene {
     const unit = TILE / TEX;
     for (const i of order) {
       const s = this.spots[i];
-      if (s.y + 0.5 < nearY) continue;
+      if (s.y + 0.5 < nearY || board.fields[i].kind === 'bridge') continue;
       const face = flat(s.x, s.y, unit, SLAB);
       if (!face || face.sy < -face.s || face.sy > h + face.s) continue;
       ctx.drawImage(this.textures[i], -TEX / 2, -TEX / 2, TEX, TEX + EDGE);
     }
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-    // Bridges back, over the water between two fields.
+    // Bridges back, over the water between two fields; bridge fields, a bridge of their own.
     for (const l of this.bridges) this.drawBridge(l, project);
+    this.spots.forEach((s, i) => {
+      if (board.fields[i].kind === 'bridge' && s.y + 1 >= nearY) this.drawGateBridge(i, project);
+    });
 
     // The field whoever is on stands on: a ring round it.
     const on = this.current ? this.pawns.find((p) => p.id === this.current) : null;
@@ -877,6 +930,13 @@ export class Scene {
     this.spots.forEach((s, i) => {
       const kind = board.fields[i].kind;
       if (kind === 'start' || kind === 'goal' || kind === 'mole' || s.y + 0.5 < nearY) return;
+      if (kind === 'bridge') {
+        // A sign at the near end: what you need to roll to get over.
+        const { d, n } = this.axis(i);
+        const p = project(s.x - d.x * (BRIDGE_L + 0.05) + n.x * (BRIDGE_W + 0.14), s.y - d.y * (BRIDGE_L + 0.05) + n.y * (BRIDGE_W + 0.14), SLAB);
+        if (p) items.push({ z: p.z, draw: () => this.sign(p, board.fields[i].n ? '1–2' : '5–6') });
+        return;
+      }
       standing(s.x + ICON_AT.x, s.y + ICON_AT.y, SLAB, FIELDS[kind].emoji, ICON_H, 0.25);
     });
     let tag: (() => void) | null = null;
@@ -884,7 +944,8 @@ export class Scene {
     const signs = new Map<number, { names: string[]; x: number; y: number; z: number }>();
     for (const pawn of this.pawns) {
       const m = this.moving.get(pawn.id);
-      const at = m ?? { ...(this.shown.get(pawn.id) ?? this.home(pawn)), lift: 0, alpha: 1 };
+      const onBridge = board.fields[pawn.pos]?.kind === 'bridge';
+      const at = m ?? { ...(this.shown.get(pawn.id) ?? this.home(pawn)), lift: onBridge ? deckAt(BRIDGE_END) - SLAB : 0, alpha: 1 };
       const p = project(at.x, at.y, SLAB);
       if (!p) continue;
       items.push({
@@ -963,6 +1024,99 @@ export class Scene {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x, y - h / 2 + 1);
+  }
+
+  /** A little wooden sign on a post. */
+  private sign(p: Proj, text: string) {
+    const { ctx } = this;
+    const s = p.s;
+    const post = s * 0.32;
+    ctx.fillStyle = '#6b4423';
+    ctx.fillRect(p.sx - s * 0.015, p.sy - post, s * 0.03, post);
+    ctx.font = `900 ${Math.max(8, s * 0.13)}px ${DISPLAY}`;
+    const w = ctx.measureText(text).width + s * 0.1;
+    const h = s * 0.17;
+    rounded(ctx, p.sx - w / 2, p.sy - post - h, w, h, s * 0.03);
+    ctx.fillStyle = '#c8935a';
+    ctx.fill();
+    ctx.lineWidth = Math.max(1, s * 0.012);
+    ctx.strokeStyle = '#6b4423';
+    ctx.stroke();
+    ctx.fillStyle = INK;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, p.sx, p.sy - post - h / 2 + 1);
+  }
+
+  /** A bridge field: a wooden bridge arching over the water, with railings on both sides. */
+  private drawGateBridge(i: number, project: (x: number, y: number, up?: number) => Proj | null) {
+    const { ctx } = this;
+    const c = this.spot(i);
+    const { d, n } = this.axis(i);
+    const steps = 10;
+    const edge = (side: number, t: number, up: number) => project(c.x + d.x * t + n.x * side, c.y + d.y * t + n.y * side, up);
+    const ts = Array.from({ length: steps + 1 }, (_, k) => -BRIDGE_L + (2 * BRIDGE_L * k) / steps);
+    const line = (pts: (Proj | null)[]) => {
+      ctx.beginPath();
+      let started = false;
+      for (const p of pts) {
+        if (!p) continue;
+        if (started) ctx.lineTo(p.sx, p.sy);
+        else ctx.moveTo(p.sx, p.sy);
+        started = true;
+      }
+    };
+    const s0 = project(c.x, c.y, SLAB)?.s ?? 40;
+    // The side nearer the camera (lower on the screen) shows its edge; railings: the far one first.
+    const sides = [BRIDGE_W, -BRIDGE_W].sort((a, b) => (edge(b, 0, SLAB)?.sy ?? 0) - (edge(a, 0, SLAB)?.sy ?? 0));
+    const rail = (side: number) => {
+      ctx.strokeStyle = '#5a3a1f';
+      ctx.lineWidth = Math.max(1.5, s0 * 0.03);
+      for (const t of [-0.5, -0.25, 0, 0.25, 0.5]) {
+        const a = edge(side, t, deckAt(t));
+        const b = edge(side, t, deckAt(t) + 0.2);
+        if (!a || !b) continue;
+        ctx.beginPath();
+        ctx.moveTo(a.sx, a.sy);
+        ctx.lineTo(b.sx, b.sy);
+        ctx.stroke();
+      }
+      ctx.lineWidth = Math.max(2, s0 * 0.04);
+      line(ts.filter((t) => Math.abs(t) <= 0.52).map((t) => edge(side, t, deckAt(t) + 0.2)));
+      ctx.stroke();
+    };
+    rail(sides[0]);
+    // The near edge of the deck, then the deck: planks across it.
+    const near = sides[1];
+    const top = ts.map((t) => edge(near, t, deckAt(t)));
+    const under = ts.map((t) => edge(near, t, deckAt(t) - 0.07));
+    if ([...top, ...under].every(Boolean)) {
+      ctx.beginPath();
+      top.forEach((p, k) => (k ? ctx.lineTo(p!.sx, p!.sy) : ctx.moveTo(p!.sx, p!.sy)));
+      for (let k = under.length - 1; k >= 0; k--) ctx.lineTo(under[k]!.sx, under[k]!.sy);
+      ctx.closePath();
+      ctx.fillStyle = '#7a4e2a';
+      ctx.fill();
+    }
+    const left = ts.map((t) => edge(BRIDGE_W, t, deckAt(t)));
+    const right = ts.map((t) => edge(-BRIDGE_W, t, deckAt(t)));
+    if (![...left, ...right].every(Boolean)) return;
+    ctx.beginPath();
+    left.forEach((p, k) => (k ? ctx.lineTo(p!.sx, p!.sy) : ctx.moveTo(p!.sx, p!.sy)));
+    for (let k = right.length - 1; k >= 0; k--) ctx.lineTo(right[k]!.sx, right[k]!.sy);
+    ctx.closePath();
+    ctx.fillStyle = '#b9824b';
+    ctx.fill();
+    ctx.strokeStyle = '#6b4423';
+    ctx.lineWidth = Math.max(1, s0 * 0.018);
+    for (let k = 1; k < steps; k++) {
+      ctx.beginPath();
+      ctx.moveTo(left[k]!.sx, left[k]!.sy);
+      ctx.lineTo(right[k]!.sx, right[k]!.sy);
+      ctx.stroke();
+    }
+    ctx.stroke();
+    rail(sides[0] === BRIDGE_W ? -BRIDGE_W : BRIDGE_W);
   }
 
   /** A wooden bridge from a field straight over the water to the field across it. */
