@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { buzz, sfx } from '../lib/fx';
 
 /** A plain button with the app's tap feedback (pop + buzz). Styling comes from `className`. */
@@ -12,7 +12,7 @@ export default function Tap({
 }: {
   className: string;
   style?: CSSProperties;
-  onClick: () => void;
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   ariaLabel?: string;
   children: ReactNode;
@@ -24,10 +24,10 @@ export default function Tap({
       style={style}
       disabled={disabled}
       aria-label={ariaLabel}
-      onClick={() => {
+      onClick={(e) => {
         sfx.pop();
         buzz();
-        onClick();
+        onClick(e);
       }}
     >
       {children}

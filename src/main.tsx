@@ -1,6 +1,7 @@
 import '@fontsource-variable/archivo';
 import '@fontsource-variable/big-shoulders-display';
 import './styles/global.css';
+import './styles/pop.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
