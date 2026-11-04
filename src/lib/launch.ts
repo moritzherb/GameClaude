@@ -1,40 +1,59 @@
 /*
- * Opening a game from the home screen the way a phone opens an app: its page grows out of the
- * icon that was tapped. The icon's place is noted here just before navigating; the game's page
- * picks it up once and grows from there. Coming back, the home screen lets that icon settle again.
+ * Opening a game from the home screen the way a phone opens an app: the icon grows over the home
+ * screen into the game's splash (its colour and emoji), the game's page loads behind it, and the
+ * splash fades. Coming back, the home screen lets that icon settle again.
+ *
+ * The splash is a plain element on the page, outside React: it has to stay put while one screen
+ * goes and the next one comes.
  */
 
-export interface LaunchFrom {
-  /** Centre of the icon, in px from the top left of the screen. */
-  x: number;
-  y: number;
-  /** The icon's width over the screen's: where the growing starts. */
-  scale: number;
-  /** The icon's colour and emoji, shown over the page while it grows (like an app's splash). */
-  color: string;
-  emoji: string;
-}
+/** Growing out of the icon, staying as the splash, fading out (ms). */
+const GROW = 420;
+const HOLD = 700;
+const FADE = 320;
 
-let pending: LaunchFrom | null = null;
 let last: string | null = null;
 
-/** Note where the tapped icon sits, then go. Without an icon (or with reduced motion) it just goes. */
-export function launch(icon: Element | null, game: { id: string; color: string; emoji: string }, go: () => void) {
+/**
+ * Grow the game's splash out of the tapped icon, then go. Without an icon (or with reduced motion)
+ * it just goes. `glyphs` are the emoji on the splash (two for Princess/King).
+ */
+export function launch(icon: Element | null, game: { id: string; color: string; emoji: string }, go: () => void, glyphs: string[] = [game.emoji]) {
   last = game.id;
   const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (icon && !reduce) {
-    const r = icon.getBoundingClientRect();
-    const w = window.innerWidth || 1;
-    pending = { x: r.left + r.width / 2, y: r.top + r.height / 2, scale: Math.max(0.08, r.width / w), color: game.color, emoji: game.emoji };
-  } else pending = null;
-  go();
-}
-
-/** The page that opens takes the icon's place, once. */
-export function takeLaunch(): LaunchFrom | null {
-  const p = pending;
-  pending = null;
-  return p;
+  if (!icon || reduce || typeof document === 'undefined') {
+    go();
+    return;
+  }
+  document.querySelector('.launch-veil')?.remove();
+  const r = icon.getBoundingClientRect();
+  const veil = document.createElement('div');
+  veil.className = 'launch-veil';
+  veil.setAttribute('aria-hidden', 'true');
+  veil.style.setProperty('--c', game.color);
+  Object.assign(veil.style, {
+    left: `${r.left}px`,
+    top: `${r.top}px`,
+    width: `${r.width}px`,
+    height: `${r.height}px`,
+    borderRadius: getComputedStyle(icon).borderRadius,
+    fontSize: `${Math.round(r.width * 0.5)}px`,
+  });
+  const emoji = document.createElement('span');
+  emoji.className = glyphs.length > 1 ? 'launch-emoji app-duo' : 'launch-emoji';
+  for (const g of glyphs) {
+    const part = document.createElement(glyphs.length > 1 ? 'i' : 'span');
+    part.textContent = g;
+    emoji.append(part);
+  }
+  veil.append(emoji);
+  document.body.append(veil);
+  // Once it is on the screen at the icon's place, it grows to fill the screen.
+  void veil.offsetWidth;
+  Object.assign(veil.style, { left: '0px', top: '0px', width: '100%', height: '100%', borderRadius: '0px', fontSize: '110px' });
+  window.setTimeout(go, GROW);
+  window.setTimeout(() => veil.classList.add('done'), GROW + HOLD);
+  window.setTimeout(() => veil.remove(), GROW + HOLD + FADE + 50);
 }
 
 /** The game opened last from the home screen: its icon settles back when home shows again. */

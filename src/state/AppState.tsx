@@ -4,6 +4,7 @@ import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
 import { usePersistentState } from '../lib/storage';
+import { GROUND, setThemeColor } from '../lib/themeColor';
 
 export interface Player {
   id: string;
@@ -32,7 +33,9 @@ export interface Settings {
   bigMode: boolean;
   /** In games, only the table and the buttons you need: no status lines, counters or explanations. */
   clean?: boolean;
-  /** Games the group already knows: their in-game explanations are hidden. Missing in older saves. */
+  /** The group knows the games: no tutorials or explanations in any game (the rules stay behind ?). */
+  knowAll?: boolean;
+  /** Older saves: games marked known one by one (still honoured; Settings now has the one switch). */
   known?: string[];
   /** App language. English is the default (and missing in older saves). */
   lang?: Lang;
@@ -40,6 +43,8 @@ export interface Settings {
   look?: Look;
   /** In the new look, whose home screen: the phone's own (missing: auto), or always iPhone / Android. */
   phone?: PhoneSetting;
+  /** The home screen's wallpaper (new look): a made one's id, 'photo', or missing for the plain ground. */
+  wallpaper?: string;
 }
 
 export const AVATARS = [
@@ -63,12 +68,9 @@ interface AppState {
   replacePlayers: (list: Omit<Player, 'id'>[]) => void;
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => void;
-  /** True when the players marked this game as known, or play with a clean table: tutorials and
-   *  explanations stay hidden. */
+  /** True when the players know the games, or play with a clean table: tutorials and explanations
+   *  stay hidden. */
   knows: (gameId: string) => boolean;
-  /** Just the players' mark (for the settings page). */
-  markedKnown: (gameId: string) => boolean;
-  setKnown: (gameId: string, known: boolean) => void;
   ageConfirmed: boolean;
   confirmAge: () => void;
 }
@@ -118,15 +120,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.os = platformFor(settings.phone);
   }
 
-  // The browser's bar (Android) and the strip under the clock take the look's ground colour.
+  // The browser's bar (Android) and the strip under the clock take the look's ground colour
+  // (index.html has the new look's).
   const look = lookFor(settings.look);
-  useLayoutEffect(() => {
-    if (look !== 'pop') return;
-    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
-    const before = metas.map((m) => m.content);
-    metas.forEach((m) => (m.content = m.media.includes('dark') ? '#20211c' : '#ece8dd'));
-    return () => metas.forEach((m, i) => (m.content = before[i]));
-  }, [look]);
+  useLayoutEffect(() => setThemeColor(GROUND[look][0], GROUND[look][1]), [look]);
 
   // Before the screen is drawn: with big text on, the first picture mustn't show it small.
   useLayoutEffect(() => {
@@ -181,13 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       replacePlayers: (list) => setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: newId() }))),
       settings,
       updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
-      knows: (gameId) => !!settings.clean || !!settings.known?.includes(gameId),
-      markedKnown: (gameId) => !!settings.known?.includes(gameId),
-      setKnown: (gameId, known) =>
-        setSettings((s) => {
-          const rest = (s.known ?? []).filter((id) => id !== gameId);
-          return { ...s, known: known ? [...rest, gameId] : rest };
-        }),
+      knows: (gameId) => !!settings.clean || !!settings.knowAll || !!settings.known?.includes(gameId),
       ageConfirmed,
       confirmAge: () => setAgeConfirmed(true),
     }),

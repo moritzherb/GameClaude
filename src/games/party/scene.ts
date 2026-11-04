@@ -24,7 +24,7 @@ const TEX = 200;
 const EDGE = 18;
 /** A pawn's height, and the height of the picture standing on each field, in field widths. */
 const PAWN_H = 0.62;
-const ICON_H = 0.5;
+const ICON_H = 0.38;
 /** Where on its field the standing picture is: at the back on the left. */
 const ICON_AT = { x: -0.2, y: 0.14 };
 /** Where pawns stand on a field: the right half and the back, so the picture and the name stay in view. */
@@ -48,8 +48,10 @@ const FOLLOW_TILT = 1.0;
 const MIN_DIST = 4.6;
 /** The camera looks this far ahead of the pawn, so you see where it's going. */
 const AHEAD = 1.3;
-/** Seconds per field a pawn hops. */
-const STEP = 0.3;
+/** Seconds per field a pawn moves. */
+const STEP = 0.34;
+/** How high a pawn bobs between two fields (a soft lift, no hard landing). */
+const HOP = 0.16;
 /** A bridge: half its length (it reaches a little onto the fields either side), half its width, how high it arches. */
 const BRIDGE_L = 0.56;
 const BRIDGE_W = 0.34;
@@ -106,6 +108,15 @@ interface Anim {
 
 const easeInOut = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+/** A soft bump from 0 up to 1 and back, flat at both ends (so a pawn lands without a jolt). */
+const bump = (t: number) => Math.sin(Math.PI * t) ** 2;
+/** A point on a smooth curve through four points, between the middle two (Catmull-Rom). */
+const curve = (p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point => {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const at = (a: number, b: number, c: number, d: number) => 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (3 * b - a - 3 * c + d) * t3);
+  return { x: at(p0.x, p1.x, p2.x, p3.x), y: at(p0.y, p1.y, p2.y, p3.y) };
+};
 
 /** A rounded rectangle as a path. */
 function rounded(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -293,8 +304,10 @@ export class Scene {
     const n = path.length;
     // Through the middle of each field on the way, onto its own place on the last one.
     const points = [this.shown.get(id) ?? this.home(pawn), ...path.map((pos, k) => (k === n - 1 ? this.place(id, pos) : this.spot(pos)))];
-    // Steady across the fields (only the start and the end ease in and out), a hop on each.
+    // Steady across the fields (only the start and the end ease in and out), along a smooth curve
+    // through them (round the corners, no kinks), with a soft bob between each two.
     const progress = (t: number) => easeInOut(t) * n;
+    const pt = (k: number) => points[Math.max(0, Math.min(n, k))];
     return new Promise((done) => {
       this.anims.push({
         id,
@@ -309,9 +322,8 @@ export class Scene {
           const u = Math.min(n - 1e-6, progress(t));
           const i = Math.floor(u);
           const f = u - i;
-          const a = points[i];
-          const b = points[i + 1];
-          return { x: lerp(a.x, b.x, f), y: lerp(a.y, b.y, f), lift: Math.sin(Math.PI * f) * 0.3, alpha: 1 };
+          const c = curve(pt(i - 1), pt(i), pt(i + 1), pt(i + 2), f);
+          return { ...c, lift: bump(f) * HOP, alpha: 1 };
         },
       });
       this.invalidate();
@@ -331,9 +343,9 @@ export class Scene {
         done,
         at: (t) => {
           const k = easeInOut(t);
-          // Down into the hole and up out of the other; over a bridge, with little steps.
+          // Down into the hole and up out of the other; over a bridge, up its arch and down again.
           const alpha = tunnel ? Math.max(0, Math.min(1, Math.abs(t - 0.5) * 6 - 1.2)) : 1;
-          return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), lift: tunnel ? 0 : Math.abs(Math.sin(t * Math.PI * 5)) * 0.1, alpha };
+          return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), lift: tunnel ? 0 : Math.sin(Math.PI * k) * 0.22 + bump(t * 4) * 0.025, alpha };
         },
       });
       this.invalidate();
@@ -396,15 +408,15 @@ export class Scene {
     return new Promise((done) => {
       this.anims.push({
         id,
-        duration: 1.2,
+        duration: 1.5,
         start: performance.now(),
         stepped: 0,
         done,
         at: (t) => {
           const k = easeInOut(t);
           const along = -BRIDGE_END + 2 * BRIDGE_END * k;
-          // Little steps, over the arch.
-          return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), lift: deckAt(along) - SLAB + Math.abs(Math.sin(t * Math.PI * 6)) * 0.05, alpha: 1 };
+          // Over the arch, with a soft step now and then.
+          return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), lift: deckAt(along) - SLAB + bump(t * 4) * 0.025, alpha: 1 };
         },
       });
       this.invalidate();

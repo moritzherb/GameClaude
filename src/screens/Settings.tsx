@@ -1,23 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
+import { PlusIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
-import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
 import { lookFor, type Look, type PhoneSetting } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
+import { loadPhoto, readPhoto, savePhoto, WALLPAPERS } from '../lib/wallpaper';
 import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
 
-type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean';
+type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean' | 'knowAll';
 
 const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'sound', emoji: '🔊', label: tx('Sounds'), hint: tx('Boops, ticks and fanfares') },
   { key: 'haptics', emoji: '📳', label: tx('Vibration'), hint: tx('Phone buzzes when you tap') },
   { key: 'bigMode', emoji: '🔍', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
   { key: 'clean', emoji: '🃏', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
+  { key: 'knowAll', emoji: '🎓', label: tx('We know the games'), hint: tx('No explanations in the games. The rules stay behind the ? button.') },
 ];
 
 /** The app's look. Only the look: every game plays the same in both. */
@@ -57,6 +59,79 @@ function Choice<T extends string>({ label, value, options, onPick }: { label: st
   );
 }
 
+/** The home screen's wallpaper (new look): the ground, a made one, or a photo from the phone. */
+function WallpaperRow() {
+  const { settings, updateSettings } = useApp();
+  const [photo, setPhoto] = useState(loadPhoto);
+  const [busy, setBusy] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const current = settings.wallpaper ?? 'ground';
+  const pick = (wallpaper: string) => {
+    sfx.pop();
+    buzz();
+    updateSettings({ wallpaper });
+  };
+  return (
+    <div className="setting-row wall-row">
+      <span className="setting-emoji">🖼️</span>
+      <span className="setting-text">
+        <span className="setting-label">{t('Wallpaper')}</span>
+        <span className="setting-hint">{t('Behind the games on the home screen')}</span>
+      </span>
+      <span className="wall-options" role="radiogroup" aria-label={t('Wallpaper')}>
+        {WALLPAPERS.map((w) => (
+          <button
+            key={w.id}
+            type="button"
+            role="radio"
+            aria-checked={current === w.id}
+            aria-label={t(w.label)}
+            className={`wall-swatch${current === w.id ? ' active' : ''}`}
+            style={w.background ? { background: w.background } : undefined}
+            onClick={() => pick(w.id)}
+          />
+        ))}
+        {photo && (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={current === 'photo'}
+            aria-label={t('Your photo')}
+            className={`wall-swatch${current === 'photo' ? ' active' : ''}`}
+            style={{ background: `url("${photo.data}") center / cover` }}
+            onClick={() => pick('photo')}
+          />
+        )}
+        <button type="button" className="wall-swatch add" aria-label={t('Choose a photo')} disabled={busy} onClick={() => input.current?.click()}>
+          <PlusIcon />
+        </button>
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (!file) return;
+            setBusy(true);
+            try {
+              const p = await readPhoto(file);
+              savePhoto(p);
+              setPhoto(p);
+              pick('photo');
+            } catch {
+              // Not an image the phone can read: nothing changes.
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      </span>
+    </div>
+  );
+}
+
 /** The privacy policy, on the website (in the store app: in the phone's browser). */
 function openPrivacy() {
   const url = new URL('privacy.html', window.location.href.split('#')[0]).href;
@@ -72,9 +147,8 @@ function useAdChoices() {
 }
 
 export default function Settings() {
-  const { settings, updateSettings, markedKnown, setKnown } = useApp();
+  const { settings, updateSettings } = useApp();
   const adChoices = useAdChoices();
-  const withExplanations = GAMES.filter((g) => g.explains && (g.component || g.online));
 
   return (
     <main className="screen settings-page">
@@ -126,6 +200,7 @@ export default function Settings() {
             <Choice label={t('Home screen')} value={settings.phone ?? 'auto'} options={PHONES} onPick={(phone) => updateSettings({ phone })} />
           </div>
         )}
+        {lookFor(settings.look) === 'pop' && <WallpaperRow />}
 
         {OPTIONS.map((o) => {
           const on = !!settings[o.key];
@@ -137,7 +212,8 @@ export default function Settings() {
               aria-checked={on}
               className={`setting-row${on ? ' on' : ''}`}
               onClick={() => {
-                updateSettings({ [o.key]: !on });
+                // Switching it off brings every game's explanations back (also older marks, game by game).
+                updateSettings(o.key === 'knowAll' ? { knowAll: !on, known: [] } : { [o.key]: !on });
                 // Apply immediately so the feedback reflects the new state (sound ON = you hear it).
                 if (o.key === 'sound' || o.key === 'haptics') fxSettings[o.key] = !on;
                 sfx.pop();
@@ -156,38 +232,6 @@ export default function Settings() {
           );
         })}
       </div>
-
-      <section className="section">
-        <h2 className="section-title">{t('Games you know')}</h2>
-        <p className="fine-print">{t('Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.')}</p>
-        <div className="settings-list">
-          {withExplanations.map((g) => {
-            const on = markedKnown(g.id);
-            return (
-              <button
-                key={g.id}
-                type="button"
-                role="switch"
-                aria-checked={on}
-                className={`setting-row${on ? ' on' : ''}`}
-                onClick={() => {
-                  setKnown(g.id, !on);
-                  sfx.pop();
-                  buzz();
-                }}
-              >
-                <span className="setting-emoji">{g.emoji}</span>
-                <span className="setting-text">
-                  <span className="setting-label">{t(g.name)}</span>
-                </span>
-                <span className="switch">
-                  <span className="switch-knob" />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
       {cloudOn && <CloudBackup />}
 

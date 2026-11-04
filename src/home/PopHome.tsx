@@ -8,11 +8,14 @@ import { launch, lastLaunched } from '../lib/launch';
 import { lineup } from '../lib/lineup';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
+import { GROUND, setThemeColor } from '../lib/themeColor';
+import { loadPhoto, wallpaperFor } from '../lib/wallpaper';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
-import { AppButton, GameGlyph, IconArt } from './AppIcon';
+import { AppButton, GameGlyph, glyphsOf, IconArt } from './AppIcon';
 import Launcher from './Launcher';
+import { loadOrder, saveOrder } from './order';
 import Search from './Search';
 import Springboard from './Springboard';
 import { usePlatform } from './usePlatform';
@@ -23,7 +26,15 @@ import { usePlatform } from './usePlatform';
  */
 export default function PopHome() {
   const os = usePlatform();
-  const { players } = useApp();
+  const { players, settings } = useApp();
+  // The wallpaper; while home shows, the strip under the clock takes the colour of its top edge.
+  const [photo] = useState(loadPhoto);
+  const wall = wallpaperFor(settings.wallpaper, photo);
+  useEffect(() => {
+    if (!wall.top) return;
+    setThemeColor(wall.top, wall.top);
+    return () => setThemeColor(GROUND.pop[0], GROUND.pop[1]);
+  }, [wall.top]);
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   const [searching, setSearching] = useState(false);
@@ -46,6 +57,17 @@ export default function PopHome() {
     const ids = [...recentGames(), ...lineup(GAMES.filter((g) => g.component || g.online).map((g) => g.id)), ...GAMES.map((g) => g.id)];
     return [...new Set(ids)].map(findGame).filter((g): g is GameDefinition => !!g);
   });
+  // Where the user put the games (hold one to move them); until then, the order above.
+  const all = GAMES.map((g) => g.id);
+  const [order, setOrder] = useState(() => loadOrder(os, all) ?? (os === 'android' ? favorites.map((g) => g.id) : all));
+  const ordered = order.map(findGame).filter((g): g is GameDefinition => !!g);
+  const keepOrder = useCallback(
+    (ids: string[]) => {
+      setOrder(ids);
+      saveOrder(os, ids);
+    },
+    [os],
+  );
 
   // The shuffle, as on the classic home: a quick roulette of games, then the picked one opens.
   const shuffle = () => {
@@ -64,7 +86,7 @@ export default function PopHome() {
         setRolling(target);
         // Cleared if home goes away meanwhile (e.g. the host starts a game for the room).
         landing.current = window.setTimeout(() => {
-          launch(document.querySelector('.os-roulette .app-icon'), target, () => navigate(paths.game(target.id)));
+          launch(document.querySelector('.os-roulette .app-icon'), target, () => navigate(paths.game(target.id)), glyphsOf(target));
           setRolling(null);
         }, 650);
       } else setRolling(pick(GAMES));
@@ -90,11 +112,11 @@ export default function PopHome() {
   // "Tue 3 Nov" / "Di. 3. Nov."
   const date = new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
   const closeSearch = useCallback(() => setSearching(false), []);
-  const common = { players, recent, returning, dock, onSearch: () => setSearching(true), onShuffle: shuffle };
+  const common = { players, recent, returning, dock, wall, onSearch: () => setSearching(true), onShuffle: shuffle };
 
   return (
     <>
-      {os === 'android' ? <Launcher {...common} favorites={favorites} date={date} /> : <Springboard {...common} />}
+      {os === 'android' ? <Launcher {...common} favorites={ordered} onOrder={keepOrder} date={date} /> : <Springboard {...common} games={ordered} onOrder={keepOrder} />}
       {searching && <Search suggestions={recent.length ? recent : favorites.slice(0, 4)} onClose={closeSearch} />}
       {rolling && (
         <div className="os-roulette" aria-live="polite">

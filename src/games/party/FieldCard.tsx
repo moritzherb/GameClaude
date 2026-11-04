@@ -4,7 +4,7 @@ import { t, tx } from '../../i18n';
 import { storeSafe } from '../../lib/native';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
-import { Countdown, Die, Pack, PickPlayer, SnusTin, useRoll } from './bits';
+import { Countdown, Die, Pack, PickPlayer, SnusTin, useBigRoll, useRoll } from './bits';
 import { field, FIELDS, param, type Field } from './fields';
 import { duel, inTurnOrder, keepsUp, leaders, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
 
@@ -243,14 +243,12 @@ function ShopCard({ f, pos, lander, chosen, onDone }: Sub) {
 }
 
 function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean }) {
-  const { die, roll } = useRoll();
+  // The big die in the middle of the board rolls (no second one on the card).
+  const { die, roll } = useBigRoll();
   const [made, setMade] = useState<boolean | null>(null);
   const need = param(f) ? [1, 2] : [5, 6];
   return (
     <Card f={f} pos={pos} lander={lander} text={textOf(f)}>
-      <div className="pt-dice">
-        <Die value={die.value} rolling={die.rolling} big />
-      </div>
       {made != null && <Verdict emoji={made ? '🌉' : '🍻'} title={made ? t('Over you go!') : t('Not this time: drink 1 and wait.')} />}
       <div className="pt-card-actions">
         {made == null ? (
@@ -279,19 +277,25 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
 }
 
 function RollBackCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean }) {
-  const { die, roll } = useRoll();
+  // The big die in the middle of the board rolls (no second one on the card).
+  const { roll } = useBigRoll();
+  const [rolled, setRolled] = useState(false);
   return (
     <Card f={f} pos={pos} lander={lander} text={textOf(f)}>
-      <div className="pt-dice">
-        <Die value={die.value} rolling={die.rolling} big />
-      </div>
       <div className="pt-card-actions">
-        {canAce && !die.rolling && !die.value && (
+        {canAce && !rolled && (
           <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'next', ace: true })}>
             🂡 {t('Play your Ace')}
           </button>
         )}
-        <BigButton size="xl" disabled={die.rolling || !!die.value} onClick={async () => onDone({ then: 'back', steps: await roll() })}>
+        <BigButton
+          size="xl"
+          disabled={rolled}
+          onClick={async () => {
+            setRolled(true);
+            onDone({ then: 'back', steps: await roll() });
+          }}
+        >
           {t('Roll')}
         </BigButton>
       </div>
@@ -535,7 +539,8 @@ function TschickCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: P
 }
 
 function DoubleCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: Player[] }) {
-  const { die, roll } = useRoll();
+  // The big die in the middle of the board rolls (no second one on the card).
+  const { die, roll } = useBigRoll();
   const [step, setStep] = useState(0);
   const [end, setEnd] = useState<{ who: Player; n: number } | null>(null);
   const who = order[step % order.length];
@@ -546,9 +551,6 @@ function DoubleCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: Pl
       <div className="pt-double">
         <span className="pt-double-n">{n}</span>
         <span className="pt-double-who">{t('{name}: drink {n}, or roll a 5 or 6 to pass on {m}', { name: who.name, n, m: storeSafe ? Math.min(4, n * 2) : n * 2 })}</span>
-      </div>
-      <div className="pt-dice">
-        <Die value={die.value} rolling={die.rolling} big />
       </div>
       {end && <Verdict emoji="🍻" title={t('{name} drinks {n}', { name: end.who.name, n: end.n })} />}
       <div className="pt-card-actions">

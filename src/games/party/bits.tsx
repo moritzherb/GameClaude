@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import Avatar from '../../components/Avatar';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
@@ -36,8 +36,17 @@ export function Die({ value, rolling, big }: { value: number | null; rolling?: b
   );
 }
 
+/** How long the big die tumbles before it lands, and how long its number shows before the game goes on (ms). */
+const TUMBLE = 900;
+const READ = 550;
+
+export interface Roller {
+  die: { value: number | null; rolling: boolean; flip: number };
+  roll: (value?: number) => Promise<number>;
+}
+
 /** Roll a die: tumbles a moment, then lands. Resolves with the number. `flip` counts the rolls. */
-export function useRoll() {
+export function useRoll(): Roller {
   const [die, setDie] = useState<{ value: number | null; rolling: boolean; flip: number }>({ value: null, rolling: false, flip: 0 });
   const roll = (value = 1 + Math.floor(Math.random() * 6)) =>
     new Promise<number>((done) => {
@@ -47,10 +56,19 @@ export function useRoll() {
         setDie((d) => ({ ...d, value, rolling: false }));
         buzz(20);
         sfx.pop();
-        window.setTimeout(() => done(value), 350);
-      }, 750);
+        window.setTimeout(() => done(value), READ);
+      }, TUMBLE);
     });
   return { die, roll };
+}
+
+/** The game's one die: the big one in the middle of the board. Cards with a single roll use it too. */
+export const BigRoll = createContext<Roller | null>(null);
+
+/** The board's big die where there is one (in the game), else a die of its own. */
+export function useBigRoll(): Roller {
+  const own = useRoll();
+  return useContext(BigRoll) ?? own;
 }
 
 /** Which face shows which number, and how the cube turns to put a number in front. */
@@ -63,7 +81,8 @@ const CUBE: { face: string; n: number; turn: [number, number] }[] = [
   { face: 'bottom', n: 5, turn: [90, 0] },
 ];
 
-/** The big die in the middle of the board: thrown in, tumbling, and landing on the number. */
+/** The big die in the middle of the board: thrown in, tumbling, and landing flat on the number,
+ *  facing you, with the number under it, so you see at once what comes. */
 export function BigDie({ value, flip }: { value: number | null; flip: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(false);
@@ -72,17 +91,18 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
     if (!el || !value || !flip) return;
     setShown(true);
     const [rx, ry] = CUBE.find((c) => c.n === value)!.turn;
-    const tilt = 'rotateX(-20deg) rotateY(25deg)';
+    // Turns that end on the number, slowing down well before the end: the last part is the face
+    // coming round to the front, readable as it settles.
     const a = el.animate(
       [
-        { transform: `translateY(170px) ${tilt} rotateX(0deg) rotateY(0deg) scale(0.45)` },
-        { transform: `translateY(-50px) ${tilt} rotateX(${rx / 2 + 400}deg) rotateY(${ry / 2 + 520}deg) scale(1.05)`, offset: 0.55 },
-        { transform: `translateY(8px) ${tilt} rotateX(${rx + 720}deg) rotateY(${ry + 1080}deg) scale(1)`, offset: 0.85 },
-        { transform: `translateY(0) ${tilt} rotateX(${rx + 720}deg) rotateY(${ry + 1080}deg) scale(1)` },
+        { transform: `translateY(160px) rotateX(${rx + 520}deg) rotateY(${ry + 700}deg) scale(0.5)` },
+        { transform: `translateY(-46px) rotateX(${rx + 190}deg) rotateY(${ry + 250}deg) scale(1.08)`, offset: 0.45 },
+        { transform: `translateY(6px) rotateX(${rx + 12}deg) rotateY(${ry - 14}deg) scale(1)`, offset: 0.8 },
+        { transform: `translateY(0) rotateX(${rx}deg) rotateY(${ry}deg) scale(1)` },
       ],
-      { duration: 820, easing: 'cubic-bezier(0.25, 0.7, 0.35, 1)', fill: 'forwards' },
+      { duration: TUMBLE, easing: 'cubic-bezier(0.22, 0.75, 0.3, 1)', fill: 'forwards' },
     );
-    const hide = window.setTimeout(() => setShown(false), 1900);
+    const hide = window.setTimeout(() => setShown(false), TUMBLE + 1600);
     return () => {
       window.clearTimeout(hide);
       a.cancel();
@@ -90,6 +110,7 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
   }, [flip, value]);
   return (
     <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
+      <span className="pt-cube-shadow" key={`s${flip}`} />
       <span ref={ref} className="pt-cube">
         {/* A solid core: through the faces' round edges you see die, not the board. */}
         <span className="pt-cube-core" />
@@ -103,6 +124,11 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
           </span>
         ))}
       </span>
+      {value != null && (
+        <span className="pt-cube-n" key={`n${flip}`}>
+          {value}
+        </span>
+      )}
     </span>
   );
 }

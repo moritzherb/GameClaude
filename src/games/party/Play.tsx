@@ -7,7 +7,7 @@ import { getLang, t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useTurnBubble } from '../../lib/turn';
 import type { Player } from '../../state/AppState';
-import { BigDie, Die, PawnIcon, useRoll } from './bits';
+import { BigDie, BigRoll, PawnIcon, useRoll } from './bits';
 import { jumps, type Board } from './boards';
 import FieldCard, { type Outcome } from './FieldCard';
 import { FIELDS, param, type Field } from './fields';
@@ -42,7 +42,8 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   // The camera's off the pawn: moved by a finger, or showing the whole board.
   const [away, setAway] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const { die, roll } = useRoll();
+  const roller = useRoll();
+  const { die, roll } = roller;
   const canvas = useRef<HTMLCanvasElement>(null);
   const top = useRef<HTMLDivElement>(null);
   const scene = useRef<Scene | null>(null);
@@ -286,63 +287,60 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
 
       <BigDie value={die.value} flip={die.flip} />
 
-      <div className="pt-panel">
-        {phase.kind === 'field' ? (
-          <FieldCard
-            key={`${phase.pos}-${phase.chosen?.kind ?? ''}`}
-            field={phase.chosen ?? phase.field}
-            chosen={!!phase.chosen}
-            pos={phase.pos}
-            g={g}
-            target={targets[phase.pos]}
-            players={players}
-            lander={me}
-            onDone={(o) => resolve(o, phase.pos, phase.chosen ?? phase.field)}
-            onChoose={(f) => setPhase({ ...phase, chosen: f })}
-          />
-        ) : phase.kind === 'note' ? (
-          <div className="pt-card slide-up" style={{ '--field': FIELDS[pawn.jailed ? 'prison' : 'bridge'].color } as CSSProperties}>
-            <div className="pt-card-head">
-              <span className="pt-card-emoji">{phase.emoji}</span>
-              <span className="pt-card-heading">
-                <span className="pt-card-kicker">{me.name}</span>
-                <span className="pt-card-title">{phase.title}</span>
-              </span>
+      <BigRoll.Provider value={roller}>
+        <div className="pt-panel">
+          {phase.kind === 'field' ? (
+            <FieldCard
+              key={`${phase.pos}-${phase.chosen?.kind ?? ''}`}
+              field={phase.chosen ?? phase.field}
+              chosen={!!phase.chosen}
+              pos={phase.pos}
+              g={g}
+              target={targets[phase.pos]}
+              players={players}
+              lander={me}
+              onDone={(o) => resolve(o, phase.pos, phase.chosen ?? phase.field)}
+              onChoose={(f) => setPhase({ ...phase, chosen: f })}
+            />
+          ) : phase.kind === 'note' ? (
+            <div className="pt-card slide-up" style={{ '--field': FIELDS[pawn.jailed ? 'prison' : 'bridge'].color } as CSSProperties}>
+              <div className="pt-card-head">
+                <span className="pt-card-emoji">{phase.emoji}</span>
+                <span className="pt-card-heading">
+                  <span className="pt-card-kicker">{me.name}</span>
+                  <span className="pt-card-title">{phase.title}</span>
+                </span>
+              </div>
+              {phase.text && <p className="pt-card-text">{phase.text}</p>}
+              <div className="pt-card-actions">
+                <BigButton size="xl" onClick={() => (phase.then === 'again' ? setPhase({ kind: 'turn' }) : next())}>
+                  {phase.then === 'again' ? t('Roll again') : t('Done')}
+                </BigButton>
+              </div>
             </div>
-            {phase.text && <p className="pt-card-text">{phase.text}</p>}
-            <div className="pt-dice">
-              <Die value={die.value} big />
+          ) : (
+            <div className="pt-turn">
+              <div className="pt-turn-who" style={{ '--chip': me.color } as CSSProperties}>
+                <PawnIcon pawn={pawns[me.id]} size={44} />
+                <span className="pt-turn-text">
+                  <span className="pt-turn-name">{me.name}</span>
+                  <span className="pt-turn-sub">{status}</span>
+                </span>
+              </div>
+              <div className="pt-card-actions">
+                {(pawn.jailed || pawn.gate) && pawn.aces > 0 && phase.kind === 'turn' && (
+                  <button type="button" className="pt-ace-btn" onClick={aceOut}>
+                    🂡 {t('Play your Ace')}
+                  </button>
+                )}
+                <BigButton size="xl" disabled={phase.kind !== 'turn'} onClick={rollTurn}>
+                  {pawn.jailed ? t('Roll for a 6') : (need ?? t('Roll the die'))}
+                </BigButton>
+              </div>
             </div>
-            <div className="pt-card-actions">
-              <BigButton size="xl" onClick={() => (phase.then === 'again' ? setPhase({ kind: 'turn' }) : next())}>
-                {phase.then === 'again' ? t('Roll again') : t('Done')}
-              </BigButton>
-            </div>
-          </div>
-        ) : (
-          <div className="pt-turn">
-            <div className="pt-turn-who" style={{ '--chip': me.color } as CSSProperties}>
-              <PawnIcon pawn={pawns[me.id]} size={44} />
-              <span className="pt-turn-text">
-                <span className="pt-turn-name">{me.name}</span>
-                <span className="pt-turn-sub">{status}</span>
-              </span>
-              <Die value={die.value} rolling={die.rolling} />
-            </div>
-            <div className="pt-card-actions">
-              {(pawn.jailed || pawn.gate) && pawn.aces > 0 && phase.kind === 'turn' && (
-                <button type="button" className="pt-ace-btn" onClick={aceOut}>
-                  🂡 {t('Play your Ace')}
-                </button>
-              )}
-              <BigButton size="xl" disabled={phase.kind !== 'turn'} onClick={rollTurn}>
-                {pawn.jailed ? t('Roll for a 6') : (need ?? t('Roll the die'))}
-              </BigButton>
-            </div>
-          </div>
-        )}
-      </div>
-
+          )}
+        </div>
+      </BigRoll.Provider>
       <Sheet open={showEffects} onClose={() => setShowEffects(false)} title={t('In play')}>
         <div className="kc-effects">
           {effects.map((e) => (

@@ -5433,27 +5433,30 @@ h3 {
   transition: transform 0.6s var(--ease);
 }
 
-/* The splash going in: a stream from above, as long as the beer rises. */
+/* The splash going in: a stream from above, as long as the beer rises. It runs down to the bottom of
+   the glass (behind the beer) and its tail follows it there; nothing of it goes past the glass. */
 .kl-glass-stream {
-  fill: #f2b233;
-  transform-box: fill-box;
-  transform-origin: 50% 0;
+  fill: none;
+  stroke: #f2b233;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 100 220;
   animation: kl-stream 0.9s ease-in-out both;
 }
 
 @keyframes kl-stream {
   from {
-    transform: scaleY(0);
+    stroke-dashoffset: 100;
   }
-  35% {
-    transform: scaleY(1);
+  40% {
+    stroke-dashoffset: 0;
     opacity: 1;
   }
-  80% {
+  85% {
     opacity: 1;
   }
   to {
-    transform: scaleY(1) translateY(30px);
+    stroke-dashoffset: -104;
     opacity: 0;
   }
 }
@@ -7789,9 +7792,7 @@ h3 {
   }
 }
 
-.tr-board.flipped .tr-slot.pickable,
-.tr-middle.flipped .tr-stock.ready,
-.tr-middle.flipped .tr-discard.drop-here {
+.tr-board.flipped .tr-slot.pickable {
   animation: tr-pulse 1.2s steps(3, jump-none) infinite;
   outline: 3px solid transparent;
   outline-offset: 2px;
@@ -7800,27 +7801,6 @@ h3 {
 @keyframes tr-pulse {
   50% {
     outline-color: var(--accent);
-  }
-}
-
-.tr-middle.flipped .tr-discard.drop-here {
-  animation-name: tr-pulse-bad;
-}
-
-@keyframes tr-pulse-bad {
-  50% {
-    outline-color: var(--bad);
-  }
-}
-
-.tr-middle.flipped .tr-discard.nope {
-  animation: tr-nope 0.3s ease;
-}
-
-@keyframes tr-nope {
-  50% {
-    outline: 3px solid var(--bad);
-    outline-offset: 2px;
   }
 }
 
@@ -7847,8 +7827,40 @@ h3 {
   padding: 0 4px;
 }
 
+/*
+ * On the turn of the player opposite the middle faces them: each piece turned on its own, in
+ * reverse order, which looks the same as the whole row turned. The row itself isn't turned, so
+ * the stock can nudge (and the discard pile shake) just as for the player at the bottom: a moving
+ * piece inside a turned row made iPhones leave things out and stutter, and the stand-in for it (an
+ * outline blinking in steps) looked like lag. The nudge goes away from the player who is on.
+ */
 .tr-middle.flipped {
-  transform: rotate(180deg);
+  direction: rtl;
+}
+
+.tr-middle.flipped > * {
+  direction: ltr;
+  rotate: 180deg;
+}
+
+/* The piece with the card being dragged stays above its neighbours. */
+.tr-middle.flipped > :has(.dragging) {
+  z-index: 3;
+}
+
+.tr-middle.flipped .tr-stock.ready,
+.tr-middle.flipped .tr-discard.drop-here {
+  animation: tr-nudge-turned 1.4s ease-in-out infinite;
+}
+
+@keyframes tr-nudge-turned {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .tr-stock,
@@ -11705,6 +11717,21 @@ h3 {
   display: none;
 }
 
+/* No room kept empty under the table: it reaches down to the bottom, so the stack and the glass sit
+   in the middle of the screen, and Next shows over the table's foot while a card is up. */
+.play-screen.clean .kl {
+  position: relative;
+}
+
+.play-screen.clean .kl > .sticky-action {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  padding: 0;
+  background: none;
+}
+
 /* Bus Driver: the cards, the question and everyone's hand. Row numbers, sips per row and
    counters go (their room stays, so nothing shifts). */
 .play-screen.clean .bd-turn > .bd-progress,
@@ -13351,12 +13378,13 @@ h3 {
 
 /* The big die, thrown onto the middle of the board: a cube in 3D. */
 .pt-cube-stage {
+  --cube: 112px;
   position: absolute;
   left: 50%;
   top: 34%;
-  width: 96px;
-  height: 96px;
-  margin: -48px 0 0 -48px;
+  width: var(--cube);
+  height: var(--cube);
+  margin: calc(var(--cube) / -2) 0 0 calc(var(--cube) / -2);
   perspective: 700px;
   pointer-events: none;
   opacity: 0;
@@ -13380,9 +13408,9 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 6px;
-  padding: 15px;
-  border-radius: 14px;
+  gap: 7px;
+  padding: 18px;
+  border-radius: 16px;
   background: #fbf9f3;
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12), inset 0 -6px 12px rgba(0, 0, 0, 0.12);
   -webkit-backface-visibility: hidden;
@@ -13405,25 +13433,71 @@ h3 {
 }
 
 .pt-cube-face.front {
-  transform: translateZ(48px);
+  transform: translateZ(calc(var(--cube) / 2));
 }
 
 .pt-cube-face.back {
-  transform: rotateY(180deg) translateZ(48px);
+  transform: rotateY(180deg) translateZ(calc(var(--cube) / 2));
 }
 
 .pt-cube-face.right {
-  transform: rotateY(90deg) translateZ(48px);
+  transform: rotateY(90deg) translateZ(calc(var(--cube) / 2));
 }
 
 .pt-cube-face.left {
-  transform: rotateY(-90deg) translateZ(48px);
+  transform: rotateY(-90deg) translateZ(calc(var(--cube) / 2));
 }
 
 .pt-cube-face.top {
-  transform: rotateX(90deg) translateZ(48px);
+  transform: rotateX(90deg) translateZ(calc(var(--cube) / 2));
 }
 
 .pt-cube-face.bottom {
-  transform: rotateX(-90deg) translateZ(48px);
+  transform: rotateX(-90deg) translateZ(calc(var(--cube) / 2));
+}
+
+/* Its shadow on the board, and once it has landed the number under it: what comes, at a glance. */
+.pt-cube-shadow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent);
+  animation: pt-cube-shadow 0.9s cubic-bezier(0.22, 0.75, 0.3, 1) both;
+}
+
+@keyframes pt-cube-shadow {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  45% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+.pt-cube-n {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 26px);
+  min-width: 48px;
+  padding: 6px 14px 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 900 30px/1 var(--font-display);
+  text-align: center;
+  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.5);
+  transform: translateX(-50%);
+  animation: pt-cube-n 0.35s 0.85s var(--spring) both;
+}
+
+@keyframes pt-cube-n {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.4);
+  }
 }

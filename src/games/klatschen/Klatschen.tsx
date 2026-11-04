@@ -289,7 +289,9 @@ function Glass({ level, pour = false }: { level: number; pour?: boolean }) {
         </clipPath>
       </defs>
       <path d="M8 18h44l-5 76H13z" className="kl-glass-body" />
-      {pour && fill > 0 && <rect key={level} x="27" y="-14" width="6" height="106" rx="3" className="kl-glass-stream" />}
+      {/* Falls from above to the bottom of the glass (behind the beer) and runs out there: it never
+          reaches past the glass. */}
+      {pour && fill > 0 && <path key={level} d="M30 -14V86" pathLength={100} className="kl-glass-stream" />}
       <g clipPath={`url(#${clip})`}>
         <rect x="0" y="0" width="60" height="100" className="kl-glass-beer" style={rise} />
         {fill > 0 && <rect x="0" y="-5" width="60" height="6" rx="3" className="kl-glass-foam" style={rise} />}

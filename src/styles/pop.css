@@ -81,7 +81,7 @@ html[data-look='pop'] body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(120% 60% at 50% 0%, var(--pop-glow), transparent 75%), var(--bg);
+  background: radial-gradient(120% 40% at 50% 46%, var(--pop-glow), transparent 80%), var(--bg);
 }
 
 html[data-look='pop'] body::after {
@@ -329,7 +329,7 @@ html[data-look='pop'] .os-home {
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
-  padding: max(12px, env(safe-area-inset-top)) 20px max(10px, env(safe-area-inset-bottom));
+  padding: max(18px, env(safe-area-inset-top)) 20px max(10px, env(safe-area-inset-bottom));
   gap: 0;
 }
 
@@ -548,7 +548,8 @@ html[data-os='android'] .app-icon.sm {
   object-fit: cover;
 }
 
-.w-face.empty {
+/* "none", not "empty": .empty is the app's empty-state block (with padding). */
+.w-face.none {
   background: var(--pop-tile-2);
   color: var(--muted);
   font: 700 18px/1 var(--font-body);
@@ -594,9 +595,11 @@ html[data-os='android'] .app-icon.sm {
   box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35), 0 18px 26px -14px rgba(0, 0, 0, 0.85);
 }
 
+/* A long name breaks after a slash, and gets smaller until its longest word fits. */
 .w-last .w-title {
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  font-size: min(26px, calc((40vw - 28px) * 2 / var(--longest, 8)));
 }
 
 .w-pop {
@@ -655,6 +658,11 @@ html[data-os='android'] .app-icon.sm {
   gap: 18px;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+}
+
+.sb-page .os-grid,
+.la-grid {
+  align-content: space-evenly;
 }
 
 .sb-page .os-grid {
@@ -865,9 +873,9 @@ html[data-os='android'] .lib-box .app-icon {
 
 /* ---------- Android ---------- */
 
-.os-home.android {
+html[data-look='pop'] .os-home.android {
   --ic: 58px;
-  gap: 14px;
+  gap: 16px;
 }
 
 .la-glance {
@@ -1074,6 +1082,364 @@ html[data-os='android'] .lib-box .app-icon {
   display: none;
 }
 
+/* ---------- Measured like the phones' own home screens ----------
+   iPhone: icons 60 pt on a 393 pt screen (15.3 % of the width), four columns from margin to margin
+   (7 % each side), two small widgets 158 pt square with 22 pt between them, the dock as glass 10 pt
+   in from the sides, the names in the system font at 12 pt.
+   Android (Pixel): four equal cells across nearly the whole width, icons centred in them, names in
+   the system font; the dock row and the search pill at the bottom. */
+
+html[data-look='pop'] .os-home.ios {
+  --ic: clamp(52px, 15.3vw, 66px);
+  --mx: clamp(14px, 7vw, 34px);
+  --wg: 5.6vw;
+  padding-left: var(--mx);
+  padding-right: var(--mx);
+}
+
+.os-home.ios .sb-pages {
+  margin: 0 calc(-1 * var(--mx));
+}
+
+/* The names reach 11 px past the icons: the grid makes room for that at the sides. */
+.os-home.ios .sb-page {
+  padding: 4px calc(var(--mx) - 11px) 0;
+}
+
+.os-home.ios .sb-page .os-grid.movable {
+  padding-inline: 11px;
+}
+
+.os-home.ios .sb-page .sb-widgets {
+  margin-inline: 11px;
+}
+
+.os-home.ios .os-grid.movable,
+.os-home.ios .sb-dock {
+  grid-template-columns: repeat(4, var(--ic));
+  justify-content: space-between;
+  column-gap: 0;
+}
+
+.os-home.ios .os-grid.movable {
+  row-gap: 14px;
+}
+
+.os-home.ios .sb-widgets {
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--wg);
+}
+
+.os-home.ios .sb-widgets > * {
+  grid-column: auto;
+  margin-inline: 0;
+}
+
+/* Names: the system font, a little wider than the icon (they may reach into the gap). */
+.os-home .app-label,
+.os-search .app-label {
+  width: calc(100% + 22px);
+  max-width: none;
+  margin: 0 -11px;
+  text-align: center;
+  font: 400 12px/1.2 -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+html[data-os='android'] .os-home .app-label,
+html[data-os='android'] .os-search .app-label {
+  width: 100%;
+  margin: 0;
+  font-family: 'Google Sans', Roboto, system-ui, sans-serif;
+}
+
+html[data-look='pop'] .os-home.android {
+  --ic: clamp(48px, 13.6vw, 58px);
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.os-home.android .la-glance {
+  padding-inline: 8px;
+}
+
+.os-home.android .la-search {
+  margin-inline: 6px;
+}
+
+/* Dock and search as glass over the wallpaper, as the phones have them. */
+html[data-look='pop'] .os-home {
+  --pop-glass: rgba(255, 255, 255, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-look='pop']:not([data-theme='light']) .os-home {
+    --pop-glass: rgba(255, 255, 255, 0.07);
+  }
+}
+
+html[data-look='pop'][data-theme='dark'] .os-home,
+html[data-look='pop'] .os-home.has-wall {
+  --pop-glass: rgba(255, 255, 255, 0.11);
+}
+
+.os-home .sb-dock,
+.os-home .sb-search,
+.os-home .la-search:not(.os-done) {
+  background: var(--pop-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.2), 0 10px 24px -14px rgba(0, 0, 0, 0.5);
+}
+
+.os-home.ios .sb-dock {
+  margin: 0 calc(10px - var(--mx));
+  padding: 14px calc(var(--mx) - 10px);
+  border-radius: 34px;
+}
+
+/* On a wallpaper the names and the date are white, with a soft shadow to stand out. */
+.os-home.has-wall .app-label,
+.os-home.has-wall .la-date,
+.os-home.has-wall .sb-search,
+.os-home.has-wall .la-search,
+.os-home.has-wall .lib-label {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.os-home.has-wall .sb-search-label svg,
+.os-home.has-wall .la-search svg {
+  color: #fff;
+}
+
+.os-home.has-wall .sb-dots i {
+  background: #fff;
+}
+
+/* Settings: the wallpapers to choose from. */
+.wall-row {
+  flex-wrap: wrap;
+}
+
+.wall-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  padding: 2px 0 6px 42px;
+}
+
+.wall-swatch {
+  width: 44px;
+  height: 66px;
+  border-radius: 10px;
+  background: radial-gradient(120% 40% at 50% 46%, var(--pop-glow, #33342d), transparent 80%), var(--bg);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s var(--spring);
+}
+
+.wall-swatch:active {
+  transform: scale(0.94);
+}
+
+.wall-swatch.active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-ink);
+}
+
+.wall-swatch.add {
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.wall-swatch.add svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- iPhone: pulling home down brings the search; above the dock just the page dots ---------- */
+
+/* Down on the pages is ours (the search); sideways is turning the page; the App Library scrolls. */
+.os-home.ios .sb-pages {
+  touch-action: pan-x;
+}
+
+.os-home.ios .sb-library {
+  touch-action: pan-x pan-y;
+}
+
+/* The search field, coming down from the top with the finger. */
+.sb-peek {
+  position: absolute;
+  z-index: 10;
+  top: max(10px, env(safe-area-inset-top));
+  left: var(--mx);
+  right: var(--mx);
+  display: flex;
+  opacity: 0;
+  transform: translateY(-70px);
+  pointer-events: none;
+}
+
+.sb-peek-field {
+  flex: 1;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pop-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.2), 0 10px 24px -14px rgba(0, 0, 0, 0.5);
+  color: var(--muted);
+  font: 500 16px/1 -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+}
+
+.sb-peek-field svg {
+  width: 17px;
+  height: 17px;
+  color: var(--accent-ink);
+}
+
+.os-home.has-wall .sb-peek-field {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.os-home.has-wall .sb-peek-field svg {
+  color: #fff;
+}
+
+/* The dots where the search pill was (same room, so nothing moves). */
+.sb-dots-bar {
+  flex: none;
+  align-self: center;
+  height: 32px;
+  margin: 10px 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.sb-dots-bar .sb-dots {
+  margin-left: 0;
+  gap: 8px;
+}
+
+.sb-dots-bar .sb-dots i {
+  width: 7px;
+  height: 7px;
+}
+
+/* The search opening: its field drops in from the top. */
+.os-search-bar {
+  animation: os-search-drop 0.3s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+@keyframes os-search-drop {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Moving apps: hold one until they wiggle, then drag (home/useHomeEdit.ts) ---------- */
+
+.os-home.editing .os-grid.movable .app {
+  touch-action: none;
+}
+
+.os-home.editing .os-grid.movable .app:not(.lifted) .app-icon {
+  animation: app-jiggle 0.26s ease-in-out infinite alternate;
+}
+
+.os-home.editing .os-grid.movable .app:nth-child(2n) .app-icon {
+  animation-duration: 0.23s;
+  animation-delay: -0.12s;
+}
+
+.os-home.editing .os-grid.movable .app:nth-child(3n) .app-icon {
+  animation-duration: 0.29s;
+  animation-delay: -0.07s;
+}
+
+@keyframes app-jiggle {
+  from {
+    transform: rotate(-1.8deg);
+  }
+  to {
+    transform: rotate(1.8deg);
+  }
+}
+
+/* The app being dragged: its place stays empty, a copy follows the finger, lifted. */
+.app.lifted {
+  opacity: 0;
+}
+
+.app-ghost {
+  position: fixed;
+  z-index: 500;
+  margin: 0;
+  pointer-events: none;
+}
+
+.app-ghost .app-icon {
+  transform: scale(1.14);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.4), 0 4px 8px rgba(0, 0, 0, 0.35), 0 22px 28px -10px rgba(0, 0, 0, 0.8);
+}
+
+.app-ghost .app-label {
+  opacity: 0;
+}
+
+.app-ghost.landing {
+  transition:
+    left 0.2s cubic-bezier(0.2, 0.85, 0.25, 1),
+    top 0.2s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.app-ghost.landing .app-icon {
+  transform: none;
+  transition: transform 0.2s;
+}
+
+/* Dragging: the pages stay where they are (they turn only at the side of the screen). */
+.os-home.dragging .sb-pages {
+  overflow-x: hidden;
+  scroll-snap-type: none;
+}
+
+.os-done {
+  justify-content: center;
+  padding: 0 28px;
+  background: var(--pop-lime);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 3px 8px rgba(0, 0, 0, 0.45);
+  color: #151612;
+  font: 700 15px/1 var(--font-body);
+  animation: pop-in 0.25s var(--spring) both;
+}
+
+.la-search.os-done {
+  font-size: 16px;
+}
+
+/* All games (Android): closing slides it back down. */
+.la-drawer {
+  transition: transform 0.23s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.la-drawer-wrap.closing {
+  background: transparent;
+  transition: background 0.23s;
+}
+
+.la-drawer-wrap.closing .la-drawer {
+  transform: translateY(100%) !important;
+}
+
 /* ---------- Search: Spotlight on the iPhone, the search bar's page on Android ---------- */
 
 .os-search {
@@ -1188,57 +1554,34 @@ html[data-os='android'] .os-search-field {
   color: rgba(243, 239, 228, 0.75);
 }
 
-/* ---------- Opening a game: the icon grows to fill the screen ---------- */
+/* ---------- Opening a game: the icon grows over home into the game's splash (lib/launch.ts) ---------- */
 
 .launch-veil {
+  --c: #6d6a5f;
   position: fixed;
-  inset: 0;
-  z-index: 90;
+  z-index: 1000;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  line-height: 1;
+  background: radial-gradient(130% 120% at 25% 10%, oklch(from var(--c) calc(l * 0.93) calc(c * 1.05) h) 0%, oklch(from var(--c) calc(l * 0.76) c h) 60%, oklch(from var(--c) calc(l * 0.68) calc(c * 0.95) h) 100%);
+  transition:
+    left 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    top 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    width 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    height 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    border-radius 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    font-size 0.42s cubic-bezier(0.2, 0.85, 0.25, 1),
+    opacity 0.32s ease;
+}
+
+.launch-veil.done {
+  opacity: 0;
   pointer-events: none;
-  background: oklch(from var(--c) calc(l * 0.78) c h);
-  transform-origin: var(--lx) var(--ly);
-  animation: launch-veil 0.56s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
 }
 
 .launch-emoji {
-  font-size: 110px;
-  line-height: 1;
-  filter: drop-shadow(0 16px 12px rgba(0, 0, 0, 0.4));
-  animation: launch-emoji 0.56s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
-}
-
-@keyframes launch-veil {
-  0% {
-    transform: scale(var(--ls));
-    border-radius: 120px;
-    opacity: 1;
-  }
-  48% {
-    transform: scale(1);
-    border-radius: 0;
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    border-radius: 0;
-    opacity: 0;
-  }
-}
-
-@keyframes launch-emoji {
-  0% {
-    transform: scale(0.6);
-  }
-  48% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 0;
-  }
+  filter: drop-shadow(0 0.14em 0.1em rgba(0, 0, 0, 0.4));
 }
 
 /* ---------- Settings: the look ---------- */
@@ -1284,13 +1627,8 @@ html[data-look='pop'] .look-seg button.active {
 @media (prefers-reduced-motion: reduce) {
   html[data-look='pop'] .os-home.back,
   .app.returning .app-icon,
-  .launch-veil,
-  .launch-emoji,
-  .la-drawer {
+  .la-drawer,
+  .os-home.editing .os-grid.movable .app .app-icon {
     animation: none !important;
-  }
-
-  .launch-veil {
-    display: none;
   }
 }
