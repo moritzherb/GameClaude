@@ -15,8 +15,9 @@ const GROW = 420;
 const HOLD = 600;
 const FADE = 320;
 /** How far ahead of the page the strip under the clock is set (ms): an iPhone shows it that much
- *  later (measured on one: the strip at 94 % of the page's colour while that came in, 25 ms behind). */
-const STRIP_LEAD = 25;
+ *  later. Measured on one: 25 ms behind while the colour comes in, a frame more (33 ms) while it
+ *  goes, with the game's page just drawn underneath. */
+const STRIP_LEAD = { in: 25, out: 33 };
 /** How long a splash shows before it fades (the start-up screen keeps to it too). */
 export const SPLASH_MS = GROW + HOLD;
 
@@ -104,7 +105,7 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     // The phone shows a new colour for its strip a frame or so after the page's: the strip is set
     // that much ahead, so both show the same at the same moment. Fading out, the page underneath
     // is the game's now.
-    const ahead = t + STRIP_LEAD;
+    const ahead = t + (t < GROW ? STRIP_LEAD.in : STRIP_LEAD.out);
     layer.set(mix(ahead >= GROW + HOLD ? layer.under() : from, color, amount(ahead)));
     requestAnimationFrame(frame);
   };
