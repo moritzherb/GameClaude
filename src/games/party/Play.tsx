@@ -263,12 +263,14 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
           <button
             type="button"
             className="pt-back-btn pop-in"
+            style={{ '--chip': me.color } as CSSProperties}
+            aria-label={t('Back to the pawn')}
             onClick={() => {
               sfx.tick();
               scene.current?.follow(current(gRef.current));
             }}
           >
-            🎯 {t('Back to the pawn')}
+            <PawnIcon pawn={pawns[me.id]} size={32} />
           </button>
         ) : (
           <button

@@ -74,7 +74,9 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   let fading = false;
   const follow = () => {
     if (!veil.isConnected) return layer.release();
-    const k = parseFloat(getComputedStyle(fill).opacity) || 0;
+    // A step behind the colour on the screen: the phone's strip shows it at once, the screen's
+    // filling only reads as colour once it is well along.
+    const k = (parseFloat(getComputedStyle(fill).opacity) || 0) ** 3;
     // Fading out, the page underneath is the game's: its ground.
     layer.set(mix(fading ? layer.under() : from, color, k));
     requestAnimationFrame(follow);
