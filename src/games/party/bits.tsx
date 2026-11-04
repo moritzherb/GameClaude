@@ -5,6 +5,7 @@ import { buzz, sfx } from '../../lib/fx';
 import { storeSafe } from '../../lib/native';
 import type { Player } from '../../state/AppState';
 import type { Toss } from './logic';
+import { drawDie } from './die3d';
 import { pawnSprite, SPRITE_H, type PawnDef } from './pawns';
 
 const PIPS: Record<number, number[]> = {
@@ -98,13 +99,42 @@ const HOPS: [offset: number, y: number, scale: number][] = [
 const SPIN = [1, 0.42, 0.2, 0.07, 0.025, -0.006, 0];
 const FALL = 'cubic-bezier(0.5, 0, 0.9, 0.5)';
 const RISE = 'cubic-bezier(0.1, 0.5, 0.5, 1)';
+/** The canvas the die is drawn on (CSS px): room for it turned on a corner and close to you. */
+const DIE_BOX = 240;
+
+/** CSS's cubic-bezier(x1, y1, x2, y2) as a function of progress (0 to 1). */
+function bezier(x1: number, y1: number, x2: number, y2: number) {
+  const at = (a: number, b: number, t: number) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+  return (x: number) => {
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (at(x1, x2, mid) < x) lo = mid;
+      else hi = mid;
+    }
+    return at(y1, y2, (lo + hi) / 2);
+  };
+}
+/** How the spin eases between the bounces: the throw, then each slowing after a bounce. */
+const SPIN_EASE = [bezier(0.3, 0, 0.7, 1), bezier(0, 0, 0.58, 1)];
+
+/** How much of the spin is left `t` ms into the throw (as the keyframes above, eased between). */
+function spinLeft(t: number) {
+  const x = Math.max(0, Math.min(1, t / TUMBLE));
+  let i = 0;
+  while (i < HOPS.length - 2 && x > HOPS[i + 1][0]) i++;
+  const [a, b] = [HOPS[i][0], HOPS[i + 1][0]];
+  const k = (i === 0 ? SPIN_EASE[0] : SPIN_EASE[1])(b > a ? (x - a) / (b - a) : 1);
+  return SPIN[i] + (SPIN[i + 1] - SPIN[i]) * k;
+}
 
 /** The big die in the middle of the board: thrown onto it from above, spinning, bouncing twice and
  *  landing flat on the number, facing you, with the number under it, so you see at once what comes.
  *  Its shadow on the board grows and sharpens as it comes down. */
 export function BigDie({ value, flip }: { value: number | null; flip: number }) {
   const hop = useRef<HTMLSpanElement>(null);
-  const cube = useRef<HTMLSpanElement>(null);
+  const cube = useRef<HTMLCanvasElement>(null);
   const shadow = useRef<HTMLSpanElement>(null);
   const pill = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(false);
@@ -118,17 +148,31 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
     const ay = 360 * (2 + ((flip + 1) % 2)) - 90 * (flip % 2);
     const az = flip % 2 ? 40 : -40;
     const easing = (i: number) => (i % 2 === 0 ? FALL : RISE);
+    // The die itself: one solid body drawn on its canvas each frame (die3d.ts), turning as the
+    // keyframes say; its height and how close it is come from the hop round it.
+    const ctx = c.getContext('2d');
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    // Sharp also when it's close to you (the hop scales it up to 1.45).
+    const res = Math.round(DIE_BOX * dpr * 1.45);
+    if (c.width !== res) c.width = c.height = res;
+    const paint = (t: number) => {
+      if (!ctx) return;
+      const k = spinLeft(t);
+      ctx.setTransform(res / DIE_BOX, 0, 0, res / DIE_BOX, 0, 0);
+      drawDie(ctx, DIE_BOX, rx + ax * k, ry + ay * k, az * k);
+    };
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = now - start;
+      paint(t);
+      if (t < TUMBLE) frame = requestAnimationFrame(tick);
+    };
+    paint(0);
+    frame = requestAnimationFrame(tick);
     const anims = [
       h.animate(
         HOPS.map(([offset, y, scale], i) => ({ offset, transform: `translateY(${y}px) scale(${scale})`, easing: easing(i) })),
-        { duration: TUMBLE, fill: 'forwards' },
-      ),
-      c.animate(
-        HOPS.map(([offset], i) => ({
-          offset,
-          transform: `rotateX(${rx + ax * SPIN[i]}deg) rotateY(${ry + ay * SPIN[i]}deg) rotateZ(${az * SPIN[i]}deg)`,
-          easing: i === 0 ? 'cubic-bezier(0.3, 0, 0.7, 1)' : 'ease-out',
-        })),
         { duration: TUMBLE, fill: 'forwards' },
       ),
       // The shadow: small and faint while it's high, full under it on the board.
@@ -155,6 +199,7 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
     return () => {
       window.clearTimeout(hide);
       taps.forEach((x) => window.clearTimeout(x));
+      cancelAnimationFrame(frame);
       anims.forEach((a) => a.cancel());
     };
   }, [flip, value]);
@@ -162,19 +207,7 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
     <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
       <span ref={shadow} className="pt-cube-shadow" />
       <span ref={hop} className="pt-cube-hop">
-        <span ref={cube} className="pt-cube">
-          {/* A solid core: through the faces' round corners you see die, not the board. */}
-          {CUBE.map((c) => (
-            <span key={`core-${c.face}`} className={`pt-cube-core ${c.face}`} />
-          ))}
-          {CUBE.map((c) => (
-            <span key={c.face} className={`pt-cube-face ${c.face}`}>
-              {Array.from({ length: 9 }, (_, i) => (
-                <span key={i} className={`pt-pip${PIPS[c.n].includes(i) ? ' on' : ''}`} />
-              ))}
-            </span>
-          ))}
-        </span>
+        <canvas ref={cube} className="pt-cube" />
       </span>
       {value != null && (
         <span ref={pill} className="pt-cube-n" key={`n${flip}`}>

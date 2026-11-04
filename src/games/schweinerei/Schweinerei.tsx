@@ -108,12 +108,17 @@ const pigSize = (w: number, h: number) => {
   return { pw, ph: pw * 0.75 };
 };
 
-/** Keep a pig on the table: not off the edges, not under the result slip at the top, not under the pen button. */
-function clampSpot(x: number, y: number, w: number, pw: number): [number, number] {
+/** Room kept at the bottom of the table for the button to the next player, when the turn is over (px). */
+const NEXT_ROOM = 54 + 16;
+
+/** Keep a pig on the table: not off the edges, not under the result slip at the top, not under the
+ *  pen button or the button to the next player at the bottom. */
+function clampSpot(x: number, y: number, w: number, h: number, pw: number): [number, number] {
   // The whole drawing (a little wider than the pig) stays on the table.
   const half = (pw / 0.9 / 2 / w) * 100 + 1;
   let cx = Math.min(100 - half, Math.max(half, x));
-  const cy = Math.min(80, Math.max(40, y));
+  const low = Math.max(40, Math.min(80, ((h - NEXT_ROOM - (pw * 0.75) / 2) / h) * 100));
+  const cy = Math.min(low, Math.max(40, y));
   if (cx > 62 && cy > 64) cx = 62;
   return [cx, cy];
 }
@@ -126,7 +131,7 @@ function landing(th: Throw, from: { x: number; y: number }, v: { x: number; y: n
   const dist = h * (0.18 + Math.min(speed, 3) * 0.1) * (0.85 + Math.random() * 0.3);
   const lx = ((from.x + (v.x / speed) * dist * 0.6) / w) * 100 + (Math.random() * 2 - 1) * 8;
   const ly = ((from.y + (v.y / speed) * dist) / h) * 100;
-  const [x, y] = clampSpot(lx, ly, w, pw);
+  const [x, y] = clampSpot(lx, ly, w, h, pw);
   const j = () => Math.random() * 2 - 1;
   // Touching: snout to snout, overlapping a little. Piggyback: one on top of the other.
   if (th.kind === 'touch') {
@@ -149,8 +154,8 @@ function landing(th: Throw, from: { x: number; y: number }, v: { x: number; y: n
     const dx = sideBySide ? pw * room + 12 + Math.random() * 40 : Math.random() * pw * 0.6;
     const dy = sideBySide ? j() * ph * 0.4 : ph * room + 12 + Math.random() * 30;
     const sx = Math.random() < 0.5 ? 1 : -1;
-    const ax = clampSpot(x - ((sx * dx) / 2 / w) * 100, y - (dy / 2 / h) * 100, w, pw);
-    const bx = clampSpot(x + ((sx * dx) / 2 / w) * 100, y + (dy / 2 / h) * 100, w, pw);
+    const ax = clampSpot(x - ((sx * dx) / 2 / w) * 100, y - (dy / 2 / h) * 100, w, h, pw);
+    const bx = clampSpot(x + ((sx * dx) / 2 / w) * 100, y + (dy / 2 / h) * 100, w, h, pw);
     const apartX = (Math.abs(ax[0] - bx[0]) / 100) * w >= pw * room * 0.98;
     const apartY = (Math.abs(ax[1] - bx[1]) / 100) * h >= ph * room * 0.98;
     if (apartX || apartY)
@@ -160,8 +165,8 @@ function landing(th: Throw, from: { x: number; y: number }, v: { x: number; y: n
       ];
   }
   // A tight table: one top left, one bottom right.
-  const a = clampSpot(0, 40, w, pw);
-  const b2 = clampSpot(100, 40 + ((ph + 10) / h) * 100, w, pw);
+  const a = clampSpot(0, 40, w, h, pw);
+  const b2 = clampSpot(100, 40 + ((ph + 10) / h) * 100, w, h, pw);
   return [
     { x: a[0], y: a[1], rot: j() * 20 },
     { x: Math.min(b2[0], 62), y: b2[1], rot: j() * 20 },
@@ -318,9 +323,9 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
     const { pw } = pigSize(r.width, r.height);
     const gap = ((pw * 1.06) / r.width) * 100;
     const ey = (end.y / r.height) * 100;
-    let a = clampSpot((end.x / r.width) * 100 - gap / 2, ey, r.width, pw);
-    const b = clampSpot(a[0] + gap, ey, r.width, pw);
-    if (b[0] - a[0] < gap * 0.98) a = clampSpot(b[0] - gap, ey, r.width, pw);
+    let a = clampSpot((end.x / r.width) * 100 - gap / 2, ey, r.width, r.height, pw);
+    const b = clampSpot(a[0] + gap, ey, r.width, r.height, pw);
+    if (b[0] - a[0] < gap * 0.98) a = clampSpot(b[0] - gap, ey, r.width, r.height, pw);
     const here = (i: number): PigAt => {
       const [x, y] = i ? b : a;
       return { x, y, rot: at[i].rot };
@@ -619,15 +624,14 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             <span className="fk-bank-amount">+{g.turnPts}</span>
           </Tap>
         )}
-      </div>
-
-      <div className="sticky-action stack mx-actions sw-actions">
-        {g.ended ? (
-          <BigButton onClick={() => setG(nextPlayer(g))}>
-            <NextName text={t('Next: {name} →')} name={players[(g.turn + 1) % players.length].name} />
-          </BigButton>
-        ) : (
-          <span className="mx-slot mx-must">{g.turnPts > 0 ? t('Throw again, or put your points in the pen (bottom right)') : t('Grab the pigs and throw them up the table')}</span>
+        {/* The table reaches the bottom edge; once the turn is over, the button to the next player
+            lies along its foot (the pigs never land under it). */}
+        {g.ended && (
+          <div className="sw-next">
+            <BigButton onClick={() => setG(nextPlayer(g))}>
+              <NextName text={t('Next: {name} →')} name={players[(g.turn + 1) % players.length].name} />
+            </BigButton>
+          </div>
         )}
       </div>
 

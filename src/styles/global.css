@@ -5221,6 +5221,15 @@ h3 {
   --bank: max(58px, min(calc(18 * var(--qw)), calc(22 * var(--qh))));
 }
 
+/* The button to the next player, along the foot of the table once the turn is over. */
+.sw-next {
+  position: absolute;
+  left: calc(3 * var(--qw));
+  right: calc(3 * var(--qw));
+  bottom: calc(3 * var(--qw));
+  z-index: 4;
+}
+
 /* What the throw was: a slip at the top of the table. */
 .sw-result {
   position: absolute;
@@ -11719,10 +11728,6 @@ h3 {
   justify-content: center;
 }
 
-.play-screen.clean .sw-actions .mx-must {
-  visibility: hidden;
-}
-
 .play-screen.clean .mx-status:not(.verdict) .mx-claim {
   align-items: center;
   text-align: center;
@@ -13454,91 +13459,15 @@ h3 {
   transition-duration: 0.08s;
 }
 
+/* The die itself: one solid body drawn on a canvas (src/games/party/die3d.ts), with room round it
+   for its corners as it turns. */
 .pt-cube {
   position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-.pt-cube-face {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 7px;
-  padding: 18px;
-  border-radius: 18px;
-  /* Ivory, lit from the top left, its rim a little darker so the edges read. */
-  background: radial-gradient(120% 120% at 28% 22%, #ffffff 0%, #f5f2e9 45%, #e6e1d5 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(70, 60, 40, 0.1),
-    inset 0 -6px 10px rgba(70, 60, 40, 0.12);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-/* The pips drilled in: dark, with a lit lower lip. */
-.pt-cube-face .pt-pip.on {
-  background: radial-gradient(circle at 42% 38%, #45403a 0%, #15130f 62%);
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* A solid cube a little inside the faces (sharp corners): through the faces' round corners and
-   the seams between them you see die, never the board. */
-.pt-cube-core {
-  position: absolute;
-  inset: 6px;
-  background: #dcd6c8;
-}
-
-.pt-cube-core.front {
-  transform: translateZ(calc(var(--cube) / 2 - 6px));
-}
-
-.pt-cube-core.back {
-  transform: rotateY(180deg) translateZ(calc(var(--cube) / 2 - 6px));
-}
-
-.pt-cube-core.right {
-  transform: rotateY(90deg) translateZ(calc(var(--cube) / 2 - 6px));
-}
-
-.pt-cube-core.left {
-  transform: rotateY(-90deg) translateZ(calc(var(--cube) / 2 - 6px));
-}
-
-.pt-cube-core.top {
-  transform: rotateX(90deg) translateZ(calc(var(--cube) / 2 - 6px));
-}
-
-.pt-cube-core.bottom {
-  transform: rotateX(-90deg) translateZ(calc(var(--cube) / 2 - 6px));
-}
-
-.pt-cube-face.front {
-  transform: translateZ(calc(var(--cube) / 2));
-}
-
-.pt-cube-face.back {
-  transform: rotateY(180deg) translateZ(calc(var(--cube) / 2));
-}
-
-.pt-cube-face.right {
-  transform: rotateY(90deg) translateZ(calc(var(--cube) / 2));
-}
-
-.pt-cube-face.left {
-  transform: rotateY(-90deg) translateZ(calc(var(--cube) / 2));
-}
-
-.pt-cube-face.top {
-  transform: rotateX(90deg) translateZ(calc(var(--cube) / 2));
-}
-
-.pt-cube-face.bottom {
-  transform: rotateX(-90deg) translateZ(calc(var(--cube) / 2));
+  left: 50%;
+  top: 50%;
+  width: 240px;
+  height: 240px;
+  margin: -120px 0 0 -120px;
 }
 
 /* Its shadow on the board, and once it has landed the number under it: what comes, at a glance. */
