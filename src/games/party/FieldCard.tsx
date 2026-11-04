@@ -3,7 +3,7 @@ import BigButton from '../../components/BigButton';
 import { t, tx } from '../../i18n';
 import { storeSafe } from '../../lib/native';
 import { buzz, celebrate, sfx } from '../../lib/fx';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import { Countdown, Die, Pack, PickPlayer, SnusTin, useBigRoll, useRoll } from './bits';
 import { field, FIELDS, param, type Field } from './fields';
 import { duel, inTurnOrder, keepsUp, leaders, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
@@ -148,8 +148,10 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
 function Card({ f, pos, lander, chosen, text, children }: { f: Field; pos: number; lander: Player; chosen?: boolean; text?: string; children?: ReactNode }) {
   const info = FIELDS[f.kind];
   const n = param(f);
+  // The group knows the game: a smaller card.
+  const known = useApp().knows('party');
   return (
-    <div className="pt-card slide-up" style={{ '--field': info.color } as CSSProperties}>
+    <div className={`pt-card slide-up${known ? ' known' : ''}`} style={{ '--field': info.color } as CSSProperties}>
       <div className="pt-card-head">
         <span className="pt-card-emoji">{info.emoji}</span>
         <span className="pt-card-heading">

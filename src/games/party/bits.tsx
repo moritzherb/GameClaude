@@ -163,10 +163,10 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
       <span ref={shadow} className="pt-cube-shadow" />
       <span ref={hop} className="pt-cube-hop">
         <span ref={cube} className="pt-cube">
-          {/* A solid core: through the faces' round edges you see die, not the board. */}
-          <span className="pt-cube-core" />
-          <span className="pt-cube-core x" />
-          <span className="pt-cube-core y" />
+          {/* A solid core: through the faces' round corners you see die, not the board. */}
+          {CUBE.map((c) => (
+            <span key={`core-${c.face}`} className={`pt-cube-core ${c.face}`} />
+          ))}
           {CUBE.map((c) => (
             <span key={c.face} className={`pt-cube-face ${c.face}`}>
               {Array.from({ length: 9 }, (_, i) => (

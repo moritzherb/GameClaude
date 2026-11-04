@@ -4049,28 +4049,28 @@ h3 {
 }
 
 /* The 4th King: the crown goes like for any card (the face-down card mustn't give it away), and
-   only once the card has turned over it drops onto its top right corner (over the card, so nothing
-   under it goes on a layer of its own). */
+   the moment the King's face shows (halfway through the flip) it drops onto the card's top right
+   corner (over the card, so nothing under it goes on a layer of its own). */
 .kc-ring.revealing .kc-crown-wrap.crowning {
   z-index: 4;
   opacity: 1;
   pointer-events: none;
-  transform: translate(calc(-50% + 25 * var(--qw)), calc(-62 * var(--qw))) rotate(24deg) scale(0.55);
+  transform: translate(calc(-50% + 24 * var(--qw)), calc(-65 * var(--qw))) rotate(24deg) scale(0.78);
   transition: none;
-  animation: kc-crown-onto 0.7s var(--spring) 0.8s both;
+  animation: kc-crown-onto 0.45s var(--spring) 0.42s both;
 }
 
 @keyframes kc-crown-onto {
   from {
     opacity: 0;
-    transform: translate(calc(-50% + 25 * var(--qw)), calc(-96 * var(--qw))) rotate(-20deg) scale(0.8);
+    transform: translate(calc(-50% + 24 * var(--qw)), calc(-88 * var(--qw))) rotate(-10deg) scale(1);
   }
-  40% {
+  30% {
     opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(calc(-50% + 25 * var(--qw)), calc(-62 * var(--qw))) rotate(24deg) scale(0.55);
+    transform: translate(calc(-50% + 24 * var(--qw)), calc(-65 * var(--qw))) rotate(24deg) scale(0.78);
   }
 }
 
@@ -12432,9 +12432,9 @@ h3 {
 /* The card for a field: its colour round it. */
 .pt-card {
   --field: var(--accent);
-  max-height: min(62dvh, 560px);
+  max-height: min(56dvh, 500px);
   overflow-y: auto;
-  padding: 14px;
+  padding: 12px;
   border-radius: 18px;
   background: var(--surface);
   box-shadow: inset 0 0 0 3px var(--field), 0 -8px 30px -10px rgba(0, 0, 0, 0.45);
@@ -12450,12 +12450,12 @@ h3 {
   flex: none;
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 15px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
   background: var(--field);
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.18);
-  font-size: 1.9rem;
+  font-size: 1.6rem;
 }
 
 .pt-card-heading {
@@ -12476,14 +12476,41 @@ h3 {
 .pt-card-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   line-height: 0.95;
   text-transform: uppercase;
 }
 
 .pt-card-text {
-  font-size: 1rem;
-  line-height: 1.38;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+/* The group knows the game: the card says just what to do, smaller. */
+.pt-card.known {
+  gap: 7px;
+  padding: 10px 12px;
+}
+
+.pt-card.known .pt-card-emoji {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  font-size: 1.3rem;
+}
+
+.pt-card.known .pt-card-title {
+  font-size: 1.25rem;
+}
+
+.pt-card.known .pt-card-text {
+  font-size: 0.86rem;
+  line-height: 1.3;
+}
+
+.pt-card.known .big-btn-xl {
+  min-height: 52px;
+  font-size: clamp(1.15rem, 5.6vw, 1.35rem);
 }
 
 .pt-card-sub {
@@ -13381,15 +13408,17 @@ h3 {
 }
 
 /* Back to the pawn after looking round the board. */
+/* Back to the pawn after looking round the board: a bubble with the pawn whose turn it is. */
 .pt-back-btn {
+  --chip: var(--accent);
   flex: none;
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 800;
-  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2.5px var(--chip), 0 6px 16px -6px rgba(0, 0, 0, 0.5);
 }
 
 /* A finger moves the camera round the board, two fingers zoom: the page itself doesn't move. */
@@ -13402,7 +13431,7 @@ h3 {
   --cube: 112px;
   position: absolute;
   left: 50%;
-  top: 34%;
+  top: 38%;
   width: var(--cube);
   height: var(--cube);
   margin: calc(var(--cube) / -2) 0 0 calc(var(--cube) / -2);
@@ -13456,19 +13485,36 @@ h3 {
   box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+/* A solid cube a little inside the faces (sharp corners): through the faces' round corners and
+   the seams between them you see die, never the board. */
 .pt-cube-core {
   position: absolute;
-  inset: 1px;
-  border-radius: 16px;
-  background: #e6e1d5;
+  inset: 6px;
+  background: #dcd6c8;
 }
 
-.pt-cube-core.x {
-  transform: rotateX(90deg);
+.pt-cube-core.front {
+  transform: translateZ(calc(var(--cube) / 2 - 6px));
 }
 
-.pt-cube-core.y {
-  transform: rotateY(90deg);
+.pt-cube-core.back {
+  transform: rotateY(180deg) translateZ(calc(var(--cube) / 2 - 6px));
+}
+
+.pt-cube-core.right {
+  transform: rotateY(90deg) translateZ(calc(var(--cube) / 2 - 6px));
+}
+
+.pt-cube-core.left {
+  transform: rotateY(-90deg) translateZ(calc(var(--cube) / 2 - 6px));
+}
+
+.pt-cube-core.top {
+  transform: rotateX(90deg) translateZ(calc(var(--cube) / 2 - 6px));
+}
+
+.pt-cube-core.bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--cube) / 2 - 6px));
 }
 
 .pt-cube-face.front {
