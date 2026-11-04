@@ -996,29 +996,6 @@ html[data-look='pop'] .os-home.android {
   white-space: nowrap;
 }
 
-.w-crewchip {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px 5px 5px;
-  border-radius: 999px;
-  background: var(--pop-widget);
-  box-shadow: var(--pop-chip-shadow);
-}
-
-.w-crewchip .w-face {
-  width: 28px;
-  height: 28px;
-  margin-right: -6px;
-  font-size: 15px;
-}
-
-.w-crewchip b {
-  margin-left: 6px;
-  font: 900 20px/1 var(--font-display);
-  color: var(--accent-ink);
-}
 
 .la-widgets .widget,
 .w-cookie {
@@ -1060,10 +1037,12 @@ html[data-look='pop'] .os-home.android {
   text-transform: uppercase;
 }
 
-.w-cookie-in b {
-  font-size: 40px;
-  margin-bottom: 2px;
-  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.45));
+.w-cookie-in .w-faces {
+  margin: 0 0 8px 7px;
+}
+
+.w-cookie-in .w-face {
+  box-shadow: 0 0 0 1.5px #c24f86, 0 3px 5px rgba(0, 0, 0, 0.3);
 }
 
 .la-grid {
@@ -1421,6 +1400,21 @@ html[data-look='pop'] .os-home.has-wall {
 .sb-peek .os-search-bar,
 .os-search.pulled .os-search-bar {
   animation: none;
+}
+
+/* The search's veil (as .os-search's, without its blur), coming over home with the pull. */
+.sb-pull-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.sb-peek {
+  will-change: transform, opacity;
 }
 
 .sb-peek-text {
@@ -1823,7 +1817,7 @@ html[data-look='pop'] .os-search {
 /* Nothing behind the search scrolls along. */
 .os-search {
   overscroll-behavior: contain;
-  will-change: transform, opacity;
+  will-change: opacity;
 }
 
 .os-search-h {
@@ -1884,12 +1878,20 @@ html[data-look='pop'] .os-search {
   place-items: center;
   overflow: hidden;
   line-height: 1;
-  /* Even along the top, so the strip under the clock (lib/launch.ts takes this tone) runs on into it. */
+}
+
+/* The colour, coming in evenly all over. Even along the top, so the strip under the clock
+   (lib/launch.ts takes this tone) runs on into it. */
+.launch-fill {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
   background: linear-gradient(180deg, oklch(from var(--c) calc(l * 0.87) calc(c * 1.03) h) 0%, oklch(from var(--c) calc(l * 0.76) c h) 55%, oklch(from var(--c) calc(l * 0.68) calc(c * 0.95) h) 100%);
-  will-change: clip-path, opacity;
+  will-change: opacity;
 }
 
 .launch-emoji {
+  position: relative;
   font-size: 110px;
   filter: drop-shadow(0 16px 12px rgba(0, 0, 0, 0.4));
   will-change: transform;

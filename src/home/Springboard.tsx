@@ -29,8 +29,8 @@ export interface HomeProps {
   returning: string | null;
   /** The four apps in the dock. */
   dock: ReactNode;
-  /** Open the search; `pulled`: home was pulled down, its field is already in place. */
-  onSearch: (pulled?: boolean) => void;
+  /** Open the search; `pulledBy`: home was pulled down, its field is already there (this far below its place). */
+  onSearch: (pulledBy?: number) => void;
   onShuffle: () => void;
   /** The wallpaper (lib/wallpaper.ts). */
   wall: { background?: string; photo: boolean };
@@ -43,7 +43,9 @@ export interface HomeProps {
 
 /** How far to pull home down before the search opens (px), and how much the finger's way counts. */
 const PULL = 70;
-const GIVE = 0.6;
+const GIVE = 0.8;
+/** The pulled field gliding into its place as the search opens (Search.tsx does the same). */
+const SETTLE_FIELD = '0.2s cubic-bezier(0.2, 0.85, 0.25, 1)';
 /** A finger this far sideways (more than up or down) is turning the page. */
 const TURN = 10;
 /** Let go past this share of the width, or this fast (px/ms), and the next page comes. */
@@ -131,43 +133,30 @@ export default function Springboard({ players, recent, returning, dock, wall, on
     return () => window.removeEventListener('resize', measure);
   }, [rows, games.length]);
 
-  // Pulling down: the search field follows the finger from the top, home dims behind it a little.
+  // Pulling down: the search field follows the finger from the top (past its place it gives a
+  // little more), and the search's veil comes over home with it. Only these two move (by transform
+  // and opacity): home itself stays as it is, nothing is drawn again while the finger moves.
   const peek = useRef<HTMLDivElement>(null);
-  const showPull = (dy: number) => {
+  const dim = useRef<HTMLDivElement>(null);
+  /** Past its place the field gives only a little more. */
+  const below = (dy: number) => (dy < PULL ? dy - PULL : (dy - PULL) * 0.25);
+  const showPull = (dy: number, how = '') => {
     const el = peek.current;
-    const pg = viewport.current;
-    if (!el || !pg) return;
+    const veil = dim.current;
+    if (!el || !veil) return;
     const k = Math.min(1, dy / PULL);
-    el.style.transform = `translateY(${Math.min(0, dy - PULL)}px)`;
-    el.style.opacity = String(k);
-    pg.style.transform = dy ? `translateY(${dy * 0.2}px)` : '';
-    pg.style.opacity = dy ? String(1 - k * 0.25) : '';
+    for (const x of [el, veil]) x.style.transition = how ? `transform ${how}, opacity ${how}` : 'none';
+    el.style.transform = dy ? `translateY(${below(dy)}px)` : '';
+    el.style.opacity = dy ? String(k) : '';
+    veil.style.opacity = dy ? String(k) : '';
   };
-  const endPull = (open: boolean) => {
-    const el = peek.current;
-    const pg = viewport.current;
-    if (pg) {
-      pg.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
-      pg.style.transform = '';
-      pg.style.opacity = '';
-      window.setTimeout(() => (pg.style.transition = ''), 260);
-    }
-    if (!el) return open && onSearch(true);
-    if (!open) {
-      el.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
-      el.style.transform = '';
-      el.style.opacity = '';
-      window.setTimeout(() => (el.style.transition = ''), 260);
-      return;
-    }
-    // The search opens with its field just where this one is (the same field): this one stays
-    // until the search has faded in over it, then goes unseen.
-    onSearch(true);
-    window.setTimeout(() => {
-      el.style.transition = 'none';
-      el.style.transform = '';
-      el.style.opacity = '';
-    }, 320);
+  const endPull = (dy: number) => {
+    if (dy < PULL) return showPull(0, '0.25s ease');
+    // The search opens with its field just where this one is (the same field) over the same veil,
+    // and both glide up into place together; these stay until the search has faded in over them.
+    onSearch(below(dy));
+    showPull(PULL, SETTLE_FIELD);
+    window.setTimeout(() => showPull(0), 320);
   };
 
   /**
@@ -221,11 +210,9 @@ export default function Springboard({ players, recent, returning, dock, wall, on
       if (edit.editing) {
         // Held until the apps wiggle: this finger moves an app now.
         s.mode = 'none';
-        return endPull(false);
+        return endPull(0);
       }
-      const p = Math.max(0, s.dy - 12) * GIVE;
-      for (const el of [peek.current, viewport.current]) if (el) el.style.transition = 'none';
-      showPull(p);
+      showPull(Math.max(0, s.dy - 12) * GIVE);
     }
   };
   const onTouchEnd = () => {
@@ -239,13 +226,13 @@ export default function Springboard({ players, recent, returning, dock, wall, on
       const v = (x2 - x1) / Math.max(1, t2 - t1);
       const dir = Math.abs(v) > FAST ? -Math.sign(v) : Math.abs(s.dx) > w * PAST ? -Math.sign(s.dx) : 0;
       go(pageRef.current + dir);
-    } else if (s?.mode === 'pull') endPull(Math.max(0, s.dy - 12) * GIVE >= PULL);
+    } else if (s?.mode === 'pull') endPull(Math.max(0, s.dy - 12) * GIVE);
   };
   const onTouchCancel = () => {
     const s = swipe.current;
     swipe.current = null;
     if (s?.mode === 'page') go(pageRef.current);
-    else if (s?.mode === 'pull') endPull(false);
+    else if (s?.mode === 'pull') endPull(0);
   };
 
   // Without a finger: a sideways wheel or trackpad swipe turns a page, one at a time.
@@ -265,7 +252,8 @@ export default function Springboard({ players, recent, returning, dock, wall, on
       style={{ ...(wall.background ? { background: wall.background } : {}), ...(pitch ? { '--sb-row-gap': `${pitch.gap}px` } : {}) } as CSSProperties}
       {...edit.handlers}
     >
-      {/* The search's own bar (see Search.tsx), coming down with the finger. */}
+      {/* The search's veil and its own bar (see Search.tsx), coming down with the finger. */}
+      <div className="sb-pull-dim" ref={dim} aria-hidden />
       <div className="sb-peek" ref={peek} aria-hidden>
         <div className="os-search-bar">
           <span className="os-search-field">

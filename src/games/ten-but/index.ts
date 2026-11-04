@@ -10,6 +10,7 @@ const tenBut: GameDefinition = {
   color: 'var(--c-lilac)',
   categories: ['party', 'pregame', 'quick'],
   minPlayers: 3,
+  playersOptional: true,
   intensity: 1,
   explains: true,
   rules: [

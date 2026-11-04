@@ -10,6 +10,7 @@ const princessTreatment: GameDefinition = {
   color: 'var(--c-pink)',
   categories: ['party', 'pregame', 'quick'],
   minPlayers: 3,
+  playersOptional: true,
   intensity: 1,
   explains: true,
   rules: [

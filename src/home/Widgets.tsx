@@ -38,16 +38,6 @@ export function CrewWidget({ players }: { players: Player[] }) {
   );
 }
 
-/** Android: the crew next to the date, as a small pill. */
-export function CrewChip({ players }: { players: Player[] }) {
-  return (
-    <Tap className="w-crewchip" onClick={() => navigate(paths.players())} ariaLabel={`${t('The crew')}: ${t('{n} players', { n: players.length })}`}>
-      <Faces players={players} />
-      <b>{players.length || '+'}</b>
-    </Tap>
-  );
-}
-
 /** The game played last, to jump back in; before the first game, the shuffle. */
 export function LastWidget({ game, onShuffle }: { game: GameDefinition | null; onShuffle: () => void }) {
   if (!game) {
@@ -91,14 +81,14 @@ const COOKIE = `polygon(${Array.from({ length: 72 }, (_, i) => {
   return `${(50 + r * Math.cos(a)).toFixed(2)}% ${(50 + r * Math.sin(a)).toFixed(2)}%`;
 }).join(', ')})`;
 
-/** Android: the shuffle on a cookie shape. */
-export function CookieWidget({ onShuffle }: { onShuffle: () => void }) {
+/** Android: the crew on a cookie shape (their faces, how many). Opens the crew. The shuffle is in the dock. */
+export function CrewCookie({ players }: { players: Player[] }) {
   return (
-    <Tap className="w-cookie" onClick={onShuffle} ariaLabel={t('Shuffle')}>
+    <Tap className="w-cookie" onClick={() => navigate(paths.players())} ariaLabel={`${t('The crew')}: ${t('{n} players', { n: players.length })}`}>
       <span className="w-cookie-shape" style={{ clipPath: COOKIE }} aria-hidden />
       <span className="w-cookie-in">
-        <b aria-hidden>🎲</b>
-        {t('Shuffle')}
+        <Faces players={players} />
+        {players.length ? t('{n} players', { n: players.length }) : t('The crew')}
       </span>
     </Tap>
   );

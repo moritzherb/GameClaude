@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { watchAppHeight } from './lib/appHeight';
 import { watchBoxes } from './lib/boxes';
+import { watchTyping } from './lib/forgetTyping';
 import { isNative, toNative, watchScreens } from './lib/native';
 import { SPLASH_MS } from './lib/launch';
 import { watchForUpdates } from './lib/update';
@@ -54,6 +55,8 @@ watchAppHeight();
 // The game tables' sizes for the CSS (instead of container queries, see lib/boxes.ts): watching
 // before the first render, so the first picture has them.
 watchBoxes();
+// No "Undo Typing" when the phone is shaken (lib/forgetTyping.ts).
+watchTyping();
 
 void fontsReady().then(() => {
   createRoot(document.getElementById('root')!).render(

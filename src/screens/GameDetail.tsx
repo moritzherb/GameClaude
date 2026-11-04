@@ -26,8 +26,9 @@ function cardName(name: string) {
 export default function GameDetail({ game }: { game: GameDefinition }) {
   const { players } = useApp();
   const pop = useLook() === 'pop';
-  const missing = Math.max(0, game.minPlayers - players.length);
-  const tooMany = !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
+  // A game that plays without a player list starts right away.
+  const missing = game.playersOptional ? 0 : Math.max(0, game.minPlayers - players.length);
+  const tooMany = !game.playersOptional && !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
   const range = playerRange(game);
   const name = cardName(t(game.name));
 

@@ -11,7 +11,7 @@ import { searchGames } from './search';
 import type { HomeProps } from './Springboard';
 import { useHomeEdit } from './useHomeEdit';
 import { useRows } from './useRows';
-import { CookieWidget, CrewChip, LastWidget } from './Widgets';
+import { CrewCookie, LastWidget } from './Widgets';
 
 /**
  * The Android home screen (a Pixel's): the date and the crew at a glance, the shuffle on a cookie
@@ -58,10 +58,9 @@ export default function Launcher({
     >
       <header className="la-glance">
         <span className="la-date">{date}</span>
-        <CrewChip players={players} />
       </header>
       <div className="la-widgets">
-        <CookieWidget onShuffle={onShuffle} />
+        <CrewCookie players={players} />
         {recent[0] ? (
           <LastWidget game={recent[0]} onShuffle={onShuffle} />
         ) : (

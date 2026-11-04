@@ -3,8 +3,8 @@
  * what the app shows at the top right now. On a plain screen that's the ground; over it a splash,
  * a dimmed backdrop, a wallpaper lay their own colour (`tintTop`), the newest on top.
  *
- * On an iPhone's home-screen app the strip takes the colour of .top-edge (global.css), which reads
- * --top-edge; elsewhere the theme-color tags carry it.
+ * On an iPhone's home-screen app the strip takes the colour of .top-edge (global.css; set on that
+ * element alone, so nothing else is styled again when it changes); elsewhere the theme-color tag.
  */
 
 /** The ground colour of each look (light, dark): the browser's bar and the strip under the clock take it. */
@@ -19,8 +19,8 @@ const layers: { color: string }[] = [];
 function paint() {
   if (typeof document === 'undefined') return;
   const top = layers[layers.length - 1]?.color;
-  if (top) document.documentElement.style.setProperty('--top-edge', top);
-  else document.documentElement.style.removeProperty('--top-edge');
+  const edge = document.querySelector<HTMLElement>('.top-edge');
+  if (edge) edge.style.backgroundColor = top ?? '';
   const phoneDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
   document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
     const dark = forced ? forced === 'dark' : m.media ? m.media.includes('dark') : phoneDark;
@@ -45,23 +45,44 @@ export function setTheme(theme: 'light' | 'dark' | null) {
   paint();
 }
 
-/** Lay a colour over the top of the screen; the function returned takes it away again. */
-export function tintTop(color: string): () => void {
+/** Lay a colour over the top of the screen, to change as it goes (`set`) and take away (`release`). */
+export function topLayer(color: string) {
   const layer = { color };
   layers.push(layer);
   paint();
-  return () => {
-    const i = layers.indexOf(layer);
-    if (i < 0) return;
-    layers.splice(i, 1);
-    paint();
+  return {
+    set(next: string) {
+      if (next === layer.color) return;
+      layer.color = next;
+      if (layers[layers.length - 1] === layer) paint();
+    },
+    release() {
+      const i = layers.indexOf(layer);
+      if (i < 0) return;
+      layers.splice(i, 1);
+      paint();
+    },
+    /** What would show at the top without this layer: the ones under it, or the ground. */
+    under() {
+      const i = layers.indexOf(layer);
+      return (i > 0 ? layers[i - 1].color : null) ?? ground();
+    },
   };
+}
+
+/** Lay a colour over the top of the screen; the function returned takes it away again. */
+export function tintTop(color: string): () => void {
+  const layer = topLayer(color);
+  return layer.release;
 }
 
 /** The colour at the top now: the newest one laid there, or the page's ground. */
 export function topColor(): string {
-  const top = layers[layers.length - 1]?.color;
-  if (top) return top;
+  return layers[layers.length - 1]?.color ?? ground();
+}
+
+/** The page's ground colour. */
+function ground(): string {
   const bg = typeof document === 'undefined' ? '' : getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   return bg || pair[1];
 }
@@ -92,6 +113,14 @@ export function parseColor(css: string): RGBA | null {
 }
 
 const hexOf = ([r, g, b]: number[]) => '#' + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+
+/** Between two colours: `a` at 0, `b` at 1. */
+export function mix(a: string, b: string, k: number): string {
+  const x = parseColor(a);
+  const y = parseColor(b);
+  if (!x || !y) return k < 0.5 ? a : b;
+  return hexOf([0, 1, 2].map((i) => x[i] + (y[i] - x[i]) * k));
+}
 
 /** `css` (with its own see-through-ness) laid over the colour at the top now. */
 export function overTop(css: string): string {
