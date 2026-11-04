@@ -548,7 +548,8 @@ html[data-os='android'] .app-icon.sm {
   object-fit: cover;
 }
 
-.w-face.empty {
+/* "none", not "empty": .empty is the app's empty-state block (with padding). */
+.w-face.none {
   background: var(--pop-tile-2);
   color: var(--muted);
   font: 700 18px/1 var(--font-body);

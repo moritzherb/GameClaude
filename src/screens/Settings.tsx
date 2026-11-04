@@ -3,7 +3,6 @@ import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
 import { PlusIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
-import { GAMES } from '../games/registry';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
@@ -13,13 +12,14 @@ import { loadPhoto, readPhoto, savePhoto, WALLPAPERS } from '../lib/wallpaper';
 import { cloudOn } from '../net/cloud';
 import { useApp } from '../state/AppState';
 
-type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean';
+type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean' | 'knowAll';
 
 const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
   { key: 'sound', emoji: '🔊', label: tx('Sounds'), hint: tx('Boops, ticks and fanfares') },
   { key: 'haptics', emoji: '📳', label: tx('Vibration'), hint: tx('Phone buzzes when you tap') },
   { key: 'bigMode', emoji: '🔍', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
   { key: 'clean', emoji: '🃏', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
+  { key: 'knowAll', emoji: '🎓', label: tx('We know the games'), hint: tx('No explanations in the games. The rules stay behind the ? button.') },
 ];
 
 /** The app's look. Only the look: every game plays the same in both. */
@@ -147,9 +147,8 @@ function useAdChoices() {
 }
 
 export default function Settings() {
-  const { settings, updateSettings, markedKnown, setKnown } = useApp();
+  const { settings, updateSettings } = useApp();
   const adChoices = useAdChoices();
-  const withExplanations = GAMES.filter((g) => g.explains && (g.component || g.online));
 
   return (
     <main className="screen settings-page">
@@ -213,7 +212,8 @@ export default function Settings() {
               aria-checked={on}
               className={`setting-row${on ? ' on' : ''}`}
               onClick={() => {
-                updateSettings({ [o.key]: !on });
+                // Switching it off brings every game's explanations back (also older marks, game by game).
+                updateSettings(o.key === 'knowAll' ? { knowAll: !on, known: [] } : { [o.key]: !on });
                 // Apply immediately so the feedback reflects the new state (sound ON = you hear it).
                 if (o.key === 'sound' || o.key === 'haptics') fxSettings[o.key] = !on;
                 sfx.pop();
@@ -232,38 +232,6 @@ export default function Settings() {
           );
         })}
       </div>
-
-      <section className="section">
-        <h2 className="section-title">{t('Games you know')}</h2>
-        <p className="fine-print">{t('Switch a game on to skip its tutorials and explanations while you play. The rules stay behind the ? button.')}</p>
-        <div className="settings-list">
-          {withExplanations.map((g) => {
-            const on = markedKnown(g.id);
-            return (
-              <button
-                key={g.id}
-                type="button"
-                role="switch"
-                aria-checked={on}
-                className={`setting-row${on ? ' on' : ''}`}
-                onClick={() => {
-                  setKnown(g.id, !on);
-                  sfx.pop();
-                  buzz();
-                }}
-              >
-                <span className="setting-emoji">{g.emoji}</span>
-                <span className="setting-text">
-                  <span className="setting-label">{t(g.name)}</span>
-                </span>
-                <span className="switch">
-                  <span className="switch-knob" />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
       {cloudOn && <CloudBackup />}
 

@@ -302,6 +302,8 @@ const app: Record<string, string> = {
   Auto: 'Auto',
   iPhone: 'iPhone',
   Android: 'Android',
+  'We know the games': 'Ich kenne die Spiele',
+  'No explanations in the games. The rules stay behind the ? button.': 'Keine Erklärungen in den Spielen. Die Regeln findest du weiter hinter dem ?-Knopf.',
   // Settings: the home screen's wallpaper
   Wallpaper: 'Hintergrund',
   'Behind the games on the home screen': 'Hinter den Spielen auf der Startseite',

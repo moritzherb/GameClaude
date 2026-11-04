@@ -66,7 +66,22 @@ void fontsReady().then(() => {
   );
   // The store app keeps its splash screen up until the first screen is drawn.
   if (isNative) requestAnimationFrame(() => requestAnimationFrame(() => toNative({ type: 'ready' })));
+  requestAnimationFrame(() => requestAnimationFrame(hideBoot));
 });
+
+/**
+ * The start-up screen (index.html): the turning die stays a moment, so it's seen and not just a
+ * flash, then fades into the app. The store app has had its own splash until now: it goes at once.
+ */
+function hideBoot() {
+  const boot = document.getElementById('boot');
+  if (!boot) return;
+  const wait = isNative ? 0 : Math.max(0, 750 - performance.now());
+  window.setTimeout(() => {
+    boot.classList.add('done');
+    window.setTimeout(() => boot.remove(), 350);
+  }, wait);
+}
 
 // The store app brings its own copy of the app (and its updates come through the store).
 if (isNative) watchScreens();

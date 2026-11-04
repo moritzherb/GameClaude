@@ -22,6 +22,48 @@
   </head>
   <body>
     <div class="top-edge" aria-hidden="true"></div>
+    <!-- Starting up: a plain dark screen with the app's lime die turning (gone once the app is drawn, see main.tsx). -->
+    <style>
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483646;
+        display: grid;
+        place-items: center;
+        background: #20211c;
+        transition: opacity 0.3s ease;
+      }
+      #boot svg {
+        width: 64px;
+        height: 64px;
+        animation: boot-spin 0.7s linear infinite;
+      }
+      #boot.done {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot svg {
+          animation-duration: 2.4s;
+        }
+      }
+    </style>
+    <div id="boot" aria-hidden="true">
+      <svg viewBox="100 96 312 328">
+        <defs>
+          <linearGradient id="boot-f" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#d2fa4c" /><stop offset="1" stop-color="#b9e62b" /></linearGradient>
+          <linearGradient id="boot-l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93bd1c" /><stop offset="1" stop-color="#7a9f12" /></linearGradient>
+        </defs>
+        <rect x="116" y="128" width="280" height="280" rx="60" fill="url(#boot-l)" />
+        <rect x="116" y="112" width="280" height="280" rx="60" fill="url(#boot-f)" />
+        <g fill="#14150f"><circle cx="180" cy="176" r="29" /><circle cx="332" cy="176" r="29" /><circle cx="256" cy="252" r="29" /><circle cx="180" cy="328" r="29" /><circle cx="332" cy="328" r="29" /></g>
+      </svg>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

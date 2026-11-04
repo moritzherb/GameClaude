@@ -21,7 +21,7 @@ function Faces({ players }: { players: Player[] }) {
           </span>
         ))
       ) : (
-        <span className="w-face empty">+</span>
+        <span className="w-face none">+</span>
       )}
     </span>
   );
