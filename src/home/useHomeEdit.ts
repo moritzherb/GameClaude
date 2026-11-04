@@ -43,9 +43,17 @@ interface Press {
   last: number;
 }
 
+/** The pages, when there are several (iPhone, home/Springboard.tsx). */
+export interface Pager {
+  /** The page showing, and the last one with apps (the App Library comes after). */
+  page: () => number;
+  last: () => number;
+  go: (n: number) => void;
+}
+
 interface Options {
-  /** The pages, when there are several (iPhone): at the side of the screen the next one comes. */
-  pager?: RefObject<HTMLElement | null>;
+  /** The pages, when there are several: at the side of the screen the next one comes. */
+  pager?: Pager;
   /** The "−" on a wiggling app was tapped. */
   onRemove?: (id: string) => void;
 }
@@ -193,8 +201,7 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
 
   /** At the side of the screen: after a moment, the page there. */
   const edge = (p: Press) => {
-    const el = pager?.current;
-    if (!el) return;
+    if (!pager) return;
     const dir = p.x < EDGE ? -1 : p.x > window.innerWidth - EDGE ? 1 : 0;
     if (!dir) {
       window.clearTimeout(p.edge);
@@ -205,11 +212,10 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     p.edge = window.setTimeout(() => {
       p.edge = undefined;
       // Only as far as the pages with apps (not into the App Library).
-      const pages = el.querySelectorAll('.os-grid.movable').length;
-      const max = Math.min(el.scrollWidth - el.clientWidth, (pages - 1) * el.clientWidth);
-      const next = Math.max(0, Math.min(max, Math.round(el.scrollLeft / el.clientWidth + dir) * el.clientWidth));
-      if (next !== el.scrollLeft) {
-        el.scrollTo({ left: next, behavior: 'smooth' });
+      const now = pager.page();
+      const next = Math.max(0, Math.min(pager.last(), now + dir));
+      if (next !== now) {
+        pager.go(next);
         buzz(6);
       }
       if (press.current === p) edge(p);
@@ -222,7 +228,7 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
    */
   const decide = (p: Press, x: number, y: number) => {
     if (!p.mode && Math.hypot(x - p.x0, y - p.y0) >= 4) {
-      const flick = !!pager?.current && p.touch && Date.now() - p.t0 < FLICK && Math.abs(x - p.x0) >= Math.abs(y - p.y0);
+      const flick = !!pager && p.touch && Date.now() - p.t0 < FLICK && Math.abs(x - p.x0) >= Math.abs(y - p.y0);
       p.mode = flick ? 'flick' : 'app';
     }
     return p.mode;
@@ -230,7 +236,7 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
 
   // While an app is dragged the page must not scroll (only a listener that isn't passive can stop
   // it), and the long press mustn't open a menu. While wiggling, a finger on an app is the app's,
-  // unless it flicks sideways: then the browser turns the page as usual.
+  // unless it flicks sideways: then the pages turn as usual.
   useEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -352,6 +358,8 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
 
   return {
     editing,
+    /** A finger is on an app that it holds or moves: not a swipe through the pages. */
+    holds: () => !!press.current && (press.current.dragging || press.current.mode === 'app'),
     done: () => setEditing(false),
     handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onClickCapture },
   };

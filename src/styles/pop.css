@@ -651,20 +651,20 @@ html[data-os='android'] .app-icon.sm {
 
 /* ---------- iPhone ---------- */
 
+/* The pages side by side on a strip that the finger moves (home/Springboard.tsx): one per swipe. */
 .os-home.ios .sb-pages {
   flex: 1;
   min-height: 0;
   margin: 0 -20px;
   display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
+  overflow: hidden;
 }
 
-.os-home.ios .sb-pages::-webkit-scrollbar {
-  display: none;
+.sb-strip {
+  flex: none;
+  width: 100%;
+  display: flex;
+  will-change: transform;
 }
 
 .sb-page {
@@ -675,8 +675,6 @@ html[data-os='android'] .app-icon.sm {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .sb-page .os-grid,
@@ -743,7 +741,9 @@ html[data-os='android'] .app-icon.sm {
   margin-left: 10px;
 }
 
-.sb-dots i {
+.sb-dots i,
+.sb-dots button {
+  position: relative;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -751,7 +751,15 @@ html[data-os='android'] .app-icon.sm {
   opacity: 0.45;
 }
 
-.sb-dots i.on {
+/* A dot is a button (it turns to its page): bigger to hit than to see. */
+.sb-dots button::after {
+  content: '';
+  position: absolute;
+  inset: -12px -4px;
+}
+
+.sb-dots i.on,
+.sb-dots button.on {
   background: var(--ink);
   opacity: 1;
 }
@@ -888,6 +896,82 @@ html[data-os='android'] .lib-box .app-icon {
   font: 900 15px/1 var(--font-display);
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+/* A folder of the App Library opened: all its games over the blurred home screen. */
+.sb-folder-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: max(24px, env(safe-area-inset-top)) var(--mx, 20px) max(24px, env(safe-area-inset-bottom));
+  background: color-mix(in oklab, var(--bg) 45%, transparent);
+  -webkit-backdrop-filter: blur(28px) saturate(1.3);
+  backdrop-filter: blur(28px) saturate(1.3);
+  animation: fade-in 0.22s ease both;
+}
+
+.sb-folder-title {
+  align-self: flex-start;
+  padding: 0 6px;
+  font: 700 30px/1.1 -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  animation: sb-folder-in 0.32s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.sb-folder {
+  --k: #6d6a5f;
+  max-height: 72vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 22px 14px 18px;
+  border-radius: 38px;
+  background: color-mix(in oklab, var(--k) 14%, color-mix(in oklab, var(--surface) 72%, transparent));
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.18), 0 24px 48px -16px rgba(0, 0, 0, 0.55);
+  animation: sb-folder-in 0.32s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.sb-folder::-webkit-scrollbar {
+  display: none;
+}
+
+.sb-folder-grid {
+  --ic: clamp(52px, 15.3vw, 64px);
+  row-gap: 18px;
+}
+
+/* On a wallpaper too, the names read on the folder. */
+.os-home .sb-folder .app-label {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.sb-folder-wrap.closing {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.sb-folder-wrap.closing .sb-folder,
+.sb-folder-wrap.closing .sb-folder-title {
+  animation: sb-folder-out 0.18s ease forwards;
+}
+
+@keyframes sb-folder-out {
+  to {
+    transform: scale(0.92);
+  }
+}
+
+@keyframes sb-folder-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
 }
 
 /* ---------- Android ---------- */
@@ -1260,7 +1344,8 @@ html[data-look='pop'] .os-home.has-wall {
   color: #fff;
 }
 
-.os-home.has-wall .sb-dots i {
+.os-home.has-wall .sb-dots i,
+.os-home.has-wall .sb-dots button {
   background: #fff;
 }
 
@@ -1308,13 +1393,14 @@ html[data-look='pop'] .os-home.has-wall {
 
 /* ---------- iPhone: pulling home down brings the search; above the dock just the page dots ---------- */
 
-/* Down on the pages is ours (the search); sideways is turning the page; the App Library scrolls. */
+/* On the pages the finger is ours (turning them, the search); the App Library scrolls up and down. */
 .os-home.ios .sb-pages {
-  touch-action: pan-x;
+  touch-action: none;
 }
 
 .os-home.ios .sb-library {
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 /* The search field, coming down from the top with the finger. */
@@ -1375,7 +1461,7 @@ html[data-look='pop'] .os-home.has-wall {
   gap: 8px;
 }
 
-.sb-dots-bar .sb-dots i {
+.sb-dots-bar .sb-dots button {
   width: 7px;
   height: 7px;
 }
@@ -1396,11 +1482,6 @@ html[data-look='pop'] .os-home.has-wall {
 
 .os-home.editing .os-grid.movable .app {
   touch-action: none;
-}
-
-/* iPhone: a quick sideways flick on a wiggling app still turns the page (home/useHomeEdit.ts). */
-.os-home.ios.editing .os-grid.movable .app {
-  touch-action: pan-x;
 }
 
 .os-home.editing .os-grid.movable .app:not(.lifted) .app-icon {
@@ -1609,12 +1690,6 @@ html[data-os='android'] .os-alert-btn {
     opacity: 0;
     transform: scale(1.12);
   }
-}
-
-/* Dragging: the pages stay where they are (they turn only at the side of the screen). */
-.os-home.dragging .sb-pages {
-  overflow-x: hidden;
-  scroll-snap-type: none;
 }
 
 .os-done {
@@ -1833,7 +1908,9 @@ html[data-look='pop'] .look-seg button.active {
   .la-drawer,
   .os-home.editing .os-grid.movable .app .app-icon,
   .app-x,
-  .os-alert {
+  .os-alert,
+  .sb-folder,
+  .sb-folder-title {
     animation: none !important;
   }
 }
