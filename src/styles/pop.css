@@ -1259,6 +1259,92 @@ html[data-look='pop'] .os-home.has-wall {
   height: 20px;
 }
 
+/* ---------- iPhone: pulling home down brings the search; above the dock just the page dots ---------- */
+
+/* Down on the pages is ours (the search); sideways is turning the page; the App Library scrolls. */
+.os-home.ios .sb-pages {
+  touch-action: pan-x;
+}
+
+.os-home.ios .sb-library {
+  touch-action: pan-x pan-y;
+}
+
+/* The search field, coming down from the top with the finger. */
+.sb-peek {
+  position: absolute;
+  z-index: 10;
+  top: max(10px, env(safe-area-inset-top));
+  left: var(--mx);
+  right: var(--mx);
+  display: flex;
+  opacity: 0;
+  transform: translateY(-70px);
+  pointer-events: none;
+}
+
+.sb-peek-field {
+  flex: 1;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pop-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.2), 0 10px 24px -14px rgba(0, 0, 0, 0.5);
+  color: var(--muted);
+  font: 500 16px/1 -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+}
+
+.sb-peek-field svg {
+  width: 17px;
+  height: 17px;
+  color: var(--accent-ink);
+}
+
+.os-home.has-wall .sb-peek-field {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.os-home.has-wall .sb-peek-field svg {
+  color: #fff;
+}
+
+/* The dots where the search pill was (same room, so nothing moves). */
+.sb-dots-bar {
+  flex: none;
+  align-self: center;
+  height: 32px;
+  margin: 10px 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.sb-dots-bar .sb-dots {
+  margin-left: 0;
+  gap: 8px;
+}
+
+.sb-dots-bar .sb-dots i {
+  width: 7px;
+  height: 7px;
+}
+
+/* The search opening: its field drops in from the top. */
+.os-search-bar {
+  animation: os-search-drop 0.3s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+@keyframes os-search-drop {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+}
+
 /* ---------- Moving apps: hold one until they wiggle, then drag (home/useHomeEdit.ts) ---------- */
 
 .os-home.editing .os-grid.movable .app {
