@@ -24,8 +24,8 @@ function preloadFonts(): Plugin {
 /**
  * The store app's copy (`npm run build:app`): the whole app in one HTML file, script, styles,
  * fonts and pictures inside, so the app shows it offline from its own bundle. Also written as a
- * module (html.js) the React Native side imports. No home-screen icons, manifest or service worker:
- * the app is the app.
+ * module (html.js) the React Native side imports. No home-screen icons, start-up images, manifest or
+ * service worker: the app is the app.
  */
 function singleFile(): Plugin {
   return {
@@ -33,7 +33,7 @@ function singleFile(): Plugin {
     apply: 'build',
     enforce: 'post',
     transformIndexHtml(html) {
-      return html.replace(/\s*<link rel="(icon|apple-touch-icon|manifest)"[^>]*>/g, '').replace(/\s*<meta name="(apple-mobile-web-app-[a-z-]+|mobile-web-app-capable)"[^>]*>/g, '');
+      return html.replace(/\s*<link rel="(icon|apple-touch-icon|apple-touch-startup-image|manifest)"[^>]*>/g, '').replace(/\s*<meta name="(apple-mobile-web-app-[a-z-]+|mobile-web-app-capable)"[^>]*>/g, '');
     },
     generateBundle(_options, bundle) {
       const page = bundle['index.html'];
