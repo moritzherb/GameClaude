@@ -5104,6 +5104,11 @@ h3 {
   color: inherit;
 }
 
+/* What's in the pen, and this turn's points under it: a little air between the two. */
+.sw .mx-claim {
+  gap: 4px;
+}
+
 /* The pigs on the table: pick them up with a finger, swing and let go. */
 .sw-table {
   touch-action: none;
@@ -11717,11 +11722,15 @@ h3 {
 }
 
 /* Mäxchen and Schweinerei: what's to beat or in the pen this turn, and who drinks how much after
-   the cup is lifted. No how-to lines (a warning still shows). */
+   the cup is lifted; in Schweinerei the bonus throw too. No how-to lines (a warning still shows). */
 .play-screen.clean .mx-status:not(.verdict) .bd-player,
-.play-screen.clean .sw-board,
+.play-screen.clean .sw-board-players,
 .play-screen.clean .mx-hint:not(.warn) {
   display: none;
+}
+
+.play-screen.clean .sw-board {
+  justify-content: center;
 }
 
 .play-screen.clean .mx-status:not(.verdict) {

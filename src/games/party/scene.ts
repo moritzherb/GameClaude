@@ -184,6 +184,13 @@ export class Scene {
   private shown = new Map<string, Point>();
   private moving = new Map<string, Moving>();
   private anims: Anim[] = [];
+  /** Where a pawn is on its way to (a hop, a bridge, a tunnel), from the moment it sets off until
+   *  the game says it's there: it stands there as soon as it lands, never a moment back where it
+   *  came from. `from` is where the game had it when it set off. */
+  private dest = new Map<string, { pos: number; from: number }>();
+  /** Each pawn's own place on its field, kept for as long as it stands there: the first one there
+   *  takes the first place, the next the next free one, and nobody moves when someone comes or goes. */
+  private slots = new Map<string, { pos: number; k: number }>();
   private cam: Cam = { x: 0, y: 0, dist: FOLLOW_DIST, tilt: FOLLOW_TILT };
   private goal: Cam = { ...this.cam };
   private following: string | null = null;
@@ -274,6 +281,11 @@ export class Scene {
   setPawns(pawns: PawnView[], current: string | null) {
     this.pawns = pawns;
     this.current = current;
+    // The game caught up with a move (or put the pawn somewhere else altogether).
+    for (const p of pawns) {
+      const d = this.dest.get(p.id);
+      if (d && p.pos !== d.from) this.dest.delete(p.id);
+    }
     for (const p of pawns) if (!this.shown.has(p.id)) this.shown.set(p.id, this.home(p));
     if (this.following && !this.away) this.aim(this.following);
     this.invalidate();
@@ -302,8 +314,10 @@ export class Scene {
     const pawn = this.pawns.find((p) => p.id === id);
     if (!pawn || !path.length) return Promise.resolve();
     const n = path.length;
+    const start = this.shown.get(id) ?? this.home(pawn);
+    this.dest.set(id, { pos: path[n - 1], from: pawn.pos });
     // Through the middle of each field on the way, onto its own place on the last one.
-    const points = [this.shown.get(id) ?? this.home(pawn), ...path.map((pos, k) => (k === n - 1 ? this.place(id, pos) : this.spot(pos)))];
+    const points = [start, ...path.map((pos, k) => (k === n - 1 ? this.place(id, pos) : this.spot(pos)))];
     // Steady across the fields (only the start and the end ease in and out), along a smooth curve
     // through them (round the corners, no kinks), with a soft bob between each two.
     const progress = (t: number) => easeInOut(t) * n;
@@ -333,6 +347,8 @@ export class Scene {
   /** Over a bridge, or through a tunnel, to another field. */
   travel(id: string, to: number, tunnel: boolean): Promise<void> {
     const a = this.shown.get(id) ?? this.spot(to);
+    const pawn = this.pawns.find((p) => p.id === id);
+    if (pawn) this.dest.set(id, { pos: to, from: pawn.pos });
     const b = this.place(id, to);
     return new Promise((done) => {
       this.anims.push({
@@ -359,10 +375,30 @@ export class Scene {
     return { x: s.x, y: s.y };
   }
 
-  /** The place on field `pos` for pawn `id` (with whoever else stands there). */
+  /** The field a pawn stands on, or is on its way to. */
+  private fieldOf(p: PawnView): number {
+    return this.dest.get(p.id)?.pos ?? p.pos;
+  }
+
+  /** Pawn `id`'s own place on field `pos` (0, 1, …): kept while it stands there, else the first free one. */
+  private slot(id: string, pos: number): number {
+    const mine = this.slots.get(id);
+    if (mine && mine.pos === pos) return mine.k;
+    const taken = new Set<number>();
+    for (const q of this.pawns) {
+      if (q.id === id || this.fieldOf(q) !== pos) continue;
+      const s = this.slots.get(q.id);
+      if (s && s.pos === pos) taken.add(s.k);
+    }
+    let k = 0;
+    while (taken.has(k)) k++;
+    this.slots.set(id, { pos, k });
+    return k;
+  }
+
+  /** The place on field `pos` for pawn `id`: its own, beside whoever else stands there. */
   private place(id: string, pos: number, crossed = false): Point {
-    const here = this.pawns.filter((q) => q.id === id || (q.pos === pos && !this.moving.has(q.id)));
-    const k = Math.max(0, here.findIndex((q) => q.id === id));
+    const k = this.slot(id, pos);
     const base = this.spot(pos);
     const kind = this.board?.fields[pos]?.kind;
     if (kind === 'bridge') {
@@ -374,10 +410,10 @@ export class Scene {
     }
     let off: Point;
     if (kind === 'start' || kind === 'goal') {
-      // No picture on the start and the finish: everyone round the middle.
-      const n = here.length;
+      // No picture on the start and the finish: everyone round the middle, a place for each player.
+      const n = this.pawns.length;
       const a = (k / Math.max(1, n)) * Math.PI * 2 + Math.PI / 2;
-      off = n === 1 ? { x: 0, y: 0.05 } : { x: Math.cos(a) * 0.24, y: Math.sin(a) * 0.2 + 0.05 };
+      off = n <= 1 ? { x: 0, y: 0.05 } : { x: Math.cos(a) * 0.24, y: Math.sin(a) * 0.2 + 0.05 };
     } else {
       const s = SLOTS[k % SLOTS.length];
       off = { x: s.x + Math.floor(k / SLOTS.length) * 0.06, y: s.y };
@@ -386,7 +422,9 @@ export class Scene {
   }
 
   private home(p: PawnView): Point {
-    return this.place(p.id, p.pos, p.crossed);
+    const d = this.dest.get(p.id);
+    // Just landed (the game doesn't know yet): where it landed, as it landed.
+    return d ? this.place(p.id, d.pos) : this.place(p.id, p.pos, p.crossed);
   }
 
   /** Which way a bridge runs: from the field before it (d), and across it (n). */
@@ -436,7 +474,7 @@ export class Scene {
     // The middle of the pawn's field (not its own place on it): the camera doesn't drift once it lands.
     const p = this.moving.get(id) ?? (() => {
       const v = this.pawns.find((q) => q.id === id);
-      return v ? this.spot(v.pos) : this.where(id);
+      return v ? this.spot(this.fieldOf(v)) : this.where(id);
     })();
     // Across, the camera goes most of the way to the pawn: its field in the middle, the board's edge near.
     const mid = ((this.board?.cols ?? 5) - 1) / 2;
