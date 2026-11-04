@@ -15,9 +15,9 @@ const GROW = 420;
 const HOLD = 600;
 const FADE = 320;
 /** How far ahead of the page the strip under the clock is set (ms): an iPhone shows it that much
- *  later. Measured on one: 25 ms behind while the colour comes in, a frame more (33 ms) while it
- *  goes, with the game's page just drawn underneath. */
-const STRIP_LEAD = { in: 25, out: 33 };
+ *  later, give or take a frame. Measured on one: some 25 to 28 ms behind while the colour comes in;
+ *  while it goes, 25 left the strip a shade lighter than the page and 33 a shade darker. */
+const STRIP_LEAD = { in: 27, out: 29 };
 /** How long a splash shows before it fades (the start-up screen keeps to it too). */
 export const SPLASH_MS = GROW + HOLD;
 
