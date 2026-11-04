@@ -36,9 +36,10 @@ export function Die({ value, rolling, big }: { value: number | null; rolling?: b
   );
 }
 
-/** How long the big die tumbles before it lands, and how long its number shows before the game goes on (ms). */
-const TUMBLE = 900;
-const READ = 550;
+/** How long the big die is in the air and bouncing before it lies still, and how long its number
+ *  shows before the game goes on (ms). */
+const TUMBLE = 1500;
+const READ = 700;
 
 export interface Roller {
   die: { value: number | null; rolling: boolean; flip: number };
@@ -81,51 +82,102 @@ const CUBE: { face: string; n: number; turn: [number, number] }[] = [
   { face: 'bottom', n: 5, turn: [90, 0] },
 ];
 
-/** The big die in the middle of the board: thrown in, tumbling, and landing flat on the number,
- *  facing you, with the number under it, so you see at once what comes. */
+/** The fall: height above the board (px, up is minus) and how close to you (scale) over the throw,
+ *  as keyframe offsets. It drops in, bounces twice, lower each time, and lies still. */
+const HOPS: [offset: number, y: number, scale: number][] = [
+  [0, -300, 1.45],
+  [0.34, 0, 1],
+  [0.52, -78, 1.08],
+  [0.67, 0, 1],
+  [0.78, -24, 1.02],
+  [0.87, 0, 1],
+  [1, 0, 1],
+];
+/** How much of the spin is left at each of those moments (it slows down at every bounce), and a
+ *  last little rock as it settles. */
+const SPIN = [1, 0.42, 0.2, 0.07, 0.025, -0.006, 0];
+const FALL = 'cubic-bezier(0.5, 0, 0.9, 0.5)';
+const RISE = 'cubic-bezier(0.1, 0.5, 0.5, 1)';
+
+/** The big die in the middle of the board: thrown onto it from above, spinning, bouncing twice and
+ *  landing flat on the number, facing you, with the number under it, so you see at once what comes.
+ *  Its shadow on the board grows and sharpens as it comes down. */
 export function BigDie({ value, flip }: { value: number | null; flip: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
+  const hop = useRef<HTMLSpanElement>(null);
+  const cube = useRef<HTMLSpanElement>(null);
+  const shadow = useRef<HTMLSpanElement>(null);
+  const pill = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(false);
   useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el || !value || !flip) return;
+    const [h, c, sh] = [hop.current, cube.current, shadow.current];
+    if (!h || !c || !sh || !value || !flip) return;
     setShown(true);
-    const [rx, ry] = CUBE.find((c) => c.n === value)!.turn;
-    // Turns that end on the number, slowing down well before the end: the last part is the face
-    // coming round to the front, readable as it settles.
-    const a = el.animate(
-      [
-        { transform: `translateY(160px) rotateX(${rx + 520}deg) rotateY(${ry + 700}deg) scale(0.5)` },
-        { transform: `translateY(-46px) rotateX(${rx + 190}deg) rotateY(${ry + 250}deg) scale(1.08)`, offset: 0.45 },
-        { transform: `translateY(6px) rotateX(${rx + 12}deg) rotateY(${ry - 14}deg) scale(1)`, offset: 0.8 },
-        { transform: `translateY(0) rotateX(${rx}deg) rotateY(${ry}deg) scale(1)` },
-      ],
-      { duration: TUMBLE, easing: 'cubic-bezier(0.22, 0.75, 0.3, 1)', fill: 'forwards' },
-    );
-    const hide = window.setTimeout(() => setShown(false), TUMBLE + 1600);
+    const [rx, ry] = CUBE.find((x) => x.n === value)!.turn;
+    // A few whole turns on two axes (and a twist), different every throw, all ending on the number.
+    const ax = 360 * (2 + (flip % 2)) + 90 * (flip % 3);
+    const ay = 360 * (2 + ((flip + 1) % 2)) - 90 * (flip % 2);
+    const az = flip % 2 ? 40 : -40;
+    const easing = (i: number) => (i % 2 === 0 ? FALL : RISE);
+    const anims = [
+      h.animate(
+        HOPS.map(([offset, y, scale], i) => ({ offset, transform: `translateY(${y}px) scale(${scale})`, easing: easing(i) })),
+        { duration: TUMBLE, fill: 'forwards' },
+      ),
+      c.animate(
+        HOPS.map(([offset], i) => ({
+          offset,
+          transform: `rotateX(${rx + ax * SPIN[i]}deg) rotateY(${ry + ay * SPIN[i]}deg) rotateZ(${az * SPIN[i]}deg)`,
+          easing: i === 0 ? 'cubic-bezier(0.3, 0, 0.7, 1)' : 'ease-out',
+        })),
+        { duration: TUMBLE, fill: 'forwards' },
+      ),
+      // The shadow: small and faint while it's high, full under it on the board.
+      sh.animate(
+        HOPS.map(([offset, y], i) => {
+          const k = 1 - Math.min(1, -y / 300);
+          return { offset, transform: `scale(${0.35 + 0.65 * k})`, opacity: 0.15 + 0.85 * k, easing: easing(i) };
+        }),
+        { duration: TUMBLE, fill: 'forwards' },
+      ),
+    ];
+    if (pill.current)
+      anims.push(
+        pill.current.animate([{ opacity: 0, transform: 'translateX(-50%) scale(0.4)' }, { opacity: 1, transform: 'translateX(-50%) scale(1)' }], {
+          duration: 320,
+          delay: TUMBLE * 0.86,
+          easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+          fill: 'both',
+        }),
+      );
+    // A tap on each bounce.
+    const taps = [0.34, 0.67].map((at, i) => window.setTimeout(() => buzz(i ? 6 : 12), TUMBLE * at));
+    const hide = window.setTimeout(() => setShown(false), TUMBLE + 1700);
     return () => {
       window.clearTimeout(hide);
-      a.cancel();
+      taps.forEach((x) => window.clearTimeout(x));
+      anims.forEach((a) => a.cancel());
     };
   }, [flip, value]);
   return (
     <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
-      <span className="pt-cube-shadow" key={`s${flip}`} />
-      <span ref={ref} className="pt-cube">
-        {/* A solid core: through the faces' round edges you see die, not the board. */}
-        <span className="pt-cube-core" />
-        <span className="pt-cube-core x" />
-        <span className="pt-cube-core y" />
-        {CUBE.map((c) => (
-          <span key={c.face} className={`pt-cube-face ${c.face}`}>
-            {Array.from({ length: 9 }, (_, i) => (
-              <span key={i} className={`pt-pip${PIPS[c.n].includes(i) ? ' on' : ''}`} />
-            ))}
-          </span>
-        ))}
+      <span ref={shadow} className="pt-cube-shadow" />
+      <span ref={hop} className="pt-cube-hop">
+        <span ref={cube} className="pt-cube">
+          {/* A solid core: through the faces' round edges you see die, not the board. */}
+          <span className="pt-cube-core" />
+          <span className="pt-cube-core x" />
+          <span className="pt-cube-core y" />
+          {CUBE.map((c) => (
+            <span key={c.face} className={`pt-cube-face ${c.face}`}>
+              {Array.from({ length: 9 }, (_, i) => (
+                <span key={i} className={`pt-pip${PIPS[c.n].includes(i) ? ' on' : ''}`} />
+              ))}
+            </span>
+          ))}
+        </span>
       </span>
       {value != null && (
-        <span className="pt-cube-n" key={`n${flip}`}>
+        <span ref={pill} className="pt-cube-n" key={`n${flip}`}>
           {value}
         </span>
       )}

@@ -247,8 +247,9 @@ textarea {
       right: 0;
       z-index: 2147483647;
       height: 11px;
-      /* What shows at the top right now (a splash, a dimmed backdrop, the wallpaper: lib/themeColor.ts). */
-      background-color: var(--top-edge, var(--bg));
+      /* The ground; what shows over it at the top (a splash, a dimmed backdrop, the wallpaper) is
+         set on this element by lib/themeColor.ts. */
+      background-color: var(--bg);
       -webkit-background-clip: text;
       background-clip: text;
       pointer-events: none;
@@ -4047,16 +4048,30 @@ h3 {
   opacity: 0;
 }
 
-/* The 4th King: the crown stays, waits for the card to land under it, then hops onto its top edge
-   (over the card, so nothing under it goes on a layer of its own). */
+/* The 4th King: the crown goes like for any card (the face-down card mustn't give it away), and
+   only once the card has turned over it drops onto its top right corner (over the card, so nothing
+   under it goes on a layer of its own). */
 .kc-ring.revealing .kc-crown-wrap.crowning {
   z-index: 4;
   opacity: 1;
   pointer-events: none;
-  transform: translate(-50%, calc(-57 * var(--qw))) rotate(-8deg) scale(0.7);
-  transition:
-    opacity 0.2s ease,
-    transform 0.7s var(--spring) 0.8s;
+  transform: translate(calc(-50% + 25 * var(--qw)), calc(-62 * var(--qw))) rotate(24deg) scale(0.55);
+  transition: none;
+  animation: kc-crown-onto 0.7s var(--spring) 0.8s both;
+}
+
+@keyframes kc-crown-onto {
+  from {
+    opacity: 0;
+    transform: translate(calc(-50% + 25 * var(--qw)), calc(-96 * var(--qw))) rotate(-20deg) scale(0.8);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translate(calc(-50% + 25 * var(--qw)), calc(-62 * var(--qw))) rotate(24deg) scale(0.55);
+  }
 }
 
 .kc-ring.revealing .kc-crown-wrap.crowning .kc-crown,
@@ -13391,10 +13406,18 @@ h3 {
   width: var(--cube);
   height: var(--cube);
   margin: calc(var(--cube) / -2) 0 0 calc(var(--cube) / -2);
-  perspective: 700px;
+  perspective: 900px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
+}
+
+/* Its height over the board and how close to you (src/games/party/bits.tsx BigDie). */
+.pt-cube-hop {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .pt-cube-stage.on {
@@ -13406,6 +13429,7 @@ h3 {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .pt-cube-face {
@@ -13416,18 +13440,27 @@ h3 {
   grid-template-rows: repeat(3, 1fr);
   gap: 7px;
   padding: 18px;
-  border-radius: 16px;
-  background: #fbf9f3;
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12), inset 0 -6px 12px rgba(0, 0, 0, 0.12);
+  border-radius: 18px;
+  /* Ivory, lit from the top left, its rim a little darker so the edges read. */
+  background: radial-gradient(120% 120% at 28% 22%, #ffffff 0%, #f5f2e9 45%, #e6e1d5 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(70, 60, 40, 0.1),
+    inset 0 -6px 10px rgba(70, 60, 40, 0.12);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
+/* The pips drilled in: dark, with a lit lower lip. */
+.pt-cube-face .pt-pip.on {
+  background: radial-gradient(circle at 42% 38%, #45403a 0%, #15130f 62%);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 .pt-cube-core {
   position: absolute;
-  inset: 3px;
-  border-radius: 10px;
-  background: #e4e0d4;
+  inset: 1px;
+  border-radius: 16px;
+  background: #e6e1d5;
 }
 
 .pt-cube-core.x {
@@ -13470,19 +13503,8 @@ h3 {
   bottom: -18px;
   height: 18px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent);
-  animation: pt-cube-shadow 0.9s cubic-bezier(0.22, 0.75, 0.3, 1) both;
-}
-
-@keyframes pt-cube-shadow {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-  45% {
-    opacity: 0.35;
-    transform: scale(0.7);
-  }
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), transparent);
+  will-change: transform, opacity;
 }
 
 .pt-cube-n {
@@ -13498,12 +13520,4 @@ h3 {
   text-align: center;
   box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.5);
   transform: translateX(-50%);
-  animation: pt-cube-n 0.35s 0.85s var(--spring) both;
-}
-
-@keyframes pt-cube-n {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) scale(0.4);
-  }
 }

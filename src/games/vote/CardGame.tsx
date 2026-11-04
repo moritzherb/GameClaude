@@ -110,13 +110,14 @@ export default function CardGame<C>(props: CardGameProps<C>) {
     return {
       ...prev,
       drawn: prev.drawn + 1,
-      round: { text: prev.deck[prev.drawn], who: whoFor(prev.mode), reader: (prev.round.reader + 1) % players.length },
+      round: { text: prev.deck[prev.drawn], who: whoFor(prev.mode), reader: players.length ? (prev.round.reader + 1) % players.length : 0 },
       chosen: null,
       picks,
     };
   };
 
-  const reader = s && !s.over ? players[s.round.reader % players.length] : null;
+  // Without a player list nobody reads in turn: the table just plays.
+  const reader = s && !s.over && players.length ? players[s.round.reader % players.length] : null;
   useTurnBubble(reader);
   const stage = useRef<HTMLDivElement>(null);
   useFit(stage, s && !s.over ? s.drawn : null);

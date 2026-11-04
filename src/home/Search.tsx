@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SearchIcon } from '../components/Icons';
 import { GAMES } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
@@ -15,12 +15,28 @@ const AWAY = 70;
  * the top; Android searches in its drawer). Before typing it suggests the recent games. Pushing it
  * back up puts it away, as on the phone; so do Cancel and Escape.
  */
-export default function Search({ suggestions, pulled, onClose }: { suggestions: GameDefinition[]; pulled?: boolean; onClose: () => void }) {
+export default function Search({ suggestions, pulledBy, onClose }: { suggestions: GameDefinition[]; pulledBy?: number; onClose: () => void }) {
+  const pulled = pulledBy != null;
   const [query, setQuery] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
   const leaving = useRef(false);
+
+  /** The field and the games `dy` up, the veil behind them at `fade` (it fades in place: never
+   *  slides over home), moving there in `how` (or at once). */
+  const place = (dy: number, fade: number, how = '') => {
+    const el = root.current;
+    if (!el) return;
+    el.style.transition = how ? `opacity ${how}` : 'none';
+    el.style.opacity = fade < 1 ? String(fade) : '';
+    for (const part of [bar.current, body.current]) {
+      if (!part) continue;
+      part.style.transition = how ? `transform ${how}` : 'none';
+      part.style.transform = dy ? `translateY(${dy}px)` : '';
+    }
+  };
   useTopTint(root);
 
   /** Away upwards and fading (from wherever the finger left it), then gone. */
@@ -30,12 +46,17 @@ export default function Search({ suggestions, pulled, onClose }: { suggestions: 
     leaving.current = true;
     if (!el) return onClose();
     input.current?.blur();
-    el.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.85, 0.25, 1), opacity 0.22s ease';
-    el.style.transform = 'translateY(-90px)';
-    el.style.opacity = '0';
+    place(-70, 0, '0.22s cubic-bezier(0.2, 0.85, 0.25, 1)');
     el.style.pointerEvents = 'none';
     window.setTimeout(onClose, 220);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose]);
+
+  // Pulled down past its place: the field starts where the pulled one is and glides up with it.
+  useLayoutEffect(() => {
+    if (pulledBy) bar.current?.animate([{ transform: `translateY(${pulledBy}px)` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(0.2, 0.85, 0.25, 1)' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Without scrolling: an iPhone would push the page up to show the field (it's at the top anyway).
@@ -63,12 +84,10 @@ export default function Search({ suggestions, pulled, onClose }: { suggestions: 
         if (dy > -8) return;
         start.on = true;
         input.current?.blur();
-        el.style.transition = 'none';
       }
       e.preventDefault();
       start.dy = Math.min(0, dy + 8);
-      el.style.transform = `translateY(${start.dy}px)`;
-      el.style.opacity = String(Math.max(0.2, 1 + start.dy / 260));
+      place(start.dy, Math.max(0, 1 + start.dy / 220));
     };
     const onEnd = () => {
       const s = start;
@@ -76,9 +95,7 @@ export default function Search({ suggestions, pulled, onClose }: { suggestions: 
       if (!s?.on) return;
       const fast = -s.dy / Math.max(1, Date.now() - s.t) > 0.5;
       if (-s.dy > AWAY || fast) return close();
-      el.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.85, 0.25, 1), opacity 0.25s ease';
-      el.style.transform = '';
-      el.style.opacity = '';
+      place(0, 1, '0.25s cubic-bezier(0.2, 0.85, 0.25, 1)');
     };
     el.addEventListener('touchstart', onStart, { passive: true });
     el.addEventListener('touchmove', onMove, { passive: false });
@@ -97,7 +114,7 @@ export default function Search({ suggestions, pulled, onClose }: { suggestions: 
 
   return (
     <div ref={root} className={`sheet-backdrop os-search${pulled ? ' pulled' : ''}`} role="dialog" aria-modal="true" aria-label={t('Search')} onClick={(e) => e.target === e.currentTarget && close()}>
-      <div className="os-search-bar">
+      <div className="os-search-bar" ref={bar}>
         <label className="os-search-field">
           <SearchIcon />
           <input

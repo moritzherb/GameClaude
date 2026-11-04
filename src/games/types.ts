@@ -54,6 +54,11 @@ export interface GameDefinition {
    * maxPlayers then only says how many play.
    */
   picksPlayers?: boolean;
+  /**
+   * Plays without a player list: nobody is picked or voted for, the table just talks (minPlayers
+   * then only says how many it's for). With a list, the one whose turn it is shows.
+   */
+  playersOptional?: boolean;
   /** How hard it hits: 1 = chill, 2 = tipsy, 3 = dangerous. */
   intensity: 1 | 2 | 3;
   /** Props needed besides drinks, e.g. "Deck of cards". */

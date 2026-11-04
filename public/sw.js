@@ -32,8 +32,7 @@ self.addEventListener('fetch', (event) => {
   // Pages: network first (checked with the server, not the browser cache) so updates
   // arrive, cache as fallback when offline. A slow network (a party basement) mustn't leave the
   // screen black while the app starts: after a moment the copy on the phone opens, and the fresh
-  // page still lands in the cache for next time. Not for the app's reload onto a new build
-  // (?build=…): that one has to be the new page.
+  // page still lands in the cache for next time.
   if (request.mode === 'navigate') {
     const fresh = fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' }).then((res) => {
       // Only a good page replaces the offline copy (never an error page).
@@ -45,6 +44,12 @@ self.addEventListener('fetch', (event) => {
     });
     const offline = () => caches.match(request).then((r) => r || caches.match('./'));
     const patient = new URL(request.url).searchParams.has('build');
+    // The app's reload onto a new build fetched that page beforehand (src/lib/update.ts): from the phone.
+    if (patient) {
+      event.respondWith(caches.match(request).then((r) => r || fresh.catch(() => offline())));
+      event.waitUntil(fresh.catch(() => {}));
+      return;
+    }
     event.respondWith(
       new Promise((resolve) => {
         let done = false;
@@ -55,7 +60,7 @@ self.addEventListener('fetch', (event) => {
           if (served === 'fresh' && res.ok) res.clone().text().then(pruneOldAssets, () => {});
           resolve(res);
         };
-        const timer = patient ? 0 : setTimeout(() => offline().then((r) => answer(r, 'cached')), SLOW_MS);
+        const timer = setTimeout(() => offline().then((r) => answer(r, 'cached')), SLOW_MS);
         fresh.then(
           (res) => {
             clearTimeout(timer);
