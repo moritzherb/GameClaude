@@ -62,8 +62,6 @@ const schweinerei: Record<string, string> = {
   'Pick up the pigs and throw them': 'Schweinchen nehmen und werfen',
   'Pick up the pigs, swing up and let go': 'Schweinchen nehmen, nach oben schwingen und loslassen',
   Pen: 'Stall',
-  'Throw again, or put your points in the pen (bottom right)': 'Nochmal werfen, oder Punkte in den Stall bringen (rechts unten)',
-  'Grab the pigs and throw them up the table': 'Schnapp dir die Schweinchen und wirf sie über den Tisch',
 
   // Finish
   '{n} points': '{n} Punkte',
