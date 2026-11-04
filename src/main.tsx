@@ -9,6 +9,7 @@ import App from './App';
 import { watchAppHeight } from './lib/appHeight';
 import { watchBoxes } from './lib/boxes';
 import { isNative, toNative, watchScreens } from './lib/native';
+import { SPLASH_MS } from './lib/launch';
 import { watchForUpdates } from './lib/update';
 import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
@@ -70,13 +71,14 @@ void fontsReady().then(() => {
 });
 
 /**
- * The start-up screen (index.html): the turning die stays a moment, so it's seen and not just a
- * flash, then fades into the app. The store app has had its own splash until now: it goes at once.
+ * The start-up screen (index.html): the turning die stays as long as a game's splash (from when it
+ * first showed), then fades into the app. The store app has had its own splash: it goes at once.
  */
 function hideBoot() {
   const boot = document.getElementById('boot');
   if (!boot) return;
-  const wait = isNative ? 0 : Math.max(0, 750 - performance.now());
+  const shown = (window as { __bootAt?: number }).__bootAt ?? 0;
+  const wait = isNative ? 0 : Math.max(0, SPLASH_MS - (performance.now() - shown));
   window.setTimeout(() => {
     boot.classList.add('done');
     window.setTimeout(() => boot.remove(), 350);

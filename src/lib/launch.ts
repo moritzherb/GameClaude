@@ -9,8 +9,10 @@
 
 /** Growing out of the icon, staying as the splash, fading out (ms). */
 const GROW = 420;
-const HOLD = 700;
+const HOLD = 600;
 const FADE = 320;
+/** How long a splash shows before it fades (the start-up screen keeps to it too). */
+export const SPLASH_MS = GROW + HOLD;
 
 let last: string | null = null;
 
@@ -27,18 +29,13 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   }
   document.querySelector('.launch-veil')?.remove();
   const r = icon.getBoundingClientRect();
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const radius = parseFloat(getComputedStyle(icon).borderTopLeftRadius) || r.width * 0.24;
   const veil = document.createElement('div');
   veil.className = 'launch-veil';
   veil.setAttribute('aria-hidden', 'true');
   veil.style.setProperty('--c', game.color);
-  Object.assign(veil.style, {
-    left: `${r.left}px`,
-    top: `${r.top}px`,
-    width: `${r.width}px`,
-    height: `${r.height}px`,
-    borderRadius: getComputedStyle(icon).borderRadius,
-    fontSize: `${Math.round(r.width * 0.5)}px`,
-  });
   const emoji = document.createElement('span');
   emoji.className = glyphs.length > 1 ? 'launch-emoji app-duo' : 'launch-emoji';
   for (const g of glyphs) {
@@ -48,12 +45,28 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   }
   veil.append(emoji);
   document.body.append(veil);
-  // Once it is on the screen at the icon's place, it grows to fill the screen.
-  void veil.offsetWidth;
-  Object.assign(veil.style, { left: '0px', top: '0px', width: '100%', height: '100%', borderRadius: '0px', fontSize: '110px' });
+  // The splash covers the screen from the start, cut to the icon's shape, and the cut opens up to
+  // the whole screen; the emoji glides from the icon to the middle and grows. Nothing on the page
+  // is laid out again while it runs (it used to grow by its size: every frame a new layout).
+  const ease = 'cubic-bezier(0.2, 0.85, 0.25, 1)';
+  veil.animate(
+    [
+      { clipPath: `inset(${r.top}px ${w - r.right}px ${h - r.bottom}px ${r.left}px round ${radius}px)` },
+      { clipPath: `inset(0px 0px 0px 0px round 0px)` },
+    ],
+    { duration: GROW, easing: ease, fill: 'both' },
+  );
+  const dx = r.left + r.width / 2 - w / 2;
+  const dy = r.top + r.height / 2 - h / 2;
+  emoji.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${(r.width * 0.5) / 110})` }, { transform: 'none' }], { duration: GROW, easing: ease, fill: 'both' });
   window.setTimeout(go, GROW);
-  window.setTimeout(() => veil.classList.add('done'), GROW + HOLD);
-  window.setTimeout(() => veil.remove(), GROW + HOLD + FADE + 50);
+  window.setTimeout(() => {
+    const out = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE, easing: 'ease', fill: 'forwards' });
+    out.onfinish = () => veil.remove();
+    veil.style.pointerEvents = 'none';
+  }, GROW + HOLD);
+  // In case the fade never ends (a tab in the background): gone in any case.
+  window.setTimeout(() => veil.remove(), GROW + HOLD + FADE + 400);
 }
 
 /** The game opened last from the home screen: its icon settles back when home shows again. */

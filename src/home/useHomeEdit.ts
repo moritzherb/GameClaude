@@ -4,13 +4,19 @@ import { moveTo } from './order';
 
 /** Holding an app this long starts moving the apps (as on an iPhone). */
 const HOLD = 480;
-/** A finger moving this far before that is a swipe, not a hold. */
+/** A finger moving this far is a move (before the hold: a swipe, not a hold; on a tap: not a tap). */
 const SLOP = 10;
+/** While the apps wiggle, a finger on an app that is this quick sideways flicks the page instead (ms). */
+const FLICK = 130;
 /** Near the side of the screen while dragging: after a moment the next (or previous) page. */
 const EDGE = 26;
 const EDGE_WAIT = 550;
 /** Between two reorders, so the apps sliding away don't swap back under the finger. */
 const SETTLE = 180;
+/** The apps making room, and the dragged one landing. */
+const SLIDE = 260;
+const LAND = 200;
+const EASE = 'cubic-bezier(0.2, 0.85, 0.25, 1)';
 
 interface Press {
   id: string;
@@ -19,28 +25,49 @@ interface Press {
   y: number;
   x0: number;
   y0: number;
+  /** When the finger came down, and whether it is one (a quick sideways flick turns the page). */
+  t0: number;
+  touch: boolean;
+  /** While wiggling, decided on the first few pixels: the app is moved, or the page flicked. */
+  mode?: 'app' | 'flick';
   timer?: number;
   dragging: boolean;
   ghost?: HTMLElement;
-  /** Where in the app the finger holds it. */
-  ox: number;
-  oy: number;
+  /** The ghost's place when lifted, and where the finger was then: it follows by a transform. */
+  gx: number;
+  gy: number;
+  lx: number;
+  ly: number;
+  frame?: number;
   edge?: number;
   last: number;
 }
 
+interface Options {
+  /** The pages, when there are several (iPhone): at the side of the screen the next one comes. */
+  pager?: RefObject<HTMLElement | null>;
+  /** The "−" on a wiggling app was tapped. */
+  onRemove?: (id: string) => void;
+}
+
 /**
- * Moving the apps on the home screen, the phone's way: hold an app until the apps wiggle, then
- * drag it; the others make room. At the side of the screen it goes to the next page (with a pager).
- * A tap on an empty spot (or on Done) ends it. `ids` is the order; `onOrder` gets the new one.
+ * Moving the apps on the home screen, the phone's way: hold an app until the apps wiggle (each with
+ * a "−" to take it off), then drag it; the others make room. At the side of the screen it goes to
+ * the next page. Swiping the pages keeps them wiggling; a tap on an empty spot (or Done) ends it.
+ * `ids` is the order; `onOrder` gets the new one.
+ *
+ * Everything that moves goes by transforms (the dragged copy, the apps making room, the landing),
+ * once a frame at most: nothing on the page is laid out again while the finger moves.
  */
-export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], onOrder: (ids: string[]) => void, pager?: RefObject<HTMLElement | null>) {
+export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], onOrder: (ids: string[]) => void, { pager, onRemove }: Options = {}) {
   const [editing, setEditing] = useState(false);
   const editingRef = useRef(false);
   editingRef.current = editing;
   const idsRef = useRef(ids);
   idsRef.current = ids;
   const press = useRef<Press | null>(null);
+  /** The finger on an empty spot: lifted again without moving, it was a tap (that ends the wiggling). */
+  const tap = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   /** After a hold or a drag the click that follows must not open the app. */
   const swallow = useRef(false);
   const before = useRef<Map<string, DOMRect> | null>(null);
@@ -52,24 +79,23 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     const was = before.current;
     before.current = null;
     const p = press.current;
-    for (const a of apps()) {
-      if (p?.dragging && a.dataset.id === p.id) {
-        a.classList.add('lifted');
-        continue;
-      }
-      const b = was?.get(a.dataset.id!);
+    const list = apps();
+    if (p?.dragging) list.find((a) => a.dataset.id === p.id)?.classList.add('lifted');
+    if (!was) return;
+    // All read first, then all moved: one layout, not one per app.
+    const moves: [HTMLElement, number, number][] = [];
+    for (const a of list) {
+      if (p?.dragging && a.dataset.id === p.id) continue;
+      const b = was.get(a.dataset.id!);
       if (!b) continue;
+      a.getAnimations().forEach((x) => x.cancel());
       const r = a.getBoundingClientRect();
       const dx = b.left - r.left;
       const dy = b.top - r.top;
       // Moved to another page: it isn't seen sliding there.
-      if ((!dx && !dy) || Math.abs(dx) > window.innerWidth / 2) continue;
-      a.style.transition = 'none';
-      a.style.transform = `translate(${dx}px, ${dy}px)`;
-      void a.offsetWidth;
-      a.style.transition = 'transform 0.26s cubic-bezier(0.2, 0.85, 0.25, 1)';
-      a.style.transform = '';
+      if ((dx || dy) && Math.abs(dx) < window.innerWidth / 2) moves.push([a, dx, dy]);
     }
+    for (const [a, dx, dy] of moves) a.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: SLIDE, easing: EASE });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids]);
 
@@ -84,12 +110,23 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     root.current?.append(ghost);
     p.app.classList.add('lifted');
     p.ghost = ghost;
-    p.ox = p.x - r.left;
-    p.oy = p.y - r.top;
+    p.gx = r.left;
+    p.gy = r.top;
+    p.lx = p.x;
+    p.ly = p.y;
     p.dragging = true;
     swallow.current = true;
     root.current?.classList.add('dragging');
     buzz(12);
+  };
+
+  /** Once a frame: the copy to the finger, the others making room, the page at the side. */
+  const step = (p: Press) => {
+    p.frame = undefined;
+    if (press.current !== p || !p.dragging) return;
+    if (p.ghost) p.ghost.style.transform = `translate3d(${p.x - p.lx}px, ${p.y - p.ly}px, 0)`;
+    reorder(p);
+    edge(p);
   };
 
   const drop = () => {
@@ -98,6 +135,7 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     if (!p) return;
     window.clearTimeout(p.timer);
     window.clearTimeout(p.edge);
+    if (p.frame) cancelAnimationFrame(p.frame);
     if (!p.dragging) return;
     root.current?.classList.remove('dragging');
     const home = root.current?.querySelector<HTMLElement>(`.os-grid.movable .app[data-id="${p.id}"]`);
@@ -106,11 +144,20 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
       // The app flies into its place, then is itself again.
       const r = home.getBoundingClientRect();
       ghost.classList.add('landing');
-      Object.assign(ghost.style, { left: `${r.left}px`, top: `${r.top}px` });
-      window.setTimeout(() => {
+      const fly = ghost.animate([{ transform: ghost.style.transform || 'none' }, { transform: `translate3d(${r.left - p.gx}px, ${r.top - p.gy}px, 0)` }], {
+        duration: LAND,
+        easing: EASE,
+        fill: 'forwards',
+      });
+      let done = false;
+      const land = () => {
+        if (done) return;
+        done = true;
         ghost.remove();
         home.classList.remove('lifted');
-      }, 200);
+      };
+      fly.onfinish = land;
+      window.setTimeout(land, LAND + 120);
     } else {
       ghost?.remove();
       root.current?.querySelectorAll('.lifted').forEach((a) => a.classList.remove('lifted'));
@@ -169,13 +216,31 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     }, EDGE_WAIT);
   };
 
-  // While an app is held or dragged the page must not scroll (only a listener that isn't passive
-  // can stop it), and the long press mustn't open a menu.
+  /**
+   * While wiggling, a finger on an app that goes quickly sideways is turning the page; anything
+   * else moves the app. Decided once, on the first few pixels (before the browser would scroll).
+   */
+  const decide = (p: Press, x: number, y: number) => {
+    if (!p.mode && Math.hypot(x - p.x0, y - p.y0) >= 4) {
+      const flick = !!pager?.current && p.touch && Date.now() - p.t0 < FLICK && Math.abs(x - p.x0) >= Math.abs(y - p.y0);
+      p.mode = flick ? 'flick' : 'app';
+    }
+    return p.mode;
+  };
+
+  // While an app is dragged the page must not scroll (only a listener that isn't passive can stop
+  // it), and the long press mustn't open a menu. While wiggling, a finger on an app is the app's,
+  // unless it flicks sideways: then the browser turns the page as usual.
   useEffect(() => {
     const el = root.current;
     if (!el) return;
     const stop = (e: TouchEvent) => {
-      if (press.current && (press.current.dragging || editingRef.current)) e.preventDefault();
+      const p = press.current;
+      if (!p) return;
+      if (p.dragging) return e.preventDefault();
+      if (!editingRef.current) return;
+      const t = e.touches[0];
+      if (t && decide(p, t.clientX, t.clientY) === 'app') e.preventDefault();
     };
     const menu = (e: Event) => {
       if ((e.target as Element).closest?.('.os-grid.movable .app')) e.preventDefault();
@@ -186,6 +251,7 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
       el.removeEventListener('touchmove', stop);
       el.removeEventListener('contextmenu', menu);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [root]);
 
   useEffect(() => {
@@ -201,10 +267,26 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
   const onPointerDown = (e: ReactPointerEvent) => {
     // A new touch: whatever the last one left to swallow is over.
     swallow.current = false;
+    tap.current = { x: e.clientX, y: e.clientY, moved: false };
     if (e.button > 0) return;
     const app = (e.target as Element).closest<HTMLElement>('.os-grid.movable .app[data-id]');
     if (!app) return;
-    const p: Press = { id: app.dataset.id!, app, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, dragging: false, ox: 0, oy: 0, last: 0 };
+    const p: Press = {
+      id: app.dataset.id!,
+      app,
+      x: e.clientX,
+      y: e.clientY,
+      x0: e.clientX,
+      y0: e.clientY,
+      t0: Date.now(),
+      touch: e.pointerType !== 'mouse',
+      dragging: false,
+      gx: 0,
+      gy: 0,
+      lx: 0,
+      ly: 0,
+      last: 0,
+    };
     press.current = p;
     if (editingRef.current) return;
     p.timer = window.setTimeout(() => {
@@ -215,51 +297,62 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
   };
 
   const onPointerMove = (e: ReactPointerEvent) => {
+    const t = tap.current;
+    if (t && !t.moved && Math.hypot(e.clientX - t.x, e.clientY - t.y) >= SLOP) t.moved = true;
     const p = press.current;
     if (!p) return;
     p.x = e.clientX;
     p.y = e.clientY;
     if (!p.dragging) {
       if (Math.hypot(p.x - p.x0, p.y - p.y0) < SLOP) return;
-      if (!editingRef.current) {
-        // A swipe, not a hold.
+      // Before the hold: a swipe, not a hold. Wiggling: a quick sideways flick turns the page.
+      if (!editingRef.current || decide(p, p.x, p.y) === 'flick') {
         window.clearTimeout(p.timer);
         press.current = null;
         return;
       }
       lift(p);
     }
-    if (p.ghost) Object.assign(p.ghost.style, { left: `${p.x - p.ox}px`, top: `${p.y - p.oy}px` });
-    reorder(p);
-    edge(p);
+    p.frame ??= requestAnimationFrame(() => step(p));
   };
 
   const onPointerUp = (e: ReactPointerEvent) => {
-    const p = press.current;
-    if (p) return drop();
-    // Editing: a tap on an empty spot ends it.
-    if (editingRef.current && !(e.target as Element).closest('.app, .os-done')) {
+    const t = tap.current;
+    tap.current = null;
+    if (press.current) return drop();
+    // Wiggling: only a tap on an empty spot ends it (not a swipe through the pages).
+    if (editingRef.current && t && !t.moved && !(e.target as Element).closest('.app, .os-done')) {
       swallow.current = true;
       setEditing(false);
     }
   };
 
-  /** While editing (and right after a hold), taps don't open anything; Done still works. */
+  /** The browser took the touch (the pages turning): a drag ends, the wiggling goes on. */
+  const onPointerCancel = () => {
+    tap.current = null;
+    drop();
+  };
+
+  /** While editing (and right after a hold), taps don't open anything; Done and the "−" still work. */
   const onClickCapture = (e: SyntheticEvent) => {
-    if ((e.target as Element).closest('.os-done')) {
+    const target = e.target as Element;
+    if (target.closest('.os-done')) {
       swallow.current = false;
       return;
     }
+    const x = editingRef.current && target.closest('.app-x');
     if (swallow.current || editingRef.current) {
       e.preventDefault();
       e.stopPropagation();
     }
     swallow.current = false;
+    const id = x && x.closest<HTMLElement>('.app[data-id]')?.dataset.id;
+    if (id) onRemove?.(id);
   };
 
   return {
     editing,
     done: () => setEditing(false),
-    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onClickCapture },
+    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onClickCapture },
   };
 }

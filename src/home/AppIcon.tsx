@@ -37,12 +37,13 @@ export function GameGlyph({ game }: { game: GameDefinition }) {
  * the emoji floating over it with a shadow of its own. Round on Android (the stylesheet decides).
  * `tone` is for the dock: lime (the shuffle) or dark.
  */
-export function IconArt({ color, tone, size, children }: { color?: string; tone?: 'lime' | 'dark'; size?: 'sm' | 'lg'; children: ReactNode }) {
+export function IconArt({ color, tone, size, corner, children }: { color?: string; tone?: 'lime' | 'dark'; size?: 'sm' | 'lg'; corner?: ReactNode; children: ReactNode }) {
   return (
     <span className={`app-icon${tone ? ` ${tone}` : ''}${size ? ` ${size}` : ''}`} style={color ? ({ '--c': color } as CSSProperties) : undefined}>
       <span className="app-emoji" aria-hidden>
         {children}
       </span>
+      {corner}
     </span>
   );
 }
@@ -56,6 +57,7 @@ export function AppButton({
   tone,
   glyph,
   badge,
+  removable,
   returning,
   onOpen,
 }: {
@@ -67,6 +69,8 @@ export function AppButton({
   tone?: 'lime' | 'dark';
   glyph: ReactNode;
   badge?: ReactNode;
+  /** On the home screen's grid: while the apps wiggle, a "−" in the corner takes it off (home/useHomeEdit.ts). */
+  removable?: boolean;
   /** The app the user just came back from: its icon settles back into place. */
   returning?: boolean;
   /** Gets the icon, to grow the next page out of it. */
@@ -84,7 +88,7 @@ export function AppButton({
         onOpen(e.currentTarget.querySelector('.app-icon'));
       }}
     >
-      <IconArt color={color} tone={tone}>
+      <IconArt color={color} tone={tone} corner={removable && <span className="app-x" aria-hidden />}>
         {glyph}
       </IconArt>
       {badge != null && <span className="app-badge">{badge}</span>}
@@ -94,10 +98,11 @@ export function AppButton({
 }
 
 /** A game as an app: its page grows out of the icon. */
-export function GameApp({ game, returning }: { game: GameDefinition; returning?: boolean }) {
+export function GameApp({ game, returning, removable }: { game: GameDefinition; returning?: boolean; removable?: boolean }) {
   return (
     <AppButton
       id={game.id}
+      removable={removable}
       label={shortName(game)}
       name={t(game.name)}
       color={game.color}
