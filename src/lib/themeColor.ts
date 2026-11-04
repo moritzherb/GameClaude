@@ -21,11 +21,15 @@ function paint() {
   const top = layers[layers.length - 1]?.color;
   if (top) document.documentElement.style.setProperty('--top-edge', top);
   else document.documentElement.style.removeProperty('--top-edge');
+  const phoneDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
   document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-    const dark = forced ? forced === 'dark' : m.media.includes('dark');
+    const dark = forced ? forced === 'dark' : m.media ? m.media.includes('dark') : phoneDark;
     m.content = top ?? (dark ? pair[1] : pair[0]);
   });
 }
+
+// The phone switching between light and dark (with Auto): the bar along.
+if (typeof matchMedia === 'function') matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', paint);
 
 /** Colour the browser's bar and the strip under the clock (light mode, dark mode). */
 export function setThemeColor(light: string, dark: string) {

@@ -29,7 +29,8 @@ export interface HomeProps {
   returning: string | null;
   /** The four apps in the dock. */
   dock: ReactNode;
-  onSearch: () => void;
+  /** Open the search; `pulled`: home was pulled down, its field is already in place. */
+  onSearch: (pulled?: boolean) => void;
   onShuffle: () => void;
   /** The wallpaper (lib/wallpaper.ts). */
   wall: { background?: string; photo: boolean };
@@ -143,10 +144,30 @@ export default function Springboard({ players, recent, returning, dock, wall, on
     pg.style.opacity = dy ? String(1 - k * 0.25) : '';
   };
   const endPull = (open: boolean) => {
-    for (const el of [peek.current, viewport.current]) if (el) el.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
-    showPull(0);
-    window.setTimeout(() => [peek.current, viewport.current].forEach((el) => el && (el.style.transition = '')), 260);
-    if (open) onSearch();
+    const el = peek.current;
+    const pg = viewport.current;
+    if (pg) {
+      pg.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+      pg.style.transform = '';
+      pg.style.opacity = '';
+      window.setTimeout(() => (pg.style.transition = ''), 260);
+    }
+    if (!el) return open && onSearch(true);
+    if (!open) {
+      el.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+      el.style.transform = '';
+      el.style.opacity = '';
+      window.setTimeout(() => (el.style.transition = ''), 260);
+      return;
+    }
+    // The search opens with its field just where this one is (the same field): this one stays
+    // until the search has faded in over it, then goes unseen.
+    onSearch(true);
+    window.setTimeout(() => {
+      el.style.transition = 'none';
+      el.style.transform = '';
+      el.style.opacity = '';
+    }, 320);
   };
 
   /**
@@ -244,11 +265,15 @@ export default function Springboard({ players, recent, returning, dock, wall, on
       style={{ ...(wall.background ? { background: wall.background } : {}), ...(pitch ? { '--sb-row-gap': `${pitch.gap}px` } : {}) } as CSSProperties}
       {...edit.handlers}
     >
+      {/* The search's own bar (see Search.tsx), coming down with the finger. */}
       <div className="sb-peek" ref={peek} aria-hidden>
-        <span className="sb-peek-field">
-          <SearchIcon />
-          {t('Search')}
-        </span>
+        <div className="os-search-bar">
+          <span className="os-search-field">
+            <SearchIcon />
+            <span className="sb-peek-text">{t('Search games')}</span>
+          </span>
+          <span className="os-search-cancel">{t('Cancel')}</span>
+        </div>
       </div>
       <div
         className="sb-pages"
@@ -282,7 +307,7 @@ export default function Springboard({ players, recent, returning, dock, wall, on
             </section>
           ))}
           <section className="sb-page sb-library" aria-label={t('App Library')}>
-            <Tap className="sb-lib-search" onClick={onSearch}>
+            <Tap className="sb-lib-search" onClick={() => onSearch()}>
               <SearchIcon />
               {t('App Library')}
             </Tap>

@@ -15,7 +15,7 @@ const AWAY = 70;
  * the top; Android searches in its drawer). Before typing it suggests the recent games. Pushing it
  * back up puts it away, as on the phone; so do Cancel and Escape.
  */
-export default function Search({ suggestions, onClose }: { suggestions: GameDefinition[]; onClose: () => void }) {
+export default function Search({ suggestions, pulled, onClose }: { suggestions: GameDefinition[]; pulled?: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -95,7 +95,7 @@ export default function Search({ suggestions, onClose }: { suggestions: GameDefi
   const shown = query.trim() ? found : suggestions;
 
   return (
-    <div ref={root} className="sheet-backdrop os-search" role="dialog" aria-modal="true" aria-label={t('Search')} onClick={(e) => e.target === e.currentTarget && close()}>
+    <div ref={root} className={`sheet-backdrop os-search${pulled ? ' pulled' : ''}`} role="dialog" aria-modal="true" aria-label={t('Search')} onClick={(e) => e.target === e.currentTarget && close()}>
       <div className="os-search-bar">
         <label className="os-search-field">
           <SearchIcon />

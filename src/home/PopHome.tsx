@@ -34,7 +34,8 @@ export default function PopHome() {
   useLayoutEffect(() => (wall.top ? tintTop(wall.top) : undefined), [wall.top]);
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
-  const [searching, setSearching] = useState(false);
+  /** The search: shut, open, or open from pulling home down (its field already in place). */
+  const [searching, setSearching] = useState<false | 'open' | 'pulled'>(false);
   const [rolling, setRolling] = useState<GameDefinition | null>(null);
   const timer = useRef<number>(undefined);
   const landing = useRef<number>(undefined);
@@ -132,7 +133,7 @@ export default function PopHome() {
     returning,
     dock,
     wall,
-    onSearch: () => setSearching(true),
+    onSearch: (pulled?: boolean) => setSearching(pulled ? 'pulled' : 'open'),
     onShuffle: shuffle,
     onOrder: keepOrder,
     onRemove: (id: string) => setRemoving(findGame(id) ?? null),
@@ -141,7 +142,7 @@ export default function PopHome() {
   return (
     <>
       {os === 'android' ? <Launcher {...common} favorites={ordered} date={date} /> : <Springboard {...common} games={ordered} />}
-      {searching && <Search suggestions={recent.length ? recent : favorites.slice(0, 4)} onClose={closeSearch} />}
+      {searching && <Search suggestions={recent.length ? recent : favorites.slice(0, 4)} pulled={searching === 'pulled'} onClose={closeSearch} />}
       {removing && (
         <div ref={alert} className="sheet-backdrop os-alert-wrap" onClick={(e) => e.target === e.currentTarget && setRemoving(null)}>
           <div className="os-alert" role="alertdialog" aria-modal="true" aria-labelledby="os-alert-title">
