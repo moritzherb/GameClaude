@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <!-- The new look's ground (the classic look sets its own, see AppState): the strip under the clock takes it. -->
-    <meta name="theme-color" content="#ece8dd" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#20211c" media="(prefers-color-scheme: dark)" />
+    <!-- One colour, the start-up screen's dark (it is dark in every look): an iPhone opening the app
+         again, before the page is drawn, colours the strip under the clock with it. Once the app runs,
+         lib/themeColor.ts sets it to what shows at the top. -->
+    <meta name="theme-color" content="#20211c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- Not black-translucent: since iOS 27 that lays a frosted blur over the top of the page. With the

@@ -55,24 +55,27 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   // the whole screen; the emoji glides from the icon to the middle and grows. Nothing on the page
   // is laid out again while it runs (it used to grow by its size: every frame a new layout).
   const ease = 'cubic-bezier(0.2, 0.85, 0.25, 1)';
-  veil.animate(
+  const grow = veil.animate(
     [
       { clipPath: `inset(${r.top}px ${w - r.right}px ${h - r.bottom}px ${r.left}px round ${radius}px)` },
-      { clipPath: `inset(0px 0px 0px 0px round 0px)` },
+      { clipPath: `inset(-2px -2px -2px -2px round 0px)` },
     ],
     { duration: GROW, easing: ease, fill: 'both' },
   );
+  // Grown: no cut left at all (not even a hairline at the edges).
+  grow.onfinish = () => grow.cancel();
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
   emoji.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${(r.width * 0.5) / 110})` }, { transform: 'none' }], { duration: GROW, easing: ease, fill: 'both' });
-  // Once it covers the top: the strip under the clock in the splash's colour there (its gradient's
-  // tone at the top, see .launch-veil in pop.css), until it has half faded.
+  // Once it has reached the top (at 80 % of the growing, with its easing; not before, or the strip
+  // would be coloured above a dark gap): the strip under the clock in the splash's colour there
+  // (its tone at the top, see .launch-veil in pop.css), until it has half faded.
   let mine: (() => void) | null = null;
   window.setTimeout(() => {
     // The game's colour as the page has it (a game's may be one of the palette's variables).
     const color = getComputedStyle(veil).getPropertyValue('--c').trim() || game.color;
     if (veil.isConnected) untint = mine = tintTop(tone(color, 0.87, 1.03));
-  }, GROW * 0.35);
+  }, GROW * 0.8);
   const off = () => {
     mine?.();
     if (untint === mine) untint = null;
