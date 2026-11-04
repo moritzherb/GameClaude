@@ -14,10 +14,9 @@ import { mix, topColor, topLayer, tone } from './themeColor';
 const GROW = 420;
 const HOLD = 600;
 const FADE = 320;
-/** How far ahead of the page the strip under the clock is set (ms): an iPhone shows it that much
- *  later, give or take a frame. Measured on one: some 25 to 28 ms behind while the colour comes in;
- *  while it goes, 25 left the strip a shade lighter than the page and 33 a shade darker. */
-const STRIP_LEAD = { in: 27, out: 29 };
+/** How long an iPhone takes to blend its strip under the clock to each new colour (ms). WebKit's
+ *  WKColorExtensionView: a 0.1 s fade from the colour it was last given. */
+const STRIP_BLEND = 100;
 /** How long a splash shows before it fades (the start-up screen keeps to it too). */
 export const SPLASH_MS = GROW + HOLD;
 
@@ -81,6 +80,9 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   const from = topColor();
   const layer = (strip = topLayer(from));
   const start = performance.now();
+  /** The time between frames (ms), as it goes: 60 a second, 120, 30 when saving power. */
+  let step = 1000 / 60;
+  let prev = 0;
   let gone = false;
   const done = () => {
     if (gone) return;
@@ -95,6 +97,8 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     if (gone || !veil.isConnected) return done();
     const t = now - start;
     if (t >= GROW + HOLD + FADE) return done();
+    if (prev && now > prev) step += (Math.min(50, now - prev) - step) * 0.3;
+    prev = now;
     const k = amount(t);
     const fading = t >= GROW + HOLD;
     fill.style.opacity = String(k);
@@ -102,10 +106,11 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
       emoji.style.opacity = String(k);
       veil.style.pointerEvents = 'none';
     }
-    // The phone shows a new colour for its strip a frame or so after the page's: the strip is set
-    // that much ahead, so both show the same at the same moment. Fading out, the page underneath
+    // The phone blends its strip from the colour it was given a frame ago to this one, so on the
+    // screen the strip is about a frame behind: it is set that much ahead (a frame, less what it
+    // blends meanwhile), and both show the same at the same moment. Fading out, the page underneath
     // is the game's now.
-    const ahead = t + (t < GROW ? STRIP_LEAD.in : STRIP_LEAD.out);
+    const ahead = t + step - (step * step) / (2 * STRIP_BLEND);
     layer.set(mix(ahead >= GROW + HOLD ? layer.under() : from, color, amount(ahead)));
     requestAnimationFrame(frame);
   };
