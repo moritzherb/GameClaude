@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { t } from '../i18n';
 import { buzz } from '../lib/fx';
+import { useTopTint } from '../lib/useTopTint';
 import { cropPhoto } from '../lib/photo';
 import BigButton from './BigButton';
 
@@ -19,6 +20,8 @@ interface View {
  * the slider. The circle shows what the others will see.
  */
 export default function PhotoCrop({ img, onDone, onCancel }: { img: HTMLImageElement; onDone: (photo: string) => void; onCancel: () => void }) {
+  const backdrop = useRef<HTMLDivElement>(null);
+  useTopTint(backdrop);
   const frame = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(260);
   const w = img.naturalWidth;
@@ -104,7 +107,7 @@ export default function PhotoCrop({ img, onDone, onCancel }: { img: HTMLImageEle
 
   const s = base * view.zoom;
   return (
-    <div className="crop-backdrop">
+    <div className="crop-backdrop" ref={backdrop}>
       <div className="crop" role="dialog" aria-modal aria-label={t('Move and zoom')}>
         <h2 className="sheet-title">{t('Move and zoom')}</h2>
         <p className="crop-hint">{t('Drag the photo, pinch or slide to zoom. The circle is what the others see.')}</p>

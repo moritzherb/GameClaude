@@ -29,3 +29,23 @@ export function moveTo<T>(list: T[], from: number, to: number): T[] {
   next.splice(to, 0, item);
   return next;
 }
+
+/** The games taken off the home screen (the "−" while the apps wiggle): still in the library, search and drawer. */
+const hiddenKey = (os: Platform) => `home-hidden-${os}`;
+
+export function loadHidden(os: Platform): string[] {
+  const raw = load<unknown>(hiddenKey(os), []);
+  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : [];
+}
+
+export function saveHidden(os: Platform, ids: string[]) {
+  save(hiddenKey(os), ids);
+}
+
+/** Settings: the home screens as they first were (every game back, the first order). */
+export function resetHome() {
+  for (const os of ['ios', 'android'] as Platform[]) {
+    save(key(os), null);
+    save(hiddenKey(os), []);
+  }
+}

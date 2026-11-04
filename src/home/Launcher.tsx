@@ -2,10 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchIcon } from '../components/Icons';
 import Tap from '../components/Tap';
 import { GAMES } from '../games/registry';
-import type { GameDefinition } from '../games/types';
+import { CATEGORIES, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
+import { useTopTint } from '../lib/useTopTint';
 import { GameApp } from './AppIcon';
+import { searchGames } from './search';
 import type { HomeProps } from './Springboard';
 import { useHomeEdit } from './useHomeEdit';
 import { useRows } from './useRows';
@@ -14,26 +16,27 @@ import { CookieWidget, CrewChip, LastWidget } from './Widgets';
 /**
  * The Android home screen (a Pixel's): the date and the crew at a glance, the shuffle on a cookie
  * and the last game as widgets, four rows of games, the dock and the search bar at the bottom.
- * All games sit in the drawer: the search bar opens it, and so does a swipe up.
+ * All games sit in the drawer: a swipe up opens it, the search bar opens it searching.
  */
 export default function Launcher({
   players,
   recent,
   favorites,
   onOrder,
+  onRemove,
   returning,
   dock,
   wall,
   date,
-  onSearch,
   onShuffle,
 }: Omit<HomeProps, 'games'> & { favorites: GameDefinition[]; date: string }) {
-  const [drawer, setDrawer] = useState(false);
+  /** The drawer: shut, open, or open with its search field ready to type in. */
+  const [drawer, setDrawer] = useState<false | 'open' | 'search'>(false);
   const start = useRef<{ x: number; y: number } | null>(null);
   const grid = useRef<HTMLDivElement>(null);
   const rows = useRows(grid, 2, 4);
   const main = useRef<HTMLElement>(null);
-  const edit = useHomeEdit(main, favorites.map((g) => g.id), onOrder);
+  const edit = useHomeEdit(main, favorites.map((g) => g.id), onOrder, { onRemove });
 
   return (
     <main
@@ -49,7 +52,7 @@ export default function Launcher({
         const s = start.current;
         start.current = null;
         // Swiping up opens all games (not while moving apps).
-        if (s && !edit.editing && s.y - e.clientY > 70 && Math.abs(e.clientX - s.x) < 60) setDrawer(true);
+        if (s && !edit.editing && s.y - e.clientY > 70 && Math.abs(e.clientX - s.x) < 60) setDrawer('open');
         edit.handlers.onPointerUp(e);
       }}
     >
@@ -73,7 +76,7 @@ export default function Launcher({
       </div>
       <div className="os-grid la-grid movable" ref={grid}>
         {favorites.slice(0, rows * 4).map((g) => (
-          <GameApp key={g.id} game={g} returning={g.id === returning} />
+          <GameApp key={g.id} game={g} returning={g.id === returning} removable />
         ))}
       </div>
       <nav className="la-dock" aria-label={t('Dock')}>
@@ -85,7 +88,7 @@ export default function Launcher({
           {t('Done')}
         </button>
       ) : (
-        <button type="button" className="la-search" onClick={() => setDrawer(true)}>
+        <button type="button" className="la-search" onClick={() => setDrawer('search')}>
           <span className="la-mark" aria-hidden>
             p!
           </span>
@@ -93,28 +96,27 @@ export default function Launcher({
           <SearchIcon />
         </button>
       )}
-      {drawer && (
-        <Drawer
-          onClose={() => setDrawer(false)}
-          onSearch={() => {
-            setDrawer(false);
-            onSearch();
-          }}
-          returning={returning}
-        />
-      )}
+      {drawer && <Drawer onClose={() => setDrawer(false)} searching={drawer === 'search'} returning={returning} />}
     </main>
   );
 }
 
 /**
- * All games, A to Z, in a sheet from the bottom, like the app drawer. Swiping it down closes it
- * (from anywhere on it while the games are scrolled to the top).
+ * All games, A to Z, in a sheet from the bottom, like the app drawer, with its search field on top:
+ * typing there narrows the games right here. Swiping it down closes it (from anywhere on it while
+ * the games are scrolled to the top).
  */
-function Drawer({ onClose, onSearch, returning }: { onClose: () => void; onSearch: () => void; returning: string | null }) {
+function Drawer({ onClose, searching, returning }: { onClose: () => void; searching: boolean; returning: string | null }) {
   const [closing, setClosing] = useState(false);
+  const [query, setQuery] = useState('');
   const sheet = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const wrap = useRef<HTMLDivElement>(null);
+  useTopTint(wrap);
+  useEffect(() => {
+    if (searching) input.current?.focus();
+  }, [searching]);
   const pull = useRef<{ y: number; t: number; dy: number; on: boolean } | null>(null);
   const close = useCallback(() => {
     setClosing(true);
@@ -126,8 +128,11 @@ function Drawer({ onClose, onSearch, returning }: { onClose: () => void; onSearc
     return () => window.removeEventListener('keydown', onKey);
   }, [close]);
   const sorted = [...GAMES].sort((a, b) => t(a.name).localeCompare(t(b.name)));
+  const shown = query.trim()
+    ? searchGames(query, sorted, (g) => [t(g.name), t(g.tagline), ...g.categories.map((c) => t(CATEGORIES.find((x) => x.id === c)?.label ?? ''))])
+    : sorted;
   return (
-    <div className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
+    <div ref={wrap} className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
       <div
         ref={sheet}
         className="la-drawer"
@@ -148,6 +153,7 @@ function Drawer({ onClose, onSearch, returning }: { onClose: () => void; onSearc
             if (dy < -6) pull.current = null;
             if (dy < 8) return;
             p.on = true;
+            input.current?.blur();
           }
           p.dy = Math.max(0, dy - 8);
           el.style.transition = 'none';
@@ -167,15 +173,28 @@ function Drawer({ onClose, onSearch, returning }: { onClose: () => void; onSearc
         }}
       >
         <button type="button" className="la-handle" onClick={close} aria-label={t('Close')} />
-        <Tap className="la-drawer-search" onClick={onSearch}>
+        <label className="la-drawer-search">
           <SearchIcon />
-          <span>{t('Search games')}</span>
-        </Tap>
-        <div className="os-grid la-drawer-grid" ref={list}>
-          {sorted.map((g) => (
-            <GameApp key={g.id} game={g} returning={g.id === returning} />
-          ))}
-        </div>
+          <input
+            ref={input}
+            type="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            placeholder={t('Search games')}
+            aria-label={t('Search games')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        {shown.length ? (
+          <div className="os-grid la-drawer-grid" ref={list}>
+            {shown.map((g) => (
+              <GameApp key={g.id} game={g} returning={g.id === returning} />
+            ))}
+          </div>
+        ) : (
+          <p className="la-drawer-none">{t('No game called “{q}”', { q: query.trim() })}</p>
+        )}
       </div>
     </div>
   );

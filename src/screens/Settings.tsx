@@ -10,7 +10,8 @@ import { lookFor, type Look, type PhoneSetting } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
 import { loadPhoto, readPhoto, savePhoto, WALLPAPERS } from '../lib/wallpaper';
 import { cloudOn } from '../net/cloud';
-import { useApp } from '../state/AppState';
+import { resetHome } from '../home/order';
+import { useApp, type ThemeSetting } from '../state/AppState';
 
 type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean' | 'knowAll';
 
@@ -26,6 +27,13 @@ const OPTIONS: { key: Toggle; emoji: string; label: string; hint: string }[] = [
 const LOOKS: { id: Look; label: string }[] = [
   { id: 'pop', label: tx('New') },
   { id: 'classic', label: tx('Classic') },
+];
+
+/** Light or dark, or as the phone is. */
+const THEMES: { id: ThemeSetting; label: string }[] = [
+  { id: 'auto', label: tx('Auto') },
+  { id: 'light', label: tx('Light') },
+  { id: 'dark', label: tx('Dark') },
 ];
 
 /** In the new look: whose home screen. */
@@ -132,6 +140,30 @@ function WallpaperRow() {
   );
 }
 
+/** The home screens as they first were: the games taken off it back, the first order. */
+function ResetHomeRow() {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      className="setting-row"
+      disabled={done}
+      onClick={() => {
+        resetHome();
+        setDone(true);
+        sfx.pop();
+        buzz();
+      }}
+    >
+      <span className="setting-emoji">↩️</span>
+      <span className="setting-text">
+        <span className="setting-label">{t('Reset home screen')}</span>
+        <span className="setting-hint">{done ? '✓' : t('Every game back, in the first order')}</span>
+      </span>
+    </button>
+  );
+}
+
 /** The privacy policy, on the website (in the store app: in the phone's browser). */
 function openPrivacy() {
   const url = new URL('privacy.html', window.location.href.split('#')[0]).href;
@@ -190,6 +222,15 @@ export default function Settings() {
           <Choice label={t('Look')} value={lookFor(settings.look)} options={LOOKS} onPick={(look) => updateSettings({ look })} />
         </div>
 
+        <div className="setting-row look-row">
+          <span className="setting-emoji">🌓</span>
+          <span className="setting-text">
+            <span className="setting-label">{t('Appearance')}</span>
+            <span className="setting-hint">{t('Light, dark, or like your phone')}</span>
+          </span>
+          <Choice label={t('Appearance')} value={settings.theme ?? 'auto'} options={THEMES} onPick={(theme) => updateSettings({ theme })} />
+        </div>
+
         {lookFor(settings.look) === 'pop' && (
           <div className="setting-row look-row">
             <span className="setting-emoji">📱</span>
@@ -201,6 +242,7 @@ export default function Settings() {
           </div>
         )}
         {lookFor(settings.look) === 'pop' && <WallpaperRow />}
+        {lookFor(settings.look) === 'pop' && <ResetHomeRow />}
 
         {OPTIONS.map((o) => {
           const on = !!settings[o.key];

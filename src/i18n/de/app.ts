@@ -293,6 +293,12 @@ const app: Record<string, string> = {
   'No game called “{q}”': 'Kein Spiel namens „{q}“',
   'Page {n}': 'Seite {n}',
   'App Library': 'App-Mediathek',
+  'Remove “{name}”?': '„{name}“ entfernen?',
+  'It stays in the App Library and in the search.': 'Es bleibt in der App-Mediathek und in der Suche.',
+  'It stays with all games and in the search.': 'Es bleibt bei allen Spielen und in der Suche.',
+  'Remove from home screen': 'Von der Startseite entfernen',
+  'Reset home screen': 'Startseite zurücksetzen',
+  'Every game back, in the first order': 'Alle Spiele zurück, in der ersten Reihenfolge',
   // Settings: the look
   Look: 'Look',
   New: 'Neu',
@@ -302,6 +308,10 @@ const app: Record<string, string> = {
   Auto: 'Auto',
   iPhone: 'iPhone',
   Android: 'Android',
+  Appearance: 'Darstellung',
+  'Light, dark, or like your phone': 'Hell, dunkel oder wie dein Handy',
+  Light: 'Hell',
+  Dark: 'Dunkel',
   'We know the games': 'Ich kenne die Spiele',
   'No explanations in the games. The rules stay behind the ? button.': 'Keine Erklärungen in den Spielen. Die Regeln findest du weiter hinter dem ?-Knopf.',
   // Settings: the home screen's wallpaper
