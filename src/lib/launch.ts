@@ -14,6 +14,9 @@ import { mix, topColor, topLayer, tone } from './themeColor';
 const GROW = 420;
 const HOLD = 600;
 const FADE = 320;
+/** How far ahead of the page the strip under the clock is set (ms): an iPhone shows it that much
+ *  later (measured on one: the strip at 94 % of the page's colour while that came in, 25 ms behind). */
+const STRIP_LEAD = 25;
 /** How long a splash shows before it fades (the start-up screen keeps to it too). */
 export const SPLASH_MS = GROW + HOLD;
 
@@ -67,9 +70,13 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   // The colour comes in evenly all over, and the strip under the clock with it: both set in the
   // same frame from the same number (a compositor animation for the colour would start a moment
   // later on an iPhone than the strip, and the two would part). The strip goes from what was there
-  // to the splash's tone along its top (see .launch-fill in pop.css), and back to the game's ground.
+  // to the splash's colour along its top, and back to the game's ground.
+  // The splash's colours as plain sRGB, the same ones for the page and the strip: an iPhone shows a
+  // colour written in OKLCH in its wider range, the strip can't, and the two would differ.
   // The game's colour as the page has it (a game's may be one of the palette's variables).
-  const color = tone(getComputedStyle(veil).getPropertyValue('--c').trim() || game.color, 0.87, 1.03);
+  const base = getComputedStyle(veil).getPropertyValue('--c').trim() || game.color;
+  const color = tone(base, 0.87, 1.03);
+  fill.style.background = `linear-gradient(180deg, ${color} 0%, ${tone(base, 0.76)} 55%, ${tone(base, 0.68, 0.95)} 100%)`;
   const from = topColor();
   const layer = (strip = topLayer(from));
   const start = performance.now();
@@ -81,23 +88,24 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     layer.release();
     if (strip === layer) strip = null;
   };
+  /** How much colour shows `t` ms in. */
+  const amount = (t: number) => (t < GROW ? inOut(t / GROW) : t < GROW + HOLD ? 1 : 1 - inOut((t - GROW - HOLD) / FADE));
   const frame = (now: number) => {
     if (gone || !veil.isConnected) return done();
     const t = now - start;
-    let k: number;
-    let under = from;
-    if (t < GROW) k = inOut(t / GROW);
-    else if (t < GROW + HOLD) k = 1;
-    else {
-      // Fading out: the page underneath is the game's now.
-      k = 1 - inOut((t - GROW - HOLD) / FADE);
-      under = layer.under();
+    if (t >= GROW + HOLD + FADE) return done();
+    const k = amount(t);
+    const fading = t >= GROW + HOLD;
+    fill.style.opacity = String(k);
+    if (fading) {
+      emoji.style.opacity = String(k);
       veil.style.pointerEvents = 'none';
     }
-    if (t >= GROW + HOLD + FADE) return done();
-    fill.style.opacity = String(k);
-    if (t >= GROW + HOLD) emoji.style.opacity = String(k);
-    layer.set(mix(under, color, k));
+    // The phone shows a new colour for its strip a frame or so after the page's: the strip is set
+    // that much ahead, so both show the same at the same moment. Fading out, the page underneath
+    // is the game's now.
+    const ahead = t + STRIP_LEAD;
+    layer.set(mix(ahead >= GROW + HOLD ? layer.under() : from, color, amount(ahead)));
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
@@ -107,10 +115,10 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   window.setTimeout(done, GROW + HOLD + FADE + 400);
 }
 
-/** Slow in, slow out (0 to 1). */
+/** Slow in, slow out (0 to 1), and never steep: a strip a moment off would show a shade off. */
 const inOut = (x: number) => {
   const t = Math.max(0, Math.min(1, x));
-  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+  return t * t * (3 - 2 * t);
 };
 
 /** The game opened last from the home screen: its icon settles back when home shows again. */
