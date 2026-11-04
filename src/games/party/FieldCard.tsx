@@ -1,10 +1,10 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useContext, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import { t, tx } from '../../i18n';
 import { storeSafe } from '../../lib/native';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
-import { Countdown, Die, Pack, PickPlayer, SnusTin, useBigRoll, useRoll } from './bits';
+import { BigToss, Countdown, Die, PickPlayer, TOSS_MS, useBigRoll, useRoll } from './bits';
 import { field, FIELDS, param, type Field } from './fields';
 import { duel, inTurnOrder, keepsUp, leaders, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
 
@@ -440,22 +440,23 @@ function HandsCard({ f, pos, lander, chosen, onDone }: Sub) {
 function SnusCard({ f, pos, lander, chosen, canAce, onDone }: Sub & { canAce: boolean }) {
   const [call, setCall] = useState<boolean | null>(null);
   const [lid, setLid] = useState<boolean | null>(null);
-  const [flip, setFlip] = useState(0);
   const [landed, setLanded] = useState(false);
+  // The tin is flipped onto the middle of the board, as big as the die (Play shows it).
+  const toss = useContext(BigToss);
   const go = (callLid: boolean) => {
+    const up = Math.random() < 0.5;
     setCall(callLid);
-    setLid(Math.random() < 0.5);
-    setFlip((x) => x + 1);
+    setLid(up);
+    toss?.({ kind: 'tin', result: up ? 1 : 0 });
     sfx.tick();
     window.setTimeout(() => {
       setLanded(true);
       buzz(30);
-    }, 1150);
+    }, TOSS_MS + 100);
   };
   const right = landed && call === lid;
   return (
     <Card f={f} pos={pos} lander={lander} chosen={chosen} text={textOf(f)}>
-      <SnusTin lid={lid} flip={flip} />
       {landed && (
         <Verdict
           emoji={right ? '🎉' : '🍻'}
@@ -503,20 +504,22 @@ function TschickCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: P
   const thrower = order[throws.length % order.length];
   const last = throws[throws.length - 1];
   const pot = throws.reduce((s, x) => s + x.toss, 0);
+  // The pack is flipped onto the middle of the board, as big as the die (Play shows it).
+  const throwPack = useContext(BigToss);
   const go = () => {
     const toss = tossPack();
     setFlying(true);
     setThrows((x) => [...x, { p: thrower, toss }]);
+    throwPack?.({ kind: 'pack', result: toss });
     sfx.tick();
     window.setTimeout(() => {
       setFlying(false);
       buzz(toss === 3 ? [40, 40, 80] : 25);
       if (!keepsUp(last?.toss ?? null, toss)) setLost(true);
-    }, 1050);
+    }, TOSS_MS + 50);
   };
   return (
     <Card f={f} pos={pos} lander={lander} chosen={chosen} text={throws.length ? undefined : textOf(f)}>
-      <Pack toss={last?.toss ?? null} flip={throws.length} />
       {throws.length > 0 && (
         <div className="pt-tschick-line">
           <span>{flying ? t('{name} flips …', { name: last.p.name }) : t('{name}: {toss} (+{n})', { name: last.p.name, toss: t(TOSS[last.toss]), n: last.toss })}</span>

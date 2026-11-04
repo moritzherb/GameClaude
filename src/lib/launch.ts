@@ -55,17 +55,17 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     part.textContent = g;
     emoji.append(part);
   }
-  veil.append(fill, emoji);
-  document.body.append(veil);
-
-  // The emoji starts just on the icon's and glides to the middle.
+  // The emoji starts just on the icon's and glides to the middle as the colour comes in: the same
+  // frame, the same amount (set in the loop below), never a moment on its own over the home screen.
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
-  emoji.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${(r.width * 0.5) / 110})` }, { transform: 'none' }], {
-    duration: GROW,
-    easing: 'cubic-bezier(0.2, 0.85, 0.25, 1)',
-    fill: 'forwards',
-  });
+  const small = (r.width * 0.5) / 110;
+  const glide = (k: number) => {
+    emoji.style.transform = k >= 1 ? 'none' : `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px) scale(${small + (1 - small) * k})`;
+  };
+  glide(0);
+  veil.append(fill, emoji);
+  document.body.append(veil);
 
   // The colour comes in evenly all over, and the strip under the clock with it: both set in the
   // same frame from the same number (a compositor animation for the colour would start a moment
@@ -102,6 +102,8 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     const k = amount(t);
     const fading = t >= GROW + HOLD;
     fill.style.opacity = String(k);
+    if (t < GROW) glide(k);
+    else if (emoji.style.transform !== 'none') glide(1);
     if (fading) {
       emoji.style.opacity = String(k);
       veil.style.pointerEvents = 'none';

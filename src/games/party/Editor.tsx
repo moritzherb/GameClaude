@@ -378,7 +378,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                 const jump = here && (here.kind === 'back-bridge' || here.kind === 'mole');
                 return (
                   <div key={k} className={`pt-cell${next ? ' next' : ''}${i === last && last > 0 ? ' end' : ''}`}>
-                    {water.has(k) && <span className="pt-cell-water" style={waterStyle} />}
+                    {/* The tunnel under the water: where it crosses a river, the river runs over it. */}
                     {tunnels.has(k) && (
                       <span className="pt-cell-tunnel">
                         {SIDES.filter((d) => near(d.x, d.y, tunnels) || tunnelEnds.has(`${x + d.x},${y + d.y}`)).map((d) => (
@@ -386,6 +386,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                         ))}
                       </span>
                     )}
+                    {water.has(k) && <span className="pt-cell-water" style={waterStyle} />}
                     {links.map((d) => (
                       <span key={d} className={`pt-route ${d}`} />
                     ))}
