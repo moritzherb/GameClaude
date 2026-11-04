@@ -1880,13 +1880,13 @@ html[data-look='pop'] .os-search {
   line-height: 1;
 }
 
-/* The colour, coming in evenly all over. Even along the top, so the strip under the clock
-   (lib/launch.ts takes this tone) runs on into it. */
+/* The colour, coming in evenly all over (lib/launch.ts paints it, in the same sRGB colours as the
+   strip under the clock, and sets how much shows each frame). Even along the top, so the strip
+   runs on into it. */
 .launch-fill {
   position: absolute;
   inset: 0;
   opacity: 0;
-  background: linear-gradient(180deg, oklch(from var(--c) calc(l * 0.87) calc(c * 1.03) h) 0%, oklch(from var(--c) calc(l * 0.76) c h) 55%, oklch(from var(--c) calc(l * 0.68) calc(c * 0.95) h) 100%);
   will-change: opacity;
 }
 
