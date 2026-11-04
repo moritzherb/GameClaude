@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DiceIcon, PeopleIcon, PersonIcon, SlidersIcon } from '../components/Icons';
 import { findGame, GAMES, playableGames } from '../games/registry';
 import type { GameDefinition } from '../games/types';
@@ -8,7 +8,8 @@ import { launch, lastLaunched } from '../lib/launch';
 import { lineup } from '../lib/lineup';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
-import { GROUND, setThemeColor } from '../lib/themeColor';
+import { tintTop } from '../lib/themeColor';
+import { useTopTint } from '../lib/useTopTint';
 import { loadPhoto, wallpaperFor } from '../lib/wallpaper';
 import { navigate, paths } from '../lib/router';
 import { useRoom } from '../net/RoomProvider';
@@ -30,11 +31,7 @@ export default function PopHome() {
   // The wallpaper; while home shows, the strip under the clock takes the colour of its top edge.
   const [photo] = useState(loadPhoto);
   const wall = wallpaperFor(settings.wallpaper, photo);
-  useEffect(() => {
-    if (!wall.top) return;
-    setThemeColor(wall.top, wall.top);
-    return () => setThemeColor(GROUND.pop[0], GROUND.pop[1]);
-  }, [wall.top]);
+  useLayoutEffect(() => (wall.top ? tintTop(wall.top) : undefined), [wall.top]);
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   const [searching, setSearching] = useState(false);
@@ -63,6 +60,11 @@ export default function PopHome() {
   // The games taken off the home screen (still in the App Library, the search and the drawer).
   const [hidden, setHidden] = useState(() => loadHidden(os));
   const [removing, setRemoving] = useState<GameDefinition | null>(null);
+  // Over the shuffle and the alert, the strip under the clock dims with them.
+  const roulette = useRef<HTMLDivElement>(null);
+  const alert = useRef<HTMLDivElement>(null);
+  useTopTint(roulette, !!rolling);
+  useTopTint(alert, !!removing);
   const ordered = order
     .filter((id) => !hidden.includes(id))
     .map(findGame)
@@ -141,7 +143,7 @@ export default function PopHome() {
       {os === 'android' ? <Launcher {...common} favorites={ordered} date={date} /> : <Springboard {...common} games={ordered} />}
       {searching && <Search suggestions={recent.length ? recent : favorites.slice(0, 4)} onClose={closeSearch} />}
       {removing && (
-        <div className="sheet-backdrop os-alert-wrap" onClick={(e) => e.target === e.currentTarget && setRemoving(null)}>
+        <div ref={alert} className="sheet-backdrop os-alert-wrap" onClick={(e) => e.target === e.currentTarget && setRemoving(null)}>
           <div className="os-alert" role="alertdialog" aria-modal="true" aria-labelledby="os-alert-title">
             <div className="os-alert-text">
               <h2 id="os-alert-title">{t('Remove “{name}”?', { name: t(removing.name) })}</h2>
@@ -157,7 +159,7 @@ export default function PopHome() {
         </div>
       )}
       {rolling && (
-        <div className="os-roulette" aria-live="polite">
+        <div ref={roulette} className="os-roulette" aria-live="polite">
           <div className="os-roulette-card">
             <IconArt color={rolling.color} size="lg">
               <GameGlyph game={rolling} />

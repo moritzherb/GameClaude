@@ -5,6 +5,7 @@ import { GAMES } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
+import { useTopTint } from '../lib/useTopTint';
 import { GameApp } from './AppIcon';
 import { searchGames } from './search';
 import type { HomeProps } from './Springboard';
@@ -111,6 +112,8 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
   const sheet = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const wrap = useRef<HTMLDivElement>(null);
+  useTopTint(wrap);
   useEffect(() => {
     if (searching) input.current?.focus();
   }, [searching]);
@@ -129,7 +132,7 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
     ? searchGames(query, sorted, (g) => [t(g.name), t(g.tagline), ...g.categories.map((c) => t(CATEGORIES.find((x) => x.id === c)?.label ?? ''))])
     : sorted;
   return (
-    <div className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
+    <div ref={wrap} className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
       <div
         ref={sheet}
         className="la-drawer"

@@ -3,6 +3,7 @@ import { SearchIcon } from '../components/Icons';
 import { GAMES } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
+import { useTopTint } from '../lib/useTopTint';
 import { GameApp } from './AppIcon';
 import { searchGames } from './search';
 
@@ -20,6 +21,7 @@ export default function Search({ suggestions, onClose }: { suggestions: GameDefi
   const root = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const leaving = useRef(false);
+  useTopTint(root);
 
   /** Away upwards and fading (from wherever the finger left it), then gone. */
   const close = useCallback(() => {

@@ -21,6 +21,7 @@ import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 import PopHome from '../home/PopHome';
 import { useLook } from '../home/usePlatform';
+import { useTopTint } from '../lib/useTopTint';
 
 /** Home: in the new look the phone's own home screen, in the classic look the poster and the line-up. */
 export default function Home() {
@@ -35,6 +36,8 @@ function ClassicHome() {
   const [rolling, setRolling] = useState<GameDefinition | null>(null);
   const timer = useRef<number>(undefined);
   const landing = useRef<number>(undefined);
+  const roulette = useRef<HTMLDivElement>(null);
+  useTopTint(roulette, !!rolling);
 
   useEffect(
     () => () => {
@@ -217,7 +220,7 @@ function ClassicHome() {
         </section>
 
         {rolling && (
-          <div className="roulette-overlay">
+          <div className="roulette-overlay" ref={roulette}>
             <div className="roulette-card" style={{ '--card-bg': rolling.color } as CSSProperties}>
               <div className="roulette-emoji">{rolling.emoji}</div>
               <div className="roulette-name">{t(rolling.name)}</div>

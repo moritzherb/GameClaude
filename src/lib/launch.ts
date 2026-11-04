@@ -4,8 +4,10 @@
  * splash fades. Coming back, the home screen lets that icon settle again.
  *
  * The splash is a plain element on the page, outside React: it has to stay put while one screen
- * goes and the next one comes.
+ * goes and the next one comes. While it covers the screen the strip under the clock takes its colour.
  */
+
+import { tintTop, tone } from './themeColor';
 
 /** Growing out of the icon, staying as the splash, fading out (ms). */
 const GROW = 420;
@@ -15,6 +17,8 @@ const FADE = 320;
 export const SPLASH_MS = GROW + HOLD;
 
 let last: string | null = null;
+/** Takes the splash's colour off the strip under the clock again. */
+let untint: (() => void) | null = null;
 
 /**
  * Grow the game's splash out of the tapped icon, then go. Without an icon (or with reduced motion)
@@ -28,6 +32,8 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     return;
   }
   document.querySelector('.launch-veil')?.remove();
+  untint?.();
+  untint = null;
   const r = icon.getBoundingClientRect();
   const w = window.innerWidth;
   const h = window.innerHeight;
@@ -59,7 +65,21 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
   emoji.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${(r.width * 0.5) / 110})` }, { transform: 'none' }], { duration: GROW, easing: ease, fill: 'both' });
+  // Once it covers the top: the strip under the clock in the splash's colour there (its gradient's
+  // tone at the top, see .launch-veil in pop.css), until it has half faded.
+  let mine: (() => void) | null = null;
+  window.setTimeout(() => {
+    // The game's colour as the page has it (a game's may be one of the palette's variables).
+    const color = getComputedStyle(veil).getPropertyValue('--c').trim() || game.color;
+    if (veil.isConnected) untint = mine = tintTop(tone(color, 0.87, 1.03));
+  }, GROW * 0.35);
+  const off = () => {
+    mine?.();
+    if (untint === mine) untint = null;
+    mine = null;
+  };
   window.setTimeout(go, GROW);
+  window.setTimeout(off, GROW + HOLD + FADE / 2);
   window.setTimeout(() => {
     const out = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE, easing: 'ease', fill: 'forwards' });
     out.onfinish = () => veil.remove();

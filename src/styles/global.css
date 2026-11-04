@@ -247,10 +247,16 @@ textarea {
       right: 0;
       z-index: 2147483647;
       height: 11px;
-      background-color: var(--bg);
+      /* What shows at the top right now (a splash, a dimmed backdrop, the wallpaper: lib/themeColor.ts). */
+      background-color: var(--top-edge, var(--bg));
       -webkit-background-clip: text;
       background-clip: text;
       pointer-events: none;
+    }
+
+    /* The start-up screen (index.html) is dark in every look. */
+    html:has(#boot:not(.done)) .top-edge {
+      background-color: #20211c;
     }
   }
 }

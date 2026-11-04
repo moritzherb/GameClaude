@@ -15,6 +15,7 @@ import Tap from '../components/Tap';
 import { CATEGORIES, type Category, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import type { Player } from '../state/AppState';
+import { useTopTint } from '../lib/useTopTint';
 import { GameApp, GameGlyph, IconArt } from './AppIcon';
 import { useHomeEdit, type Pager } from './useHomeEdit';
 import { useRows } from './useRows';
@@ -351,6 +352,8 @@ export function LibraryGroup({ category, onOpen }: { category: Category; onOpen:
  */
 function LibraryFolder({ category, onClose }: { category: Category; onClose: () => void }) {
   const [closing, setClosing] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  useTopTint(wrap);
   const close = useCallback(() => {
     setClosing(true);
     window.setTimeout(onClose, 180);
@@ -361,7 +364,7 @@ function LibraryFolder({ category, onClose }: { category: Category; onClose: () 
     return () => window.removeEventListener('keydown', onKey);
   }, [close]);
   return (
-    <div className={`sb-folder-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
+    <div ref={wrap} className={`sb-folder-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
       <h2 className="sb-folder-title" onClick={close}>
         {t(category.label)}
       </h2>

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { t } from '../i18n';
+import { useTopTint } from '../lib/useTopTint';
 import BigButton from './BigButton';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 export default function Sheet({ open, onClose, title, children, closeLabel = t('Got it') }: Props) {
   const titleId = useId();
   const box = useRef<HTMLDivElement>(null);
+  const backdrop = useRef<HTMLDivElement>(null);
+  useTopTint(backdrop, open);
   // Screen readers: move into the sheet when it opens, and back to where you were when it closes.
   useEffect(() => {
     if (!open) return;
@@ -30,7 +33,7 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
 
   if (!open) return null;
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="sheet-backdrop" ref={backdrop} onClick={onClose}>
       <div
         ref={box}
         className="sheet slide-up"
