@@ -7,7 +7,8 @@ import { getLang, t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useTurnBubble } from '../../lib/turn';
 import type { Player } from '../../state/AppState';
-import { BigDie, BigRoll, PawnIcon, useRoll } from './bits';
+import { BigDie, BigRoll, BigToss, PawnIcon, TossStage, useRoll } from './bits';
+import type { Thrown } from './solid3d';
 import { jumps, type Board } from './boards';
 import FieldCard, { type Outcome } from './FieldCard';
 import { FIELDS, param, type Field } from './fields';
@@ -43,6 +44,9 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   const [away, setAway] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
   const roller = useRoll();
+  // The Tschick pack and the snus tin, thrown onto the middle of the board by the cards.
+  const [thrown, setThrown] = useState<{ what: Thrown; flip: number } | null>(null);
+  const toss = useCallback((what: Thrown) => setThrown((x) => ({ what, flip: (x?.flip ?? 0) + 1 })), []);
   const { die, roll } = roller;
   const canvas = useRef<HTMLCanvasElement>(null);
   const top = useRef<HTMLDivElement>(null);
@@ -184,12 +188,13 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
       if (path.length) return move(id, path);
     }
     if (o.then === 'again') {
-      // Over the bridge: across it to its far end, then roll again.
+      // Over the bridge: across it to its far end, then roll again. The button that said so rolls:
+      // no second button to roll with.
       if (f.kind === 'bridge') {
         setPhase({ kind: 'busy' });
         await scene.current?.cross(id);
       }
-      return setPhase({ kind: 'turn' });
+      return rollTurn();
     }
     next();
   };
@@ -288,7 +293,9 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
       </div>
 
       <BigDie value={die.value} flip={die.flip} />
+      <TossStage what={thrown?.what ?? null} flip={thrown?.flip ?? 0} />
 
+      <BigToss.Provider value={toss}>
       <BigRoll.Provider value={roller}>
         <div className="pt-panel">
           {phase.kind === 'field' ? (
@@ -315,7 +322,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
               </div>
               {phase.text && <p className="pt-card-text">{phase.text}</p>}
               <div className="pt-card-actions">
-                <BigButton size="xl" onClick={() => (phase.then === 'again' ? setPhase({ kind: 'turn' }) : next())}>
+                <BigButton size="xl" onClick={() => (phase.then === 'again' ? rollTurn() : next())}>
                   {phase.then === 'again' ? t('Roll again') : t('Done')}
                 </BigButton>
               </div>
@@ -343,6 +350,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
           )}
         </div>
       </BigRoll.Provider>
+      </BigToss.Provider>
       <Sheet open={showEffects} onClose={() => setShowEffects(false)} title={t('In play')}>
         <div className="kc-effects">
           {effects.map((e) => (

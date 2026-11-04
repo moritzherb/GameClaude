@@ -130,9 +130,10 @@ export const rollDie = (rand = Math.random) => 1 + Math.floor(rand() * 6);
 /** How the pack lands: flat (1 sip), on its side (2), upright (3). */
 export type Toss = 1 | 2 | 3;
 
+/** Flat 35 %, on its side 50 %, upright 15 %. */
 export function tossPack(rand = Math.random): Toss {
   const r = rand();
-  return r < 0.6 ? 1 : r < 0.9 ? 2 : 3;
+  return r < 0.35 ? 1 : r < 0.85 ? 2 : 3;
 }
 
 /** A throw keeps up when it's as good as the one before or better. */

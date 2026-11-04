@@ -2,10 +2,9 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import Avatar from '../../components/Avatar';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
-import { storeSafe } from '../../lib/native';
 import type { Player } from '../../state/AppState';
-import type { Toss } from './logic';
 import { drawDie } from './die3d';
+import { drawThrown, spinFor, type Thrown } from './solid3d';
 import { pawnSprite, SPRITE_H, type PawnDef } from './pawns';
 
 const PIPS: Record<number, number[]> = {
@@ -119,9 +118,9 @@ function bezier(x1: number, y1: number, x2: number, y2: number) {
 /** How the spin eases between the bounces: the throw, then each slowing after a bounce. */
 const SPIN_EASE = [bezier(0.3, 0, 0.7, 1), bezier(0, 0, 0.58, 1)];
 
-/** How much of the spin is left `t` ms into the throw (as the keyframes above, eased between). */
-function spinLeft(t: number) {
-  const x = Math.max(0, Math.min(1, t / TUMBLE));
+/** How much of the spin is left `t` ms into a throw that takes `of` ms (as the keyframes above, eased between). */
+function spinLeft(t: number, of = TUMBLE) {
+  const x = Math.max(0, Math.min(1, t / of));
   let i = 0;
   while (i < HOPS.length - 2 && x > HOPS[i + 1][0]) i++;
   const [a, b] = [HOPS[i][0], HOPS[i + 1][0]];
@@ -218,6 +217,75 @@ export function BigDie({ value, flip }: { value: number | null; flip: number }) 
   );
 }
 
+/** How long the pack or the tin is in the air and bouncing (ms): the cards say how it landed after it. */
+export const TOSS_MS = 1000;
+
+/** Throw the Tschick pack or the snus tin onto the middle of the board (Play shows it, the cards throw it). */
+export const BigToss = createContext<((what: Thrown) => void) | null>(null);
+
+/** The pack or the tin, thrown onto the middle of the board as the big die is (as big, spinning,
+ *  bouncing twice, its shadow sharpening), landing as it fell: one solid body (solid3d.ts). */
+export function TossStage({ what, flip }: { what: Thrown | null; flip: number }) {
+  const hop = useRef<HTMLSpanElement>(null);
+  const body = useRef<HTMLCanvasElement>(null);
+  const shadow = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(false);
+  useLayoutEffect(() => {
+    const [h, c, sh] = [hop.current, body.current, shadow.current];
+    if (!h || !c || !sh || !what || !flip) return;
+    setShown(true);
+    const [ax, ay, az] = spinFor(what, flip);
+    const easing = (i: number) => (i % 2 === 0 ? FALL : RISE);
+    const ctx = c.getContext('2d');
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const res = Math.round(DIE_BOX * dpr * 1.45);
+    if (c.width !== res) c.width = c.height = res;
+    const paint = (t: number) => {
+      if (!ctx) return;
+      const k = spinLeft(t, TOSS_MS);
+      drawThrown(ctx, DIE_BOX, res / DIE_BOX, what, ax * k, ay * k, az * k);
+    };
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = now - start;
+      paint(t);
+      if (t < TOSS_MS) frame = requestAnimationFrame(tick);
+    };
+    paint(0);
+    frame = requestAnimationFrame(tick);
+    const anims = [
+      h.animate(
+        HOPS.map(([offset, y, scale], i) => ({ offset, transform: `translateY(${y}px) scale(${scale})`, easing: easing(i) })),
+        { duration: TOSS_MS, fill: 'forwards' },
+      ),
+      sh.animate(
+        HOPS.map(([offset, y], i) => {
+          const k = 1 - Math.min(1, -y / 300);
+          return { offset, transform: `scale(${0.35 + 0.65 * k})`, opacity: 0.15 + 0.85 * k, easing: easing(i) };
+        }),
+        { duration: TOSS_MS, fill: 'forwards' },
+      ),
+    ];
+    const taps = [0.34, 0.67].map((at, i) => window.setTimeout(() => buzz(i ? 6 : 12), TOSS_MS * at));
+    const hide = window.setTimeout(() => setShown(false), TOSS_MS + 2200);
+    return () => {
+      window.clearTimeout(hide);
+      taps.forEach((x) => window.clearTimeout(x));
+      cancelAnimationFrame(frame);
+      anims.forEach((a) => a.cancel());
+    };
+  }, [flip, what]);
+  return (
+    <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
+      <span ref={shadow} className="pt-cube-shadow" />
+      <span ref={hop} className="pt-cube-hop">
+        <canvas ref={body} className="pt-cube" />
+      </span>
+    </span>
+  );
+}
+
 /** A pawn's picture. */
 export function PawnIcon({ pawn, size = 40 }: { pawn: PawnDef; size?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -289,82 +357,3 @@ export function Countdown({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** The pose a pack lands in, as a rotation. */
-const POSE: Record<Toss, { rx: number; rz: number; y: number }> = {
-  1: { rx: 90, rz: 0, y: 66 },
-  2: { rx: 0, rz: 90, y: 52 },
-  3: { rx: 0, rz: 0, y: 37 },
-};
-
-/** A pack of cigarettes (a plain box in the store app), flipped into the air; it lands flat, on its side or upright. */
-export function Pack({ toss, flip }: { toss: Toss | null; flip: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el || !toss || !flip) return;
-    const p = POSE[toss];
-    const spinX = 720 + (flip % 2) * 360;
-    const a = el.animate(
-      [
-        { transform: `translateY(60px) rotateX(0deg) rotateZ(0deg)` },
-        { transform: `translateY(-90px) rotateX(${spinX / 2 + p.rx / 2}deg) rotateZ(${180 + p.rz / 2}deg)`, offset: 0.45 },
-        { transform: `translateY(${p.y - 6}px) rotateX(${spinX + p.rx}deg) rotateZ(${360 + p.rz}deg)`, offset: 0.85 },
-        { transform: `translateY(${p.y}px) rotateX(${spinX + p.rx}deg) rotateZ(${360 + p.rz}deg)` },
-      ],
-      { duration: 1000, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)', fill: 'forwards' },
-    );
-    return () => a.cancel();
-  }, [toss, flip]);
-  const rest = toss ? POSE[toss] : POSE[3];
-  return (
-    <span className="pt-pack-stage" aria-hidden>
-      <span className="pt-pack-floor" />
-      <span ref={ref} className="pt-pack" style={{ transform: `translateY(${rest.y}px) rotateX(${rest.rx}deg) rotateZ(${rest.rz}deg)` }}>
-        <span className="pt-pack-face front">
-          <span className="pt-pack-top" />
-          <span className="pt-pack-name">{storeSafe ? 'PROST' : 'TSCHICK'}</span>
-        </span>
-        <span className="pt-pack-face back">
-          <span className="pt-pack-top" />
-          <span className="pt-pack-name">{storeSafe ? 'PROST' : 'TSCHICK'}</span>
-        </span>
-        <span className="pt-pack-face left" />
-        <span className="pt-pack-face right" />
-        <span className="pt-pack-face top" />
-        <span className="pt-pack-face bottom" />
-      </span>
-    </span>
-  );
-}
-
-/** A tin of snus (a plain tin in the store app), flipped like a coin: it lands lid up or bottom up. */
-export function SnusTin({ lid, flip }: { lid: boolean | null; flip: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el || lid == null || !flip) return;
-    const end = 1440 + (lid ? 0 : 180);
-    const a = el.animate(
-      [
-        { transform: 'translateY(40px) rotateX(0deg)' },
-        { transform: `translateY(-100px) rotateX(${end / 2}deg)`, offset: 0.5 },
-        { transform: `translateY(0) rotateX(${end}deg)` },
-      ],
-      { duration: 1100, easing: 'cubic-bezier(0.3, 0.6, 0.4, 1)', fill: 'forwards' },
-    );
-    return () => a.cancel();
-  }, [lid, flip]);
-  return (
-    <span className="pt-snus-stage" aria-hidden>
-      <span ref={ref} className="pt-snus" style={{ transform: `rotateX(${lid === false ? 180 : 0}deg)` }}>
-        <span className="pt-snus-face lid">
-          <span className="pt-snus-star">★</span>
-          <span className="pt-snus-name">{storeSafe ? 'PROST' : 'SNUS'}</span>
-        </span>
-        <span className="pt-snus-face bottom">
-          <span className="pt-snus-ring" />
-        </span>
-      </span>
-    </span>
-  );
-}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BOARDS, fromStored, jumps, jumpTarget, layout, toStored, type Board } from './boards';
 import { field, FIELDS, KINDS, type Field } from './fields';
-import { duel, inTurnOrder, keepsUp, leaders, newGame, nextTurn, reverse, rightOf, swapSeats, trailers, walk, walkBack } from './logic';
+import { duel, inTurnOrder, keepsUp, leaders, newGame, nextTurn, reverse, rightOf, rollDie, swapSeats, tossPack, trailers, walk, walkBack } from './logic';
 
 const plain = (n: number): Field[] => Array.from({ length: n }, (_, i) => field(i === 0 ? 'start' : i === n - 1 ? 'goal' : 'safe'));
 
@@ -135,6 +135,21 @@ describe('turns', () => {
 });
 
 describe('little games', () => {
+  it('Tschick flip: flat 35 %, on its side 50 %, upright 15 %', () => {
+    expect(tossPack(() => 0)).toBe(1);
+    expect(tossPack(() => 0.349)).toBe(1);
+    expect(tossPack(() => 0.35)).toBe(2);
+    expect(tossPack(() => 0.849)).toBe(2);
+    expect(tossPack(() => 0.85)).toBe(3);
+    expect(tossPack(() => 0.999)).toBe(3);
+  });
+
+  it('A die: every number one time in six', () => {
+    const n = [0, 0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < 6000; i++) n[rollDie(() => i / 6000)]++;
+    expect(n.slice(1)).toEqual([1000, 1000, 1000, 1000, 1000, 1000]);
+  });
+
   it('Tschick flip: as good or better keeps up', () => {
     expect(keepsUp(null, 1)).toBe(true);
     expect(keepsUp(1, 1)).toBe(true);

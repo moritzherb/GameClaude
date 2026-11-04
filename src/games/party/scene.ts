@@ -348,8 +348,35 @@ export class Scene {
   travel(id: string, to: number, tunnel: boolean): Promise<void> {
     const a = this.shown.get(id) ?? this.spot(to);
     const pawn = this.pawns.find((p) => p.id === id);
+    const route = tunnel && pawn ? this.tunnelRoute(pawn.pos, to) : null;
     if (pawn) this.dest.set(id, { pos: to, from: pawn.pos });
     const b = this.place(id, to);
+    if (route) {
+      // Through the tunnel: along it cell by cell (round its corners), the way it's dug; under a
+      // river it crossed, only a shadow of it shows.
+      const points = [a, ...route, b];
+      const n = points.length - 1;
+      const pt = (k: number) => points[Math.max(0, Math.min(n, k))];
+      const seen = points.map((q, k) => (k > 0 && k < n && this.water.has(cellKey(q)) ? 0.25 : 1));
+      return new Promise((done) => {
+        this.anims.push({
+          id,
+          duration: 0.3 * n + 0.3,
+          start: performance.now(),
+          stepped: 0,
+          done,
+          at: (t) => {
+            const u = Math.min(n - 1e-6, easeInOut(t) * n);
+            const i = Math.floor(u);
+            const f = u - i;
+            const c = curve(pt(i - 1), pt(i), pt(i + 1), pt(i + 2), f);
+            const alpha = lerp(seen[i], seen[Math.min(n, i + 1)], easeInOut(f));
+            return { ...c, lift: bump(f) * 0.04, alpha };
+          },
+        });
+        this.invalidate();
+      });
+    }
     return new Promise((done) => {
       this.anims.push({
         id,
@@ -366,6 +393,45 @@ export class Scene {
       });
       this.invalidate();
     });
+  }
+
+  /** The tunnel's cells from field `from` to field `to`, in order (null: no tunnel joins them). */
+  private tunnelRoute(from: number, to: number): Point[] | null {
+    const a = this.spots[from];
+    const b = this.spots[to];
+    if (!a || !b) return null;
+    const dirs = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ];
+    const near = (c: Cell, d: Cell) => Math.abs(c.x - d.x) + Math.abs(c.y - d.y) === 1;
+    const back = new Map<string, Cell | null>();
+    const queue: Cell[] = [];
+    for (const d of dirs) {
+      const c = { x: a.x + d.x, y: a.y + d.y };
+      if (this.tunnels.has(cellKey(c)) && !back.has(cellKey(c))) {
+        back.set(cellKey(c), null);
+        queue.push(c);
+      }
+    }
+    while (queue.length) {
+      const c = queue.shift()!;
+      if (near(c, b)) {
+        const path: Point[] = [];
+        for (let k: Cell | null = c; k; k = back.get(cellKey(k)) ?? null) path.unshift({ x: k.x, y: k.y });
+        return path;
+      }
+      for (const d of dirs) {
+        const n = { x: c.x + d.x, y: c.y + d.y };
+        if (this.tunnels.has(cellKey(n)) && !back.has(cellKey(n))) {
+          back.set(cellKey(n), c);
+          queue.push(n);
+        }
+      }
+    }
+    return null;
   }
 
   /* ---------- Where things are ---------- */
@@ -874,8 +940,26 @@ export class Scene {
       ctx.fill();
       ctx.lineWidth = 2;
       ctx.strokeStyle = shade(this.theme.far, -0.45);
-      ctx.stroke();
+      // Its edge round it; where the near end lies behind you, no line across the bottom of the
+      // picture (that's not the board's edge, just where the view begins).
+      if (m.y0 < nearY) {
+        const ps = [
+          { x: m.x0, y: nearY },
+          { x: m.x0, y: m.y1 },
+          { x: m.x1, y: m.y1 },
+          { x: m.x1, y: nearY },
+        ].map((q) => project(q.x, q.y));
+        if (ps.every(Boolean)) {
+          ctx.beginPath();
+          ps.forEach((q, i) => (i ? ctx.lineTo(q!.sx, q!.sy) : ctx.moveTo(q!.sx, q!.sy)));
+          ctx.stroke();
+        }
+      } else ctx.stroke();
     }
+
+    // The mole's tunnels: a trail of dug-up earth from cell to cell (round corners too), right up to
+    // the fields it joins. Before the water: where a tunnel crosses a river, it runs under it.
+    this.drawTunnels(project, nearY);
 
     // Water, cell by cell: neighbouring cells run into one another, round corners where it ends.
     const wet = [...this.water].map((k) => k.split(',').map(Number) as [number, number]).filter(([, y]) => y + 0.6 >= nearY);
@@ -927,8 +1011,6 @@ export class Scene {
       }
     }
 
-    // The mole's tunnels: a trail of dug-up earth from cell to cell (round corners too), right up to the fields it joins.
-    this.drawTunnels(project, nearY);
 
     // Fields, the far ones first: a little block each, the picture on top.
     const order = this.spots.map((_, i) => i).sort((a, b) => this.spots[b].y - this.spots[a].y);
