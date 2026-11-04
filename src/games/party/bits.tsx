@@ -42,24 +42,36 @@ const TUMBLE = 1500;
 const READ = 700;
 
 export interface Roller {
-  die: { value: number | null; rolling: boolean; flip: number };
+  /** `rolling`: in the air. `busy`: from the throw until its number counts (it lies still a moment
+   *  before): no other roll meanwhile. */
+  die: { value: number | null; rolling: boolean; busy: boolean; flip: number };
   roll: (value?: number) => Promise<number>;
 }
 
-/** Roll a die: tumbles a moment, then lands. Resolves with the number. `flip` counts the rolls. */
+/** Roll a die: tumbles a moment, then lands. Resolves with the number. `flip` counts the rolls.
+ *  One roll at a time: asked again while it's on, it gives the same roll. */
 export function useRoll(): Roller {
-  const [die, setDie] = useState<{ value: number | null; rolling: boolean; flip: number }>({ value: null, rolling: false, flip: 0 });
-  const roll = (value = 1 + Math.floor(Math.random() * 6)) =>
-    new Promise<number>((done) => {
+  const [die, setDie] = useState<{ value: number | null; rolling: boolean; busy: boolean; flip: number }>({ value: null, rolling: false, busy: false, flip: 0 });
+  const pending = useRef<Promise<number> | null>(null);
+  const roll = (value = 1 + Math.floor(Math.random() * 6)) => {
+    if (pending.current) return pending.current;
+    const p = new Promise<number>((done) => {
       sfx.tick();
-      setDie((d) => ({ value, rolling: true, flip: d.flip + 1 }));
+      setDie((d) => ({ value, rolling: true, busy: true, flip: d.flip + 1 }));
       window.setTimeout(() => {
         setDie((d) => ({ ...d, value, rolling: false }));
         buzz(20);
         sfx.pop();
-        window.setTimeout(() => done(value), READ);
+        window.setTimeout(() => {
+          pending.current = null;
+          setDie((d) => ({ ...d, busy: false }));
+          done(value);
+        }, READ);
       }, TUMBLE);
     });
+    pending.current = p;
+    return p;
+  };
   return { die, roll };
 }
 
