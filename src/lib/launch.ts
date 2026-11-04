@@ -55,8 +55,7 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   veil.append(fill, emoji);
   document.body.append(veil);
 
-  // The colour comes in evenly all over; the emoji starts just on the icon's and glides to the middle.
-  fill.animate([{ opacity: 0 }, { opacity: 1 }], { duration: GROW, easing: 'cubic-bezier(0.35, 0, 0.25, 1)', fill: 'forwards' });
+  // The emoji starts just on the icon's and glides to the middle.
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
   emoji.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${(r.width * 0.5) / 110})` }, { transform: 'none' }], {
@@ -65,43 +64,54 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     fill: 'forwards',
   });
 
-  // The strip under the clock follows the colour's coming and going frame by frame: from what was
-  // there to the splash's tone along its top (see .launch-fill in pop.css) and back.
+  // The colour comes in evenly all over, and the strip under the clock with it: both set in the
+  // same frame from the same number (a compositor animation for the colour would start a moment
+  // later on an iPhone than the strip, and the two would part). The strip goes from what was there
+  // to the splash's tone along its top (see .launch-fill in pop.css), and back to the game's ground.
   // The game's colour as the page has it (a game's may be one of the palette's variables).
   const color = tone(getComputedStyle(veil).getPropertyValue('--c').trim() || game.color, 0.87, 1.03);
   const from = topColor();
   const layer = (strip = topLayer(from));
-  let fading = false;
-  const follow = () => {
-    if (!veil.isConnected) return layer.release();
-    // A step behind the colour on the screen: the phone's strip shows it at once, the screen's
-    // filling only reads as colour once it is well along.
-    const k = (parseFloat(getComputedStyle(fill).opacity) || 0) ** 3;
-    // Fading out, the page underneath is the game's: its ground.
-    layer.set(mix(fading ? layer.under() : from, color, k));
-    requestAnimationFrame(follow);
-  };
-  requestAnimationFrame(follow);
-
-  window.setTimeout(go, GROW);
-  window.setTimeout(() => {
-    fading = true;
-    const out = fill.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE, easing: 'ease', fill: 'forwards' });
-    emoji.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE, easing: 'ease', fill: 'forwards' });
-    veil.style.pointerEvents = 'none';
-    out.onfinish = () => {
-      veil.remove();
-      layer.release();
-      if (strip === layer) strip = null;
-    };
-  }, GROW + HOLD);
-  // In case the fade never ends (a tab in the background): gone in any case.
-  window.setTimeout(() => {
+  const start = performance.now();
+  let gone = false;
+  const done = () => {
+    if (gone) return;
+    gone = true;
     veil.remove();
     layer.release();
     if (strip === layer) strip = null;
-  }, GROW + HOLD + FADE + 400);
+  };
+  const frame = (now: number) => {
+    if (gone || !veil.isConnected) return done();
+    const t = now - start;
+    let k: number;
+    let under = from;
+    if (t < GROW) k = inOut(t / GROW);
+    else if (t < GROW + HOLD) k = 1;
+    else {
+      // Fading out: the page underneath is the game's now.
+      k = 1 - inOut((t - GROW - HOLD) / FADE);
+      under = layer.under();
+      veil.style.pointerEvents = 'none';
+    }
+    if (t >= GROW + HOLD + FADE) return done();
+    fill.style.opacity = String(k);
+    if (t >= GROW + HOLD) emoji.style.opacity = String(k);
+    layer.set(mix(under, color, k));
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+
+  window.setTimeout(go, GROW);
+  // In case the frames stop (a tab in the background): gone in any case.
+  window.setTimeout(done, GROW + HOLD + FADE + 400);
 }
+
+/** Slow in, slow out (0 to 1). */
+const inOut = (x: number) => {
+  const t = Math.max(0, Math.min(1, x));
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+};
 
 /** The game opened last from the home screen: its icon settles back when home shows again. */
 export function lastLaunched(): string | null {
