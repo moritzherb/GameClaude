@@ -1456,9 +1456,48 @@ html[data-look='pop'] .os-home.has-wall {
   align-items: center;
 }
 
+/* The dots in a small dark pill, as on the iPhone. */
 .sb-dots-bar .sb-dots {
+  height: 24px;
   margin-left: 0;
+  padding: 0 10px;
   gap: 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-look='pop']:not([data-theme='light']) .sb-dots-bar .sb-dots {
+    background: rgba(0, 0, 0, 0.42);
+  }
+}
+
+html[data-look='pop'][data-theme='dark'] .sb-dots-bar .sb-dots,
+.os-home.has-wall .sb-dots-bar .sb-dots {
+  background: rgba(0, 0, 0, 0.42);
+}
+
+/* The pages reach down to the dock and the dots (or Done) float over their foot: on the home
+   pages that room stays empty (nothing moves), the App Library scrolls on under the pill. */
+.os-home.ios {
+  --sb-foot: 54px;
+}
+
+.os-home.ios .sb-page {
+  padding-bottom: var(--sb-foot);
+}
+
+.os-home.ios .sb-library {
+  padding-bottom: calc(var(--sb-foot) + 6px);
+}
+
+.os-home.ios .sb-dots-bar,
+.os-home.ios .sb-search.os-done {
+  position: relative;
+  z-index: 3;
+  margin-top: calc(10px - var(--sb-foot));
 }
 
 .sb-dots-bar .sb-dots button {
