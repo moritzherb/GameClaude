@@ -131,6 +131,19 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     land(id, pos);
   };
 
+  /** One thing at a time from the buttons: a second tap while the first is still going on (a roll,
+   *  a move, a crossing) does nothing. */
+  const acting = useRef(false);
+  const act = (fn: () => unknown) => async () => {
+    if (acting.current) return;
+    acting.current = true;
+    try {
+      await fn();
+    } finally {
+      acting.current = false;
+    }
+  };
+
   const rollTurn = async () => {
     const x = gRef.current;
     const id = current(x);
@@ -308,7 +321,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
               target={targets[phase.pos]}
               players={players}
               lander={me}
-              onDone={(o) => resolve(o, phase.pos, phase.chosen ?? phase.field)}
+              onDone={(o) => act(() => resolve(o, phase.pos, phase.chosen ?? phase.field))()}
               onChoose={(f) => setPhase({ ...phase, chosen: f })}
             />
           ) : phase.kind === 'note' ? (
@@ -322,7 +335,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
               </div>
               {phase.text && <p className="pt-card-text">{phase.text}</p>}
               <div className="pt-card-actions">
-                <BigButton size="xl" onClick={() => (phase.then === 'again' ? rollTurn() : next())}>
+                <BigButton size="xl" onClick={act(() => (phase.then === 'again' ? rollTurn() : next()))}>
                   {phase.then === 'again' ? t('Roll again') : t('Done')}
                 </BigButton>
               </div>
@@ -342,7 +355,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
                     🂡 {t('Play your Ace')}
                   </button>
                 )}
-                <BigButton size="xl" disabled={phase.kind !== 'turn'} onClick={rollTurn}>
+                <BigButton size="xl" disabled={phase.kind !== 'turn'} onClick={act(rollTurn)}>
                   {pawn.jailed ? t('Roll for a 6') : (need ?? t('Roll the die'))}
                 </BigButton>
               </div>

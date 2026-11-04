@@ -260,7 +260,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
                 🂡 {t('Play your Ace')}
               </button>
             )}
-            <BigButton size="xl" disabled={die.rolling} onClick={async () => setMade(need.includes(await roll()))}>
+            <BigButton size="xl" disabled={die.busy} onClick={async () => setMade(need.includes(await roll()))}>
               {param(f) ? t('Roll a 1 or 2') : t('Roll a 5 or 6')}
             </BigButton>
           </>
@@ -357,7 +357,7 @@ function DiceGame({ f, pos, lander, others, chosen, onDone }: Sub & { others: Pl
       {verdict}
       <div className="pt-card-actions">
         {rival && !over && (
-          <BigButton size="xl" disabled={a.die.rolling} onClick={go}>
+          <BigButton size="xl" disabled={a.die.busy || b.die.busy} onClick={go}>
             {t('Roll')}
           </BigButton>
         )}
@@ -561,12 +561,12 @@ function DoubleCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: Pl
       <div className="pt-card-actions">
         {!end ? (
           <div className="pt-two">
-            <BigButton size="lg" variant="light" disabled={die.rolling} onClick={() => setEnd({ who, n })}>
+            <BigButton size="lg" variant="light" disabled={die.busy} onClick={() => setEnd({ who, n })}>
               {t('Drink {n}', { n })}
             </BigButton>
             <BigButton
               size="lg"
-              disabled={die.rolling}
+              disabled={die.busy}
               onClick={async () => {
                 const v = await roll();
                 if (v >= 5) setStep(step + 1);
