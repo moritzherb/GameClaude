@@ -38,7 +38,8 @@ export default function Search({ suggestions, pulled, onClose }: { suggestions: 
   }, [onClose]);
 
   useEffect(() => {
-    input.current?.focus();
+    // Without scrolling: an iPhone would push the page up to show the field (it's at the top anyway).
+    input.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

@@ -115,7 +115,8 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
   const wrap = useRef<HTMLDivElement>(null);
   useTopTint(wrap);
   useEffect(() => {
-    if (searching) input.current?.focus();
+    // Without scrolling: a phone would push the page up to show the field.
+    if (searching) input.current?.focus({ preventScroll: true });
   }, [searching]);
   const pull = useRef<{ y: number; t: number; dy: number; on: boolean } | null>(null);
   const close = useCallback(() => {

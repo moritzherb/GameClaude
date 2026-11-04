@@ -13,6 +13,8 @@ import { tintTop, tone } from './themeColor';
 const GROW = 420;
 const HOLD = 600;
 const FADE = 320;
+/** The splash's top edge is at the top of the screen after this share of the growing. */
+const TOP_AT = 0.55;
 /** How long a splash shows before it fades (the start-up screen keeps to it too). */
 export const SPLASH_MS = GROW + HOLD;
 
@@ -54,35 +56,38 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   // The splash covers the screen from the start, cut to the icon's shape, and the cut opens up to
   // the whole screen; the emoji glides from the icon to the middle and grows. Nothing on the page
   // is laid out again while it runs (it used to grow by its size: every frame a new layout).
+  // Its top edge rises faster than the rest (at the top after a little over half the time): the
+  // strip under the clock, which the phone recolours with a lag, takes its colour from the start and
+  // so meets it there, with no dark band between them.
   const ease = 'cubic-bezier(0.2, 0.85, 0.25, 1)';
+  const eased = (t: number, k: number) => 1 - (1 - Math.min(1, t)) ** k;
+  const cut = (t: number) => {
+    const p = eased(t, 3.5);
+    const top = eased(t / TOP_AT, 3);
+    const at = (from: number, k: number) => from + (-2 - from) * k;
+    return `inset(${at(r.top, top)}px ${at(w - r.right, p)}px ${at(h - r.bottom, p)}px ${at(r.left, p)}px round ${radius * (1 - p)}px)`;
+  };
   const grow = veil.animate(
-    [
-      { clipPath: `inset(${r.top}px ${w - r.right}px ${h - r.bottom}px ${r.left}px round ${radius}px)` },
-      { clipPath: `inset(-2px -2px -2px -2px round 0px)` },
-    ],
-    { duration: GROW, easing: ease, fill: 'both' },
+    Array.from({ length: 25 }, (_, i) => ({ clipPath: cut(i / 24) })),
+    { duration: GROW, easing: 'linear', fill: 'both' },
   );
   // Grown: no cut left at all (not even a hairline at the edges).
   grow.onfinish = () => grow.cancel();
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
   emoji.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${(r.width * 0.5) / 110})` }, { transform: 'none' }], { duration: GROW, easing: ease, fill: 'both' });
-  // Once it has reached the top (at 80 % of the growing, with its easing; not before, or the strip
-  // would be coloured above a dark gap): the strip under the clock in the splash's colour there
-  // (its tone at the top, see .launch-veil in pop.css), until it has half faded.
-  let mine: (() => void) | null = null;
-  window.setTimeout(() => {
-    // The game's colour as the page has it (a game's may be one of the palette's variables).
-    const color = getComputedStyle(veil).getPropertyValue('--c').trim() || game.color;
-    if (veil.isConnected) untint = mine = tintTop(tone(color, 0.87, 1.03));
-  }, GROW * 0.8);
+  // The strip under the clock in the splash's colour along its top (see .launch-veil in pop.css),
+  // from the tap (the phone takes a moment to follow) until the splash starts to fade.
+  // The game's colour as the page has it (a game's may be one of the palette's variables).
+  const color = getComputedStyle(veil).getPropertyValue('--c').trim() || game.color;
+  let mine: (() => void) | null = (untint = tintTop(tone(color, 0.87, 1.03)));
   const off = () => {
     mine?.();
     if (untint === mine) untint = null;
     mine = null;
   };
   window.setTimeout(go, GROW);
-  window.setTimeout(off, GROW + HOLD + FADE / 2);
+  window.setTimeout(off, GROW + HOLD);
   window.setTimeout(() => {
     const out = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE, easing: 'ease', fill: 'forwards' });
     out.onfinish = () => veil.remove();
