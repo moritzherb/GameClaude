@@ -20,12 +20,32 @@ function paint() {
   if (typeof document === 'undefined') return;
   const top = layers[layers.length - 1]?.color;
   const edge = document.querySelector<HTMLElement>('.top-edge');
-  if (edge) edge.style.backgroundColor = top ?? '';
+  if (edge) {
+    edge.style.backgroundColor = top ?? '';
+    nudge();
+  }
   const phoneDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
   document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
     const dark = forced ? forced === 'dark' : m.media ? m.media.includes('dark') : phoneDark;
     m.content = top ?? (dark ? pair[1] : pair[0]);
   });
+}
+
+/**
+ * An iPhone looks at the colour of what's fixed along the top only when something fixed comes or
+ * goes on the page (WebKit: a fixed element added or removed), not when a colour changes. So each
+ * time the strip's colour changes, a speck in the middle (no size, nothing to see, never along an
+ * edge) turns fixed or back: the phone looks again, the strip takes the new colour that frame.
+ */
+let speck: HTMLElement | null = null;
+function nudge() {
+  if (!speck?.isConnected) {
+    speck = document.createElement('i');
+    speck.setAttribute('aria-hidden', 'true');
+    speck.style.cssText = 'position:absolute;top:50%;left:50%;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none';
+    document.body?.append(speck);
+  }
+  speck.style.position = speck.style.position === 'fixed' ? 'absolute' : 'fixed';
 }
 
 // The phone switching between light and dark (with Auto): the bar along.
