@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Alert from '../components/Alert';
 import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
 import { PlusIcon, RowIcon, type RowGlyph } from '../components/Icons';
@@ -142,32 +143,46 @@ function WallpaperRow() {
 
 /** The home screens as they first were: the games taken off it back, the first order. */
 function ResetHomeRow() {
+  const [asking, setAsking] = useState(false);
   const [done, setDone] = useState(false);
   return (
-    <button
-      type="button"
-      className="setting-row"
-      disabled={done}
-      onClick={() => {
-        resetHome();
-        setDone(true);
-        sfx.pop();
-        buzz();
-      }}
-    >
-      <span className="setting-emoji" aria-hidden="true"><RowIcon name="reset" /></span>
-      <span className="setting-text">
-        <span className="setting-label">{t('Reset home screen')}</span>
-        <span className="setting-hint">{done ? '✓' : t('Every game back, in the first order')}</span>
-      </span>
-    </button>
+    <>
+      <button type="button" className="setting-row" disabled={done} onClick={() => setAsking(true)}>
+        <span className="setting-emoji" aria-hidden="true"><RowIcon name="reset" /></span>
+        <span className="setting-text">
+          <span className="setting-label">{t('Reset home screen')}</span>
+          <span className="setting-hint">{done ? '✓' : t('Every game back, in the first order')}</span>
+        </span>
+      </button>
+      {/* It can't be undone (your own order and the games you took off go), so it asks first. */}
+      {asking && (
+        <Alert
+          title={t('Reset home screen?')}
+          text={t('Every game comes back, in the first order. Your own order is gone.')}
+          action={t('Reset')}
+          onConfirm={() => {
+            resetHome();
+            setDone(true);
+            setAsking(false);
+            sfx.pop();
+            buzz();
+          }}
+          onCancel={() => setAsking(false)}
+        />
+      )}
+    </>
   );
 }
 
-/** The privacy policy, on the website (in the store app: in the phone's browser). */
+/**
+ * The privacy policy, on the website (in the store app: in the phone's browser). On the home-screen
+ * app there's no browser bar to come back with, so it opens in place and its own back button returns.
+ */
 function openPrivacy() {
   const url = new URL('privacy.html', window.location.href.split('#')[0]).href;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
   if (isNative) toNative({ type: 'open', url });
+  else if (standalone) window.location.href = url;
   else window.open(url, '_blank', 'noopener');
 }
 
