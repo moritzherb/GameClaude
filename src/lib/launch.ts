@@ -140,7 +140,7 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
 }
 
 /** The start-up screen's dark (index.html), and how long it takes to fade into the app (ms). */
-export const BOOT_GROUND = '#20211c';
+export const BOOT_GROUND = '#000000';
 const BOOT_FADE = 300;
 
 /**

@@ -1,0 +1,571 @@
+/* =========================================================================
+   prost! – the new look, done Apple's way (html[data-look='pop'])
+
+   The interface is calm and native, the games bring the colour:
+   - Apple's system greys for grounds and surfaces (light: grouped grey and white; dark: black and
+     its elevated greys), no heavy shadows, no gradients on controls.
+   - Apple's own type: SF Pro for reading and controls, SF Pro Rounded for titles (friendly, it's a
+     party), in sentence case; no shouting capitals. Elsewhere Archivo stands in.
+   - Familiar controls: capsule buttons, round glass buttons in the bars, iOS segmented controls,
+     switches and grouped lists.
+   - Glass (blur) only on what floats over the content: the bars' buttons, the dock, sheets.
+   - Lime, the colour of the app's die, only where it means "this one": the main action outside a
+     game and what's switched on. Inside a game the game's own colour takes its place.
+   Only looks here (and the type that comes with them); the games play exactly as before.
+   ========================================================================= */
+
+/* ---------- Foundations ---------- */
+
+html[data-look='pop'] {
+  --font-display: ui-rounded, 'SF Pro Rounded', 'Archivo Variable', system-ui, sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'Archivo Variable', BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* Light: grouped grey, white surfaces */
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface-2: #e9e9ee;
+  --line: #d1d1d6;
+  --ink: #000000;
+  --ink-2: #636366;
+  --muted: #636366;
+  --accent: #b9e330;
+  --accent-ink: #3a6a00;
+  --accent-soft: rgba(150, 200, 20, 0.18);
+  --on-accent: #10110c;
+  --hero-bg: #e9e9ee;
+  --hero-fg: #000000;
+  --hero-accent: #3a6a00;
+  --fill: rgba(118, 118, 128, 0.12);
+  --fill-2: rgba(118, 118, 128, 0.2);
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-line: rgba(0, 0, 0, 0.06);
+  --switch-on: #34c759;
+  --seg-on: #ffffff;
+  --dim: rgba(0, 0, 0, 0.35);
+
+  --pop-glow: var(--bg);
+  --pop-tile: var(--surface);
+  --pop-tile-2: var(--surface-2);
+  --pop-sunk: var(--surface-2);
+  --pop-raise: 0 0.5px 1.5px rgba(0, 0, 0, 0.08);
+  --pop-raise-sm: none;
+  --pop-sink: none;
+  --pop-text-shadow: none;
+  --pop-widget: var(--surface);
+  --pop-widget-ring: var(--surface);
+  --pop-widget-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.08);
+  --pop-chip-shadow: none;
+  --pop-lime: var(--accent);
+  --pop-paper: var(--surface);
+  --shadow: var(--pop-raise);
+  --press: none;
+
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 22px;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-look='pop']:not([data-theme='light']) {
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --line: #38383a;
+    --ink: #ffffff;
+    --ink-2: #98989f;
+    --muted: #98989f;
+    --accent: #c5f235;
+    --accent-ink: #c5f235;
+    --on-accent: #10110c;
+    --hero-bg: #2c2c2e;
+    --hero-fg: #ffffff;
+    --hero-accent: #c5f235;
+    --fill: rgba(118, 118, 128, 0.24);
+    --fill-2: rgba(118, 118, 128, 0.36);
+    --glass: rgba(44, 44, 46, 0.62);
+    --glass-line: rgba(255, 255, 255, 0.1);
+    --switch-on: #30d158;
+    --seg-on: #636366;
+    --dim: rgba(0, 0, 0, 0.5);
+    --pop-glow: var(--bg);
+    --pop-tile: var(--surface);
+    --pop-tile-2: var(--surface-2);
+    --pop-sunk: var(--surface-2);
+    --pop-raise: none;
+    --pop-raise-sm: none;
+    --pop-sink: none;
+    --pop-text-shadow: none;
+    --press: none;
+    --pop-widget: var(--surface);
+    --pop-widget-ring: var(--surface);
+    --pop-widget-shadow: none;
+    --pop-chip-shadow: none;
+    --shadow: none;
+  }
+}
+
+html[data-look='pop'][data-theme='dark'] {
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --line: #38383a;
+  --ink: #ffffff;
+  --ink-2: #98989f;
+  --muted: #98989f;
+  --accent: #c5f235;
+  --accent-ink: #c5f235;
+  --on-accent: #10110c;
+  --hero-bg: #2c2c2e;
+  --hero-fg: #ffffff;
+  --hero-accent: #c5f235;
+  --fill: rgba(118, 118, 128, 0.24);
+  --fill-2: rgba(118, 118, 128, 0.36);
+  --glass: rgba(44, 44, 46, 0.62);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --switch-on: #30d158;
+  --seg-on: #636366;
+  --dim: rgba(0, 0, 0, 0.5);
+  --pop-glow: var(--bg);
+  --pop-tile: var(--surface);
+  --pop-tile-2: var(--surface-2);
+  --pop-sunk: var(--surface-2);
+  --pop-raise: none;
+  --pop-raise-sm: none;
+  --pop-sink: none;
+  --pop-text-shadow: none;
+  --press: none;
+  --pop-widget: var(--surface);
+  --pop-widget-ring: var(--surface);
+  --pop-widget-shadow: none;
+  --pop-chip-shadow: none;
+  --shadow: none;
+}
+
+html[data-look='pop'] body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* No shouting: Apple writes titles and buttons as they're spoken, and lets SF space its letters. */
+html[data-look='pop'] body *:not(input):not(textarea) {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* ---------- Titles ---------- */
+
+html[data-look='pop'] .large-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.125rem;
+  line-height: 1.2;
+}
+
+html[data-look='pop'] .section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: 1.25;
+}
+
+html[data-look='pop'] .top-bar-title {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.2;
+}
+
+/* ---------- Buttons ---------- */
+
+html[data-look='pop'] .big-btn {
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.1875rem;
+  line-height: 1.2;
+  box-shadow: none;
+  transition:
+    transform 0.12s var(--ease-out),
+    opacity 0.12s ease,
+    background-color 0.2s ease;
+}
+
+html[data-look='pop'] .big-btn-md {
+  font-size: 1.0625rem;
+}
+
+html[data-look='pop'] .big-btn-xl {
+  font-size: 1.25rem;
+}
+
+html[data-look='pop'] .big-btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+html[data-look='pop'] .big-btn-light,
+html[data-look='pop'] .big-btn-glass {
+  background: var(--fill);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+html[data-look='pop'] .big-btn-light .next-name {
+  color: var(--accent-ink);
+}
+
+html[data-look='pop'] .big-btn-danger {
+  background: #ff3b30;
+  color: #fff;
+  box-shadow: none;
+}
+
+html[data-look='pop'] .big-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 0.85;
+  box-shadow: none;
+}
+
+html[data-look='pop'] .big-btn:disabled {
+  opacity: 0.3;
+}
+
+/* The bars' buttons: round glass, the symbol in the ink colour. */
+html[data-look='pop'] .round-btn {
+  border-radius: 50%;
+  background: var(--glass);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 0.5px var(--glass-line), 0 2px 10px rgba(0, 0, 0, 0.08);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+}
+
+html[data-look='pop'] .round-btn.accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+html[data-look='pop'] .round-btn:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+}
+
+html[data-look='pop'] .link-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--accent-ink);
+}
+
+/* Text buttons keep their own colour (red: removing everyone). */
+html[data-look='pop'] .text-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+/* ---------- Grouped lists (Settings, players) ---------- */
+
+html[data-look='pop'] .settings-list,
+html[data-look='pop'] .player-list {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+html[data-look='pop'] .setting-row {
+  min-height: 52px;
+  padding: 8px 16px;
+}
+
+html[data-look='pop'] .setting-row + .setting-row::before {
+  left: 59px;
+  border-top: 0.5px solid var(--line);
+}
+
+html[data-look='pop'] .setting-row:active {
+  background: var(--fill);
+}
+
+/* Settings' icons: the emoji on a small rounded square, as in the phone's own Settings. */
+html[data-look='pop'] .setting-emoji {
+  width: 29px;
+  height: 29px;
+  border-radius: 7px;
+  background: var(--fill);
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+html[data-look='pop'] .setting-label {
+  font-size: 1.0625rem;
+  font-weight: 400;
+}
+
+html[data-look='pop'] .setting-hint {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+/* The switch: iOS's own. */
+html[data-look='pop'] .switch {
+  width: 51px;
+  height: 31px;
+  border-radius: 999px;
+  background: var(--fill-2);
+  box-shadow: none;
+}
+
+html[data-look='pop'] .setting-row.on .switch {
+  background: var(--switch-on);
+}
+
+html[data-look='pop'] .switch-knob {
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06);
+}
+
+html[data-look='pop'] .setting-row:active .switch-knob {
+  width: 31px;
+}
+
+html[data-look='pop'] .setting-row.on .switch-knob {
+  transform: translateX(20px);
+}
+
+html[data-look='pop'] .setting-row.on:active .switch-knob {
+  transform: translateX(16px);
+}
+
+/* Segmented controls: a grey track, the chosen one a raised white (light) or grey (dark) piece. */
+html[data-look='pop'] .look-seg {
+  padding: 2px;
+  gap: 0;
+  border-radius: 9px;
+  background: var(--fill);
+  box-shadow: none;
+}
+
+html[data-look='pop'] .look-seg button {
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: none;
+}
+
+html[data-look='pop'] .look-seg button.active {
+  background: var(--seg-on);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+
+html[data-look='pop'] .seg-btn {
+  font-family: var(--font-body);
+  font-weight: 500;
+  background: var(--fill);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+html[data-look='pop'] .seg-btn.active {
+  background: var(--seg-on);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04), inset 0 0 0 1.5px var(--accent-ink);
+}
+
+/* Chips (filters, small choices): grey capsules, the chosen one filled with the ink colour. */
+html[data-look='pop'] .chip {
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink);
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+html[data-look='pop'] .chip.active {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Text fields: a quiet grey well. */
+html[data-look='pop'] .add-player-input {
+  border-radius: 12px;
+  background: var(--fill);
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+}
+
+html[data-look='pop'] .add-player-input:focus {
+  box-shadow: inset 0 0 0 2px var(--accent-ink);
+}
+
+html[data-look='pop'] .add-player-btn {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+/* ---------- Sheets ---------- */
+
+html[data-look='pop'] .sheet-backdrop {
+  background: var(--dim);
+}
+
+html[data-look='pop'] .sheet {
+  border-radius: 28px 28px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+}
+
+html[data-look='pop'] .sheet-grabber {
+  background: var(--fill-2);
+}
+
+html[data-look='pop'] .sheet-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.375rem;
+}
+
+/* ---------- Cards and panels ---------- */
+
+html[data-look='pop'] .panel {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* The rules' numbers: quiet, in the second ink. */
+html[data-look='pop'] .rule-num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ---------- Screens ---------- */
+
+/* Numbers that say nothing about the games ("No. 03", the list's 01, 02 …): gone. */
+html[data-look='pop'] .detail-no,
+html[data-look='pop'] .ticket-no {
+  display: none;
+}
+
+/* A game's page: its name in the rounded face, big but calm. */
+html[data-look='pop'] .detail-name {
+  font-weight: 800;
+  font-size: min(2.75rem, calc((min(100vw, var(--max)) - 2 * var(--gutter) - 32px) * 0.85 / (var(--longest) * 0.58)));
+  line-height: 1.05;
+}
+
+html[data-look='pop'] .ticket-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: 1.15;
+}
+
+/* Settings with a segmented control: the label above, the choices across the row's width below. */
+html[data-look='pop'] .setting-row:has(.look-seg) {
+  flex-wrap: wrap;
+  row-gap: 10px;
+  padding-bottom: 12px;
+}
+
+html[data-look='pop'] .setting-row:has(.look-seg) .setting-text {
+  flex: 1 1 calc(100% - 41px);
+}
+
+html[data-look='pop'] .setting-row .look-seg {
+  display: flex;
+  flex: 1 1 100%;
+  margin-left: 41px;
+}
+
+html[data-look='pop'] .setting-row .look-seg button {
+  flex: 1;
+}
+
+/* Home's widgets: the title in the ink colour, the kicker readable. */
+html[data-look='pop'] .w-title {
+  font: 700 22px/1.1 var(--font-display);
+}
+
+/* On the plain widgets (on a game's colour they stay white). */
+html[data-look='pop'] .w-crew .w-title,
+html[data-look='pop'] .w-shuffle .w-title {
+  color: var(--ink);
+}
+
+html[data-look='pop'] .w-kicker {
+  font: 600 13px/1 var(--font-body);
+}
+
+html[data-look='pop'] .w-shuffle .w-kicker {
+  color: var(--muted);
+}
+
+/* ---------- Focus ---------- */
+
+html[data-look='pop'] :focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+/* ---------- Every game wears its own colour ---------- */
+
+/*
+ * On a game's page and at its table the accent is the game's own colour (the colour of its icon):
+ * the main button, the cards and counters that were lime. Dark type sits on it (6:1 and better on
+ * every game colour); as text it reads as is on black, and a shade deeper on white.
+ */
+html[data-look='pop'] :is(.play-screen, .game-detail) {
+  --accent: var(--game, #c5f235);
+  --accent-ink: color-mix(in srgb, var(--accent) 45%, #000);
+  --accent-soft: color-mix(in srgb, var(--accent) 22%, transparent);
+  --hero-accent: var(--accent-ink);
+  --pop-lime: var(--accent);
+  --on-accent: #10110c;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-look='pop']:not([data-theme='light']) :is(.play-screen, .game-detail) {
+    --accent-ink: var(--accent);
+    --hero-accent: var(--accent);
+  }
+}
+
+html[data-look='pop'][data-theme='dark'] :is(.play-screen, .game-detail) {
+  --accent-ink: var(--accent);
+  --hero-accent: var(--accent);
+}
+
+/* Card backs at a game's table: the game's colour with the fine stripes of a card back. */
+html[data-look='pop'] :is(.play-screen, .game-detail) .pcard-back {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0 4px, transparent 4px 10px), var(--accent);
+}
+
+html[data-look='pop'] :is(.play-screen, .game-detail) :is(.kc-slot, .deck-count-stack i) {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0 2px, transparent 2px 5px), var(--accent);
+}
+
+/* The small line under a segment's label: readable on the chosen (grey) piece too. */
+html[data-look='pop'] .seg-btn .seg-sub {
+  opacity: 1;
+  color: var(--muted);
+}
+
+html[data-look='pop'] .seg-btn.active .seg-sub {
+  color: var(--ink);
+  opacity: 0.85;
+}

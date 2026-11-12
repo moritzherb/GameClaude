@@ -33,7 +33,7 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
   const name = cardName(t(game.name));
 
   return (
-    <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}`}>
+    <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}`} style={{ '--game': game.color } as CSSProperties}>
       {/* New look: back to the home screen the game was opened from. */}
       <TopBar onBack={() => navigate(pop ? paths.home : paths.games())} />
 

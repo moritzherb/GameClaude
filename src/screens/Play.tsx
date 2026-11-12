@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import BigButton from '../components/BigButton';
 import { CrewContext } from '../components/Finished';
 import GameBar from '../components/GameBar';
@@ -35,7 +35,7 @@ export default function Play({ game }: { game: GameDefinition }) {
   if (!playable) return null;
 
   return (
-    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`}>
+    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`} style={{ '--game': game.color } as CSSProperties}>
       <GameBar game={game} turn={turn} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
 
       <CrewContext.Provider value={players}>

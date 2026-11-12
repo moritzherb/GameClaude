@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import BigButton from '../components/BigButton';
 import { CrewContext } from '../components/Finished';
 import GameBar from '../components/GameBar';
@@ -57,7 +57,7 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   }
 
   return (
-    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`}>
+    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`} style={{ '--game': game.color } as CSSProperties}>
       <GameBar game={game} turn={turn} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}

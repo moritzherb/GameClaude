@@ -263,7 +263,7 @@ textarea {
 
     /* The start-up screen (index.html) is dark in every look. */
     html:has(#boot:not(.done)) .top-edge {
-      background-color: #20211c;
+      background-color: #000000;
     }
   }
 }
