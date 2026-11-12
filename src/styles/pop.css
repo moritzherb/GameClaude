@@ -1723,14 +1723,33 @@ html[data-os='android'] .os-alert-btn {
   font-size: 16px;
 }
 
-/* All games (Android): closing slides it back down. */
+/* All games (Android): closing slides it back down, and the dim goes with it (its own layer: the
+   backdrop's colour can't fade, a look's rule sets it). */
 .la-drawer {
+  position: relative;
   transition: transform 0.23s cubic-bezier(0.2, 0.85, 0.25, 1);
 }
 
-.la-drawer-wrap.closing {
+html[data-look] .sheet-backdrop.la-drawer-wrap {
   background: transparent;
-  transition: background 0.23s;
+  animation: none;
+}
+
+.la-drawer-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--dim, rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+  transition: opacity 0.23s;
+  animation: fade-in 0.2s linear;
+}
+
+.la-drawer-wrap.closing {
+  pointer-events: none;
+}
+
+.la-drawer-wrap.closing .la-drawer-dim {
+  opacity: 0;
 }
 
 .la-drawer-wrap.closing .la-drawer {

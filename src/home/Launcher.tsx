@@ -112,7 +112,10 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
-  useTopTint(wrap);
+  // The dim is its own layer, so closing can fade it while the sheet slides down (and the strip under
+  // the clock goes along with it).
+  const dim = useRef<HTMLDivElement>(null);
+  useTopTint(dim);
   useEffect(() => {
     // Without scrolling: a phone would push the page up to show the field.
     if (searching) input.current?.focus({ preventScroll: true });
@@ -133,6 +136,7 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
     : sorted;
   return (
     <div ref={wrap} className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
+      <div ref={dim} className="la-drawer-dim" aria-hidden />
       <div
         ref={sheet}
         className="la-drawer"
