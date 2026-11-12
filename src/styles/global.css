@@ -2081,6 +2081,15 @@ h3 {
 
 .game-bar .top-bar-title {
   font-size: clamp(1.1rem, 5.2vw, 1.35rem);
+  /* A long name ("Princess/King Treatment") takes two even lines in the same bar instead of being
+     cut off; only past two does it end in "…". */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  text-wrap: balance;
+  line-height: 1;
 }
 
 /*
@@ -4204,7 +4213,8 @@ h3 {
 .kc-ring-hint {
   position: absolute;
   left: 50%;
-  top: 68%;
+  /* Just under the crown, where the gap in the cards is still wide enough for the words. */
+  top: 67%;
   transform: translateX(-50%);
   white-space: nowrap;
   color: var(--muted);
@@ -13529,4 +13539,53 @@ h3 {
     opacity: 0;
     filter: blur(4px);
   }
+}
+
+/*
+ * Bigger to hit than to see (Apple's guidelines: a tap needs about 44 × 44 pt, never under 28).
+ * These small controls keep their look and their place; an invisible margin round each takes the
+ * taps that land just beside it. Only what is smaller than 44 grows, and only on that side.
+ */
+.round-btn,
+.hs-stake-btn,
+.hs-suit,
+.look-seg button,
+.flag-btn,
+.player-avatar,
+.profile-color,
+.kc-chip,
+.sw-bonus {
+  position: relative;
+}
+
+.round-btn::after,
+.hs-stake-btn::after,
+.hs-suit::after,
+.look-seg button::after,
+.flag-btn::after,
+.player-avatar::after,
+.profile-color::after,
+.kc-chip::after,
+.sw-bonus::after {
+  content: '';
+  position: absolute;
+  top: min(0px, calc((100% - 44px) / 2));
+  bottom: min(0px, calc((100% - 44px) / 2));
+  left: min(0px, calc((100% - 44px) / 2));
+  right: min(0px, calc((100% - 44px) / 2));
+}
+
+/* The flag rounds its own corners, so the button's invisible margin isn't cut off with them. */
+.flag-btn {
+  overflow: visible;
+}
+
+.flag-btn svg {
+  clip-path: inset(0 round 5px);
+}
+
+/* An avatar's emoji sits in a span of its own (hidden from screen readers): not one of the stack's
+   circles. */
+.avatar-stack span.avatar-glyph {
+  all: unset;
 }

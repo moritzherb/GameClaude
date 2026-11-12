@@ -7,6 +7,7 @@ import type { GameProps } from '../types';
 import { spinFate } from './fates';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
+import FitText from '../../components/FitText';
 
 export default function WhoDrinks({ players }: GameProps) {
   const [highlight, setHighlight] = useState<number | null>(null);
@@ -87,7 +88,7 @@ export default function WhoDrinks({ players }: GameProps) {
               }}
             >
               <span className="spin-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
-              <span className="spin-chip-name">{p.name}</span>
+              <FitText className="spin-chip-name">{p.name}</FitText>
               {/* The drink counter, bottom right. */}
               <span key={bumped?.id === p.id ? bumped.n : 'n'} className={`spin-chip-count${n ? '' : ' zero'}${bumped?.id === p.id ? ' bump' : ''}`}>
                 {n}

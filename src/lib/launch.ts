@@ -8,7 +8,7 @@
  * goes and the next one comes. Only opacity and transforms move: nothing is laid out again.
  */
 
-import { mix, topColor, topLayer, tone } from './themeColor';
+import { coverTop, mix, topColor, topLayer, tone } from './themeColor';
 
 /** Filling the screen, staying as the splash, fading out (ms). */
 const GROW = 420;
@@ -55,15 +55,13 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     part.textContent = g;
     emoji.append(part);
   }
-  // The emoji starts just on the icon's and glides to the middle as the colour comes in: the same
-  // frame, the same amount (set in the loop below), never a moment on its own over the home screen.
+  // The emoji starts just on the icon's and glides to the middle as the colour comes in: from the
+  // same moment, along the same curve, never a moment on its own over the home screen.
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
   const small = (r.width * 0.5) / 110;
-  const glide = (k: number) => {
-    emoji.style.transform = k >= 1 ? 'none' : `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px) scale(${small + (1 - small) * k})`;
-  };
-  glide(0);
+  const at = (k: number) => (k >= 1 ? 'none' : `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px) scale(${small + (1 - small) * k})`);
+  emoji.style.transform = at(0);
   veil.append(fill, emoji);
   document.body.append(veil);
 
@@ -80,9 +78,26 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   const from = topColor();
   const layer = (strip = topLayer(from));
   const start = performance.now();
+  // The glide runs on the phone's compositor (set from a script each frame, the grown emoji and its
+  // shadow were drawn anew every frame: it stuttered). Its curve is the colour's, point by point,
+  // and it starts at the colour's zero.
+  let glide: Animation | null = null;
+  if (typeof emoji.animate === 'function') {
+    const N = 24;
+    glide = emoji.animate(
+      Array.from({ length: N + 1 }, (_, i) => ({ transform: at(inOut(i / N)) })),
+      { duration: GROW, easing: 'linear', fill: 'forwards' },
+    );
+    glide.startTime = start;
+  }
+  const fadeAt = GROW + HOLD;
   /** The time between frames (ms), as it goes: 60 a second, 120, 30 when saving power. */
   let step = 1000 / 60;
   let prev = 0;
+  /** How long the splash has shown (ms). Once grown, a frame never counts for more than two: the
+   *  moment the phone spends drawing the game's page behind the splash holds the splash a little
+   *  longer instead of making the fade skip ahead. */
+  let shown = 0;
   let gone = false;
   const done = () => {
     if (gone) return;
@@ -92,18 +107,19 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     if (strip === layer) strip = null;
   };
   /** How much colour shows `t` ms in. */
-  const amount = (t: number) => (t < GROW ? inOut(t / GROW) : t < GROW + HOLD ? 1 : 1 - inOut((t - GROW - HOLD) / FADE));
+  const amount = (t: number) => (t < GROW ? inOut(t / GROW) : t < fadeAt ? 1 : 1 - inOut((t - fadeAt) / FADE));
   const frame = (now: number) => {
     if (gone || !veil.isConnected) return done();
-    const t = now - start;
-    if (t >= GROW + HOLD + FADE) return done();
+    if (!prev || now - start < GROW) shown = now - start;
+    else if (now > prev) shown += Math.min(now - prev, 2 * step);
+    const t = shown;
+    if (t >= fadeAt + FADE) return done();
     if (prev && now > prev) step += (Math.min(50, now - prev) - step) * 0.3;
     prev = now;
     const k = amount(t);
-    const fading = t >= GROW + HOLD;
+    const fading = t >= fadeAt;
     fill.style.opacity = String(k);
-    if (t < GROW) glide(k);
-    else if (emoji.style.transform !== 'none') glide(1);
+    if (!glide) emoji.style.transform = at(t < GROW ? k : 1);
     if (fading) {
       emoji.style.opacity = String(k);
       veil.style.pointerEvents = 'none';
@@ -113,14 +129,53 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
     // blends meanwhile), and both show the same at the same moment. Fading out, the page underneath
     // is the game's now.
     const ahead = t + step - (step * step) / (2 * STRIP_BLEND);
-    layer.set(mix(ahead >= GROW + HOLD ? layer.under() : from, color, amount(ahead)));
+    layer.set(mix(ahead >= fadeAt ? layer.under() : from, color, amount(ahead)));
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
 
   window.setTimeout(go, GROW);
   // In case the frames stop (a tab in the background): gone in any case.
-  window.setTimeout(done, GROW + HOLD + FADE + 400);
+  window.setTimeout(done, GROW + HOLD + FADE + 1500);
+}
+
+/** The start-up screen's dark (index.html), and how long it takes to fade into the app (ms). */
+export const BOOT_GROUND = '#20211c';
+const BOOT_FADE = 300;
+
+/**
+ * The start-up screen fading into the app: its dark leaves the strip under the clock frame by frame
+ * along with it (set as far ahead as the phone blends, as for a splash), to whatever the app shows
+ * at the top by then. Until this runs the strip stays the start-up screen's (main.tsx covers it).
+ */
+export function fadeBoot(boot: HTMLElement) {
+  boot.classList.add('done');
+  boot.style.transition = 'none';
+  boot.style.opacity = '1';
+  const start = performance.now();
+  let step = 1000 / 60;
+  let prev = 0;
+  let gone = false;
+  const done = () => {
+    if (gone) return;
+    gone = true;
+    coverTop(null);
+    boot.remove();
+  };
+  const frame = (now: number) => {
+    if (gone) return;
+    const t = now - start;
+    if (t >= BOOT_FADE) return done();
+    if (prev && now > prev) step += (Math.min(50, now - prev) - step) * 0.3;
+    prev = now;
+    boot.style.opacity = String(1 - inOut(t / BOOT_FADE));
+    const ahead = inOut((t + step - (step * step) / (2 * STRIP_BLEND)) / BOOT_FADE);
+    coverTop(ahead >= 1 ? null : mix(BOOT_GROUND, topColor(), ahead));
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  // In case the frames stop (the app sent to the background meanwhile): gone in any case.
+  window.setTimeout(done, BOOT_FADE + 500);
 }
 
 /** Slow in, slow out (0 to 1), and never steep: a strip a moment off would show a shade off. */

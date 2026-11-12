@@ -435,7 +435,7 @@ function Board({
               data-drop={`slot:${who}:${i}`}
               className={`tr-slot${s.up ? ' up' : ''}${target === i ? ' target' : ''}${wild && hint && !s.up ? ' pickable' : ''}`}
               onClick={(e) => hand && onSlot(i, e.currentTarget)}
-              aria-label={s.up ? `${label}: ${rankLabel(s.card.value)}` : label}
+              aria-label={s.up ? `${label}: ${rankLabel(s.card.value)}` : t('Slot {label}', { label })}
             >
               {s.up ? <CardFace card={s.card} /> : <span className="pcard-face pcard-back" />}
               {!s.up && <span className="tr-slot-label">{label}</span>}

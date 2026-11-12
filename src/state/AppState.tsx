@@ -1,5 +1,5 @@
 import { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
-import { setLang, type Lang } from '../i18n';
+import { setLang, tx, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
@@ -56,6 +56,17 @@ export const AVATARS = [
   '🐮', '🐔', '🦉', '🐢', '🦈', '🐲', '👽', '🤖', '👻', '💀', '🎃', '🤠', '🥸', '😎', '🤡', '👑', '🍕', '🌮',
 ];
 export const PLAYER_COLORS = ['#ff8a3d', '#ffc83d', '#6b95ff', '#3ddc97', '#ff7ac6', '#b49cff', '#ff5a4e', '#5fd3f3'];
+/** What each of the players' colours is called (for screen readers). English; translate with t(). */
+export const COLOR_NAMES: Record<string, string> = {
+  '#ff8a3d': tx('Orange'),
+  '#ffc83d': tx('Yellow'),
+  '#6b95ff': tx('Blue'),
+  '#3ddc97': tx('Green'),
+  '#ff7ac6': tx('Pink'),
+  '#b49cff': tx('Purple'),
+  '#ff5a4e': tx('Red'),
+  '#5fd3f3': tx('Turquoise'),
+};
 export const MAX_PLAYERS = 20;
 
 interface AppState {

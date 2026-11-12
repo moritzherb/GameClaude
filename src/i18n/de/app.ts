@@ -323,6 +323,14 @@ const app: Record<string, string> = {
   Ocean: 'Ozean',
   Ember: 'Glut',
   'Your photo': 'Dein Foto',
+  Orange: 'Orange',
+  Yellow: 'Gelb',
+  Blue: 'Blau',
+  Green: 'Grün',
+  Pink: 'Pink',
+  Purple: 'Lila',
+  Red: 'Rot',
+  Turquoise: 'Türkis',
   'Choose a photo': 'Foto wählen',
 };
 
