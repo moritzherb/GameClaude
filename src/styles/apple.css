@@ -1,7 +1,7 @@
 /* =========================================================================
    prost! – the new look, done Apple's way (html[data-look='pop'])
 
-   The interface is calm and native, the games bring the colour:
+   Black and white, with one shot of acid lime you can't miss:
    - Apple's system greys for grounds and surfaces (light: grouped grey and white; dark: black and
      its elevated greys), no heavy shadows, no gradients on controls.
    - Apple's own type: SF Pro for reading and controls, SF Pro Rounded for titles (friendly, it's a
@@ -9,8 +9,8 @@
    - Familiar controls: capsule buttons, round glass buttons in the bars, iOS segmented controls,
      switches and grouped lists.
    - Glass (blur) only on what floats over the content: the bars' buttons, the dock, sheets.
-   - Lime, the colour of the app's die, only where it means "this one": the main action outside a
-     game and what's switched on. Inside a game the game's own colour takes its place.
+   - Acid lime (#b8f01e) only as a fill, where it means "this one": the main action, what's switched
+     on or chosen, the card backs. Everything else is black and white (text accents too).
    Only looks here (and the type that comes with them); the games play exactly as before.
    ========================================================================= */
 
@@ -28,18 +28,18 @@ html[data-look='pop'] {
   --ink: #000000;
   --ink-2: #636366;
   --muted: #636366;
-  --accent: #b9e330;
-  --accent-ink: #3a6a00;
-  --accent-soft: rgba(150, 200, 20, 0.18);
-  --on-accent: #10110c;
+  --accent: #b8f01e;
+  --accent-ink: #000000;
+  --accent-soft: rgba(184, 240, 30, 0.22);
+  --on-accent: #000000;
   --hero-bg: #e9e9ee;
   --hero-fg: #000000;
-  --hero-accent: #3a6a00;
+  --hero-accent: #000000;
   --fill: rgba(118, 118, 128, 0.12);
   --fill-2: rgba(118, 118, 128, 0.2);
   --glass: rgba(255, 255, 255, 0.72);
   --glass-line: rgba(0, 0, 0, 0.06);
-  --switch-on: #34c759;
+  --switch-on: var(--accent);
   --seg-on: #ffffff;
   --dim: rgba(0, 0, 0, 0.35);
 
@@ -74,17 +74,17 @@ html[data-look='pop'] {
     --ink: #ffffff;
     --ink-2: #98989f;
     --muted: #98989f;
-    --accent: #c5f235;
-    --accent-ink: #c5f235;
-    --on-accent: #10110c;
+    --accent: #b8f01e;
+    --accent-ink: #ffffff;
+    --on-accent: #000000;
     --hero-bg: #2c2c2e;
     --hero-fg: #ffffff;
-    --hero-accent: #c5f235;
+    --hero-accent: #ffffff;
     --fill: rgba(118, 118, 128, 0.24);
     --fill-2: rgba(118, 118, 128, 0.36);
     --glass: rgba(44, 44, 46, 0.62);
     --glass-line: rgba(255, 255, 255, 0.1);
-    --switch-on: #30d158;
+    --switch-on: var(--accent);
     --seg-on: #636366;
     --dim: rgba(0, 0, 0, 0.5);
     --pop-glow: var(--bg);
@@ -112,17 +112,17 @@ html[data-look='pop'][data-theme='dark'] {
   --ink: #ffffff;
   --ink-2: #98989f;
   --muted: #98989f;
-  --accent: #c5f235;
-  --accent-ink: #c5f235;
-  --on-accent: #10110c;
+  --accent: #b8f01e;
+  --accent-ink: #ffffff;
+  --on-accent: #000000;
   --hero-bg: #2c2c2e;
   --hero-fg: #ffffff;
-  --hero-accent: #c5f235;
+  --hero-accent: #ffffff;
   --fill: rgba(118, 118, 128, 0.24);
   --fill-2: rgba(118, 118, 128, 0.36);
   --glass: rgba(44, 44, 46, 0.62);
   --glass-line: rgba(255, 255, 255, 0.1);
-  --switch-on: #30d158;
+  --switch-on: var(--accent);
   --seg-on: #636366;
   --dim: rgba(0, 0, 0, 0.5);
   --pop-glow: var(--bg);
@@ -522,40 +522,12 @@ html[data-look='pop'] :focus-visible {
   outline-offset: 2px;
 }
 
-/* ---------- Every game wears its own colour ---------- */
-
-/*
- * On a game's page and at its table the accent is the game's own colour (the colour of its icon):
- * the main button, the cards and counters that were lime. Dark type sits on it (6:1 and better on
- * every game colour); as text it reads as is on black, and a shade deeper on white.
- */
-html[data-look='pop'] :is(.play-screen, .game-detail) {
-  --accent: var(--game, #c5f235);
-  --accent-ink: color-mix(in srgb, var(--accent) 45%, #000);
-  --accent-soft: color-mix(in srgb, var(--accent) 22%, transparent);
-  --hero-accent: var(--accent-ink);
-  --pop-lime: var(--accent);
-  --on-accent: #10110c;
-}
-
-@media (prefers-color-scheme: dark) {
-  html[data-look='pop']:not([data-theme='light']) :is(.play-screen, .game-detail) {
-    --accent-ink: var(--accent);
-    --hero-accent: var(--accent);
-  }
-}
-
-html[data-look='pop'][data-theme='dark'] :is(.play-screen, .game-detail) {
-  --accent-ink: var(--accent);
-  --hero-accent: var(--accent);
-}
-
-/* Card backs at a game's table: the game's colour with the fine stripes of a card back. */
-html[data-look='pop'] :is(.play-screen, .game-detail) .pcard-back {
+/* Card backs: the lime with the fine stripes of a card back. */
+html[data-look='pop'] .pcard-back {
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0 4px, transparent 4px 10px), var(--accent);
 }
 
-html[data-look='pop'] :is(.play-screen, .game-detail) :is(.kc-slot, .deck-count-stack i) {
+html[data-look='pop'] :is(.kc-slot, .deck-count-stack i) {
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0 2px, transparent 2px 5px), var(--accent);
 }
 
@@ -568,4 +540,65 @@ html[data-look='pop'] .seg-btn .seg-sub {
 html[data-look='pop'] .seg-btn.active .seg-sub {
   color: var(--ink);
   opacity: 0.85;
+}
+
+/* ---------- Motion ---------- */
+
+/*
+ * Squash and stretch: a big button squashes a little under the thumb (wider, flatter) and springs
+ * back when let go. Pressed quickly (80 ms), back with a small overshoot. Kept small: these are
+ * pressed all evening.
+ */
+html[data-look='pop'] .big-btn {
+  transition:
+    transform 0.34s var(--spring),
+    opacity 0.12s ease,
+    background-color 0.2s ease;
+}
+
+html[data-look='pop'] .big-btn:active:not(:disabled) {
+  transform: scale(1.012, 0.94);
+  opacity: 1;
+  transition-duration: 0.08s;
+  transition-timing-function: var(--ease-out);
+}
+
+/*
+ * Feedback you can't miss: a wrong move shakes its message once, short. It shakes with `translate`,
+ * so it adds to whatever the element is already moved or turned by.
+ */
+@keyframes nope {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  20% {
+    translate: -7px 0;
+  }
+  40% {
+    translate: 6px 0;
+  }
+  60% {
+    translate: -4px 0;
+  }
+  80% {
+    translate: 2px 0;
+  }
+}
+
+html[data-look='pop'] .notice.bad,
+html[data-look='pop'] .fk-pick-info.bad {
+  animation: nope 0.42s var(--ease-out);
+}
+
+html[data-look='pop'] .tr-status-hint.tr-warn {
+  animation:
+    pop-in 0.3s var(--spring),
+    nope 0.42s var(--ease-out) 0.05s;
+}
+
+html[data-look='pop'] .sw-result.bad {
+  animation:
+    mx-slip 0.4s var(--spring) 0.12s both,
+    nope 0.42s var(--ease-out) 0.5s;
 }
