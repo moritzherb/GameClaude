@@ -244,7 +244,9 @@ export function TossStage({ what, flip }: { what: Thrown | null; flip: number })
   const [shown, setShown] = useState(false);
   useLayoutEffect(() => {
     const [h, c, sh] = [hop.current, body.current, shadow.current];
-    if (!h || !c || !sh || !what || !flip) return;
+    // The card it was thrown for is done: gone at once.
+    if (!what) return setShown(false);
+    if (!h || !c || !sh || !flip) return;
     setShown(true);
     const [ax, ay, az] = spinFor(what, flip);
     const easing = (i: number) => (i % 2 === 0 ? FALL : RISE);
@@ -289,7 +291,7 @@ export function TossStage({ what, flip }: { what: Thrown | null; flip: number })
     };
   }, [flip, what]);
   return (
-    <span className={`pt-cube-stage${shown ? ' on' : ''}`} aria-hidden>
+    <span className={`pt-cube-stage${shown && what ? ' on' : ''}`} style={what ? undefined : { transition: 'none' }} aria-hidden>
       <span ref={shadow} className="pt-cube-shadow" />
       <span ref={hop} className="pt-cube-hop">
         <canvas ref={body} className="pt-cube" />

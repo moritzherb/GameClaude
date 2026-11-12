@@ -6,6 +6,7 @@ import { buzz, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
 import { cellKey, jumps, jumpTarget, MAX_COLS, MAX_ROWS, MIN_FIELDS, type Board, type Cell } from './boards';
 import { field, FIELDS, GROUPS, KINDS, param, type Field, type FieldKind } from './fields';
+import { FieldIcon } from './FieldIcon';
 
 type Tool = 'path' | 'water' | 'tunnel' | 'erase';
 
@@ -44,6 +45,8 @@ interface Gesture {
   changed: boolean;
   /** The field the finger came down on. */
   field: number | null;
+  /** Where (screen y) the finger last made the map a row taller: another row only a cell further up. */
+  pulled?: number;
 }
 
 interface Props {
@@ -62,12 +65,13 @@ interface Props {
  */
 export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Props) {
   const [name, setName] = useState(asNew ? '' : board.name);
-  const [ed, setEd] = useState<Ed>(() => ({
-    spots: board.spots,
-    kinds: board.fields,
-    water: new Set(board.water.map(cellKey)),
-    tunnels: new Set(board.tunnels.map(cellKey)),
-  }));
+  // A new board starts empty: you draw your own path, rivers and tunnels (only its look comes
+  // from the board it was made from).
+  const [ed, setEd] = useState<Ed>(() =>
+    asNew
+      ? { spots: [], kinds: [], water: new Set(), tunnels: new Set() }
+      : { spots: board.spots, kinds: board.fields, water: new Set(board.water.map(cellKey)), tunnels: new Set(board.tunnels.map(cellKey)) },
+  );
   // Gestures read and change the newest state right away, a step per cell the finger crosses.
   const live = useRef(ed);
   const commit = (next: Ed) => {
@@ -80,6 +84,9 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const [clearing, setClearing] = useState(false);
   const [more, setMore] = useState(false);
   const [naming, setNaming] = useState(false);
+  /** What's typed into the search over the kinds of field (each time a field is opened, empty). */
+  const [query, setQuery] = useState('');
+  useEffect(() => setQuery(''), [editing]);
   const cols = MAX_COLS;
   const used = [...spots.map((c) => c.y), ...[...water, ...tunnels].map((k) => +k.split(',')[1])];
   const top = used.length ? Math.max(...used) : 0;
@@ -87,14 +94,18 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const savedRows = Math.min(MAX_ROWS, Math.max(10, top + 3));
 
   // The map fills the room beside the tools: as many rows as fit with the cells as wide as they
-  // can be. It only grows (and its cells shrink) once the path nears its top.
+  // can be, and as many as what's drawn on it reaches: no empty row above it. It grows (and its
+  // cells shrink) only when a finger drawing the path goes on up over its top edge.
   const box = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState({ w: 0, h: 0 });
   const screenRows = room.w && room.h ? Math.max(8, Math.floor(room.h / Math.floor(room.w / MAX_COLS))) : 10;
-  const fitRows = Math.min(MAX_ROWS, Math.max(screenRows, top + 2));
-  // While a finger draws, the map keeps its size (it grows once the finger lifts).
+  const fitRows = Math.min(MAX_ROWS, Math.max(screenRows, top + 1));
+  // While a finger draws, the map keeps its size (it grows only when the finger asks for it).
   const [heldRows, setHeldRows] = useState<number | null>(null);
   const rows = heldRows ?? fitRows;
+  // The rows as the gestures see them, the newest (a row added mid-gesture counts at once).
+  const rowsNow = useRef(rows);
+  rowsNow.current = rows;
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -137,7 +148,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
     const cur = live.current;
     const k = cellKey(c);
     const n = cur.spots.length;
-    if (cur.spots.some((s) => cellKey(s) === k) || (n && !nextTo(cur.spots[n - 1], c)) || c.y >= rows) return false;
+    if (cur.spots.some((s) => cellKey(s) === k) || (n && !nextTo(cur.spots[n - 1], c)) || c.y >= rowsNow.current) return false;
     const tunnelsNext = new Set(cur.tunnels);
     tunnelsNext.delete(k);
     commit({
@@ -254,6 +265,24 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const onMove = (e: ReactPointerEvent) => {
     const g = gesture.current;
     if (!g || e.pointerId !== g.id) return;
+    // Drawing the path on up over the map's top edge, from its end in the top row: the map gets a
+    // row more, and the path goes on into it.
+    if (g.mode === 'draw') {
+      const r = gridEl.current?.getBoundingClientRect();
+      const cur = live.current;
+      const endNow = cur.spots[cur.spots.length - 1];
+      const more = rowsNow.current;
+      const over = g.pulled == null ? r && e.clientY < r.top : e.clientY < g.pulled - cell;
+      if (r && over && endNow && endNow.y === more - 1 && more < MAX_ROWS && g.at.x === endNow.x && g.at.y === endNow.y) {
+        g.pulled = e.clientY;
+        rowsNow.current = more + 1;
+        setHeldRows(more + 1);
+        const up = { x: endNow.x, y: more };
+        g.changed = extend(up) || g.changed;
+        g.at = up;
+        return;
+      }
+    }
     const c = cellAt(e);
     if (!c || (c.x === g.at.x && c.y === g.at.y)) return;
     // A quick finger skips cells: go there one cell at a time, so the path stays whole.
@@ -398,7 +427,9 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                     {here && (
                       <span className={`pt-cell-field${here.kind === 'start' || here.kind === 'goal' ? ' end' : ''}${jump && targets[i!] == null ? ' broken' : ''}`} style={{ '--field': FIELDS[here.kind].color } as CSSProperties}>
                         {here.kind !== 'start' && here.kind !== 'goal' && <span className="pt-cell-n">{i}</span>}
-                        <span className="pt-cell-emoji">{FIELDS[here.kind].emoji}</span>
+                        <span className="pt-cell-emoji">
+                          <FieldIcon emoji={FIELDS[here.kind].emoji} />
+                        </span>
                         {jump && <span className="pt-cell-to">{targets[i!] != null ? `→ ${targets[i!]}` : '⚠️'}</span>}
                       </span>
                     )}
@@ -475,10 +506,27 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
         </BigButton>
       </Sheet>
 
-      <Sheet open={editing != null} onClose={() => setEditing(null)} title={editing != null ? t('Field {n}', { n: editing }) : ''}>
+      <Sheet
+        open={editing != null}
+        onClose={() => {
+          setEditing(null);
+          setQuery('');
+        }}
+        title={editing != null ? t('Field {n}', { n: editing }) : ''}
+      >
         {editing != null && (
           <div className="pt-kinds">
-            {editing === last && (
+            <input
+              type="search"
+              className="add-player-input pt-kind-search"
+              value={query}
+              placeholder={t('Search fields')}
+              autoComplete="off"
+              enterKeyHint="search"
+              aria-label={t('Search fields')}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {editing === last && matches(query, t('Finish'), t('The path ends here: the finish.')) && (
               <button
                 type="button"
                 className={`pt-kind pt-kind-goal${f?.kind === 'goal' ? ' on' : ''}`}
@@ -498,7 +546,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
             {f && f.kind !== 'goal' && FIELDS[f.kind].param && (
               <div className="pt-param">
                 <span className="pt-param-title">
-                  {FIELDS[f.kind].emoji} {FIELDS[f.kind].title(param(f))}
+                  <FieldIcon emoji={FIELDS[f.kind].emoji} /> {FIELDS[f.kind].title(param(f))}
                 </span>
                 <div className="pt-param-values">
                   {FIELDS[f.kind].param!.values.map((v) => (
@@ -509,44 +557,59 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                 </div>
               </div>
             )}
-            {GROUPS.map((group) => (
-              <div key={group.id} className="pt-kind-group">
-                <span className="pt-kind-group-title">{t(group.label)}</span>
-                {KINDS.filter((k) => FIELDS[k].group === group.id).map((k) => {
-                  // A bridge back or a tunnel has to lead somewhere from here.
-                  const jump = k === 'back-bridge' || k === 'mole';
-                  const to = jump ? jumpTarget(geometry, editing, k) : null;
-                  const sub = !jump
-                    ? FIELDS[k].text(FIELDS[k].param?.def ?? 0, '')
-                    : to != null
-                      ? t('Back to field {n}', { n: to })
-                      : k === 'mole'
-                        ? t('Not here yet: dig a tunnel next to this field (Tunnel tool).')
-                        : t('Not here yet: put water next to this field, with a field before it across the water.');
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      className={`pt-kind${f?.kind === k ? ' on' : ''}`}
-                      style={{ '--field': FIELDS[k].color } as CSSProperties}
-                      disabled={jump && to == null}
-                      onClick={() => setKind(editing, field(k as FieldKind, f?.kind === k ? f.n : undefined))}
-                    >
-                      <span className="pt-kind-emoji">{FIELDS[k].emoji}</span>
-                      <span className="pt-kind-text">
-                        <span className="pt-kind-title">{FIELDS[k].title(FIELDS[k].param?.def ?? 0)}</span>
-                        <span className="pt-kind-sub">{sub}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+            {GROUPS.map((group) => {
+              const inGroup = KINDS.filter((k) => FIELDS[k].group === group.id && matches(query, FIELDS[k].title(FIELDS[k].param?.def ?? 0), FIELDS[k].label(FIELDS[k].param?.def ?? 0), FIELDS[k].text(FIELDS[k].param?.def ?? 0, '')));
+              return inGroup.length === 0 ? null : (
+                <div key={group.id} className="pt-kind-group">
+                  <span className="pt-kind-group-title">{t(group.label)}</span>
+                  {inGroup.map((k) => {
+                    // A bridge back or a tunnel has to lead somewhere from here.
+                    const jump = k === 'back-bridge' || k === 'mole';
+                    const to = jump ? jumpTarget(geometry, editing, k) : null;
+                    const sub = !jump
+                      ? FIELDS[k].text(FIELDS[k].param?.def ?? 0, '')
+                      : to != null
+                        ? t('Back to field {n}', { n: to })
+                        : k === 'mole'
+                          ? t('Not here yet: dig a tunnel next to this field (Tunnel tool).')
+                          : t('Not here yet: put water next to this field, with a field before it across the water.');
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        className={`pt-kind${f?.kind === k ? ' on' : ''}`}
+                        style={{ '--field': FIELDS[k].color } as CSSProperties}
+                        disabled={jump && to == null}
+                        onClick={() => setKind(editing, field(k as FieldKind, f?.kind === k ? f.n : undefined))}
+                      >
+                        <span className="pt-kind-emoji">
+                          <FieldIcon emoji={FIELDS[k].emoji} />
+                        </span>
+                        <span className="pt-kind-text">
+                          <span className="pt-kind-title">{FIELDS[k].title(FIELDS[k].param?.def ?? 0)}</span>
+                          <span className="pt-kind-sub">{sub}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         )}
       </Sheet>
     </div>
   );
+}
+
+/** Whether a kind of field matches what's typed: every word of it in its name or what it says
+ *  (case and accents don't matter). */
+function matches(query: string, ...texts: string[]) {
+  const fold = (x: string) => x.toLocaleLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const hay = fold(texts.join(' '));
+  return words.every((w) => hay.includes(w));
 }
 
 function toCell(k: string): Cell {

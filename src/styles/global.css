@@ -13346,3 +13346,35 @@ h3 {
   box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.5);
   transform: translateX(-50%);
 }
+
+/* The Ace (src/games/party/ace.ts): a playing card of our own, as big as the text or emoji it stands
+   for. The card character is no emoji on an iPhone (see-through, or nothing at all). */
+.pt-ace-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.02em;
+  width: 0.74em;
+  height: 1em;
+  vertical-align: -0.14em;
+  border-radius: 0.1em;
+  background: #fffdf7;
+  box-shadow:
+    inset 0 0 0 0.04em #cfc8b8,
+    0 0.04em 0.1em rgba(0, 0, 0, 0.3);
+  color: #d7261e;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pt-ace-a {
+  font-size: 0.46em;
+  font-weight: 900;
+}
+
+.pt-ace-heart {
+  font-size: 0.36em;
+}

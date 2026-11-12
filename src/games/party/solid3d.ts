@@ -128,7 +128,9 @@ function packFaces(): Face[] {
  *  drawn (lying flat, its front up), and how high its middle is above the board. */
 const PACK_POSE: Record<1 | 2 | 3, { turn: (p: V) => V; h: number }> = {
   1: { turn: (p) => p, h: PD },
-  2: { turn: (p) => rotY(p, 90), h: PW },
+  // On its side: lying along its long narrow side, its front (or back) turned towards you, not just
+  // the narrow strip of its side.
+  2: { turn: (p) => rotX(rotZ(p, 90), -90), h: PW },
   3: { turn: (p) => rotX(p, -90), h: PH },
 };
 
@@ -243,7 +245,8 @@ export function drawThrown(ctx: CanvasRenderingContext2D, size: number, scale: n
     // Facing away from you: you can't see that side.
     if (dot(n, sub(eye, p[0])) <= 0) continue;
     const d = Math.max(0, dot(n, LIGHT));
-    const lit = 0.64 + 0.36 * d + (f.metal ? 0.35 * d ** 12 : 0.06 * d ** 20);
+    // Bright: a pack or a tin lies in the light of the room, the side turned towards you too.
+    const lit = 0.78 + 0.24 * d + (f.metal ? 0.3 * d ** 12 : 0.05 * d ** 20);
     const c = f.color.map((v) => Math.round(Math.min(255, v * lit)));
     const fill = `rgb(${c[0]},${c[1]},${c[2]})`;
     const path = () => {

@@ -1,5 +1,6 @@
 import { cellKey, jumps, THEMES, type Board, type Cell, type Theme } from './boards';
 import { FIELDS } from './fields';
+import { ACE, paintAce } from './ace';
 import { EMOJI_FONT, pawnSprite, shade, SPRITE_H, type PawnDef } from './pawns';
 
 /** A pawn as the scene shows it. */
@@ -830,10 +831,13 @@ export class Scene {
     c.width = c.height = Math.round(px * 1.25 * r);
     const ctx = c.getContext('2d')!;
     ctx.scale(r, r);
-    ctx.font = `${px}px ${EMOJI_FONT}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(emoji, (px * 1.25) / 2, px * 1.25 - px * 0.2);
+    if (emoji === ACE) paintAce(ctx, (px * 1.25) / 2, px * 1.25 - px * 0.16, px * 0.9);
+    else {
+      ctx.font = `${px}px ${EMOJI_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(emoji, (px * 1.25) / 2, px * 1.25 - px * 0.2);
+    }
     this.emojis.set(emoji, c);
     return c;
   }

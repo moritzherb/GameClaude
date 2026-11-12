@@ -11,7 +11,9 @@ import { BigDie, BigRoll, BigToss, PawnIcon, TossStage, useRoll } from './bits';
 import type { Thrown } from './solid3d';
 import { jumps, type Board } from './boards';
 import FieldCard, { type Outcome } from './FieldCard';
+import { ACE } from './ace';
 import { FIELDS, param, type Field } from './fields';
+import { AceCard, FieldIcon } from './FieldIcon';
 import { current, finish, newGame, nextTurn, setPawn, walk, walkBack, type Game } from './logic';
 import type { PawnDef } from './pawns';
 import { Scene } from './scene';
@@ -45,8 +47,13 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   const [showEffects, setShowEffects] = useState(false);
   const roller = useRoll();
   // The Tschick pack and the snus tin, thrown onto the middle of the board by the cards.
-  const [thrown, setThrown] = useState<{ what: Thrown; flip: number } | null>(null);
-  const toss = useCallback((what: Thrown) => setThrown((x) => ({ what, flip: (x?.flip ?? 0) + 1 })), []);
+  const [thrown, setThrown] = useState<{ what: Thrown | null; flip: number }>({ what: null, flip: 0 });
+  const toss = useCallback((what: Thrown) => setThrown((x) => ({ what, flip: x.flip + 1 })), []);
+  // Done with the card (Done, Next): the pack or the tin is gone at once, not lying there a moment
+  // longer while the next one rolls.
+  useLayoutEffect(() => {
+    if (phase.kind !== 'field') setThrown((x) => (x.what ? { ...x, what: null } : x));
+  }, [phase.kind]);
   const { die, roll } = roller;
   const canvas = useRef<HTMLCanvasElement>(null);
   const top = useRef<HTMLDivElement>(null);
@@ -216,7 +223,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     ...g.rules.map((r, i) => ({ key: `r${i}`, icon: '📜', text: r })),
     ...g.mates.map(([a, b], i) => ({ key: `m${i}`, icon: '🤝', text: `${byId(a).name} & ${byId(b).name}` })),
     ...(g.silence ? [{ key: 's', icon: '🤫', text: t('Silence until {name} is on', { name: byId(g.silence).name }) }] : []),
-    ...g.order.filter((id) => g.pawns[id].aces > 0).map((id) => ({ key: `a${id}`, icon: '🂡', text: g.pawns[id].aces > 1 ? `${byId(id).name} ×${g.pawns[id].aces}` : byId(id).name })),
+    ...g.order.filter((id) => g.pawns[id].aces > 0).map((id) => ({ key: `a${id}`, icon: ACE, text: g.pawns[id].aces > 1 ? `${byId(id).name} ×${g.pawns[id].aces}` : byId(id).name })),
   ];
 
   if (phase.kind === 'over' && g.winner) {
@@ -261,7 +268,12 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
   let status =
     pawn.pos === 0
       ? t('At the start · {total} fields to go', { total: last })
-      : t('Field {n} of {total} · {field}', { n: pawn.pos, total: last, field: `${FIELDS[here.kind].emoji} ${FIELDS[here.kind].title(param(here))}` });
+      : t('Field {n} of {total} · {field}', {
+          n: pawn.pos,
+          total: last,
+          // (The Ace's card is a picture of its own, not a character: just its name in the line.)
+          field: FIELDS[here.kind].emoji === ACE ? FIELDS[here.kind].title(param(here)) : `${FIELDS[here.kind].emoji} ${FIELDS[here.kind].title(param(here))}`,
+        });
   if (pawn.jailed) status = t('In prison: only a 6 gets you out');
   else if (pawn.gate) status = param(g.fields[pawn.pos]) ? t('At the bridge: a 1 or 2 gets you over') : t('At the bridge: a 5 or 6 gets you over');
 
@@ -306,7 +318,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
       </div>
 
       <BigDie value={die.value} flip={die.flip} />
-      <TossStage what={thrown?.what ?? null} flip={thrown?.flip ?? 0} />
+      <TossStage what={thrown.what} flip={thrown.flip} />
 
       <BigToss.Provider value={toss}>
       <BigRoll.Provider value={roller}>
@@ -352,7 +364,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
               <div className="pt-card-actions">
                 {(pawn.jailed || pawn.gate) && pawn.aces > 0 && phase.kind === 'turn' && (
                   <button type="button" className="pt-ace-btn" onClick={aceOut}>
-                    🂡 {t('Play your Ace')}
+                    <AceCard /> {t('Play your Ace')}
                   </button>
                 )}
                 <BigButton size="xl" disabled={phase.kind !== 'turn'} onClick={act(rollTurn)}>
@@ -368,7 +380,9 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
         <div className="kc-effects">
           {effects.map((e) => (
             <div key={e.key} className="kc-effect">
-              <span className="kc-effect-icon">{e.icon}</span>
+              <span className="kc-effect-icon">
+                <FieldIcon emoji={e.icon} />
+              </span>
               <span>{e.key.startsWith('a') ? t('{name} has an Ace up their sleeve', { name: e.text }) : e.text}</span>
             </div>
           ))}

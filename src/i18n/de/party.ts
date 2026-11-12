@@ -15,15 +15,16 @@ const party: Record<string, string> = {
     'Brücken zurück und der Tunnel vom Maulwurf schicken dich zurück. Zurück-Würfeln: nochmal würfeln und so viele Felder zurück.',
   'An Ace up your sleeve skips a field you don’t want to do, once.': 'Ein Ass im Ärmel überspringt einmal ein Feld, auf das du keine Lust hast.',
   'First into the finish wins.': 'Wer zuerst im Ziel ist, gewinnt.',
-  'Make your own board: start from one of the boards, put the fields you like where you like, and save it.':
-    'Bau dein eigenes Brett: Starte mit einem der Bretter, setz die Felder, wo du willst, und speicher es.',
+  'Make your own board: draw the path, put the fields you like where you like, and save it.':
+    'Bau dein eigenes Brett: Zeichne den Weg, setz die Felder, wo du willst, und speicher es.',
 
   // Before the game
   Board: 'Brett',
   'Your own · {n} fields': 'Eigenes · {n} Felder',
   '{n} fields': '{n} Felder',
   'Edit this board': 'Dieses Brett bearbeiten',
-  'Make your own from this board': 'Eigenes Brett daraus bauen',
+  'Make your own board': 'Eigenes Brett bauen',
+  'Search fields': 'Felder suchen',
   Pawns: 'Spielfiguren',
   '{name}’s pawn': 'Spielfigur von {name}',
 

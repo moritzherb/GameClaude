@@ -6,6 +6,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
 import { BigToss, Countdown, Die, PickPlayer, TOSS_MS, useBigRoll, useRoll } from './bits';
 import { field, FIELDS, param, type Field } from './fields';
+import { AceCard, FieldIcon } from './FieldIcon';
 import { duel, inTurnOrder, keepsUp, leaders, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
 
 /** What happens once a field is done. */
@@ -131,7 +132,7 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
       <div className="pt-card-actions">
         {canAce && (
           <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'next', ace: true })}>
-            🂡 {t('Play your Ace')}
+            <AceCard /> {t('Play your Ace')}
           </button>
         )}
         {done && (
@@ -153,7 +154,9 @@ function Card({ f, pos, lander, chosen, text, children }: { f: Field; pos: numbe
   return (
     <div className={`pt-card slide-up${known ? ' known' : ''}`} style={{ '--field': info.color } as CSSProperties}>
       <div className="pt-card-head">
-        <span className="pt-card-emoji">{info.emoji}</span>
+        <span className="pt-card-emoji">
+          <FieldIcon emoji={info.emoji} />
+        </span>
         <span className="pt-card-heading">
           <span className="pt-card-kicker">{chosen ? t('{name} chose', { name: lander.name }) : t('{name} · field {n}', { name: lander.name, n: pos })}</span>
           <span className="pt-card-title">{info.title(n)}</span>
@@ -257,7 +260,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
           <>
             {canAce && (
               <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'again', ace: true, update: (x) => setPawn(x, lander.id, { gate: false, crossed: true }) })}>
-                🂡 {t('Play your Ace')}
+                <AceCard /> {t('Play your Ace')}
               </button>
             )}
             <BigButton size="xl" disabled={die.busy} onClick={async () => setMade(need.includes(await roll()))}>
@@ -287,7 +290,7 @@ function RollBackCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolea
       <div className="pt-card-actions">
         {canAce && !rolled && (
           <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'next', ace: true })}>
-            🂡 {t('Play your Ace')}
+            <AceCard /> {t('Play your Ace')}
           </button>
         )}
         <BigButton
@@ -472,7 +475,7 @@ function SnusCard({ f, pos, lander, chosen, canAce, onDone }: Sub & { canAce: bo
           <>
             {canAce && !chosen && (
               <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'next', ace: true })}>
-                🂡 {t('Play your Ace')}
+                <AceCard /> {t('Play your Ace')}
               </button>
             )}
             <div className="pt-two">
@@ -610,7 +613,9 @@ function ChooseCard({ f, pos, lander, fields, onChoose }: Omit<Sub, 'onDone'> & 
               onChoose(field(o.kind, o.n));
             }}
           >
-            <span className="pt-choose-emoji">{FIELDS[o.kind].emoji}</span>
+            <span className="pt-choose-emoji">
+              <FieldIcon emoji={FIELDS[o.kind].emoji} />
+            </span>
             <span className="pt-choose-label">{FIELDS[o.kind].title(param(o))}</span>
           </button>
         ))}

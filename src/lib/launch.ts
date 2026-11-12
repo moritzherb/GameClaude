@@ -12,7 +12,7 @@ import { mix, topColor, topLayer, tone } from './themeColor';
 
 /** Filling the screen, staying as the splash, fading out (ms). */
 const GROW = 420;
-const HOLD = 600;
+const HOLD = 480;
 const FADE = 320;
 /** How long an iPhone takes to blend its strip under the clock to each new colour (ms). WebKit's
  *  WKColorExtensionView: a 0.1 s fade from the colour it was last given. */
