@@ -35,7 +35,7 @@ const horseRace: Record<string, string> = {
   '{suit} moves up': '{suit} zieht vor',
   '{names} give out {n} sips': '{n} Schlucke verteilen: {names}',
   '{names} give out {n} sip': '{n} Schluck verteilen: {names}',
-  'The first Ace into a row turns its side card over.': 'Das erste Ass in einer Reihe deckt ihre Seitenkarte auf.',
+  'The first Ace into a row turns its side card over.': 'Erstes Ass in der Reihe: Seitenkarte auf!',
   'On your marks…': 'Auf die Plätze…',
   'Turn the side card': 'Seitenkarte aufdecken',
   'Next card': 'Nächste Karte',

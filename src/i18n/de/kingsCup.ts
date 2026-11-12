@@ -59,7 +59,7 @@ const kingsCup: Record<string, string> = {
   'drew a card': 'hat gezogen',
   'your turn': 'du bist dran',
   'Face-down card': 'Verdeckte Karte',
-  'Pick any card': 'Zieh irgendeine Karte',
+  'Pick any card': 'Zieh eine Karte',
   'Who’s your mate?': 'Wer ist dein Trinkpartner?',
   'Write down your rule (optional)': 'Schreib deine Regel auf (optional)',
   'e.g. No first names': 'z. B. Keine Vornamen',

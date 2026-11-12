@@ -2081,6 +2081,15 @@ h3 {
 
 .game-bar .top-bar-title {
   font-size: clamp(1.1rem, 5.2vw, 1.35rem);
+  /* A long name ("Princess/King Treatment") takes two even lines in the same bar instead of being
+     cut off; only past two does it end in "…". */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  text-wrap: balance;
+  line-height: 1;
 }
 
 /*
@@ -4204,7 +4213,8 @@ h3 {
 .kc-ring-hint {
   position: absolute;
   left: 50%;
-  top: 68%;
+  /* Just under the crown, where the gap in the cards is still wide enough for the words. */
+  top: 67%;
   transform: translateX(-50%);
   white-space: nowrap;
   color: var(--muted);

@@ -10,7 +10,8 @@ import { watchAppHeight } from './lib/appHeight';
 import { watchBoxes } from './lib/boxes';
 import { watchTyping } from './lib/forgetTyping';
 import { isNative, toNative, watchScreens } from './lib/native';
-import { SPLASH_MS } from './lib/launch';
+import { BOOT_GROUND, SPLASH_MS, fadeBoot } from './lib/launch';
+import { coverTop } from './lib/themeColor';
 import { watchForUpdates } from './lib/update';
 import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
@@ -49,6 +50,10 @@ function fontsReady() {
   return Promise.race([fonts, new Promise((done) => window.setTimeout(done, 1000))]).catch(() => {});
 }
 
+// While the start-up screen shows, the strip under the clock stays its dark (the home screen
+// underneath already lays its wallpaper's colour there); it goes along as the screen fades.
+if (document.getElementById('boot')) coverTop(BOOT_GROUND);
+
 // The window's real height for the CSS (an iPhone home-screen app gets 100dvh wrong).
 watchAppHeight();
 
@@ -82,10 +87,7 @@ function hideBoot() {
   if (!boot) return;
   const shown = (window as { __bootAt?: number }).__bootAt ?? 0;
   const wait = isNative ? 0 : Math.max(0, SPLASH_MS - (performance.now() - shown));
-  window.setTimeout(() => {
-    boot.classList.add('done');
-    window.setTimeout(() => boot.remove(), 350);
-  }, wait);
+  window.setTimeout(() => fadeBoot(boot), wait);
 }
 
 // The store app brings its own copy of the app (and its updates come through the store).

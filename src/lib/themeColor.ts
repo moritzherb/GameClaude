@@ -15,10 +15,12 @@ let forced: 'light' | 'dark' | null = null;
 let pair: [string, string] = [GROUND.pop[0], GROUND.pop[1]];
 /** Colours laid over the top of the screen, oldest first. */
 const layers: { color: string }[] = [];
+/** The start-up screen's colour while it lies over everything (null once it's gone). */
+let cover: string | null = null;
 
 function paint() {
   if (typeof document === 'undefined') return;
-  const top = layers[layers.length - 1]?.color;
+  const top = cover ?? layers[layers.length - 1]?.color;
   const edge = document.querySelector<HTMLElement>('.top-edge');
   if (edge) {
     edge.style.backgroundColor = top ?? '';
@@ -62,6 +64,17 @@ export function setTheme(theme: 'light' | 'dark' | null) {
   forced = theme;
   if (theme) document.documentElement.dataset.theme = theme;
   else delete document.documentElement.dataset.theme;
+  paint();
+}
+
+/**
+ * The start-up screen (index.html) lies over the whole app while it shows: the strip under the clock
+ * keeps its colour, whatever the app lays at the top underneath meanwhile (a wallpaper, a game's
+ * colour). Set as it fades, null when it's gone. The colours under it go on as usual (`topColor`).
+ */
+export function coverTop(color: string | null) {
+  if (color === cover) return;
+  cover = color;
   paint();
 }
 
