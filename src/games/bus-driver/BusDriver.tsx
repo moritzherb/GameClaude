@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import PlayingCard from '../../components/PlayingCard';
@@ -175,7 +176,9 @@ export default function BusDriver({ players, exit }: GameProps) {
               setS({ ...s, risky: !s.risky });
             }}
           >
-            <span className="setting-emoji">🔥</span>
+            <span className="setting-emoji" aria-hidden="true">
+              <RowIcon name="risk" />
+            </span>
             <span className="setting-text">
               <span className="setting-label">{t('Risky mode')}</span>
               <span className="setting-hint">{t('Adds a 5th question: guess the exact suit.')}</span>

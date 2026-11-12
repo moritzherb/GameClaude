@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { RowIcon, type RowGlyph } from './Icons';
 import { t } from '../i18n';
 import { backUp, deleteMyData, groupCode, restore } from '../net/cloud';
 import BigButton from './BigButton';
@@ -16,9 +17,9 @@ export default function CloudBackup() {
       <h2 className="section-title">{t('New phone?')}</h2>
       <p className="fine-print">{t('Back up your players, boards, settings and stats under a code. On the new phone, bring them in with that code.')}</p>
       <div className="settings-list">
-        <Row emoji="☁️" label={t('Make a backup code')} hint={t('A new code each time, the old one stops working')} onClick={() => setOpen('backup')} />
-        <Row emoji="📲" label={t('Bring in a backup')} hint={t('Replaces what’s on this phone')} onClick={() => setOpen('restore')} />
-        <Row emoji="🗑️" label={t('Delete my data on the server')} hint={t('Your backup and the boards you shared')} onClick={() => setOpen('delete')} />
+        <Row icon="backup" label={t('Make a backup code')} hint={t('A new code each time, the old one stops working')} onClick={() => setOpen('backup')} />
+        <Row icon="restore" label={t('Bring in a backup')} hint={t('Replaces what’s on this phone')} onClick={() => setOpen('restore')} />
+        <Row icon="trash" label={t('Delete my data on the server')} hint={t('Your backup and the boards you shared')} onClick={() => setOpen('delete')} />
       </div>
       <BackupSheet open={open === 'backup'} onClose={close} />
       <RestoreSheet open={open === 'restore'} onClose={close} />
@@ -27,10 +28,12 @@ export default function CloudBackup() {
   );
 }
 
-function Row({ emoji, label, hint, onClick }: { emoji: string; label: string; hint: string; onClick: () => void }) {
+function Row({ icon, label, hint, onClick }: { icon: RowGlyph; label: string; hint: string; onClick: () => void }) {
   return (
     <button type="button" className="setting-row" onClick={onClick}>
-      <span className="setting-emoji">{emoji}</span>
+      <span className="setting-emoji" aria-hidden="true">
+        <RowIcon name={icon} />
+      </span>
       <span className="setting-text">
         <span className="setting-label">{label}</span>
         <span className="setting-hint">{hint}</span>

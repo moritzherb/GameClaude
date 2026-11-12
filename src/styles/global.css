@@ -687,7 +687,6 @@ h3 {
   font-size: 3rem;
   line-height: 1;
   transform-origin: 50% 90%;
-  animation: wiggle 2.4s ease-in-out infinite;
 }
 
 .gate .stack {
@@ -1813,8 +1812,13 @@ h3 {
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
-  color: var(--bad-ink);
+  color: var(--accent-ink);
   font-size: 0.9375rem;
+}
+
+/* Red only where something goes away (removing everyone, leaving the room, clearing the stats). */
+.text-btn.bad {
+  color: var(--bad-ink);
 }
 
 .text-btn.danger {
@@ -1835,7 +1839,6 @@ h3 {
 .empty-emoji {
   font-size: 3rem;
   line-height: 1;
-  animation: bob 3s ease-in-out infinite;
 }
 
 /* ---------- Settings ---------- */
@@ -1882,6 +1885,11 @@ h3 {
   display: grid;
   place-items: center;
   font-size: 1rem;
+}
+
+.setting-emoji svg {
+  font-size: 18px;
+  color: var(--ink);
 }
 
 .setting-text {
@@ -4104,13 +4112,14 @@ h3 {
 }
 
 /* The 4th King: the crown goes like for any card (the face-down card mustn't give it away), and
-   the moment the King's face shows (halfway through the flip) it drops onto the card's top right
-   corner (over the card, so nothing under it goes on a layer of its own). */
+   the moment the King's face shows (halfway through the flip) it drops straight down onto the
+   middle of the card's top edge, as if put on (over the card, so nothing under it goes on a layer
+   of its own). */
 .kc-ring.revealing .kc-crown-wrap.crowning {
   z-index: 4;
   opacity: 1;
   pointer-events: none;
-  transform: translate(calc(-50% + 24 * var(--qw)), calc(-65 * var(--qw))) rotate(24deg) scale(0.78);
+  transform: translate(-50%, calc(-66 * var(--qw))) scale(0.78);
   transition: none;
   animation: kc-crown-onto 0.45s var(--spring) 0.42s both;
 }
@@ -4118,14 +4127,14 @@ h3 {
 @keyframes kc-crown-onto {
   from {
     opacity: 0;
-    transform: translate(calc(-50% + 24 * var(--qw)), calc(-88 * var(--qw))) rotate(-10deg) scale(1);
+    transform: translate(-50%, calc(-90 * var(--qw))) scale(0.9);
   }
   30% {
     opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(calc(-50% + 24 * var(--qw)), calc(-65 * var(--qw))) rotate(24deg) scale(0.78);
+    transform: translate(-50%, calc(-66 * var(--qw))) scale(0.78);
   }
 }
 
@@ -7380,6 +7389,14 @@ h3 {
   font-size: 0.8rem;
 }
 
+/* Sips: a mug beside the number, in the quiet text colour. */
+.hs-stake-num svg {
+  margin-left: 2px;
+  font-size: 15px;
+  color: var(--muted);
+  vertical-align: -2px;
+}
+
 /* Too narrow for all of it in one line (345px or less, see HorseRace.tsx): name and stake on top,
    the suits below. */
 .hs-bets.narrow .hs-bet-row {
@@ -8481,6 +8498,7 @@ h3 {
 
 .code-input::placeholder {
   color: var(--line);
+  letter-spacing: normal;
 }
 
 .code-input:focus {
@@ -8524,7 +8542,6 @@ h3 {
 .connecting-emoji {
   font-size: 4.5rem;
   line-height: 1;
-  animation: wiggle 1.2s ease-in-out infinite;
 }
 
 .room-code-card {
@@ -11963,9 +11980,54 @@ h3 {
   flex-shrink: 0;
 }
 
-.vt-seg-emoji {
-  font-size: 1.9rem;
+/* Who the cards are about: a row of small upright cards, each showing just its emoji. The chosen
+   one in the lime ring, the others a step back. Mixed shows the other two together. */
+.vt-picks {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.vt-pick {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: clamp(2.5rem, 13vw, 3.5rem);
   line-height: 1;
+  transition: transform 0.15s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+.vt-pick:active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.vt-pick.on {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+.vt-pick-emoji {
+  display: block;
+  opacity: 0.65;
+  transform: scale(0.88);
+  transition: transform 0.25s var(--ease-out), opacity 0.2s var(--ease-out);
+}
+
+.vt-pick.on .vt-pick-emoji {
+  opacity: 1;
+  transform: none;
+}
+
+/* Two emoji, a little smaller, overlapping like two cards side by side. */
+.vt-pick.mixed .vt-pick-emoji {
+  font-size: 0.8em;
+}
+
+.vt-pick.mixed .vt-pick-emoji + .vt-pick-emoji {
+  margin-left: -0.3em;
 }
 
 .vt-count {

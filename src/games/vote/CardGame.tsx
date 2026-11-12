@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import Finished from '../../components/Finished';
@@ -9,11 +9,14 @@ import { useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 
-/** A choice on the setup screen: who the cards are about. `mixed` picks one of the others per card. */
+/**
+ * A choice on the setup screen: who the cards are about. `mixed` picks one of the others per card
+ * (and shows their emoji together, so it has none of its own).
+ */
 export interface Mode {
   id: string;
-  emoji: string;
-  /** Already translated. */
+  emoji?: string;
+  /** Already translated: the button's name (it shows just the emoji). */
   label: string;
   mixed?: boolean;
 }
@@ -139,13 +142,22 @@ export default function CardGame<C>(props: CardGameProps<C>) {
       <div className="bd vt">
         <section className="section">
           <h3 className="section-title">{props.modeTitle}</h3>
-          <div className={`seg ${modes!.length === 2 ? 'two' : 'three'}`}>
+          {/* Small cards, one per choice, their face the emoji the cards will be about. */}
+          <div className="vt-picks" style={{ '--n': modes!.length } as CSSProperties}>
             {modes!.map((m) => (
-              <button key={m.id} type="button" className={`seg-btn${mode === m.id ? ' active' : ''}`} aria-pressed={mode === m.id} onClick={() => setMode(m.id)}>
-                <span className="vt-seg-emoji" aria-hidden="true">
-                  {m.emoji}
-                </span>
-                <span className="seg-sub">{m.label}</span>
+              <button
+                key={m.id}
+                type="button"
+                className={`vt-pick${mode === m.id ? ' on' : ''}${m.mixed ? ' mixed' : ''}`}
+                aria-pressed={mode === m.id}
+                aria-label={m.label}
+                onClick={() => setMode(m.id)}
+              >
+                {(m.mixed ? modes!.filter((o) => !o.mixed) : [m]).map((o) => (
+                  <span key={o.id} className="vt-pick-emoji" aria-hidden="true">
+                    {o.emoji}
+                  </span>
+                ))}
               </button>
             ))}
           </div>

@@ -107,7 +107,7 @@ const app: Record<string, string> = {
   'Host my own room instead': 'Lieber eigenen Raum eröffnen',
   'Host a room': 'Raum eröffnen',
   'or join one': 'oder beitreten',
-  CODE: 'CODE',
+  Code: 'Code',
   'Room code': 'Raumcode',
   Join: 'Beitreten',
   'Works on any network, Wi-Fi or mobile data, even when the phones are on different ones. Keep the app open on the host phone.':
@@ -136,6 +136,7 @@ const app: Record<string, string> = {
   Offline: 'Offline',
   'Waiting for the others to join…': 'Warte auf die anderen…',
   'Cheers!': 'Prost!',
+  Cheers: 'Prost',
   'Shows up on every phone': 'Erscheint auf jedem Handy',
   'Back to {game}': 'Zurück zu {game}',
   'Games for every phone': 'Spiele für alle Handys',

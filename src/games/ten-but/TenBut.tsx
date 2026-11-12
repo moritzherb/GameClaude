@@ -28,7 +28,7 @@ export default function TenBut(props: GameProps) {
       modes={[
         { id: 'he', emoji: '🙋‍♂️', label: t('He') },
         { id: 'she', emoji: '🙋‍♀️', label: t('She') },
-        { id: 'mixed', emoji: '🎲', label: t('Mixed'), mixed: true },
+        { id: 'mixed', label: t('Mixed'), mixed: true },
       ]}
       modeTitle={t('Who’s it about?')}
       intro={t('A card says: a 10, but … Read it out and talk about it: still a 10? Then the next card.')}

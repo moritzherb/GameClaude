@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import Avatar from '../components/Avatar';
 import BigButton from '../components/BigButton';
-import { CloseIcon } from '../components/Icons';
+import { CloseIcon, RowIcon } from '../components/Icons';
 import QrCode from '../components/QrCode';
 import Tap from '../components/Tap';
 import TopBar from '../components/TopBar';
@@ -129,7 +129,7 @@ function Start({ joinCode }: { joinCode: string | null }) {
               name="prost-room"
               className="code-input"
               value={code}
-              placeholder={t('CODE')}
+              placeholder={t('Code')}
               maxLength={6}
               autoComplete="off"
               autoCapitalize="characters"
@@ -176,7 +176,6 @@ function Lobby() {
       <main className="screen">
         <TopBar onBack={() => room.leave()} icon="close" />
         <div className="connecting">
-          <div className="connecting-emoji">📡</div>
           <h1 className="bd-title">{isHost ? t('Opening the room…') : t('Joining {code}…', { code })}</h1>
           <p className="lead">{t('This takes a few seconds.')}</p>
         </div>
@@ -265,14 +264,16 @@ function Lobby() {
       </section>
 
       <Tap className="cheers-btn" onClick={room.sendCheers}>
-        <span className="cheers-emoji">🍻</span>
-        <span>{t('Cheers!')}</span>
+        <span className="cheers-emoji" aria-hidden="true">
+          <RowIcon name="cheers" />
+        </span>
+        <span>{t('Cheers')}</span>
         <span className="cheers-sub">{t('Shows up on every phone')}</span>
       </Tap>
 
       {running ? (
         <BigButton size="xl" onClick={() => navigate(paths.online(running.id))}>
-          {running.emoji} {t('Back to {game}', { game: t(running.name) })}
+          {t('Back to {game}', { game: t(running.name) })}
         </BigButton>
       ) : isHost ? (
         <section className="section">
@@ -315,7 +316,7 @@ function Lobby() {
 
       <button
         type="button"
-        className={`text-btn${armLeave ? ' danger' : ''}`}
+        className={`text-btn bad${armLeave ? ' danger' : ''}`}
         onClick={() => {
           buzz();
           if (armLeave) room.leave();

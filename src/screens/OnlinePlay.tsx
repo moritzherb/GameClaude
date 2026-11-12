@@ -43,7 +43,6 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
       <main className="screen">
         <TopBar onBack={() => navigate(paths.game(game.id))} />
         <div className="connecting">
-          <div className="connecting-emoji">📱</div>
           <h1 className="bd-title">{t('{game} needs a room', { game: t(game.name) })}</h1>
           <p className="lead">{t('Every player uses their own phone. Open a room, let everyone join, then start the game from there.')}</p>
         </div>

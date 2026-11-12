@@ -58,7 +58,7 @@ const schweinerei: Record<string, string> = {
   'Into the pen: +{n}': 'In den Stall: +{n}',
 
   'And throw!': 'Und werfen!',
-  'That wasn’t a throw. Swing up and let go!': 'Das war kein Wurf. Mit Schwung nach oben und loslassen!',
+  'That wasn’t a throw. Swing up and let go!': 'Das war kein Wurf. Mit Schwung nach oben und loslassen.',
   'Pick up the pigs and throw them': 'Schweinchen nehmen und werfen',
   'Pick up the pigs, swing up and let go': 'Schweinchen nehmen, nach oben schwingen und loslassen',
   Pen: 'Stall',

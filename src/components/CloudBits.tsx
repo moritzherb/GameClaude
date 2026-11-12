@@ -76,7 +76,7 @@ export function CodeForm({ length, label, busy, onSubmit }: { length: number; la
         name="prost-code"
         className="code-input"
         value={code}
-        placeholder={t('CODE')}
+        placeholder={t('Code')}
         maxLength={length + Math.floor(length / 4)}
         autoComplete="off"
         autoCapitalize="characters"

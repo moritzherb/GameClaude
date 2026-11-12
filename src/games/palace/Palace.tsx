@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
@@ -213,7 +214,9 @@ export default function Palace() {
         </ul>
         <div className="settings-list">
           <Tap className={`setting-row${tableless ? '' : ' on'}`} onClick={() => setTableless(!tableless)} ariaLabel={t('Table phone in the middle')}>
-            <span className="setting-emoji">📱</span>
+            <span className="setting-emoji" aria-hidden="true">
+              <RowIcon name="phone" />
+            </span>
             <span className="setting-text">
               <span className="setting-label">{t('Table phone in the middle')}</span>
               <span className="setting-hint">

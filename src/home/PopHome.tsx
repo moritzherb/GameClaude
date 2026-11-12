@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { DiceIcon, PeopleIcon, PersonIcon, SlidersIcon } from '../components/Icons';
+import { DiceIcon, PeopleIcon, SlidersIcon } from '../components/Icons';
 import { findGame, GAMES, playableGames } from '../games/registry';
 import type { GameDefinition } from '../games/types';
 import { getLang, t } from '../i18n';
@@ -20,6 +20,7 @@ import { loadHidden, loadOrder, saveHidden, saveOrder } from './order';
 import Search from './Search';
 import Springboard from './Springboard';
 import { usePlatform } from './usePlatform';
+import { useProfile } from '../net/profile';
 
 /**
  * Home in the new look: the phone's own home screen, an iPhone's on iPhones and an Android
@@ -44,6 +45,7 @@ export default function PopHome() {
     };
   }, [wall.top]);
   const room = useRoom();
+  const { profile: me } = useProfile();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   /** The search: shut, open, or open from pulling home down (its field already in place). */
   const [searching, setSearching] = useState<false | { pulledBy?: number }>(false);
@@ -129,7 +131,13 @@ export default function PopHome() {
         badge={inRoom ? room.members.filter((m) => m.online).length : undefined}
         onOpen={() => navigate(paths.room)}
       />
-      <AppButton label={t('Your profile')} tone="dark" glyph={<PersonIcon />} onOpen={() => navigate(paths.profile)} />
+      {/* Your own picture, not a generic one: the button beside it (the crew, the room) reads as the party. */}
+      <AppButton
+        label={t('Your profile')}
+        color={me.color}
+        glyph={me.photo ? <img className="app-photo" src={me.photo} alt="" draggable={false} /> : me.avatar}
+        onOpen={() => navigate(paths.profile)}
+      />
       <AppButton label={t('Settings')} tone="dark" glyph={<SlidersIcon />} onOpen={() => navigate(paths.settings)} />
     </>
   );

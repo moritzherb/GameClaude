@@ -24,7 +24,6 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
     return (
       <main className="screen">
         <div className="connecting">
-          <div className="connecting-emoji">🫗</div>
           <h2 className="bd-title">{t('Oops, something spilled.')}</h2>
           <p className="lead">{t('This screen crashed. Your players and settings are safe.')}</p>
           <p className="fine-print crash-text">{`${error.name}: ${error.message}`.slice(0, 200)}</p>
