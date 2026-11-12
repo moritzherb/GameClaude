@@ -138,6 +138,18 @@ export default function Springboard({ players, recent, returning, dock, wall, on
   // and opacity): home itself stays as it is, nothing is drawn again while the finger moves.
   const peek = useRef<HTMLDivElement>(null);
   const dim = useRef<HTMLDivElement>(null);
+  // While a finger pulls (and until the veil has gone again), the strip under the clock dims with it.
+  const [pulling, setPulling] = useState(false);
+  const pullDone = useRef(0);
+  useTopTint(dim, pulling);
+  const pullStarts = () => {
+    window.clearTimeout(pullDone.current);
+    setPulling(true);
+  };
+  const pullEnds = (after: number) => {
+    window.clearTimeout(pullDone.current);
+    pullDone.current = window.setTimeout(() => setPulling(false), after);
+  };
   /** Past its place the field gives only a little more. */
   const below = (dy: number) => (dy < PULL ? dy - PULL : (dy - PULL) * 0.25);
   const showPull = (dy: number, how = '') => {
@@ -151,12 +163,16 @@ export default function Springboard({ players, recent, returning, dock, wall, on
     veil.style.opacity = dy ? String(k) : '';
   };
   const endPull = (dy: number) => {
-    if (dy < PULL) return showPull(0, '0.25s ease');
+    if (dy < PULL) {
+      showPull(0, '0.25s ease');
+      return pullEnds(300);
+    }
     // The search opens with its field just where this one is (the same field) over the same veil,
     // and both glide up into place together; these stay until the search has faded in over them.
     onSearch(below(dy));
     showPull(PULL, SETTLE_FIELD);
     window.setTimeout(() => showPull(0), 320);
+    pullEnds(360);
   };
 
   /**
@@ -193,7 +209,10 @@ export default function Springboard({ players, recent, returning, dock, wall, on
         // From here the page follows the finger exactly.
         s.x = x;
         s.dx = 0;
-      } else if (s.dy > 12 && !s.lib && !edit.editing) s.mode = 'pull';
+      } else if (s.dy > 12 && !s.lib && !edit.editing) {
+        s.mode = 'pull';
+        pullStarts();
+      }
       else if (Math.abs(s.dy) > 12) s.mode = 'none';
       else return;
     }

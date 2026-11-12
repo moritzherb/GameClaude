@@ -1872,7 +1872,8 @@ h3 {
   border-top: 0.5px solid var(--line);
 }
 
-.setting-row:active {
+/* Only a row that is one action lights up; a row with its own controls leaves the press to them. */
+.setting-row:active:not(:disabled, :has(button, .switch)) {
   background: var(--surface-2);
 }
 

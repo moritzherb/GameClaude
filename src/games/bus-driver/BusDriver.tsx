@@ -88,8 +88,8 @@ export default function BusDriver({ players, exit }: GameProps) {
   useTurnBubble(s.stage === 'turn' ? seat?.player : null);
   const dealer = players.find((p) => p.id === s.dealerId);
 
-  const start = () =>
-    setS({ ...s, stage: roundStart, seats: seatOrder(players, s.dealerId), deck: shuffle(newDeck()), round: 0, turn: 0, reveal: null });
+  const start = (dealerId = s.dealerId) =>
+    setS({ ...s, dealerId, stage: roundStart, seats: seatOrder(players, dealerId), deck: shuffle(newDeck()), round: 0, turn: 0, reveal: null });
 
   const answer = (guess: Guess) => {
     if (s.reveal || answered.current) return;
@@ -160,7 +160,8 @@ export default function BusDriver({ players, exit }: GameProps) {
             </Tap>
           ))}
         </div>
-        <button type="button" className="text-btn" onClick={() => setS({ ...s, dealerId: pick(players).id })}>
+        {/* Chance picks the dealer, and the cards are dealt straight away. */}
+        <button type="button" className="text-btn" onClick={() => start(pick(players).id)}>
           {t('Pick a random dealer')}
         </button>
 
@@ -190,7 +191,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         </div>
 
         <div className="sticky-action">
-          <BigButton size="xl" onClick={start}>
+          <BigButton size="xl" onClick={() => start()}>
             {t('Deal the cards')}
           </BigButton>
         </div>

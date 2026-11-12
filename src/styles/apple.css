@@ -283,7 +283,9 @@ html[data-look='pop'] .setting-row + .setting-row::before {
   border-top: 0.5px solid var(--line);
 }
 
-html[data-look='pop'] .setting-row:active {
+/* Only a row that is one action lights up (privacy, reset, backup). A row holding its own controls
+   (segments, wallpapers, a switch) leaves the press to them. */
+html[data-look='pop'] .setting-row:active:not(:disabled, :has(button, .switch)) {
   background: var(--fill);
 }
 
@@ -609,7 +611,12 @@ html[data-look='pop'] .pick-chip-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: inherit;
+  /* The icon's own corners (its glyph box has none to inherit): rounded square, round on Android. */
+  border-radius: calc(var(--ic, 60px) * 0.24);
+}
+
+html[data-os='android'] .app-icon .app-photo {
+  border-radius: 50%;
 }
 
 /* Cheers in the room: a calm card like the others (the lime is for starting a game). */

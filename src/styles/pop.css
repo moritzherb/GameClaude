@@ -1751,6 +1751,19 @@ html[data-os='android'] .os-alert-btn {
   backdrop-filter: blur(18px);
 }
 
+/* The strip under the clock is one colour; the blurred home under the search isn't (a widget's colour
+   bleeds up into it). So the search's top edge is that one colour (lib/useTopTint.ts sets it), fading
+   into the blur just below, and strip and screen meet without an edge. */
+.os-search::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: calc(max(14px, env(safe-area-inset-top)) + 20px);
+  background: linear-gradient(var(--top-tint, transparent) calc(100% - 20px), transparent);
+  pointer-events: none;
+}
+
 .os-search-bar {
   display: flex;
   align-items: center;
