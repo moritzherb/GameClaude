@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { t } from '../i18n';
 import { useTopTint } from '../lib/useTopTint';
 import BigButton from './BigButton';
@@ -11,12 +11,29 @@ interface Props {
   closeLabel?: string;
 }
 
-/** Bottom sheet with one big close button. Tapping outside also closes it. */
+/** How long a sheet takes to go back down (a fifth quicker than it comes up), and its backdrop to
+ *  dim in and out (ms, as in global.css: .slide-down, .sheet-backdrop). */
+const OUT = 220;
+const DIM_IN = 200;
+const DIM_OUT = 160;
+
+/** Bottom sheet with one big close button. Tapping outside also closes it. It slides back down
+ *  the way it came when it closes, its dimmed backdrop (and the strip under the clock) with it. */
 export default function Sheet({ open, onClose, title, children, closeLabel = t('Got it') }: Props) {
   const titleId = useId();
   const box = useRef<HTMLDivElement>(null);
   const backdrop = useRef<HTMLDivElement>(null);
-  useTopTint(backdrop, open);
+  // Still on screen while it goes (then gone), what it showed kept as it was.
+  const [shown, setShown] = useState(open);
+  const last = useRef({ title, children, closeLabel });
+  if (open) last.current = { title, children, closeLabel };
+  useEffect(() => {
+    if (open) return setShown(true);
+    const id = window.setTimeout(() => setShown(false), OUT);
+    return () => window.clearTimeout(id);
+  }, [open]);
+  // The backdrop dims in and out straight along (global.css), the strip under the clock with it.
+  useTopTint(backdrop, open, { in: DIM_IN, out: DIM_OUT });
   // Screen readers: move into the sheet when it opens, and back to where you were when it closes.
   useEffect(() => {
     if (!open) return;
@@ -31,12 +48,14 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open && !shown) return null;
+  const leaving = !open;
+  const view = last.current;
   return (
-    <div className="sheet-backdrop" ref={backdrop} onClick={onClose}>
+    <div className={`sheet-backdrop${leaving ? ' leaving' : ''}`} ref={backdrop} onClick={leaving ? undefined : onClose}>
       <div
         ref={box}
-        className="sheet slide-up"
+        className={`sheet ${leaving ? 'slide-down' : 'slide-up'}`}
         role="dialog"
         aria-modal
         aria-labelledby={titleId}
@@ -44,11 +63,11 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
       >
         <span className="sheet-grabber" />
         <h2 className="sheet-title" id={titleId}>
-          {title}
+          {view.title}
         </h2>
-        <div className="sheet-body">{children}</div>
-        <BigButton variant="light" onClick={onClose}>
-          {closeLabel}
+        <div className="sheet-body">{view.children}</div>
+        <BigButton variant="light" onClick={leaving ? undefined : onClose}>
+          {view.closeLabel}
         </BigButton>
       </div>
     </div>
