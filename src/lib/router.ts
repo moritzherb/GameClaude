@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { buzz } from './fx';
 
 // Hash routing: works on any static host.
 //
@@ -327,7 +328,11 @@ if (typeof window !== 'undefined') {
       return;
     }
     // (Onto a game's entry, or the top ones, it's always the app's own step: nothing lies behind a game.)
-    if (!pendingGame && !pendingNav && history.state !== GAME_ROOT && history.state !== GAME_TOP && history.state !== HOME_TOP) cameBack(true);
+    if (!pendingGame && !pendingNav && history.state !== GAME_ROOT && history.state !== GAME_TOP && history.state !== HOME_TOP) {
+      cameBack(true);
+      // Swiped back out of a screen (or the back button): a tick to say it's left.
+      buzz();
+    }
     // Stepped back onto the bottom entry to make it the game as well.
     if (pendingGame) {
       const hash = pendingGame;
