@@ -11,11 +11,9 @@ interface Props {
   closeLabel?: string;
 }
 
-/** How long a sheet takes to go back down (a fifth quicker than it comes up), and its backdrop to
- *  dim in and out (ms, as in global.css: .slide-down, .sheet-backdrop). */
+/** How long a sheet takes to go back down (a fifth quicker than it comes up; ms, as in global.css:
+ *  .slide-down). */
 const OUT = 220;
-const DIM_IN = 200;
-const DIM_OUT = 160;
 
 /** Bottom sheet with one big close button. Tapping outside also closes it. It slides back down
  *  the way it came when it closes, its dimmed backdrop (and the strip under the clock) with it. */
@@ -32,8 +30,9 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
     const id = window.setTimeout(() => setShown(false), OUT);
     return () => window.clearTimeout(id);
   }, [open]);
-  // The backdrop dims in and out straight along (global.css), the strip under the clock with it.
-  useTopTint(backdrop, open, { in: DIM_IN, out: DIM_OUT });
+  // The backdrop dims in and out (global.css), the strip under the clock with it, frame by frame,
+  // until the sheet has gone.
+  useTopTint(backdrop, open || shown);
   // Screen readers: move into the sheet when it opens, and back to where you were when it closes.
   useEffect(() => {
     if (!open) return;

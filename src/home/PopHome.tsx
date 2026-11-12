@@ -8,7 +8,7 @@ import { launch, lastLaunched } from '../lib/launch';
 import { lineup } from '../lib/lineup';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
-import { tintTop } from '../lib/themeColor';
+import { followFade, topColor, topLayer } from '../lib/themeColor';
 import { useTopTint } from '../lib/useTopTint';
 import { loadPhoto, wallpaperFor } from '../lib/wallpaper';
 import { navigate, paths } from '../lib/router';
@@ -31,7 +31,18 @@ export default function PopHome() {
   // The wallpaper; while home shows, the strip under the clock takes the colour of its top edge.
   const [photo] = useState(loadPhoto);
   const wall = wallpaperFor(settings.wallpaper, photo);
-  useLayoutEffect(() => (wall.top ? tintTop(wall.top) : undefined), [wall.top]);
+  useLayoutEffect(() => {
+    if (!wall.top) return;
+    // Coming back from a game, home fades in (pop.css .os-home.back): the strip goes along.
+    const from = topColor();
+    const layer = topLayer(from);
+    const home = document.querySelector('.os-home');
+    const stop = home ? followFade(home, from, wall.top, layer.set) : (layer.set(wall.top), () => {});
+    return () => {
+      stop();
+      layer.release();
+    };
+  }, [wall.top]);
   const room = useRoom();
   const inRoom = room.status === 'open' || room.status === 'reconnecting';
   /** The search: shut, open, or open from pulling home down (its field already in place). */
