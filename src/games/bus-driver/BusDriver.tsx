@@ -91,6 +91,39 @@ export default function BusDriver({ players, exit }: GameProps) {
   const start = (dealerId = s.dealerId) =>
     setS({ ...s, dealerId, stage: roundStart, seats: seatOrder(players, dealerId), deck: shuffle(newDeck()), round: 0, turn: 0, reveal: null });
 
+  // Picking the dealer by chance: the light runs round the players, slowing down, lands on one, and
+  // the cards are dealt. `lit` is who it's on now (null: not rolling).
+  const [lit, setLit] = useState<{ id: string; landed: boolean } | null>(null);
+  const roll = useRef<number>(undefined);
+  useEffect(() => () => window.clearTimeout(roll.current), []);
+  const rollDealer = () => {
+    if (lit) return;
+    const target = pick(players);
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || players.length < 2) return start(target.id);
+    const n = players.length;
+    const from = Math.max(0, players.findIndex((p) => p.id === s.dealerId));
+    // A dozen steps or more (laps round the table), then on to the one it lands on.
+    const total = Math.max(3, Math.ceil(12 / n)) * n + ((players.findIndex((p) => p.id === target.id) - from + n) % n);
+    const step = (k: number) => {
+      const p = players[(from + k) % n];
+      if (k >= total) {
+        setLit({ id: p.id, landed: true });
+        sfx.tada();
+        buzz();
+        roll.current = window.setTimeout(() => {
+          setLit(null);
+          start(p.id);
+        }, 900);
+        return;
+      }
+      setLit({ id: p.id, landed: false });
+      sfx.tick();
+      // Quick at first, then slower and slower.
+      roll.current = window.setTimeout(() => step(k + 1), 70 + 380 * (k / total) ** 2.2);
+    };
+    step(1);
+  };
+
   const answer = (guess: Guess) => {
     if (s.reveal || answered.current) return;
     answered.current = true;
@@ -150,18 +183,19 @@ export default function BusDriver({ players, exit }: GameProps) {
           {players.map((p) => (
             <Tap
               key={p.id}
-              className={`pick-chip${p.id === s.dealerId ? ' selected' : ''}`}
+              className={`pick-chip${p.id === (lit?.id ?? s.dealerId) ? ' selected' : ''}${lit?.landed && p.id === lit.id ? ' landed' : ''}`}
               style={{ '--chip': p.color } as CSSProperties}
+              disabled={!!lit}
               onClick={() => setS({ ...s, dealerId: p.id })}
             >
               <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
-              {p.id === s.dealerId && <span className="pick-chip-badge">{t('Dealer')}</span>}
+              {p.id === (lit?.id ?? s.dealerId) && <span className="pick-chip-badge">{t('Dealer')}</span>}
             </Tap>
           ))}
         </div>
         {/* Chance picks the dealer, and the cards are dealt straight away. */}
-        <button type="button" className="text-btn" onClick={() => start(pick(players).id)}>
+        <button type="button" className="text-btn" disabled={!!lit} onClick={rollDealer}>
           {t('Pick a random dealer')}
         </button>
 
@@ -191,7 +225,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         </div>
 
         <div className="sticky-action">
-          <BigButton size="xl" onClick={() => start()}>
+          <BigButton size="xl" disabled={!!lit} onClick={() => start()}>
             {t('Deal the cards')}
           </BigButton>
         </div>
