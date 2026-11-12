@@ -40,6 +40,28 @@ function parse(hash: string): Route {
   return { segments: path.split('/').filter(Boolean), query: new URLSearchParams(query) };
 }
 
+/**
+ * Holding the screen: the address (and the history) moves on, but the screen shown stays until the
+ * hold is let go. Opening a game from home (lib/launch.ts): the new page goes into the history at
+ * once, while home still shows, so the picture an iPhone keeps of the home entry is home (not the
+ * splash that covers it a moment later); the page itself shows once the splash covers the screen.
+ */
+let held = 0;
+let heldChange = false;
+export function holdScreen(): () => void {
+  held++;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    held--;
+    if (!held && heldChange) {
+      heldChange = false;
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+  };
+}
+
 /** Where each screen was scrolled to when it was left, for swiping back to it. */
 const scrolls = new Map<string, number>();
 /** Home has more than one address ('', '#', '#/'). */
@@ -51,6 +73,11 @@ export function useRoute(): Route {
     // What the first render showed (the address may have changed since, before this listened).
     let shown = hash;
     const onChange = () => {
+      // The screen is held (see holdScreen): it shows once let go.
+      if (held) {
+        heldChange = true;
+        return;
+      }
       // The app's own steps through the history can land on the screen already shown: stay put.
       if (window.location.hash === shown) return;
       // Still the old screen on display: remember how far down it was.
