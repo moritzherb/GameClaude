@@ -167,7 +167,7 @@ export default function Players({ next }: { next: string | null }) {
       {players.length > 1 && (
         <button
           type="button"
-          className={`text-btn${armClear ? ' danger' : ''}`}
+          className={`text-btn bad${armClear ? ' danger' : ''}`}
           onClick={() => {
             buzz();
             if (armClear) {

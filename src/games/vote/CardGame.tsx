@@ -142,10 +142,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
           <div className={`seg ${modes!.length === 2 ? 'two' : 'three'}`}>
             {modes!.map((m) => (
               <button key={m.id} type="button" className={`seg-btn${mode === m.id ? ' active' : ''}`} aria-pressed={mode === m.id} onClick={() => setMode(m.id)}>
-                <span className="vt-seg-emoji" aria-hidden="true">
-                  {m.emoji}
-                </span>
-                <span className="seg-sub">{m.label}</span>
+                {m.label}
               </button>
             ))}
           </div>

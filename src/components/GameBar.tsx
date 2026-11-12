@@ -44,10 +44,8 @@ export default function GameBar({
             </span>
           )
         ) : (
-          <>
-            {/* The emoji is a picture: screen readers say just the name. */}
-            <span aria-hidden="true">{game.emoji}</span> {t(game.name)}
-          </>
+          // Just the name: the game's own emoji is its icon on the home screen, not a label.
+          t(game.name)
         )
       }
       onBack={onExit}

@@ -687,7 +687,6 @@ h3 {
   font-size: 3rem;
   line-height: 1;
   transform-origin: 50% 90%;
-  animation: wiggle 2.4s ease-in-out infinite;
 }
 
 .gate .stack {
@@ -1387,7 +1386,6 @@ h3 {
   font-size: clamp(6.5rem, 30vw, 8.5rem);
   line-height: 1;
   transform: rotate(12deg);
-  animation: bob 3.4s ease-in-out infinite;
 }
 
 .detail-name {
@@ -1813,8 +1811,13 @@ h3 {
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
-  color: var(--bad-ink);
+  color: var(--accent-ink);
   font-size: 0.9375rem;
+}
+
+/* Red only where something goes away (removing everyone, leaving the room, clearing the stats). */
+.text-btn.bad {
+  color: var(--bad-ink);
 }
 
 .text-btn.danger {
@@ -1835,7 +1838,6 @@ h3 {
 .empty-emoji {
   font-size: 3rem;
   line-height: 1;
-  animation: bob 3s ease-in-out infinite;
 }
 
 /* ---------- Settings ---------- */
@@ -1882,6 +1884,11 @@ h3 {
   display: grid;
   place-items: center;
   font-size: 1rem;
+}
+
+.setting-emoji svg {
+  font-size: 18px;
+  color: var(--ink);
 }
 
 .setting-text {
@@ -4145,7 +4152,8 @@ h3 {
   inset: 4%;
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 38%, transparent), transparent);
-  animation: crown-glow 3.2s ease-in-out infinite;
+  /* Still: a warm light under the crown, not a breathing one. */
+  opacity: 0.7;
 }
 
 .kc-crown {
@@ -4153,7 +4161,6 @@ h3 {
   width: 100%;
   height: 100%;
   overflow: visible;
-  animation: crown-idle 3.2s ease-in-out infinite;
   transform-origin: 50% 80%;
 }
 
@@ -8482,6 +8489,7 @@ h3 {
 
 .code-input::placeholder {
   color: var(--line);
+  letter-spacing: normal;
 }
 
 .code-input:focus {
@@ -8525,7 +8533,6 @@ h3 {
 .connecting-emoji {
   font-size: 4.5rem;
   line-height: 1;
-  animation: wiggle 1.2s ease-in-out infinite;
 }
 
 .room-code-card {

@@ -76,7 +76,7 @@ export default function Profile() {
             </button>
           ) : (
             <button type="button" className="chip" onClick={nextEmoji} aria-label={t('Other emoji')}>
-              🎲 {t('Other emoji')}
+              {t('Other emoji')}
             </button>
           )}
         </div>
@@ -185,7 +185,7 @@ export default function Profile() {
       {total > 0 && (
         <button
           type="button"
-          className="text-btn profile-reset"
+          className="text-btn bad profile-reset"
           onClick={() => {
             if (!confirmReset) return setConfirmReset(true);
             resetStats();

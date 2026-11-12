@@ -36,14 +36,14 @@ const busDriver: Record<string, string> = {
   'Guess the colour of your first card.': 'Ist deine erste Karte rot oder schwarz?',
   'Higher or lower?': 'Höher oder tiefer?',
   'Will the next card be higher or lower than your first card? Same value means double sips!':
-    'Wird die nächste Karte höher oder tiefer als deine erste? Gleicher Wert heißt doppelte Schlucke!',
+    'Wird die nächste Karte höher oder tiefer als deine erste? Gleicher Wert heißt doppelte Schlucke.',
   'Inside or outside?': 'Innerhalb oder außerhalb?',
   'Will the next card land between your two cards or outside of them? Hitting one of their values exactly means double sips!':
-    'Landet die nächste Karte zwischen deinen beiden Karten oder außerhalb? Triffst du genau einen ihrer Werte, gibt’s doppelte Schlucke!',
+    'Landet die nächste Karte zwischen deinen beiden Karten oder außerhalb? Triffst du genau einen ihrer Werte, gibt’s doppelte Schlucke.',
   'Got it already?': 'Hast du das Symbol schon?',
   'Will the next card have a suit you already hold?': 'Hat die nächste Karte ein Symbol, das du schon auf der Hand hast?',
   'Which suit?': 'Welches Symbol?',
-  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant! Rate das genaue Symbol der nächsten Karte. Chance: eins zu vier.',
+  'Risky! Guess the exact suit of the next card. One in four chance.': 'Riskant: Rate das genaue Symbol der nächsten Karte. Chance: eins zu vier.',
 
   /* ---------- Answer buttons ---------- */
   Red: 'Rot',

@@ -85,7 +85,6 @@ export default function HorseRace({ players, exit }: GameProps) {
                 </button>
                 <span className="hs-stake-num" aria-live="polite" aria-label={sips(stake(p))}>
                   {stake(p)}
-                  <span aria-hidden="true"> 🍺</span>
                 </span>
                 <button type="button" className="hs-stake-btn" aria-label={t('More sips')} disabled={stake(p) >= STAKE_MAX} onClick={() => changeStake(p, 1)}>
                   +
