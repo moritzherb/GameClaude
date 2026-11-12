@@ -93,6 +93,12 @@ export function coverTop(color: string | null) {
   paint();
 }
 
+/** Told when a layer changes or goes, so the ones over it can lay themselves over what's there now. */
+const watchers = new Set<(changed: object) => void>();
+function changed(layer: object) {
+  for (const w of [...watchers]) w(layer);
+}
+
 /** Lay a colour over the top of the screen, to change as it goes (`set`) and take away (`release`). */
 export function topLayer(color: string) {
   const layer = { color };
@@ -103,12 +109,30 @@ export function topLayer(color: string) {
       if (next === layer.color) return;
       layer.color = next;
       if (layers[layers.length - 1] === layer) paint();
+      else changed(layer);
     },
     release() {
       const i = layers.indexOf(layer);
       if (i < 0) return;
       layers.splice(i, 1);
       paint();
+      changed(layer);
+    },
+    /**
+     * Calls `fn` whenever a layer under this one changes colour or goes (the top shows something
+     * else under it now). Returns a stop function.
+     */
+    onUnder(fn: () => void) {
+      const w = (other: object) => {
+        const mine = layers.indexOf(layer);
+        const theirs = layers.indexOf(other as typeof layer);
+        // Under this one (or gone from under it).
+        if (other !== layer && mine >= 0 && (theirs < 0 || theirs < mine)) fn();
+      };
+      watchers.add(w);
+      return () => {
+        watchers.delete(w);
+      };
     },
     /** What would show at the top without this layer: the ones under it, or the ground. */
     under() {
@@ -128,7 +152,9 @@ const STRIP_BLEND = 100;
  * screen really shows then: what was there (`from`) and `to` mixed by the element's opacity, set a
  * frame ahead as the phone blends a frame behind. Returns a stop function.
  */
-export function followFade(el: Element, from: string, to: string, set: (color: string) => void): () => void {
+export function followFade(el: Element, from: string | (() => string), to: string | (() => string), set: (color: string) => void): () => void {
+  // Either fixed, or asked afresh each frame (what lies under can change while it's on screen).
+  const at = (c: string | (() => string)) => (typeof c === 'function' ? c() : c);
   let frame = 0;
   let prev = { t: 0, o: -1 };
   let step = 1000 / 60;
@@ -144,7 +170,7 @@ export function followFade(el: Element, from: string, to: string, set: (color: s
     // A frame ahead (less what the phone blends meanwhile), along the way it's going.
     const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * (step - (step * step) / (2 * STRIP_BLEND)) : o;
     prev = { t: now, o };
-    set(mix(from, to, Math.min(1, Math.max(0, Number.isNaN(ahead) ? 1 : ahead))));
+    set(mix(at(from), at(to), Math.min(1, Math.max(0, Number.isNaN(ahead) ? 1 : ahead))));
     if (on) frame = requestAnimationFrame(tick);
   };
   const wake = () => {
@@ -217,10 +243,10 @@ export function mix(a: string, b: string, k: number): string {
 }
 
 /** `css` (with its own see-through-ness) laid over the colour at the top now. */
-export function overTop(css: string): string {
+export function overTop(css: string, on: string = topColor()): string {
   const over = parseColor(css);
-  const under = parseColor(topColor());
-  if (!over || !under) return topColor();
+  const under = parseColor(on);
+  if (!over || !under) return on;
   const a = over[3];
   return hexOf([0, 1, 2].map((i) => under[i] * (1 - a) + over[i] * a));
 }
