@@ -1311,6 +1311,7 @@ export class Scene {
       { x: 0, y: -1 },
     ];
     ctx.lineCap = 'round';
+    const cells: { c: Proj; ends: Proj[] }[] = [];
     for (const k of this.tunnels) {
       const [x, y] = k.split(',').map(Number);
       if (y + 0.6 < nearY) continue;
@@ -1324,11 +1325,16 @@ export class Scene {
         const p = project(x + d.x * reach, y + d.y * reach);
         if (p) ends.push(p);
       }
-      for (const [color, width] of [
-        ['#8a5a34', 0.3],
-        ['#5c3a1f', 0.12],
-      ] as const) {
-        ctx.strokeStyle = color;
+      cells.push({ c, ends });
+    }
+    // All the earth first, then all the dark trail down its middle: drawn cell by cell in one go, a
+    // cell's earth covered the end of the trail before it, and the tunnel looked broken up.
+    for (const [color, width] of [
+      ['#8a5a34', 0.3],
+      ['#5c3a1f', 0.12],
+    ] as const) {
+      ctx.strokeStyle = color;
+      for (const { c, ends } of cells) {
         ctx.lineWidth = Math.max(2, c.s * width);
         ctx.beginPath();
         if (!ends.length) {

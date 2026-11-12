@@ -4104,13 +4104,14 @@ h3 {
 }
 
 /* The 4th King: the crown goes like for any card (the face-down card mustn't give it away), and
-   the moment the King's face shows (halfway through the flip) it drops onto the card's top right
-   corner (over the card, so nothing under it goes on a layer of its own). */
+   the moment the King's face shows (halfway through the flip) it drops straight down onto the
+   middle of the card's top edge, as if put on (over the card, so nothing under it goes on a layer
+   of its own). */
 .kc-ring.revealing .kc-crown-wrap.crowning {
   z-index: 4;
   opacity: 1;
   pointer-events: none;
-  transform: translate(calc(-50% + 24 * var(--qw)), calc(-65 * var(--qw))) rotate(24deg) scale(0.78);
+  transform: translate(-50%, calc(-66 * var(--qw))) scale(0.78);
   transition: none;
   animation: kc-crown-onto 0.45s var(--spring) 0.42s both;
 }
@@ -4118,14 +4119,14 @@ h3 {
 @keyframes kc-crown-onto {
   from {
     opacity: 0;
-    transform: translate(calc(-50% + 24 * var(--qw)), calc(-88 * var(--qw))) rotate(-10deg) scale(1);
+    transform: translate(-50%, calc(-90 * var(--qw))) scale(0.9);
   }
   30% {
     opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(calc(-50% + 24 * var(--qw)), calc(-65 * var(--qw))) rotate(24deg) scale(0.78);
+    transform: translate(-50%, calc(-66 * var(--qw))) scale(0.78);
   }
 }
 

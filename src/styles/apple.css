@@ -515,12 +515,6 @@ html[data-look='pop'] .w-shuffle .w-kicker {
   color: var(--muted);
 }
 
-/* ---------- Focus ---------- */
-
-html[data-look='pop'] :focus-visible {
-  outline: 3px solid var(--accent-ink);
-  outline-offset: 2px;
-}
 
 /* Card backs: the lime with the fine stripes of a card back. */
 html[data-look='pop'] .pcard-back {
@@ -601,4 +595,19 @@ html[data-look='pop'] .sw-result.bad {
   animation:
     mx-slip 0.4s var(--spring) 0.12s both,
     nope 0.42s var(--ease-out) 0.5s;
+}
+
+/* A player's emoji in a pick tile is plain text: no shadow round it (it drew a box). */
+html[data-look='pop'] .pick-chip-avatar {
+  box-shadow: none;
+}
+
+/* The dock's profile: your own picture on the tile (photo, or emoji on your colour). */
+.app-icon .app-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
