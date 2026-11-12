@@ -21,7 +21,7 @@
   --ink-2: #6d6a5f;
   --muted: #625f55;
   --line: #d8d2c2;
-  --accent: #c5f235; /* lime: fills */
+  --accent: #b8f01e; /* lime: fills */
   --accent-ink: #3f7200; /* lime that reads as text on the background */
   --accent-soft: rgba(150, 200, 20, 0.2);
   --sun: #ffd23f;
@@ -263,7 +263,7 @@ textarea {
 
     /* The start-up screen (index.html) is dark in every look. */
     html:has(#boot:not(.done)) .top-edge {
-      background-color: #20211c;
+      background-color: #000000;
     }
   }
 }

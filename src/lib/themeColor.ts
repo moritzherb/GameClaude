@@ -8,7 +8,7 @@
  */
 
 /** The ground colour of each look (light, dark): the browser's bar and the strip under the clock take it. */
-export const GROUND = { pop: ['#ece8dd', '#20211c'], classic: ['#f1ede3', '#10110e'] } as const;
+export const GROUND = { pop: ['#f2f2f7', '#000000'], classic: ['#f1ede3', '#10110e'] } as const;
 
 /** Light or dark chosen in Settings (null: as the phone is). */
 let forced: 'light' | 'dark' | null = null;
@@ -18,9 +18,24 @@ const layers: { color: string }[] = [];
 /** The start-up screen's colour while it lies over everything (null once it's gone). */
 let cover: string | null = null;
 
+/**
+ * The classic look lays a fine film grain over the whole page (global.css body::after): on average it
+ * darkens a light page and lightens a dark one a touch. The strip takes the same average, so the two
+ * meet without an edge. The grain tile's own numbers: 3.47 % of it covers, in a grey averaging 4.44.
+ */
+const GRAIN_COVER = 0.03472;
+const GRAIN_GREY = 4.4438;
+function grained(css: string): string {
+  const c = parseColor(css);
+  if (!c) return css;
+  return hexOf([0, 1, 2].map((i) => GRAIN_GREY + c[i] * (1 - GRAIN_COVER)));
+}
+
 function paint() {
   if (typeof document === 'undefined') return;
-  const top = cover ?? layers[layers.length - 1]?.color;
+  const laid = cover ?? layers[layers.length - 1]?.color;
+  // Under the grain (everything but the start-up screen, which lies over it).
+  const top = !cover && document.documentElement.dataset.look === 'classic' ? grained(laid ?? ground()) : laid;
   const edge = document.querySelector<HTMLElement>('.top-edge');
   if (edge) {
     edge.style.backgroundColor = top ?? '';
@@ -100,6 +115,52 @@ export function topLayer(color: string) {
       const i = layers.indexOf(layer);
       return (i > 0 ? layers[i - 1].color : null) ?? ground();
     },
+  };
+}
+
+/** How long an iPhone takes to blend its strip to each new colour (ms), as in lib/launch.ts. */
+const STRIP_BLEND = 100;
+
+/**
+ * While `el` is on screen, the strip under the clock goes along with how much of it shows: fading in
+ * or out by an animation or transition of its own (a screen coming back, an overlay appearing or
+ * going), or faded by hand (pulled down by a finger). Each frame it takes the colour the top of the
+ * screen really shows then: what was there (`from`) and `to` mixed by the element's opacity, set a
+ * frame ahead as the phone blends a frame behind. Returns a stop function.
+ */
+export function followFade(el: Element, from: string, to: string, set: (color: string) => void): () => void {
+  let frame = 0;
+  let prev = { t: 0, o: -1 };
+  let step = 1000 / 60;
+  const moving = () => typeof el.getAnimations === 'function' && el.getAnimations().some((a) => a.playState === 'running' || a.pending);
+  const opacity = () => Math.min(1, Math.max(0, parseFloat(getComputedStyle(el).opacity)));
+  const tick = (now: number) => {
+    frame = 0;
+    if (!el.isConnected) return;
+    const o = opacity();
+    const on = moving();
+    const dt = now - prev.t;
+    if (prev.o >= 0 && dt > 0) step += (Math.min(50, dt) - step) * 0.3;
+    // A frame ahead (less what the phone blends meanwhile), along the way it's going.
+    const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * (step - (step * step) / (2 * STRIP_BLEND)) : o;
+    prev = { t: now, o };
+    set(mix(from, to, Math.min(1, Math.max(0, Number.isNaN(ahead) ? 1 : ahead))));
+    if (on) frame = requestAnimationFrame(tick);
+  };
+  const wake = () => {
+    if (!frame) frame = requestAnimationFrame(tick);
+  };
+  tick(performance.now());
+  // A class or style that starts a fade (closing), or a finger moving it: look again.
+  const watch = typeof MutationObserver === 'function' ? new MutationObserver(wake) : null;
+  watch?.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
+  el.addEventListener('transitionrun', wake);
+  el.addEventListener('animationstart', wake);
+  return () => {
+    cancelAnimationFrame(frame);
+    watch?.disconnect();
+    el.removeEventListener('transitionrun', wake);
+    el.removeEventListener('animationstart', wake);
   };
 }
 

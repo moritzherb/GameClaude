@@ -60,7 +60,15 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   const dx = r.left + r.width / 2 - w / 2;
   const dy = r.top + r.height / 2 - h / 2;
   const small = (r.width * 0.5) / 110;
-  const at = (k: number) => (k >= 1 ? 'none' : `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px) scale(${small + (1 - small) * k})`);
+  // Not in a straight line: on a gentle arc, bowed to one side (as a thing tossed moves), the bow
+  // largest halfway.
+  const far = Math.hypot(dx, dy) || 1;
+  const bow = Math.min(60, far * 0.18);
+  const at = (k: number) => {
+    if (k >= 1) return 'none';
+    const lift = bow * 4 * k * (1 - k);
+    return `translate(${dx * (1 - k) + (-dy / far) * lift}px, ${dy * (1 - k) + (dx / far) * lift}px) scale(${small + (1 - small) * k})`;
+  };
   emoji.style.transform = at(0);
   veil.append(fill, emoji);
   document.body.append(veil);
@@ -140,7 +148,7 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
 }
 
 /** The start-up screen's dark (index.html), and how long it takes to fade into the app (ms). */
-export const BOOT_GROUND = '#20211c';
+export const BOOT_GROUND = '#000000';
 const BOOT_FADE = 300;
 
 /**
