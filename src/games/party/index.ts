@@ -20,7 +20,7 @@ const party: GameDefinition = {
     tx('Bridges back and the mole’s tunnel send you back. Roll back: roll again and go that many fields back.'),
     tx('An Ace up your sleeve skips a field you don’t want to do, once.'),
     tx('First into the finish wins.'),
-    tx('Make your own board: start from one of the boards, put the fields you like where you like, and save it.'),
+    tx('Make your own board: draw the path, put the fields you like where you like, and save it.'),
   ],
   component: Party,
 };

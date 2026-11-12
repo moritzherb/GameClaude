@@ -50,8 +50,10 @@ export function CodeCard({ code, text }: { code: string; text: string }) {
   return (
     <div className="cloud-code">
       <span className="cloud-code-value">{code}</span>
-      <button type="button" className="text-btn cloud-send" onClick={() => void send()}>
-        {copied ? t('Copied') : t('Send it')}
+      <button type="button" className={`text-btn cloud-send${copied ? ' confirmed' : ''}`} onClick={() => void send()}>
+        <span key={copied ? 'copied' : 'send'} className="swap-in">
+          {copied ? t('Copied') : t('Send it')}
+        </span>
       </button>
     </div>
   );

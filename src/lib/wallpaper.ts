@@ -54,7 +54,11 @@ export const PHOTO_DIM = 0.16;
 export function wallpaperFor(id: string | undefined, photo: Photo | null): { background?: string; top?: string; photo: boolean } {
   // A little darker, so the icons and their names stand out (the top colour already is).
   const dim = `linear-gradient(rgba(0, 0, 0, ${PHOTO_DIM}), rgba(0, 0, 0, ${PHOTO_DIM}))`;
-  if (id === 'photo' && photo) return { background: `${dim}, url("${photo.data}") center / cover no-repeat`, top: photo.top, photo: true };
+  // A photo isn't one colour along its top, the strip under the clock is: the photo comes out of
+  // the strip's colour (exactly it at the very top, gone a little further down), so no edge shows
+  // between the two.
+  const seam = (top: string) => `linear-gradient(${top}, ${top}00 110px)`;
+  if (id === 'photo' && photo) return { background: `${seam(photo.top)}, ${dim}, url("${photo.data}") center / cover no-repeat`, top: photo.top, photo: true };
   const w = WALLPAPERS.find((x) => x.id === id);
   return { background: w?.background, top: w?.top, photo: false };
 }

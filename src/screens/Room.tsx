@@ -224,8 +224,10 @@ function Lobby() {
         </span>
         <QrCode text={joinLink(code)} label={t('QR code to join room {code}', { code })} />
         <span className="fine-print">{t('Scan with the camera to join')}</span>
-        <button type="button" className="link-btn" onClick={share}>
-          {copied ? t('Link copied ✓') : t('Share link')}
+        <button type="button" className={`link-btn${copied ? ' confirmed' : ''}`} onClick={share}>
+          <span key={copied ? 'copied' : 'share'} className="swap-in">
+            {copied ? t('Link copied ✓') : t('Share link')}
+          </span>
         </button>
       </section>
 

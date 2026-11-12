@@ -74,7 +74,7 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
             </button>
           )}
           <button type="button" className="text-btn pt-link" onClick={() => onEdit(board, true)}>
-            ＋ {t('Make your own from this board')}
+            ＋ {t('Make your own board')}
           </button>
           {cloudOn && board.custom && (
             <button type="button" className="text-btn pt-link" onClick={() => setSharing(board)}>
