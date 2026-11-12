@@ -8,8 +8,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // left) anywhere. All games opens with its button.
 //
 // A running game has nothing underneath it at all: there's no swiping back out of it by
-// accident (that would just end it). The X in the corner is the way out. Home is the same: nothing
-// underneath it, so no swiping at all there (only pulling down to reload).
+// accident (that would just end it). The X in the corner is the way out. The screen a game is left
+// for (other than home: the room, once the game is over) takes its place, so it has nothing
+// underneath either; its button leads home. Home is the same: nothing underneath it, so no swiping
+// at all there (only pulling down to reload).
 
 /**
  * A real repaint (a dot nobody can see, drawn for two frames), not just a layer change: iPhones
@@ -83,7 +85,7 @@ export function useRoute(): Route {
 const ABOVE_HOME = 'prost:above-home';
 /** Home again in the top entry (after leaving a screen): nothing lies ahead of it. */
 const HOME_TOP = 'prost:home-top';
-/** Marks a running game: nothing different lies behind or ahead of it. */
+/** Marks a running game (or the screen it was left for): nothing different lies behind or ahead of it. */
 const GAME_ROOT = 'prost:game';
 /** The same game in the entry above it (only there so that swiping forward goes nowhere new). */
 const GAME_TOP = 'prost:game-top';
@@ -133,6 +135,20 @@ function go(hash: string, how: 'push' | 'replace', state: string | null) {
   window.dispatchEvent(new HashChangeEvent('hashchange'));
 }
 
+/**
+ * A screen on the bottom entry with nothing behind it (a game, or the screen a game was left for),
+ * and once it's drawn the same screen again in the entry above, so swiping forward shows nothing
+ * new (and steps right back).
+ */
+function rootOnTop(hash: string) {
+  go(hash, 'replace', GAME_ROOT);
+  afterPaint(() => {
+    if (history.state !== GAME_ROOT || window.location.hash !== hash) return;
+    history.pushState(GAME_TOP, '', hash);
+    history.back();
+  });
+}
+
 /** Runs once the screen has been drawn (two frames later; a timer in case frames don't come). */
 function afterPaint(fn: () => void) {
   let done = false;
@@ -151,6 +167,7 @@ function afterPaint(fn: () => void) {
  *   home                 [home] or [home, home]  standing on the first: nothing to swipe back to
  *   any other screen     [home, screen]
  *   a running game       [game, game]      standing on the first: nothing to swipe back to
+ *   left for a screen    [screen, screen]  the same: it takes the game's place
  */
 export function navigate(to: string) {
   const hash = `#${to}`;
@@ -174,8 +191,7 @@ export function navigate(to: string) {
   // onto that entry. So the entry ahead is only left once the game is on screen: its picture is the
   // game too (not the rules page you started from), and swiping forward shows nothing new.
   if (isGame(hash)) {
-    if (state === GAME_ROOT) go(hash, 'replace', GAME_ROOT);
-    else if (state === ABOVE_HOME || state === HOME_TOP) {
+    if (state === ABOVE_HOME || state === HOME_TOP) {
       // Top entry becomes the game, then (once it's drawn) step back and make the bottom one the game too.
       go(hash, 'replace', GAME_TOP);
       pendingGame = hash;
@@ -183,27 +199,29 @@ export function navigate(to: string) {
         if (pendingGame === hash && history.state === GAME_TOP) history.back();
       });
     } else {
-      // On the bottom entry: the game takes it and (once it's drawn) the one above, and we stand on the bottom one.
-      go(hash, 'replace', GAME_ROOT);
-      afterPaint(() => {
-        if (history.state !== GAME_ROOT || window.location.hash !== hash) return;
-        history.pushState(GAME_TOP, '', hash);
-        history.back();
-      });
+      // On the bottom entry (home, another game, or the screen a game was left for): the game takes
+      // it and (once it's drawn) the one above, and we stand on the bottom one.
+      rootOnTop(hash);
     }
     return;
   }
 
+  if (state === GAME_ROOT && !isHome(hash)) {
+    // Out of a game to another screen (the room, once the game is over): it takes the game's place
+    // right away, with nothing behind it either, its own button leading home. Home on screen first
+    // (for the swipe picture below it) would flash up on the way.
+    rootOnTop(hash);
+    return;
+  }
+
   if (state === GAME_ROOT) {
-    // Out of a game. iPhones show the last picture of an entry while you swipe back to it, and
-    // the bottom entry last showed the game. So home goes on screen there first, then:
+    // Out of a game, home. iPhones show the last picture of an entry while you swipe back to it,
+    // and the bottom entry last showed the game. So home goes on screen there first, then…
     go('#/', 'replace', null);
-    // …and the game's second entry (ahead) is replaced: by home again (standing on the bottom
-    // one), or the next screen.
+    // …the game's second entry (ahead) is replaced by home again, standing on the bottom one.
     afterPaint(() => {
       if (history.state !== null || !isHome(window.location.hash)) return;
-      if (isHome(hash)) homeOnTop();
-      else go(hash, 'push', ABOVE_HOME);
+      homeOnTop();
     });
     return;
   }
@@ -226,9 +244,10 @@ const EDGE = 18;
 if (typeof window !== 'undefined') {
   // iPhones page through the history when a finger starts right at the side of the screen and
   // swipes in, and show their picture of the screen next door while it moves: on home and in a game
-  // that's never wanted (the history only keeps the same screen there, but the picture can be an
-  // old one). So a touch that starts at the very edge there isn't handed to the phone at all. Buttons
-  // at the edge still take their taps, and scrolling from the edge is done by hand.
+  // (or the screen that took its place) that's never wanted (the history only keeps the same screen
+  // there, but the picture can be an old one). So a touch that starts at the very edge there isn't
+  // handed to the phone at all. Buttons at the edge still take their taps, and scrolling from the
+  // edge is done by hand.
   let edgeY: number | null = null;
   document.addEventListener(
     'touchstart',
@@ -238,7 +257,7 @@ if (typeof window !== 'undefined') {
       const { clientX, clientY } = e.touches[0];
       if (clientX > EDGE && clientX < window.innerWidth - EDGE) return;
       const hash = window.location.hash;
-      if (!isHome(hash) && !isGame(hash)) return;
+      if (!isHome(hash) && !isGame(hash) && history.state !== GAME_ROOT) return;
       if ((e.target as Element | null)?.closest?.('button, a, input, textarea, select, label, [role="button"]')) return;
       e.preventDefault();
       edgeY = clientY;
@@ -280,7 +299,8 @@ if (typeof window !== 'undefined') {
       }
       return;
     }
-    if (!pendingGame && !pendingNav && history.state !== GAME_TOP && history.state !== HOME_TOP) cameBack(true);
+    // (Onto a game's entry, or the top ones, it's always the app's own step: nothing lies behind a game.)
+    if (!pendingGame && !pendingNav && history.state !== GAME_ROOT && history.state !== GAME_TOP && history.state !== HOME_TOP) cameBack(true);
     // Stepped back onto the bottom entry to make it the game as well.
     if (pendingGame) {
       const hash = pendingGame;
