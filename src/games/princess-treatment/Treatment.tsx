@@ -56,7 +56,7 @@ export default function Treatment(props: GameProps) {
       modes={[
         { id: 'princess', emoji: '👸', label: t('Princess') },
         { id: 'king', emoji: '🤴', label: t('King') },
-        { id: 'mixed', emoji: '🎲', label: t('Mixed'), mixed: true },
+        { id: 'mixed', label: t('Mixed'), mixed: true },
       ]}
       modeTitle={t('Whose treatment?')}
       intro={t('A card shows something someone does for you. Just the Bare Minimum, or real Princess (or King) Treatment? Talk it over, one tap settles it.')}

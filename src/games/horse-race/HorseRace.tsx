@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard, { CardFace } from '../../components/PlayingCard';
@@ -85,6 +86,7 @@ export default function HorseRace({ players, exit }: GameProps) {
                 </button>
                 <span className="hs-stake-num" aria-live="polite" aria-label={sips(stake(p))}>
                   {stake(p)}
+                  <RowIcon name="cheers" />
                 </span>
                 <button type="button" className="hs-stake-btn" aria-label={t('More sips')} disabled={stake(p) >= STAKE_MAX} onClick={() => changeStake(p, 1)}>
                   +

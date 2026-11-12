@@ -1386,6 +1386,7 @@ h3 {
   font-size: clamp(6.5rem, 30vw, 8.5rem);
   line-height: 1;
   transform: rotate(12deg);
+  animation: bob 3.4s ease-in-out infinite;
 }
 
 .detail-name {
@@ -4152,8 +4153,7 @@ h3 {
   inset: 4%;
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--sun) 38%, transparent), transparent);
-  /* Still: a warm light under the crown, not a breathing one. */
-  opacity: 0.7;
+  animation: crown-glow 3.2s ease-in-out infinite;
 }
 
 .kc-crown {
@@ -4161,6 +4161,7 @@ h3 {
   width: 100%;
   height: 100%;
   overflow: visible;
+  animation: crown-idle 3.2s ease-in-out infinite;
   transform-origin: 50% 80%;
 }
 
@@ -7386,6 +7387,14 @@ h3 {
 
 .hs-stake-num span {
   font-size: 0.8rem;
+}
+
+/* Sips: a mug beside the number, in the quiet text colour. */
+.hs-stake-num svg {
+  margin-left: 2px;
+  font-size: 15px;
+  color: var(--muted);
+  vertical-align: -2px;
 }
 
 /* Too narrow for all of it in one line (345px or less, see HorseRace.tsx): name and stake on top,
@@ -11971,9 +11980,54 @@ h3 {
   flex-shrink: 0;
 }
 
-.vt-seg-emoji {
-  font-size: 1.9rem;
+/* Who the cards are about: a row of small upright cards, each showing just its emoji. The chosen
+   one in the lime ring, the others a step back. Mixed shows the other two together. */
+.vt-picks {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.vt-pick {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: clamp(2.5rem, 13vw, 3.5rem);
   line-height: 1;
+  transition: transform 0.15s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+.vt-pick:active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.vt-pick.on {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+.vt-pick-emoji {
+  display: block;
+  opacity: 0.65;
+  transform: scale(0.88);
+  transition: transform 0.25s var(--ease-out), opacity 0.2s var(--ease-out);
+}
+
+.vt-pick.on .vt-pick-emoji {
+  opacity: 1;
+  transform: none;
+}
+
+/* Two emoji, a little smaller, overlapping like two cards side by side. */
+.vt-pick.mixed .vt-pick-emoji {
+  font-size: 0.8em;
+}
+
+.vt-pick.mixed .vt-pick-emoji + .vt-pick-emoji {
+  margin-left: -0.3em;
 }
 
 .vt-count {
