@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { buzz } from './fx';
 
 // Hash routing: works on any static host.
 //
@@ -40,6 +41,28 @@ function parse(hash: string): Route {
   return { segments: path.split('/').filter(Boolean), query: new URLSearchParams(query) };
 }
 
+/**
+ * Holding the screen: the address (and the history) moves on, but the screen shown stays until the
+ * hold is let go. Opening a game from home (lib/launch.ts): the new page goes into the history at
+ * once, while home still shows, so the picture an iPhone keeps of the home entry is home (not the
+ * splash that covers it a moment later); the page itself shows once the splash covers the screen.
+ */
+let held = 0;
+let heldChange = false;
+export function holdScreen(): () => void {
+  held++;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    held--;
+    if (!held && heldChange) {
+      heldChange = false;
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+  };
+}
+
 /** Where each screen was scrolled to when it was left, for swiping back to it. */
 const scrolls = new Map<string, number>();
 /** Home has more than one address ('', '#', '#/'). */
@@ -51,6 +74,11 @@ export function useRoute(): Route {
     // What the first render showed (the address may have changed since, before this listened).
     let shown = hash;
     const onChange = () => {
+      // The screen is held (see holdScreen): it shows once let go.
+      if (held) {
+        heldChange = true;
+        return;
+      }
       // The app's own steps through the history can land on the screen already shown: stay put.
       if (window.location.hash === shown) return;
       // Still the old screen on display: remember how far down it was.
@@ -246,21 +274,28 @@ if (typeof window !== 'undefined') {
   // swipes in, and show their picture of the screen next door while it moves: on home and in a game
   // (or the screen that took its place) that's never wanted (the history only keeps the same screen
   // there, but the picture can be an old one). So a touch that starts at the very edge there isn't
-  // handed to the phone at all. Buttons at the edge still take their taps, and scrolling from the
-  // edge is done by hand.
+  // handed to the phone at all, not even on a button (the Android home's icons reach the edge):
+  // a tap there is passed on to the button by hand, and scrolling from the edge is done by hand.
+  // Only text fields keep their own touch (the keyboard comes up from it).
   let edgeY: number | null = null;
+  /** A tap started at the edge on something tappable: where, when, and how far it has moved. */
+  let edgeTap: { el: HTMLElement; x: number; y: number; t: number; moved: number } | null = null;
   document.addEventListener(
     'touchstart',
     (e) => {
       edgeY = null;
+      edgeTap = null;
       if (e.touches.length !== 1 || !e.cancelable) return;
       const { clientX, clientY } = e.touches[0];
       if (clientX > EDGE && clientX < window.innerWidth - EDGE) return;
       const hash = window.location.hash;
       if (!isHome(hash) && !isGame(hash) && history.state !== GAME_ROOT) return;
-      if ((e.target as Element | null)?.closest?.('button, a, input, textarea, select, label, [role="button"]')) return;
+      const target = e.target as Element | null;
+      if (target?.closest?.('input, textarea, select')) return;
+      const tappable = target?.closest?.<HTMLElement>('button, a, label, [role="button"]');
       e.preventDefault();
       edgeY = clientY;
+      if (tappable) edgeTap = { el: tappable, x: clientX, y: clientY, t: Date.now(), moved: 0 };
     },
     { passive: false },
   );
@@ -268,14 +303,31 @@ if (typeof window !== 'undefined') {
     'touchmove',
     (e) => {
       if (edgeY === null || e.touches.length !== 1) return;
-      const y = e.touches[0].clientY;
-      window.scrollBy(0, edgeY - y);
-      edgeY = y;
+      const { clientX, clientY } = e.touches[0];
+      if (edgeTap) edgeTap.moved = Math.max(edgeTap.moved, Math.hypot(clientX - edgeTap.x, clientY - edgeTap.y));
+      window.scrollBy(0, edgeY - clientY);
+      edgeY = clientY;
     },
     { passive: true },
   );
-  document.addEventListener('touchend', () => (edgeY = null), { passive: true });
-  document.addEventListener('touchcancel', () => (edgeY = null), { passive: true });
+  document.addEventListener(
+    'touchend',
+    () => {
+      // A tap (not a drag, nor a hold: home holds an app from 480 ms on): the button gets it.
+      if (edgeTap && edgeTap.moved < 10 && Date.now() - edgeTap.t < 450 && edgeTap.el.isConnected) edgeTap.el.click();
+      edgeY = null;
+      edgeTap = null;
+    },
+    { passive: true },
+  );
+  document.addEventListener(
+    'touchcancel',
+    () => {
+      edgeY = null;
+      edgeTap = null;
+    },
+    { passive: true },
+  );
 
   // Reloaded mid-game: it stays a game entry.
   if (isGame(window.location.hash)) {
@@ -300,7 +352,11 @@ if (typeof window !== 'undefined') {
       return;
     }
     // (Onto a game's entry, or the top ones, it's always the app's own step: nothing lies behind a game.)
-    if (!pendingGame && !pendingNav && history.state !== GAME_ROOT && history.state !== GAME_TOP && history.state !== HOME_TOP) cameBack(true);
+    if (!pendingGame && !pendingNav && history.state !== GAME_ROOT && history.state !== GAME_TOP && history.state !== HOME_TOP) {
+      cameBack(true);
+      // Swiped back out of a screen (or the back button): a tick to say it's left.
+      buzz();
+    }
     // Stepped back onto the bottom entry to make it the game as well.
     if (pendingGame) {
       const hash = pendingGame;

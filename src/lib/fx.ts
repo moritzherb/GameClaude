@@ -8,8 +8,43 @@ export function buzz(pattern: number | number[] = 15) {
   if (!fxSettings.haptics) return;
   // In the store app: the phone's real haptics (iPhones have no navigator.vibrate at all).
   if (isNative) return toNative({ type: 'haptic', pattern: Array.isArray(pattern) ? pattern : [pattern] });
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      /* not supported */
+    }
+    return;
+  }
+  // An iPhone (no navigator.vibrate): a tick for each buzz of the pattern, where it would start.
+  const parts = Array.isArray(pattern) ? pattern : [pattern];
+  let at = 0;
+  parts.forEach((ms, i) => {
+    if (i % 2 === 0) {
+      if (at === 0) tick();
+      else window.setTimeout(tick, at);
+    }
+    at += ms;
+  });
+}
+
+/**
+ * The iPhone's own tick, the one its switches give: a switch (Safari 17.4 and later) flipped by a
+ * hidden label, gone again at once. Elsewhere it does nothing.
+ */
+function tick() {
+  if (typeof document === 'undefined') return;
   try {
-    navigator.vibrate?.(pattern);
+    const label = document.createElement('label');
+    label.setAttribute('aria-hidden', 'true');
+    label.style.display = 'none';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.setAttribute('switch', '');
+    label.append(input);
+    document.head.append(label);
+    label.click();
+    label.remove();
   } catch {
     /* not supported */
   }

@@ -8,6 +8,7 @@
  * goes and the next one comes. Only opacity and transforms move: nothing is laid out again.
  */
 
+import { holdScreen } from './router';
 import { coverTop, mix, topColor, topLayer, tone } from './themeColor';
 
 /** Filling the screen, staying as the splash, fading out (ms). */
@@ -107,7 +108,12 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
    *  longer instead of making the fade skip ahead. */
   let shown = 0;
   let gone = false;
+  // The page goes into the history now, while home still shows: an iPhone keeps a picture of each
+  // entry from when it's left and shows it on a swipe back (home, not the splash). The page itself
+  // shows once the splash covers the screen.
+  const show = holdScreen();
   const done = () => {
+    show();
     if (gone) return;
     gone = true;
     veil.remove();
@@ -142,7 +148,8 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
   };
   requestAnimationFrame(frame);
 
-  window.setTimeout(go, GROW);
+  go();
+  window.setTimeout(show, GROW);
   // In case the frames stop (a tab in the background): gone in any case.
   window.setTimeout(done, GROW + HOLD + FADE + 1500);
 }

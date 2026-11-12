@@ -2559,6 +2559,29 @@ h3 {
   box-shadow: none;
 }
 
+/* The chance picked this one: it pops. */
+.pick-chip.landed {
+  animation: pick-landed 0.5s var(--spring);
+}
+
+@keyframes pick-landed {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pick-chip.landed {
+    animation: none;
+  }
+}
+
 .pick-chip-avatar {
   font-size: 2rem;
   line-height: 1;
