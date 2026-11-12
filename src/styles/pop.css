@@ -1950,3 +1950,51 @@ html[data-look='pop'] .look-seg button.active {
     animation: none !important;
   }
 }
+
+/*
+ * Increase Contrast (iPhone: Accessibility → Display & Text Size): the grey text, the second ink and
+ * the lines get clearly stronger, in light and in dark. Colours and layout otherwise stay.
+ * (Apple's guidelines: every colour gets an increased-contrast variant.)
+ */
+@media (prefers-contrast: more) {
+  html[data-look][data-look] {
+    --muted: #45423a;
+    --ink-2: #45423a;
+    --line: #9c978a;
+  }
+
+  html[data-look][data-theme='dark'] {
+    --muted: #d2cfc3;
+    --ink-2: #d2cfc3;
+    --line: #6e6f66;
+    --pop-glass: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  html[data-look]:not([data-theme='light']) {
+    --muted: #d2cfc3;
+    --ink-2: #d2cfc3;
+    --line: #6e6f66;
+    --pop-glass: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/*
+ * Reduce Transparency: the frosted parts (dock, search, page dots, folders, alerts) turn solid, so
+ * nothing behind them shows through. (Apple's guidelines: reduced transparency has an answer.)
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .os-home .sb-dock,
+  .os-home .sb-search:not(.os-done),
+  .os-home .la-search:not(.os-done),
+  .sb-dots-bar .sb-dots,
+  .sb-folder-wrap,
+  .os-alert,
+  .os-search,
+  .os-roulette {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
