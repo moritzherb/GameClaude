@@ -48,6 +48,7 @@ const trash: Record<string, string> = {
   'No use: onto the discard pile': 'Bringt nichts: ab auf den Ablagestapel',
   'Each player on their own phone. Turn your cards over first.': 'Jeder auf seinem eigenen Handy. Deck deine Karten als Erster auf.',
   'Also on 2 phones': 'Auch auf 2 Handys',
+  'Slot {label}': 'Platz {label}',
 };
 
 export default trash;

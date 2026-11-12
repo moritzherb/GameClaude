@@ -13,7 +13,7 @@ import { navigate, paths } from '../lib/router';
 import { unfill } from '../lib/noAutofill';
 import { loadStats, resetStats } from '../lib/stats';
 import { useProfile } from '../net/profile';
-import { PLAYER_COLORS } from '../state/AppState';
+import { COLOR_NAMES, PLAYER_COLORS } from '../state/AppState';
 
 const RANKS: Rank[] = ['president', 'vice', 'citizen', 'vice-arschloch', 'arschloch'];
 
@@ -75,7 +75,7 @@ export default function Profile() {
               {t('Remove photo')}
             </button>
           ) : (
-            <button type="button" className="chip" onClick={nextEmoji}>
+            <button type="button" className="chip" onClick={nextEmoji} aria-label={t('Other emoji')}>
               🎲 {t('Other emoji')}
             </button>
           )}
@@ -111,7 +111,7 @@ export default function Profile() {
                 type="button"
                 role="radio"
                 aria-checked={profile.color === c}
-                aria-label={c}
+                aria-label={t(COLOR_NAMES[c] ?? c)}
                 className={`profile-color${profile.color === c ? ' active' : ''}`}
                 style={{ '--chip': c } as CSSProperties}
                 onClick={() => {

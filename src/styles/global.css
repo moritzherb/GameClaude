@@ -13583,3 +13583,9 @@ h3 {
 .flag-btn svg {
   clip-path: inset(0 round 5px);
 }
+
+/* An avatar's emoji sits in a span of its own (hidden from screen readers): not one of the stack's
+   circles. */
+.avatar-stack span.avatar-glyph {
+  all: unset;
+}

@@ -81,7 +81,7 @@ function WallpaperRow() {
   };
   return (
     <div className="setting-row wall-row">
-      <span className="setting-emoji">🖼️</span>
+      <span className="setting-emoji" aria-hidden="true">🖼️</span>
       <span className="setting-text">
         <span className="setting-label">{t('Wallpaper')}</span>
         <span className="setting-hint">{t('Behind the games on the home screen')}</span>
@@ -155,7 +155,7 @@ function ResetHomeRow() {
         buzz();
       }}
     >
-      <span className="setting-emoji">↩️</span>
+      <span className="setting-emoji" aria-hidden="true">↩️</span>
       <span className="setting-text">
         <span className="setting-label">{t('Reset home screen')}</span>
         <span className="setting-hint">{done ? '✓' : t('Every game back, in the first order')}</span>
@@ -214,7 +214,7 @@ export default function Settings() {
         </div>
 
         <div className="setting-row look-row">
-          <span className="setting-emoji">🎨</span>
+          <span className="setting-emoji" aria-hidden="true">🎨</span>
           <span className="setting-text">
             <span className="setting-label">{t('Look')}</span>
             <span className="setting-hint">{t('Only the look: every game plays the same')}</span>
@@ -223,7 +223,7 @@ export default function Settings() {
         </div>
 
         <div className="setting-row look-row">
-          <span className="setting-emoji">🌓</span>
+          <span className="setting-emoji" aria-hidden="true">🌓</span>
           <span className="setting-text">
             <span className="setting-label">{t('Appearance')}</span>
             <span className="setting-hint">{t('Light, dark, or like your phone')}</span>
@@ -233,7 +233,7 @@ export default function Settings() {
 
         {lookFor(settings.look) === 'pop' && (
           <div className="setting-row look-row">
-            <span className="setting-emoji">📱</span>
+            <span className="setting-emoji" aria-hidden="true">📱</span>
             <span className="setting-text">
               <span className="setting-label">{t('Home screen')}</span>
               <span className="setting-hint">{t('Like your phone’s own')}</span>
@@ -262,7 +262,7 @@ export default function Settings() {
                 buzz();
               }}
             >
-              <span className="setting-emoji">{o.emoji}</span>
+              <span className="setting-emoji" aria-hidden="true">{o.emoji}</span>
               <span className="setting-text">
                 <span className="setting-label">{t(o.label)}</span>
                 <span className="setting-hint">{t(o.hint)}</span>
@@ -281,7 +281,7 @@ export default function Settings() {
         <h2 className="section-title">{t('Privacy')}</h2>
         <div className="settings-list">
           <button type="button" className="setting-row" onClick={openPrivacy}>
-            <span className="setting-emoji">🔒</span>
+            <span className="setting-emoji" aria-hidden="true">🔒</span>
             <span className="setting-text">
               <span className="setting-label">{t('Privacy policy')}</span>
               <span className="setting-hint">{t('What the app keeps and why')}</span>
@@ -289,7 +289,7 @@ export default function Settings() {
           </button>
           {adChoices && (
             <button type="button" className="setting-row" onClick={() => toNative({ type: 'privacy' })}>
-              <span className="setting-emoji">🎯</span>
+              <span className="setting-emoji" aria-hidden="true">🎯</span>
               <span className="setting-text">
                 <span className="setting-label">{t('Ad choices')}</span>
                 <span className="setting-hint">{t('Change what the ads may use')}</span>

@@ -44,7 +44,10 @@ export default function GameBar({
             </span>
           )
         ) : (
-          `${game.emoji} ${t(game.name)}`
+          <>
+            {/* The emoji is a picture: screen readers say just the name. */}
+            <span aria-hidden="true">{game.emoji}</span> {t(game.name)}
+          </>
         )
       }
       onBack={onExit}
