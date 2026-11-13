@@ -1580,7 +1580,9 @@ li {
   width: 100%;
   max-width: var(--max);
   max-height: 88dvh;
-  overflow-y: auto;
+  /* Only the text in the middle scrolls (.sheet-body): the grabber, title and close button stay put,
+     however it scrolls or bounces. */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1609,23 +1611,30 @@ li {
   background: inherit;
 }
 
-/* The close button stays in reach at the bottom of a long sheet, over what scrolls under it (out to
-   the sheet's edge, its padding included). */
+/* The close button: always at the bottom, still while the text above it scrolls. */
 .sheet-foot {
-  position: sticky;
-  z-index: 2;
-  bottom: calc(-16px - env(safe-area-inset-bottom));
+  flex: none;
   display: flex;
   flex-direction: column;
-  margin-bottom: calc(-16px - env(safe-area-inset-bottom));
-  padding: 6px 0 calc(16px + env(safe-area-inset-bottom));
-  background: inherit;
+  padding-top: 2px;
 }
 
 .sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* Out to the sheet's edges, so rows, rings and shadows aren't cut at the sides. */
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 2px var(--gutter);
+}
+
+.sheet-grabber,
+.sheet-title {
+  flex: none;
 }
 
 /* ---------- Players ---------- */

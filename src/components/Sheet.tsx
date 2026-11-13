@@ -17,7 +17,7 @@ const OUT = 220;
 
 /** How far down (of its height) or how fast (px/ms) a sheet has to be pulled to close. */
 const PULL_CLOSE = 0.3;
-const FLICK = 0.6;
+const FLICK = 0.5;
 
 /** Bottom sheet with one big close button. Tapping outside also closes it, and so does pulling it
  *  down (as the grabber on top says). It slides back down the way it came when it closes, its
@@ -54,14 +54,14 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
 
   // Pulled down by a finger (or the mouse on its top): it follows, the dim fading with it; let go far
   // enough down, or flicked, it closes from there, else it springs back. From the top (the grabber
-  // and title) always; from inside only when scrolled to the top and pulled down, else it scrolls.
+  // and title) always; from the text only when scrolled to the top and pulled down, else it scrolls.
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
     const el = box.current;
     const dim = backdrop.current;
     if (!open || !el || !dim) return;
-    let at: { y: number; x: number; decided: boolean; dragging: boolean } | null = null;
+    let at: { y: number; x: number; t: number; decided: boolean; dragging: boolean } | null = null;
     let dy = 0;
     let last = { y: 0, t: 0 };
     let speed = 0;
@@ -78,8 +78,9 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
     };
     const begin = (x: number, y: number, target: EventTarget | null) => {
       const t = target as Element | null;
-      if (t?.closest?.('input, textarea, select, [data-sheet-nodrag]')) return;
-      at = { x, y, decided: false, dragging: false };
+      // Not from the close button at the bottom (it stays put), nor from a field.
+      if (t?.closest?.('input, textarea, select, .sheet-foot, [data-sheet-nodrag]')) return;
+      at = { x, y, t: performance.now(), decided: false, dragging: false };
       dy = 0;
       last = { y, t: performance.now() };
       speed = 0;
@@ -90,7 +91,7 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
       if (!at.decided) {
         const ddx = x - at.x;
         const ddy = y - at.y;
-        const down = ddy > 0 && (top || el.scrollTop <= 0);
+        const down = ddy > 0 && (top || (el.querySelector('.sheet-body')?.scrollTop ?? 0) <= 0);
         if (Math.max(Math.abs(ddx), Math.abs(ddy)) < 4) return down;
         at.decided = true;
         if (!down || Math.abs(ddx) > ddy) {
@@ -114,7 +115,9 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
       const was = at;
       at = null;
       if (!was?.dragging) return;
-      if (dy > el.offsetHeight * PULL_CLOSE || speed > FLICK) close.current();
+      // Far enough, or quick at the end, or a short quick pull all along: closed.
+      const quick = speed > FLICK || (dy > 40 && dy / Math.max(1, performance.now() - was.t) > FLICK * 0.7);
+      if (dy > el.offsetHeight * PULL_CLOSE || quick) close.current();
       else settle();
     };
     const fromTop = (t: EventTarget | null) => !!(t as Element | null)?.closest?.('.sheet-grabber, .sheet-title');
@@ -196,7 +199,7 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
           {view.title}
         </h2>
         <div className="sheet-body">{view.children}</div>
-        {/* Always in reach: at the bottom, however far the sheet scrolls. */}
+        {/* Always in reach: at the bottom, still while the text scrolls. */}
         <div className="sheet-foot">
           <BigButton variant="light" onClick={leaving ? undefined : onClose}>
             {view.closeLabel}
