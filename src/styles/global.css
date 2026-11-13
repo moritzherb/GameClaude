@@ -13785,3 +13785,221 @@ button.profile-avatar:not(:disabled):active {
 .look-toggle.open .look-chevron {
   transform: rotate(90deg);
 }
+
+/* ---------- Egyptian Rat Screw (rs-): the others' piles along the top, the middle fanned in the
+   middle, your pile bottom left, Slap bottom right. Piles are as thick as the cards in them. ---------- */
+.rs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rs > * {
+  flex-shrink: 0;
+}
+
+.rs-others {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.rs-others::-webkit-scrollbar {
+  display: none;
+}
+
+.rs-seat {
+  flex: none;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.rs-seat.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.rs-seat.out {
+  opacity: 0.4;
+}
+
+.rs-seat-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.rs-seat-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* A face-down pile: one hairline per card, so its height shows how many there are. */
+.rs-stack {
+  --w: 34px;
+  position: relative;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 1.4 + var(--n) * 0.7px);
+}
+
+.rs-stack.big {
+  --w: 92px;
+  height: calc(var(--w) * 1.4 + var(--n) * 1.2px);
+}
+
+.rs-stack i {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--k) * 0.7px);
+  width: var(--w);
+  height: calc(var(--w) * 1.4);
+  border-radius: calc(var(--w) * 0.12);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 3px, transparent 3px 8px), var(--accent);
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.06) #fff, 0 0.5px 0 rgba(0, 0, 0, 0.35);
+}
+
+.rs-stack.big i {
+  bottom: calc(var(--k) * 1.2px);
+}
+
+.rs-stack.empty {
+  border-radius: calc(var(--w) * 0.12);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.rs-status {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+/* The middle: the top card big, the ones before it peeking out to the left and up, each a little
+   turned, as real cards lie. */
+.rs-middle {
+  --cw: clamp(96px, 30vw, 132px);
+  position: relative;
+  flex: 1 1 0;
+  min-height: calc(var(--cw) * 1.6);
+  display: grid;
+  place-items: center;
+}
+
+.rs-fan-card {
+  position: absolute;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  transform: translate(calc(var(--k) * var(--cw) * 0.22), calc(var(--k) * var(--cw) * 0.06)) rotate(var(--tilt));
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  animation: rs-land 0.18s var(--ease-out);
+}
+
+@keyframes rs-land {
+  from {
+    transform: translate(0, -24px) rotate(var(--tilt)) scale(1.06);
+    opacity: 0;
+  }
+}
+
+.rs-middle-more {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rs-joker {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--cw) * 0.18);
+  color: #7b3fe4;
+}
+
+.rs-take {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: auto;
+  padding-inline: 24px;
+}
+
+.rs-last {
+  margin: 0;
+  min-height: 1.3em;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.rs-me {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.rs-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.rs-mine.go .rs-stack {
+  filter: drop-shadow(0 0 0 var(--accent));
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+.rs-mine:not(:disabled):active .rs-stack {
+  transform: scale(0.97);
+}
+
+.rs-mine-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rs-mine.go .rs-mine-label {
+  color: var(--ink);
+}
+
+/* Slap: big and round, under the right thumb. */
+.rs-slap {
+  width: clamp(120px, 36vw, 150px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--bad);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2), 0 8px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.08s var(--ease-out);
+}
+
+.rs-slap:not(:disabled):active {
+  transform: scale(0.92);
+}
+
+.rs-slap:disabled {
+  opacity: 0.4;
+}

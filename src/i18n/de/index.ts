@@ -17,7 +17,8 @@ import trash from './trash';
 import whoDrinks from './whoDrinks';
 import voteGames from './voteGames';
 import party from './party';
+import ratScrew from './ratScrew';
 
-const de: Record<string, string> = { ...app, ...arschloch, ...president, ...busDriver, ...horseRace, ...kingsCup, ...klatschen, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks, ...voteGames, ...party };
+const de: Record<string, string> = { ...app, ...arschloch, ...president, ...busDriver, ...horseRace, ...kingsCup, ...klatschen, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks, ...voteGames, ...party, ...ratScrew };
 
 export default de;
