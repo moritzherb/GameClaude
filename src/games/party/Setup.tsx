@@ -34,6 +34,8 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
   const [picking, setPicking] = useState<Player | null>(null);
   const [sharing, setSharing] = useState<Board | null>(null);
   const [fetching, setFetching] = useState(false);
+  // Sharing a board and loading one by its code: one link, then the two (seldom needed).
+  const [codes, setCodes] = useState(false);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
 
   const pick = (p: Player, def: PawnDef) => {
@@ -90,23 +92,44 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
         <div className="pt-board-tools">
           {board.custom && (
             <button type="button" className="text-btn pt-link" onClick={() => onEdit(board, false)}>
-              ✏️ {t('Edit this board')}
+              {t('Edit this board')}
             </button>
           )}
           <button type="button" className="text-btn pt-link" onClick={() => onEdit(board, true)}>
-            ＋ {t('Make your own board')}
+            {t('Make your own board')}
           </button>
-          {cloudOn && board.custom && (
-            <button type="button" className="text-btn pt-link" onClick={() => setSharing(board)}>
-              📤 {t('Share this board')}
-            </button>
-          )}
           {cloudOn && (
-            <button type="button" className="text-btn pt-link" onClick={() => setFetching(true)}>
-              📥 {t('Board from a code')}
+            <button type="button" className="text-btn pt-link" onClick={() => setCodes(true)}>
+              {t('Share or load a board')}
             </button>
           )}
         </div>
+        {cloudOn && (
+          <Sheet open={codes} onClose={() => setCodes(false)} title={t('Share or load a board')} closeLabel={t('Cancel')}>
+            <div className="stack">
+              {board.custom && (
+                <BigButton
+                  variant="glass"
+                  onClick={() => {
+                    setCodes(false);
+                    setSharing(board);
+                  }}
+                >
+                  {t('Share this board')}
+                </BigButton>
+              )}
+              <BigButton
+                variant="glass"
+                onClick={() => {
+                  setCodes(false);
+                  setFetching(true);
+                }}
+              >
+                {t('Board from a code')}
+              </BigButton>
+            </div>
+          </Sheet>
+        )}
         {cloudOn && (
           <>
             <ShareBoardSheet board={sharing} onClose={() => setSharing(null)} />

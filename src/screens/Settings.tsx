@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Alert from '../components/Alert';
 import CloudBackup from '../components/CloudBackup';
 import Flag from '../components/Flag';
-import { PlusIcon, RowIcon, type RowGlyph } from '../components/Icons';
+import { ChevronIcon, PlusIcon, RowIcon, type RowGlyph } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
@@ -196,6 +196,7 @@ function useAdChoices() {
 export default function Settings() {
   const { settings, updateSettings } = useApp();
   const adChoices = useAdChoices();
+  const [lookOpen, setLookOpen] = useState(false);
 
   return (
     <main className="screen settings-page">
@@ -228,36 +229,6 @@ export default function Settings() {
           </span>
         </div>
 
-        <div className="setting-row look-row">
-          <span className="setting-emoji" aria-hidden="true"><RowIcon name="look" /></span>
-          <span className="setting-text">
-            <span className="setting-label">{t('Look')}</span>
-            <span className="setting-hint">{t('Only the look: every game plays the same')}</span>
-          </span>
-          <Choice label={t('Look')} value={lookFor(settings.look)} options={LOOKS} onPick={(look) => updateSettings({ look })} />
-        </div>
-
-        <div className="setting-row look-row">
-          <span className="setting-emoji" aria-hidden="true"><RowIcon name="theme" /></span>
-          <span className="setting-text">
-            <span className="setting-label">{t('Appearance')}</span>
-            <span className="setting-hint">{t('Light, dark, or like your phone')}</span>
-          </span>
-          <Choice label={t('Appearance')} value={settings.theme ?? 'auto'} options={THEMES} onPick={(theme) => updateSettings({ theme })} />
-        </div>
-
-        {lookFor(settings.look) === 'pop' && (
-          <div className="setting-row look-row">
-            <span className="setting-emoji" aria-hidden="true"><RowIcon name="phone" /></span>
-            <span className="setting-text">
-              <span className="setting-label">{t('Home screen')}</span>
-              <span className="setting-hint">{t('Like your phone’s own')}</span>
-            </span>
-            <Choice label={t('Home screen')} value={settings.phone ?? 'auto'} options={PHONES} onPick={(phone) => updateSettings({ phone })} />
-          </div>
-        )}
-        {lookFor(settings.look) === 'pop' && <WallpaperRow />}
-        {lookFor(settings.look) === 'pop' && <ResetHomeRow />}
 
         {OPTIONS.map((o) => {
           const on = !!settings[o.key];
@@ -289,6 +260,58 @@ export default function Settings() {
           );
         })}
       </div>
+
+      {/* How it looks: one row that opens (most people set it once), so the list stays short. */}
+      <section className="section">
+        <div className="settings-list">
+          <button type="button" className={`setting-row look-toggle${lookOpen ? ' open' : ''}`} aria-expanded={lookOpen} onClick={() => setLookOpen(!lookOpen)}>
+            <span className="setting-emoji" aria-hidden="true"><RowIcon name="look" /></span>
+            <span className="setting-text">
+              <span className="setting-label">{t('Look and home screen')}</span>
+              <span className="setting-hint">
+                {[LOOKS.find((x) => x.id === lookFor(settings.look))?.label, THEMES.find((x) => x.id === (settings.theme ?? 'auto'))?.label].map((x) => t(x ?? '')).join(' · ')}
+              </span>
+            </span>
+            <span className="look-chevron" aria-hidden="true">
+              <ChevronIcon />
+            </span>
+          </button>
+          {lookOpen && (
+            <>
+              <div className="setting-row look-row">
+                <span className="setting-emoji" aria-hidden="true"><RowIcon name="look" /></span>
+                <span className="setting-text">
+                  <span className="setting-label">{t('Look')}</span>
+                  <span className="setting-hint">{t('Only the look: every game plays the same')}</span>
+                </span>
+                <Choice label={t('Look')} value={lookFor(settings.look)} options={LOOKS} onPick={(look) => updateSettings({ look })} />
+              </div>
+
+              <div className="setting-row look-row">
+                <span className="setting-emoji" aria-hidden="true"><RowIcon name="theme" /></span>
+                <span className="setting-text">
+                  <span className="setting-label">{t('Appearance')}</span>
+                  <span className="setting-hint">{t('Light, dark, or like your phone')}</span>
+                </span>
+                <Choice label={t('Appearance')} value={settings.theme ?? 'auto'} options={THEMES} onPick={(theme) => updateSettings({ theme })} />
+              </div>
+
+              {lookFor(settings.look) === 'pop' && (
+                <div className="setting-row look-row">
+                  <span className="setting-emoji" aria-hidden="true"><RowIcon name="phone" /></span>
+                  <span className="setting-text">
+                    <span className="setting-label">{t('Home screen')}</span>
+                    <span className="setting-hint">{t('Like your phone’s own')}</span>
+                  </span>
+                  <Choice label={t('Home screen')} value={settings.phone ?? 'auto'} options={PHONES} onPick={(phone) => updateSettings({ phone })} />
+                </div>
+              )}
+              {lookFor(settings.look) === 'pop' && <WallpaperRow />}
+              {lookFor(settings.look) === 'pop' && <ResetHomeRow />}
+            </>
+          )}
+        </div>
+      </section>
 
       {cloudOn && <CloudBackup />}
 

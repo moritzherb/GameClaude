@@ -13771,3 +13771,17 @@ h3 {
 button.profile-avatar:not(:disabled):active {
   transform: scale(0.97);
 }
+
+/* Settings: the look's own rows open under one row (Hick: a short list to choose from). */
+.look-chevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 16px;
+  transition: transform 0.2s var(--ease-out);
+}
+
+.look-toggle.open .look-chevron {
+  transform: rotate(90deg);
+}

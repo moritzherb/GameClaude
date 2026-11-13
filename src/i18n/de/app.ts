@@ -137,6 +137,7 @@ const app: Record<string, string> = {
   'Waiting for the others to join…': 'Warte auf die anderen…',
   'Cheers!': 'Prost!',
   Cheers: 'Prost',
+  'Look and home screen': 'Aussehen & Startseite',
   'Reset home screen?': 'Startseite zurücksetzen?',
   'Every game comes back, in the first order. Your own order is gone.': 'Alle Spiele kommen zurück, in der ersten Reihenfolge. Deine eigene Reihenfolge ist weg.',
   Reset: 'Zurücksetzen',

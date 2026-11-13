@@ -150,6 +150,7 @@ const party: Record<string, string> = {
   'Not ready to play: {what}': 'Noch nicht spielbar: {what}',
   'Delete draft': 'Entwurf löschen',
   'Draft · {n} fields': 'Entwurf · {n} Felder',
+  'Share or load a board': 'Brett teilen oder laden',
   'Bridge forward': 'Brücke vor',
   'Over the bridge you go, on to field {n}.': 'Über die Brücke geht’s vor auf Feld {n}.',
   'Over the bridge you go, on to the field across the water.': 'Über die Brücke geht’s vor auf das Feld auf der anderen Seite des Wassers.',
