@@ -610,11 +610,21 @@ html[data-os='android'] .app-icon.sm {
   box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35), 0 18px 26px -14px rgba(0, 0, 0, 0.85);
 }
 
-/* A long name breaks after a slash, and gets smaller until its longest word fits. */
+/* "Last played" just over the name (the game's big emoji has the top right; a long kicker up there
+   ran under it). */
+.w-last .w-kicker {
+  position: relative;
+  top: auto;
+  left: auto;
+  margin-bottom: 4px;
+}
+
+/* A long name breaks between words (or after a slash); its type gets smaller until its longest word
+   fits (Widgets.tsx: useFitWords). */
 .w-last .w-title {
+  align-self: stretch;
   max-width: 100%;
   overflow-wrap: break-word;
-  font-size: min(26px, calc((40vw - 28px) * 2 / var(--longest, 8)));
 }
 
 .w-pop {

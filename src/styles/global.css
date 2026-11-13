@@ -2208,7 +2208,8 @@ li {
 }
 
 .game-bar .top-bar-title {
-  font-size: clamp(1.1rem, 5.2vw, 1.35rem);
+  /* Down to 1rem on the narrowest phones (320 wide), so "Pferderennen" isn't cut. */
+  font-size: clamp(1rem, 5.2vw, 1.35rem);
   /* A long name ("Princess/King Treatment") takes two even lines in the same bar instead of being
      cut off; only past two does it end in "…". */
   display: -webkit-box;
@@ -14069,7 +14070,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .rs-stack.big {
-  --w: 92px;
+  --w: clamp(64px, 11dvh, 92px);
   height: calc(var(--w) * 1.4 + var(--n) * 1.2px);
 }
 
@@ -14104,7 +14105,8 @@ button.profile-avatar:not(:disabled):active {
 /* The middle: the top card big, the ones before it peeking out to the left and up, each a little
    turned, as real cards lie. */
 .rs-middle {
-  --cw: clamp(96px, 30vw, 132px);
+  /* As big as the screen's width allows, and its height: smaller on a short phone (an SE). */
+  --cw: clamp(80px, min(30vw, 15dvh), 132px);
   position: relative;
   flex: 1 1 0;
   min-height: calc(var(--cw) * 1.6);
@@ -14145,14 +14147,26 @@ button.profile-avatar:not(:disabled):active {
   color: #7b3fe4;
 }
 
+.rs-take-slot {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 56px;
+  margin-top: 8px;
+}
+
 .rs-take {
-  position: absolute;
-  bottom: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
   width: auto;
-  padding-inline: 24px;
+  padding-inline: 28px;
+  animation: rs-take-in 0.2s var(--ease-out);
+}
+
+@keyframes rs-take-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
 }
 
 .rs-last {
@@ -14208,7 +14222,7 @@ button.profile-avatar:not(:disabled):active {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: clamp(120px, 36vw, 148px);
+  width: clamp(100px, min(36vw, 18dvh), 148px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: #c4473d;
@@ -15943,4 +15957,22 @@ html[data-look] .play-screen > .top-bar .round-btn {
   pointer-events: none;
   transform: translate(-50%, -50%);
   animation: sp-dim 0.15s var(--ease-out) both;
+}
+
+/* Rat Screw on a short phone (an SE): the others' seats in one line (who, then their pile), the rows a
+   little closer, so the whole table fits without scrolling. */
+@media (max-height: 700px) {
+  .rs {
+    gap: 8px;
+  }
+
+  .rs-seat {
+    flex-direction: row;
+    gap: 8px;
+    padding: 6px 10px;
+  }
+
+  .rs-seat .rs-stack {
+    --w: 24px;
+  }
 }

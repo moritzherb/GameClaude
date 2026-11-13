@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
+import { useFitWords } from '../lib/useFitWords';
 import { BackIcon, CloseIcon } from './Icons';
 
 interface Props {
@@ -31,6 +32,9 @@ export function RoundButton({ onClick, label, children, accent }: { onClick: () 
 
 /** Same layout on every screen: escape hatch top-left, title in the middle, extras on the right. */
 export default function TopBar({ title, onBack, icon = 'back', right, className }: Props) {
+  // A long word in the title ("Pferderennen" on a 320-wide phone) gets smaller instead of cut.
+  const heading = useRef<HTMLHeadingElement>(null);
+  useFitWords(heading, typeof title === 'string' ? title : '', 13);
   return (
     <header className={`top-bar${className ? ` ${className}` : ''}`}>
       <div className="top-bar-side">
@@ -40,7 +44,9 @@ export default function TopBar({ title, onBack, icon = 'back', right, className 
           </RoundButton>
         )}
       </div>
-      <h1 className="top-bar-title">{title}</h1>
+      <h1 ref={heading} className="top-bar-title">
+        {title}
+      </h1>
       <div className="top-bar-side right">{right}</div>
     </header>
   );
