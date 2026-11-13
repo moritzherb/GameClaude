@@ -149,14 +149,14 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
         <h3 className="section-title">{t('Pawns')}</h3>
         <div className="pt-pawn-rows">
           {players.map((p) => (
-            <button key={p.id} type="button" className="pt-pawn-row" onClick={() => setPicking(p)}>
+            <button key={p.id} type="button" className="pt-pawn-row" aria-label={`${p.name}: ${t(pawns[p.id].name)}`} onClick={() => setPicking(p)}>
               <span className="bd-avatar sm" style={{ background: p.color }}>
                 <Avatar avatar={p.avatar} photo={p.photo} />
               </span>
               <span className="pt-pawn-row-name">{p.name}</span>
-              <span className="pt-pawn-row-pawn">
+              {/* Their pawn alone, all in one column on the right (its colour's name only in the picker). */}
+              <span className="pt-pawn-row-pawn" aria-hidden>
                 <PawnIcon pawn={pawns[p.id]} size={40} />
-                <span>{t(pawns[p.id].name)}</span>
               </span>
             </button>
           ))}

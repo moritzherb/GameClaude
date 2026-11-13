@@ -13221,12 +13221,10 @@ li {
 }
 
 .pt-pawn-row-pawn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
 }
 
 .pt-pawn-grid {
