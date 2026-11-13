@@ -1521,27 +1521,29 @@ html[data-look='pop'][data-theme='dark'] .sb-dots-bar .sb-dots,
   touch-action: none;
 }
 
+/* A calm wiggle, each app a little out of step with its neighbours (as on an iPhone): small enough
+   that the icons stay easy to grab. */
 .os-home.editing .os-grid.movable .app:not(.lifted) .app-icon {
-  animation: app-jiggle 0.26s ease-in-out infinite alternate;
+  animation: app-jiggle 0.34s ease-in-out infinite alternate;
   will-change: transform;
 }
 
 .os-home.editing .os-grid.movable .app:nth-child(2n) .app-icon {
-  animation-duration: 0.23s;
-  animation-delay: -0.12s;
+  animation-duration: 0.31s;
+  animation-delay: -0.15s;
 }
 
 .os-home.editing .os-grid.movable .app:nth-child(3n) .app-icon {
-  animation-duration: 0.29s;
-  animation-delay: -0.07s;
+  animation-duration: 0.37s;
+  animation-delay: -0.09s;
 }
 
 @keyframes app-jiggle {
   from {
-    transform: rotate(-1.8deg);
+    transform: rotate(-1.1deg) translateY(0.3px);
   }
   to {
-    transform: rotate(1.8deg);
+    transform: rotate(1.1deg) translateY(-0.3px);
   }
 }
 
