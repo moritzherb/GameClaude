@@ -368,6 +368,13 @@ li {
   z-index: 5;
 }
 
+/* The last thing on its screen: it reaches into the screen's own padding at the bottom, so scrolled
+   to the end it stands exactly where it stood while scrolling (else it rose by that padding there). */
+.screen:not(.game-detail) > .sticky-action:last-child,
+.screen:not(.game-detail) > .bd:last-child > .sticky-action:last-child {
+  margin-bottom: calc(-20px - env(safe-area-inset-bottom));
+}
+
 /*
  * A game's page (its rules, before it starts): exactly the screen's height. The back button at the
  * top and the start button at the bottom stay put; only the middle (the card, the numbers, the
