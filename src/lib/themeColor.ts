@@ -8,7 +8,7 @@
  */
 
 /** The ground colour of each look (light, dark): the browser's bar and the strip under the clock take it. */
-export const GROUND = { pop: ['#f2f2f7', '#000000'], classic: ['#f1ede3', '#10110e'] } as const;
+export const GROUND = { pop: ['#f2f2f7', '#262624'], classic: ['#f1ede3', '#10110e'] } as const;
 
 /** Light or dark chosen in Settings (null: as the phone is). */
 let forced: 'light' | 'dark' | null = null;

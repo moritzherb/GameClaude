@@ -67,25 +67,25 @@ html[data-look='pop'] {
 
 @media (prefers-color-scheme: dark) {
   html[data-look='pop']:not([data-theme='light']) {
-    --bg: #000000;
-    --surface: #1c1c1e;
-    --surface-2: #2c2c2e;
-    --line: #38383a;
-    --ink: #ffffff;
-    --ink-2: #98989f;
-    --muted: #98989f;
+    --bg: #262624;
+    --surface: #30302e;
+    --surface-2: #3b3b38;
+    --line: #4a4945;
+    --ink: #faf9f5;
+    --ink-2: #a6a39b;
+    --muted: #a6a39b;
     --accent: #b8f01e;
     --accent-ink: #ffffff;
     --on-accent: #000000;
-    --hero-bg: #2c2c2e;
-    --hero-fg: #ffffff;
-    --hero-accent: #ffffff;
-    --fill: rgba(118, 118, 128, 0.24);
-    --fill-2: rgba(118, 118, 128, 0.36);
-    --glass: rgba(44, 44, 46, 0.62);
+    --hero-bg: #3b3b38;
+    --hero-fg: #faf9f5;
+    --hero-accent: #faf9f5;
+    --fill: rgba(150, 146, 134, 0.22);
+    --fill-2: rgba(150, 146, 134, 0.34);
+    --glass: rgba(52, 52, 49, 0.66);
     --glass-line: rgba(255, 255, 255, 0.1);
     --switch-on: var(--accent);
-    --seg-on: #636366;
+    --seg-on: #5e5d58;
     --dim: rgba(0, 0, 0, 0.5);
     --pop-glow: var(--bg);
     --pop-tile: var(--surface);
@@ -105,25 +105,25 @@ html[data-look='pop'] {
 }
 
 html[data-look='pop'][data-theme='dark'] {
-  --bg: #000000;
-  --surface: #1c1c1e;
-  --surface-2: #2c2c2e;
-  --line: #38383a;
-  --ink: #ffffff;
-  --ink-2: #98989f;
-  --muted: #98989f;
+  --bg: #262624;
+  --surface: #30302e;
+  --surface-2: #3b3b38;
+  --line: #4a4945;
+  --ink: #faf9f5;
+  --ink-2: #a6a39b;
+  --muted: #a6a39b;
   --accent: #b8f01e;
   --accent-ink: #ffffff;
   --on-accent: #000000;
-  --hero-bg: #2c2c2e;
-  --hero-fg: #ffffff;
-  --hero-accent: #ffffff;
-  --fill: rgba(118, 118, 128, 0.24);
-  --fill-2: rgba(118, 118, 128, 0.36);
-  --glass: rgba(44, 44, 46, 0.62);
+  --hero-bg: #3b3b38;
+  --hero-fg: #faf9f5;
+  --hero-accent: #faf9f5;
+  --fill: rgba(150, 146, 134, 0.22);
+  --fill-2: rgba(150, 146, 134, 0.34);
+  --glass: rgba(52, 52, 49, 0.66);
   --glass-line: rgba(255, 255, 255, 0.1);
   --switch-on: var(--accent);
-  --seg-on: #636366;
+  --seg-on: #5e5d58;
   --dim: rgba(0, 0, 0, 0.5);
   --pop-glow: var(--bg);
   --pop-tile: var(--surface);
