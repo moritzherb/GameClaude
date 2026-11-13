@@ -21,7 +21,8 @@ import ratScrew from './ratScrew';
 import colorClash from './colorClash';
 import spellbound from './spellbound';
 import numberFlip from './numberFlip';
+import megaTtt from './megaTtt';
 
-const de: Record<string, string> = { ...app, ...arschloch, ...president, ...busDriver, ...horseRace, ...kingsCup, ...klatschen, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks, ...voteGames, ...party, ...ratScrew, ...colorClash, ...spellbound, ...numberFlip };
+const de: Record<string, string> = { ...app, ...arschloch, ...president, ...busDriver, ...horseRace, ...kingsCup, ...klatschen, ...maexchen, ...fuckTheDealer, ...fiveThousand, ...pantsDown, ...palace, ...schweinerei, ...speed, ...trash, ...whoDrinks, ...voteGames, ...party, ...ratScrew, ...colorClash, ...spellbound, ...numberFlip, ...megaTtt };
 
 export default de;
