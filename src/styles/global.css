@@ -14957,3 +14957,37 @@ button.profile-avatar:not(:disabled):active {
 .sp-info .sort-btn {
   margin: 0 0 0 auto;
 }
+
+/* The age check: the terms and the privacy policy, quiet, under the buttons. */
+.gate-legal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: -4px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.gate-legal button {
+  position: relative;
+  min-height: 28px;
+  padding: 0 4px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Bigger to hit than it looks: 44 tall. */
+.gate-legal button::after {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+
+/* A short screen (an iPhone SE, a browser's bars): the 18+ a little smaller, so all fits unscrolled. */
+@media (max-height: 720px) {
+  .gate-big {
+    font-size: clamp(5rem, 30vw, 7.25rem);
+  }
+}

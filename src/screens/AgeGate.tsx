@@ -2,6 +2,7 @@ import { useState } from 'react';
 import BigButton from '../components/BigButton';
 import Logo from '../components/Logo';
 import { t } from '../i18n';
+import { openLegal } from '../lib/legal';
 
 export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const [tooYoung, setTooYoung] = useState(false);
@@ -35,6 +36,15 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
               {t('Not yet')}
             </BigButton>
           </div>
+          <p className="gate-legal">
+            <button type="button" onClick={() => openLegal('terms')}>
+              {t('Terms of use')}
+            </button>
+            <span aria-hidden>·</span>
+            <button type="button" onClick={() => openLegal()}>
+              {t('Privacy policy')}
+            </button>
+          </p>
         </div>
       )}
     </main>

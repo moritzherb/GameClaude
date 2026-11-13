@@ -338,6 +338,8 @@ const app: Record<string, string> = {
   Turquoise: 'Türkis',
   'Choose a photo': 'Foto wählen',
   'Sort your cards': 'Karten sortieren',
+  'Terms of use': 'Nutzungsbedingungen',
+  'Privacy, terms of use, imprint': 'Datenschutz, Nutzungsbedingungen, Impressum',
 };
 
 export default app;

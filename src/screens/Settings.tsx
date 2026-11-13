@@ -6,6 +6,7 @@ import { ChevronIcon, PlusIcon, RowIcon, type RowGlyph } from '../components/Ico
 import TopBar from '../components/TopBar';
 import { LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
+import { openLegal } from '../lib/legal';
 import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
 import { lookFor, type Look, type PhoneSetting } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
@@ -178,13 +179,7 @@ function ResetHomeRow() {
  * The privacy policy, on the website (in the store app: in the phone's browser). On the home-screen
  * app there's no browser bar to come back with, so it opens in place and its own back button returns.
  */
-function openPrivacy() {
-  const url = new URL('privacy.html', window.location.href.split('#')[0]).href;
-  const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
-  if (isNative) toNative({ type: 'open', url });
-  else if (standalone) window.location.href = url;
-  else window.open(url, '_blank', 'noopener');
-}
+const openPrivacy = () => openLegal();
 
 /** Whether the store app offers the ad privacy choices (the law asks for them in some places, e.g. the EU). */
 function useAdChoices() {
@@ -322,7 +317,7 @@ export default function Settings() {
             <span className="setting-emoji" aria-hidden="true"><RowIcon name="lock" /></span>
             <span className="setting-text">
               <span className="setting-label">{t('Privacy policy')}</span>
-              <span className="setting-hint">{t('What the app keeps and why')}</span>
+              <span className="setting-hint">{t('Privacy, terms of use, imprint')}</span>
             </span>
           </button>
           {adChoices && (
