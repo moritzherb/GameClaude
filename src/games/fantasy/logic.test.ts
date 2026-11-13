@@ -60,7 +60,9 @@ describe('fantasy trick-taking', () => {
   });
 
   it('locks bids from 0 to N in turn', () => {
-    let g = newGame(3);
+    // A number turned up (not an Archmage, which would have the dealer pick trump first).
+    const base = Array.from({ length: 56 }, (_, i) => num('water', (i % 13) + 1, 500 + i));
+    let g = newGame(3, false, [...base, num('fire', 9, 1), num('nature', 2, 2), num('nature', 3, 3), num('nature', 4, 4)]);
     expect(bid(g, g.turn, 2)).toBe(g);
     g = bid(g, 1, 1);
     expect(bid(g, 1, 0)).toBe(g);
