@@ -189,7 +189,7 @@ function Table({
       </p>
 
       {/* The middle: the top card, the ones before it peeking out under it. */}
-      <div className="rs-middle" aria-label={t('{n} cards in the middle', { n: g.middle.length })}>
+      <div className="rs-middle" style={{ '--half': (fan.length - 1) / 2 } as CSSProperties} aria-label={t('{n} cards in the middle', { n: g.middle.length })}>
         {fan.map((c, k) => (
           <div key={`${g.middle.length - fan.length + k}`} className="rs-fan-card" style={{ '--k': k - (fan.length - 1), '--tilt': `${((g.middle.length - fan.length + k) * 37) % 13 - 6}deg` } as CSSProperties}>
             <Face card={c} />
@@ -241,7 +241,8 @@ function Table({
               act((x) => slap(x, me));
             }}
           >
-            {out ? t('Out') : t('Slap!')}
+            {!out && <HandIcon />}
+            <span>{out ? t('Out') : t('Slap')}</span>
           </button>
         )}
       </div>
@@ -255,6 +256,16 @@ function lastText(e: Entry, name: (i: number) => string) {
   if (e.k === 'wrong') return t('{name} slapped wrong: a card under the pile.', { name: who(e.by) });
   if (e.k === 'out') return t('{name} slapped wrong without cards: out.', { name: who(e.by) });
   return t('{name} takes the pile ({n}).', { name: who(e.by), n: e.n });
+}
+
+/** An open hand, for the Slap pad. */
+function HandIcon() {
+  return (
+    <svg className="rs-slap-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8" />
+      <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15" />
+    </svg>
+  );
 }
 
 /** A face-down pile, as thick as the cards in it (a hair per card), never a number. */

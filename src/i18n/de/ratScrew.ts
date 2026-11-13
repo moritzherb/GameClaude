@@ -31,6 +31,7 @@ const ratScrew: Record<string, string> = {
   Joker: 'Joker',
   Out: 'Raus',
   'Slap!': 'Hau drauf!',
+  Slap: 'Hau drauf',
   'Take the pile': 'Stapel nehmen',
   'Tap to play': 'Tippen zum Legen',
   'Play your top card': 'Oberste Karte legen',

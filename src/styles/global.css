@@ -13914,15 +13914,16 @@ button.profile-avatar:not(:disabled):active {
   height: calc(var(--w) * 1.4 + var(--n) * 1.2px);
 }
 
+/* A classic back: a fine red lattice inside a white border, as on a pub's deck. */
 .rs-stack i {
   position: absolute;
   left: 0;
   bottom: calc(var(--k) * 0.7px);
   width: var(--w);
   height: calc(var(--w) * 1.4);
-  border-radius: calc(var(--w) * 0.12);
-  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 3px, transparent 3px 8px), var(--accent);
-  box-shadow: inset 0 0 0 calc(var(--w) * 0.06) #fff, 0 0.5px 0 rgba(0, 0, 0, 0.35);
+  border-radius: calc(var(--w) * 0.1);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 5px), #9e3a32;
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.07) #f7f4ee, inset 0 0 0 calc(var(--w) * 0.08) rgba(0, 0, 0, 0.12), 0 0.5px 0 rgba(0, 0, 0, 0.35);
 }
 
 .rs-stack.big i {
@@ -13956,14 +13957,15 @@ button.profile-avatar:not(:disabled):active {
   position: absolute;
   width: var(--cw);
   height: calc(var(--cw) * 1.4);
-  transform: translate(calc(var(--k) * var(--cw) * 0.22), calc(var(--k) * var(--cw) * 0.06)) rotate(var(--tilt));
+  /* Centred: the top card right of the middle, the ones before it peeking out to the left. */
+  transform: translate(calc((var(--k) + var(--half, 0)) * var(--cw) * 0.22), calc(var(--k) * var(--cw) * 0.06)) rotate(var(--tilt));
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
   animation: rs-land 0.18s var(--ease-out);
 }
 
 @keyframes rs-land {
   from {
-    transform: translate(0, -24px) rotate(var(--tilt)) scale(1.06);
+    transform: translate(calc(var(--half, 0) * var(--cw) * 0.22), -24px) rotate(var(--tilt)) scale(1.06);
     opacity: 0;
   }
 }
@@ -14018,8 +14020,12 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .rs-mine.go .rs-stack {
-  filter: drop-shadow(0 0 0 var(--accent));
   animation: nudge 1.4s ease-in-out infinite;
+}
+
+/* Your turn: the top card of your pile ringed in the accent. */
+.rs-mine.go .rs-stack i:last-child {
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.07) #f7f4ee, inset 0 0 0 calc(var(--w) * 0.08) rgba(0, 0, 0, 0.12), 0 0 0 3px var(--accent);
 }
 
 .rs-mine:not(:disabled):active .rs-stack {
@@ -14036,26 +14042,40 @@ button.profile-avatar:not(:disabled):active {
   color: var(--ink);
 }
 
-/* Slap: big and round, under the right thumb. */
+/* Slap: a big round pad under the right thumb, flat: the colour says it, an open hand on it. */
 .rs-slap {
-  width: clamp(120px, 36vw, 150px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: clamp(120px, 36vw, 148px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--bad);
+  background: #c4473d;
   color: #fff;
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.5rem;
-  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2), 0 8px 18px rgba(0, 0, 0, 0.35);
-  transition: transform 0.08s var(--ease-out);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.12), 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.08s var(--ease-out), background-color 0.08s;
+}
+
+.rs-slap-icon {
+  width: 34%;
+  height: 34%;
 }
 
 .rs-slap:not(:disabled):active {
-  transform: scale(0.92);
+  transform: scale(0.94);
+  background: #a93a31;
 }
 
 .rs-slap:disabled {
-  opacity: 0.4;
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 /* ---------- Color Clash (cc-): cards in four colours, each with its white shape and number. ---------- */
