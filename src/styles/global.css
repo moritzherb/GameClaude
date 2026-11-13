@@ -2612,6 +2612,18 @@ li {
   flex: 1 0 auto;
 }
 
+/* A game's own pages before and between its rounds (who deals, who starts, the bets, the waiting
+   room, the results): what's over the button stands in the middle of the room left instead of stuck
+   to the top. The room is split above and below it (the button keeps the bottom); more than fits,
+   and it's the top again, scrolling. A round with its progress bar on top keeps that at the top. */
+.play-screen > .bd:not(:has(> .bd-progress)) > :first-child {
+  margin-top: auto;
+}
+
+.play-screen > .bd:not(:has(> .bd-progress)) > :last-child:not(.sticky-action) {
+  margin-bottom: auto;
+}
+
 /* Never squash content to fit the screen – let the page scroll instead. */
 .bd > *,
 .kc > *,
