@@ -58,8 +58,11 @@ function Start({ joinCode }: { joinCode: string | null }) {
 
   return (
     <main className="screen">
-      <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="large-title">{t('Play together')}</h1>
+      {/* Back and title stay at the top while the page scrolls under them. */}
+      <div className="screen-head">
+        <TopBar onBack={() => navigate(paths.home)} />
+        <h1 className="large-title">{t('Play together')}</h1>
+      </div>
       <p className="lead">{t('Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.')}</p>
 
       {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}

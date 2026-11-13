@@ -446,6 +446,9 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
         {!known && <span className={`ftd-peek-hint${r ? ' off' : ''}`}>{t('Hold to peek, don’t let anyone see')}</span>}
       </div>
 
+      {/* Below the deck, in a room of one height whatever shows there (the values to tap, or what
+          it was and the next button), so the deck above never moves. */}
+      <div className="ftd-deckphone-low">
       {!r ? (
         <>
           <p className="ftd-ask-sub center">
@@ -479,7 +482,7 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
       ) : (
         <>
           <Verdict result={r} dealer={dealer.name} lastOfThree={lastOfThree} />
-          <div className="sticky-action">
+          <div className="ftd-deckphone-next">
             <BigButton size="xl" variant={lastOfThree || !g.deck.length ? 'primary' : 'light'} onClick={() => act({ t: 'next', at: stamp(g) })}>
               {!g.deck.length ? (
                 t('Finish game')
@@ -492,6 +495,7 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -2,7 +2,9 @@ import { shuffle } from '../../lib/random';
 
 /**
  * Color Clash: get rid of your hand first. Play a card of the active colour, the same number or the
- * same action; Spectrum any time, Overload only with nothing of the active colour. Or draw one.
+ * same action; a Choose colour card any time, an Overload only with nothing of the active colour.
+ * Or draw one. A Burden (+2) or an Overload (+4) is passed on with another of the same, the
+ * penalty growing, until someone takes the lot and plays on.
  */
 
 export type Color = 'crimson' | 'azure' | 'amber' | 'jade';
@@ -10,7 +12,7 @@ export type Kind = 'number' | 'block' | 'turnaround' | 'burden' | 'spectrum' | '
 
 export interface Card {
   id: number;
-  /** null: a universal card (Spectrum, Overload). */
+  /** null: a universal card (Choose colour, Overload). */
   color: Color | null;
   kind: Kind;
   /** A number card's number (0–9). */
@@ -21,14 +23,18 @@ export const COLORS: Color[] = ['crimson', 'azure', 'amber', 'jade'];
 export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 10;
 export const HAND = 7;
+/** What a Burden and an Overload put on the next player. */
+export const PENALTY = { burden: 2, overload: 4 } as const;
 
 export type Entry =
   | { k: 'play'; by: number; card: Card }
+  /** Drew `n` cards from the deck: one by choice, or a penalty taken. */
   | { k: 'draw'; by: number; n: number }
-  | { k: 'skip'; by: number; draws: number }
-  | { k: 'caught'; by: number; caller: number }
-  | { k: 'called'; by: number }
-  | { k: 'challenge'; by: number; actor: number; fair: boolean };
+  | { k: 'take'; by: number; n: number }
+  /** Went down to one card without saying so before the next player moved: draws 2. */
+  | { k: 'forgot'; by: number; n: number }
+  | { k: 'skip'; by: number }
+  | { k: 'called'; by: number };
 
 export interface Game {
   deck: Card[];
@@ -39,20 +45,21 @@ export interface Game {
   dir: 1 | -1;
   /** The active colour (a universal card's chosen one). */
   color: Color;
-  /** This turn's player drew this card (playable): play it or pass. */
+  /** This turn's player drew this card (playable): play it or keep it. */
   drawn: number | null;
-  /** Down to one card: whether they said so, until the next player acts. */
+  /** Down to one card just now: whether they said so. Open until the next player moves. */
   lastCard: { seat: number; called: boolean } | null;
-  /** Said "last card" ahead, while still holding two (before playing the second-last). */
-  calling: number | null;
-  /** An Overload the next player can take or challenge. `fair`: the one who played it had nothing
-   *  of the colour before it (so a challenge fails). */
-  overload: { actor: number; target: number; fair: boolean } | null;
+  /** A Burden or Overload on the player whose turn it is: answer with another of the same, or take
+   *  `n` cards (and then play). */
+  penalty: { kind: 'burden' | 'overload'; n: number } | null;
   winner: number | null;
-  last: Entry | null;
+  /** What the last move did, in order (one move can make someone else draw too). */
+  events: Entry[];
+  /** Counts moves, so every phone animates each one once. */
+  seq: number;
 }
 
-/** The 108 cards: per colour one 0, two of 1–9, two of each action; four Spectrum, four Overload. */
+/** The 108 cards: per colour one 0, two of 1–9, two of each action; four Choose colour, four Overload. */
 export function newDeck(): Card[] {
   const d: Card[] = [];
   let id = 0;
@@ -96,11 +103,24 @@ export function newGame(players: number, deck: Card[] = shuffle(newDeck()), pick
     rest = shuffle([first, ...rest]);
     first = rest.pop()!;
   }
-  let g: Game = { deck: rest, discard: [first], hands, turn: 1 % players, dir: 1, color: first.color ?? pickColor(), drawn: null, lastCard: null, calling: null, overload: null, winner: null, last: null };
+  const g: Game = {
+    deck: rest,
+    discard: [first],
+    hands,
+    turn: 1 % players,
+    dir: 1,
+    color: first.color ?? pickColor(),
+    drawn: null,
+    lastCard: null,
+    penalty: null,
+    winner: null,
+    events: [],
+    seq: 0,
+  };
   // The first card acts on the first player (left of the dealer, seat 0).
-  if (first.kind === 'block') g = { ...g, turn: step(g, g.turn) };
-  else if (first.kind === 'turnaround') g = { ...g, dir: -1, turn: players === 2 ? 1 : players - 1 };
-  else if (first.kind === 'burden') g = { ...drawFor(g, g.turn, 2), turn: step(g, g.turn) };
+  if (first.kind === 'block') return { ...g, turn: step(g, g.turn), events: [{ k: 'skip', by: g.turn }] };
+  if (first.kind === 'turnaround') return { ...g, dir: -1, turn: players === 2 ? 1 : players - 1 };
+  if (first.kind === 'burden') return { ...g, penalty: { kind: 'burden', n: PENALTY.burden } };
   return g;
 }
 
@@ -108,7 +128,9 @@ export const top = (g: Game) => g.discard[g.discard.length - 1];
 
 /** Whether a seat may play this card now (on their turn). */
 export function playable(g: Game, seat: number, card: Card): boolean {
-  if (g.winner != null || g.overload || seat !== g.turn) return false;
+  if (g.winner != null || seat !== g.turn) return false;
+  // A penalty on you: only another of the same passes it on.
+  if (g.penalty) return card.kind === g.penalty.kind;
   if (g.drawn != null && card.id !== g.drawn) return false;
   const t = top(g);
   if (card.kind === 'spectrum') return true;
@@ -118,26 +140,29 @@ export function playable(g: Game, seat: number, card: Card): boolean {
   return card.kind === t.kind;
 }
 
-/** Someone else acting ends the chance to catch whoever is down to one card. */
-const moveOn = (g: Game, seat: number): Game => (g.lastCard && g.lastCard.seat !== seat ? { ...g, lastCard: null } : g);
+/** Someone moves: whoever went down to one card before and didn't say so draws 2 now. */
+function moveOn(g: Game, seat: number): Game {
+  const l = g.lastCard;
+  if (!l || l.seat === seat) return { ...g, events: [], seq: g.seq + 1 };
+  const base = { ...g, lastCard: null, events: [] as Entry[], seq: g.seq + 1 };
+  if (l.called || g.winner != null) return base;
+  return { ...drawFor(base, l.seat, 2), events: [{ k: 'forgot', by: l.seat, n: 2 }] };
+}
+
+const say = (g: Game, e: Entry): Game => ({ ...g, events: [...g.events, e] });
 
 /** Play a card (a universal one with the colour chosen). */
 export function play(g0: Game, seat: number, cardId: number, chosen?: Color): Game {
   const card = g0.hands[seat]?.find((c) => c.id === cardId);
   if (!card || !playable(g0, seat, card) || (!card.color && !chosen)) return g0;
   let g = moveOn(g0, seat);
-  const fair = card.kind === 'overload' ? !g.hands[seat].some((c) => c.id !== card.id && c.color === g.color) : true;
   const hand = g.hands[seat].filter((c) => c.id !== cardId);
-  g = { ...g, hands: g.hands.map((h, i) => (i === seat ? hand : h)), discard: [...g.discard, card], color: card.color ?? chosen!, drawn: null, last: { k: 'play', by: seat, card } };
-  if (hand.length === 1) g = { ...g, lastCard: { seat, called: g.calling === seat } };
-  g = { ...g, calling: null };
+  g = say({ ...g, hands: g.hands.map((h, i) => (i === seat ? hand : h)), discard: [...g.discard, card], color: card.color ?? chosen!, drawn: null }, { k: 'play', by: seat, card });
+  // Out of cards: that's the game (a penalty played last doesn't matter any more).
+  if (!hand.length) return { ...g, winner: seat, lastCard: null, penalty: null };
+  // Down to one: say so before the next player moves.
+  g = { ...g, lastCard: hand.length === 1 ? { seat, called: false } : g.lastCard?.seat === seat ? null : g.lastCard };
   const next = step(g, seat);
-  if (!hand.length) {
-    // Out: a Burden or Overload still makes the next one draw.
-    if (card.kind === 'burden') g = drawFor(g, next, 2);
-    if (card.kind === 'overload') g = drawFor(g, next, 4);
-    return { ...g, winner: seat, lastCard: null };
-  }
   switch (card.kind) {
     case 'turnaround': {
       const dir = (g.dir * -1) as 1 | -1;
@@ -145,59 +170,45 @@ export function play(g0: Game, seat: number, cardId: number, chosen?: Color): Ga
       return { ...g, dir, turn: g.hands.length === 2 ? seat : step({ ...g, dir }, seat) };
     }
     case 'block':
-      return { ...g, turn: step(g, seat, 2), last: { k: 'skip', by: next, draws: 0 } };
+      return say({ ...g, turn: step(g, seat, 2) }, { k: 'skip', by: next });
     case 'burden':
-      return { ...drawFor(g, next, 2), turn: step(g, seat, 2), last: { k: 'skip', by: next, draws: 2 } };
     case 'overload':
-      // The next one decides: take it, or challenge.
-      return { ...g, turn: next, overload: { actor: seat, target: next, fair } };
+      // On to the next one, the penalty growing: pass it on with the same, or take it.
+      return { ...g, turn: next, penalty: { kind: card.kind, n: (g.penalty?.n ?? 0) + PENALTY[card.kind] } };
     default:
       return { ...g, turn: next };
   }
 }
 
+/** A penalty on you: take all its cards, then it's your turn to play. */
+export function take(g0: Game, seat: number): Game {
+  const p = g0.penalty;
+  if (!p || g0.winner != null || seat !== g0.turn) return g0;
+  const g = moveOn(g0, seat);
+  return say({ ...drawFor(g, seat, p.n), penalty: null, lastCard: g.lastCard?.seat === seat ? null : g.lastCard }, { k: 'take', by: seat, n: p.n });
+}
+
 /** Nothing to play (or rather not): draw one. Playable, it may go down at once; else the turn passes. */
 export function draw(g0: Game, seat: number): Game {
-  if (g0.winner != null || g0.overload || seat !== g0.turn || g0.drawn != null) return g0;
-  let g = drawFor(moveOn(g0, seat), seat, 1);
-  const got = g.hands[seat][g.hands[seat].length - 1];
-  g = { ...g, calling: null, last: { k: 'draw', by: seat, n: 1 } };
-  if (got && got !== g0.hands[seat][g0.hands[seat].length - 1] && playable({ ...g, drawn: got.id }, seat, got)) return { ...g, drawn: got.id };
+  if (g0.winner != null || g0.penalty || seat !== g0.turn || g0.drawn != null) return g0;
+  let g = moveOn(g0, seat);
+  const before = g.hands[seat].length;
+  g = say(drawFor(g, seat, 1), { k: 'draw', by: seat, n: 1 });
+  // Holding two again: nothing to say any more.
+  if (g.lastCard?.seat === seat) g = { ...g, lastCard: null };
+  const got = g.hands[seat].length > before ? g.hands[seat][g.hands[seat].length - 1] : null;
+  if (got && playable({ ...g, drawn: got.id }, seat, got)) return { ...g, drawn: got.id };
   return { ...g, drawn: null, turn: step(g, seat) };
 }
 
 /** Drew a playable card but keeps it. */
 export function pass(g: Game, seat: number): Game {
   if (seat !== g.turn || g.drawn == null) return g;
-  return { ...g, drawn: null, turn: step(g, seat) };
+  return { ...g, drawn: null, turn: step(g, seat), events: [], seq: g.seq + 1 };
 }
 
-/** "Last card!": said with two left on your turn (before playing), or right after going down to one. */
+/** "Last card!": right after going down to one, before the next player moves. */
 export function callLast(g: Game, seat: number): Game {
-  if (g.lastCard?.seat === seat && !g.lastCard.called) return { ...g, lastCard: { seat, called: true }, last: { k: 'called', by: seat } };
-  if (g.turn === seat && g.hands[seat].length === 2) return { ...g, calling: seat, last: { k: 'called', by: seat } };
-  return g;
-}
-
-/** Caught someone at one card who didn't say so: they draw two. */
-export function catchLast(g: Game, by: number): Game {
-  const l = g.lastCard;
-  if (!l || l.called || l.seat === by) return g;
-  return { ...drawFor(g, l.seat, 2), lastCard: null, last: { k: 'caught', by, caller: l.seat } };
-}
-
-/** The Overload's target takes it: draws four and is skipped. */
-export function acceptOverload(g: Game, seat: number): Game {
-  const o = g.overload;
-  if (!o || o.target !== seat) return g;
-  return { ...drawFor(g, seat, 4), overload: null, turn: step(g, seat), last: { k: 'skip', by: seat, draws: 4 } };
-}
-
-/** Challenges it: played unfairly, the one who did draws four (and the target plays on); fairly,
- *  the challenger draws six and is skipped. */
-export function challengeOverload(g: Game, seat: number): Game {
-  const o = g.overload;
-  if (!o || o.target !== seat) return g;
-  if (!o.fair) return { ...drawFor(g, o.actor, 4), overload: null, turn: seat, last: { k: 'challenge', by: seat, actor: o.actor, fair: false } };
-  return { ...drawFor(g, seat, 6), overload: null, turn: step(g, seat), last: { k: 'challenge', by: seat, actor: o.actor, fair: true } };
+  if (g.lastCard?.seat !== seat || g.lastCard.called) return g;
+  return { ...g, lastCard: { seat, called: true }, events: [{ k: 'called', by: seat }], seq: g.seq + 1 };
 }

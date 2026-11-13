@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -538,6 +539,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
   const [leaving, setLeaving] = useState<Card[]>([]);
   const mine = view.sides[view.me];
   const myTurn = view.turn === view.me && view.phase === 'play';
+  useYourTurn(myTurn);
   const hand = sorted(view.hand);
   const up = mine.up.filter((c): c is Card => !!c);
   const zone = hand.length ? 'hand' : up.length ? 'up' : mine.down.some(Boolean) ? 'down' : null;
@@ -805,16 +807,21 @@ export function HandSpread({
 
   const n = cards.length;
   const LIFT = 18;
-  const SHOW = 0.4; // how much of a card in a back row stays visible
+  const SHOW = 0.36; // how much of a card in a back row stays visible
   const MAX_TILT = 9; // degrees, for the outer cards of a one-row fan
-  let best = { rows: 1, per: Math.max(1, n), cw: 0 };
-  for (let rows = 1; rows <= Math.min(4, Math.max(1, n)); rows++) {
+  // As one fanned row, as in a real hand, while the cards stay a good size (each showing its corner);
+  // only a big hand goes into a second row (or more), each row overlapping the one behind it.
+  const sizeFor = (rows: number) => {
     const per = Math.ceil(n / rows);
     const byH = (box.h - LIFT) / (1.4 * (1 + (rows - 1) * SHOW));
     // A fanned row needs some room at the sides for the tilted outer cards.
-    const byW = box.w / (1 + (per - 1) * 0.38 + (rows === 1 && per > 1 ? 0.3 : 0));
-    const cw = Math.min(140, byH, byW);
-    if (cw > best.cw + 4) best = { rows, per, cw };
+    const byW = box.w / (1 + (per - 1) * 0.34 + (rows === 1 && per > 1 ? 0.3 : 0));
+    return { rows, per, cw: Math.min(112, byH, byW) };
+  };
+  let best = sizeFor(1);
+  for (let rows = 2; rows <= Math.min(4, Math.max(1, n)) && best.cw < 62; rows++) {
+    const next = sizeFor(rows);
+    if (next.cw > best.cw) best = next;
   }
   const { rows, per, cw } = best;
   const ch = cw * 1.4;
@@ -845,7 +852,9 @@ export function HandSpread({
           <button
             key={`${c.value}${c.suit}`}
             type="button"
-            className={`pl-card${sel ? ' selected' : ''}${isDim?.(c) ? ' dim' : ''}`}
+            // Covered on its right by the next card: its bottom corner (that would peek out under
+            // the next card's rounded corner) isn't drawn.
+            className={`pl-card${sel ? ' selected' : ''}${isDim?.(c) ? ' dim' : ''}${col < inRow - 1 && step < cw * 0.92 ? ' covered' : ''}`}
             style={
               {
                 '--cw': `${cw}px`,

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -153,6 +154,7 @@ function Table({
   const hand = me >= 0 ? g.hands[me] : [];
   const o = me >= 0 ? options(g, me) : { call: false, draw: false, play: false, mustCall: false };
   const myTurn = me >= 0 && g.phase === 'play' && g.turn === me;
+  useYourTurn(myTurn);
   const low = lowestClaim(g);
   const top = g.pile.at(-1);
   const last = g.log.at(-1);
@@ -161,7 +163,9 @@ function Table({
   const [reveal, setReveal] = useState<{ id: string; e: Extract<Entry, { k: 'call' }> } | null>(null);
   // While the magnifying glass looks the card over, the status doesn't give the result away yet.
   const [suspense, setSuspense] = useState(false);
-  useEffect(() => {
+  // Before the screen is drawn (a layout effect): the taker's new cards never show for a frame
+  // before the glass has looked the card over.
+  useLayoutEffect(() => {
     if (!reveal) return;
     setSuspense(true);
     const timer = window.setTimeout(() => setSuspense(false), SIP_AFTER_TURN_MS);
@@ -179,8 +183,10 @@ function Table({
   }, [key]);
 
   // What just happened, on every phone: a card turned over (big, for a moment) and your own sips.
+  // Read before the new state is drawn (a layout effect), so a card being turned over hides the
+  // cards it brings from the first frame on.
   const seen = useRef<number | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     // The first state this phone sees (opening the game, a reload): nothing to show yet.
     if (seen.current === null || g.seq < seen.current) {
       seen.current = g.seq;

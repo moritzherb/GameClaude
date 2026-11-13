@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
+import { buzz } from './fx';
 
 /** Who's on, as the bar over a game shows them on a clean table. */
 export interface TurnPlayer {
@@ -35,4 +36,16 @@ export function useTurnBubble(p: TurnPlayer | null | undefined) {
   }, [set, name, avatar, color, photo]);
   // Leaving the game (or a part of it that names someone): nobody.
   useEffect(() => () => set(null), [set]);
+}
+
+/**
+ * On your own phone (a game played on everyone's): the moment it becomes your turn, the phone
+ * vibrates, so you notice with it lying on the table. Not again while it stays yours.
+ */
+export function useYourTurn(mine: boolean) {
+  const was = useRef(false);
+  useEffect(() => {
+    if (mine && !was.current) buzz([30, 70, 30]);
+    was.current = mine;
+  }, [mine]);
 }

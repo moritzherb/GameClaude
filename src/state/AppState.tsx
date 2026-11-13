@@ -1,9 +1,10 @@
-import { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { setLang, tx, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
-import { usePersistentState } from '../lib/storage';
+import { loadPeople } from '../lib/people';
+import { load, usePersistentState } from '../lib/storage';
 import { GROUND, setThemeColor } from '../lib/themeColor';
 
 export interface Player {
@@ -78,6 +79,9 @@ interface AppState {
   addProfile: (profile: CrewProfile) => void;
   /** Replace the whole list, e.g. with everyone in a room. */
   replacePlayers: (list: Omit<Player, 'id'>[]) => void;
+  /** Crew people with a profile take on how they look now (their emoji, photo and colour), e.g.
+   *  someone who has put up a photo since they were added. */
+  refreshProfiles: (list: CrewProfile[]) => void;
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => void;
   /** True when the players know the games, or play with a clean table: tutorials and explanations
@@ -110,6 +114,22 @@ function cleanPlayers(raw: unknown): Player[] {
     }));
 }
 
+/** The crew with everyone who has a profile as they look now; the same list when nothing changed. */
+export function refreshed(list: Player[], people: CrewProfile[]): Player[] {
+  const byId = new Map(people.map((p) => [p.personId, p]));
+  let changed = false;
+  const next = list.map((p) => {
+    const pr = p.personId ? byId.get(p.personId) : undefined;
+    if (!pr) return p;
+    const photo = okPhoto(pr.photo) ? pr.photo : undefined;
+    if (p.avatar === pr.avatar && p.photo === photo && p.color === pr.color) return p;
+    changed = true;
+    const { photo: _old, ...rest } = p;
+    return { ...rest, avatar: pr.avatar, color: pr.color, ...(photo ? { photo } : {}) };
+  });
+  return changed ? next : list;
+}
+
 const okPhoto = (p: unknown): p is string => typeof p === 'string' && p.startsWith('data:image/') && p.length < 20_000;
 const newId = () => crypto.randomUUID?.() ?? String(Date.now() + Math.random());
 
@@ -124,6 +144,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [players, setPlayers] = usePersistentState<Player[]>('players', [], cleanPlayers);
   const [settings, setSettings] = usePersistentState<Settings>('settings', DEFAULT_SETTINGS, cleanSettings);
   const [ageConfirmed, setAgeConfirmed] = usePersistentState('age-ok', false);
+  // On start: everyone in the crew as this phone last saw them (in a room, or its own profile).
+  useEffect(() => {
+    const me = load<{ clientId?: string; avatar?: string; color?: string; photo?: string } | null>('me', null);
+    const known: CrewProfile[] = loadPeople().map((p) => ({ personId: p.id, name: p.name, avatar: p.avatar, color: p.color, photo: p.photo }));
+    if (me?.clientId && me.avatar && me.color) known.push({ personId: me.clientId, name: '', avatar: me.avatar, color: me.color, photo: me.photo });
+    setPlayers((list) => refreshed(list, known));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Set before the children render, so every t() call below uses the chosen language.
   setLang(settings.lang ?? 'en');
   // Also before the children render (and measure themselves): the look, and whose home screen.
@@ -189,6 +217,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return [...list, { id: newId(), ...fields, name }];
         }),
       replacePlayers: (list) => setPlayers(list.slice(0, MAX_PLAYERS).map((p) => ({ ...p, id: newId() }))),
+      refreshProfiles: (people) =>
+        setPlayers((list) => refreshed(list, people)),
       settings,
       updateSettings: (patch) => setSettings((s) => ({ ...s, ...patch })),
       knows: (gameId) => !!settings.clean || !!settings.knowAll || !!settings.known?.includes(gameId),

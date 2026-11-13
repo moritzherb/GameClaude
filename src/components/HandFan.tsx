@@ -39,17 +39,21 @@ export default function HandFan<T>({
   ratio = 1.5,
   sorted,
   onSort,
+  aside,
   label,
   className = '',
 }: {
   cards: T[];
   keyOf: (c: T) => string | number;
-  card: (c: T) => ReactNode;
+  /** Renders a card; `angle`: how far its slot is turned (deg), for a drag to go straight. */
+  card: (c: T, angle: number) => ReactNode;
   /** A card's width (px) and height to width. */
   width?: number;
   ratio?: number;
   sorted?: boolean;
   onSort?: () => void;
+  /** Another small button, above the sort button. */
+  aside?: ReactNode;
   label: string;
   className?: string;
 }) {
@@ -68,25 +72,32 @@ export default function HandFan<T>({
   const { spots, depth } = fanLayout(cards.length, room, width, ratio);
   return (
     <div className={`fan-row ${className}`}>
+      {/* As wide as the buttons on the other side, so the fan is in the middle of the screen. */}
+      {(onSort || aside) && <span className="fan-spacer" aria-hidden />}
       <div ref={box} className="fan" aria-label={label} style={{ '--cw': `${width}px`, height: Math.round(width * ratio + depth + 20) } as CSSProperties}>
         {cards.map((c, i) => {
           const s = spots[i];
           return (
             <div key={keyOf(c)} className="fan-slot" style={{ transform: `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) rotate(${s.a.toFixed(2)}deg)` }}>
-              {render(c)}
+              {render(c, s.a)}
             </div>
           );
         })}
       </div>
-      {onSort && (
-        <SortButton
-          on={!!sorted}
-          onClick={() => {
-            sfx.tick();
-            buzz(10);
-            onSort();
-          }}
-        />
+      {(onSort || aside) && (
+        <div className="fan-tools">
+          {aside}
+          {onSort && (
+            <SortButton
+              on={!!sorted}
+              onClick={() => {
+                sfx.tick();
+                buzz(10);
+                onSort();
+              }}
+            />
+          )}
+        </div>
       )}
     </div>
   );

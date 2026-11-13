@@ -61,10 +61,12 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Everyday buttons, sheets and lists move without a bounce (the spring above is for the games'
      own moments): in fast and settling, out a little quicker. */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
   /* Something moving from one place to another: slow off, slow in. */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* A sheet coming up, as on an iPhone: quick off, a long gentle settle. */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   font-size: 16px;
   color-scheme: light;
@@ -191,7 +193,11 @@ html {
 }
 
 body {
+  /* No sideways scroll. Clipped, not hidden: hidden would make the body a scroll box of its own
+     (that never scrolls, the page does), and nothing sticky (a page's title, a button at the
+     bottom) would stay put. Hidden only where clip isn't known. */
   overflow-x: hidden;
+  overflow-x: clip;
   /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
   -webkit-user-select: none;
   user-select: none;
@@ -363,27 +369,65 @@ li {
 }
 
 /*
- * A game's page (its rules, before it starts): the start button is always on screen, pinned to the
- * bottom edge, and the rules scroll underneath it. The page keeps room at the end so its last
- * lines can scroll up above the button.
+ * A game's page (its rules, before it starts): exactly the screen's height. The back button at the
+ * top and the start button at the bottom stay put; only the middle (the card, the numbers, the
+ * rules) scrolls, and only when it's longer than its room (else it's still: no scroll, no bounce).
  */
 .screen.game-detail {
-  --bar: calc(18px + 64px + 2px + env(safe-area-inset-bottom));
-  padding-bottom: calc(var(--bar) + 16px);
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
 }
 
-.screen.game-detail.two-buttons {
-  --bar: calc(18px + 64px + 10px + 56px + 2px + env(safe-area-inset-bottom));
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    .screen.game-detail {
+      height: calc(var(--app-h, 100dvh) + env(safe-area-inset-top));
+      min-height: 0;
+    }
+  }
+}
+
+.game-detail > .top-bar {
+  flex: none;
+}
+
+.detail-middle {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* Out to the screen's edges, so shadows and rings aren't cut at the sides. */
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 0 var(--gutter) 8px;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.detail-middle::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-middle > * {
+  flex-shrink: 0;
+}
+
+.detail-middle.scrolls {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* What scrolls fades out into the button bar. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
 }
 
 .game-detail > .sticky-action {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-width: var(--max);
-  margin: 0 auto;
-  padding-inline: var(--gutter);
+  position: static;
+  flex: none;
+  margin-top: 0;
+  padding-top: 6px;
+  background: none;
 }
 
 .center {
@@ -760,7 +804,7 @@ li {
 }
 
 .ticket-list.dealt > * {
-  animation: rise 0.45s var(--spring) backwards;
+  animation: rise 0.3s var(--ease-out) backwards;
 }
 
 .ticket-list.dealt > :nth-child(2) {
@@ -1137,7 +1181,7 @@ li {
   flex-direction: column;
   gap: 10px;
   /* The list comes in as one piece: one moving layer for the phone instead of one per ticket. */
-  animation: rise 0.45s var(--spring) backwards;
+  animation: rise 0.3s var(--ease-out) backwards;
 }
 
 .ticket {
@@ -6682,13 +6726,48 @@ li {
   text-align: center;
 }
 
-/* Kept inside the circle (FitText makes them smaller to fit). */
+/* The button's content in a box of its own, over the whole circle: Safari lays out a button's own
+   content in a wrapper of its own, where flex and percentages don't do what they say. The text stays
+   inside the circle's chord (the sides padded in), sized to the circle (container units), and
+   FitText makes it smaller still if it doesn't fit. */
+.fk-bank {
+  container-type: size;
+}
+
+.fk-bank-in {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--bank) * 0.02);
+  padding: 0 9%;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
 .fk-bank-text,
 .fk-bank-amount {
   display: block;
-  max-width: 78%;
+  max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
+  text-align: center;
+}
+
+@supports (font-size: 1cqw) {
+  .fk-bank-icon {
+    font-size: 24cqw;
+  }
+
+  .fk-bank-text {
+    font-size: max(9px, 15cqw);
+  }
+
+  .fk-bank-amount {
+    font-size: max(8.5px, 14cqw);
+  }
 }
 
 .fk-die {
@@ -7075,9 +7154,40 @@ li {
   white-space: nowrap;
 }
 
+.sp-opp-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sp-opp-stats {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .sp-opp-hand {
   display: flex;
   margin-left: auto;
+}
+
+/* All they have left, big: the race at a glance. */
+.sp-opp-left {
+  flex: none;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .sp-opp-hand i {
@@ -7197,19 +7307,41 @@ li {
 .sp-count {
   position: absolute;
   inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border-radius: inherit;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.32);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   color: var(--accent);
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 6rem;
   line-height: 1;
-  animation: pop-in 0.3s var(--spring) both;
+  /* The whole table dims and blurs at once and stays so (only the number below pops). */
+  animation: sp-dim 0.2s var(--ease-out) both;
   pointer-events: none;
+}
+
+@keyframes sp-dim {
+  from {
+    opacity: 0;
+  }
+}
+
+.sp-count-n {
+  display: block;
+  animation: sp-count-n 0.3s var(--ease-out) both;
+}
+
+@keyframes sp-count-n {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
 }
 
 .sp-count-label {
@@ -7262,6 +7394,7 @@ li {
 }
 
 .sp-hand {
+  position: relative;
   display: flex;
   justify-content: center;
   gap: 0;
@@ -8296,7 +8429,7 @@ li {
 }
 
 .fade-up {
-  animation: rise 0.5s var(--spring) backwards;
+  animation: rise 0.3s var(--ease-out) backwards;
 }
 
 /* Swiped back to a screen: the phone already slid it in, so it doesn't rise in a second time. */
@@ -8305,13 +8438,14 @@ li {
   animation: none;
 }
 
-/* Up from below: in fast and settling, no overshoot. Back down a fifth quicker, the way it came. */
+/* Up from below: in fast and settling, no overshoot (a sheet on the iPhone's own curve). Back down
+   quicker, the way it came, off at once. */
 .slide-up {
-  animation: slide-up 0.28s var(--ease-out);
+  animation: slide-up 0.3s var(--ease-drawer);
 }
 
 .slide-down {
-  animation: slide-down 0.22s var(--ease-in) forwards;
+  animation: slide-down 0.2s var(--ease-out) forwards;
 }
 
 @keyframes bob {
@@ -8599,14 +8733,17 @@ li {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 2rem;
-  letter-spacing: 0.25em;
+  /* The typed code as narrow as the placeholder: a touch apart, the last letter's space balanced
+     by an indent so it stays centred. */
+  letter-spacing: 0.08em;
+  text-indent: 0.08em;
   text-align: center;
   text-transform: uppercase;
 }
 
 .code-input::placeholder {
   color: var(--line);
-  letter-spacing: normal;
+  letter-spacing: 0.08em;
 }
 
 .code-input:focus {
@@ -9478,13 +9615,20 @@ li {
 }
 
 .hr-fan-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 4px 2px;
-  color: var(--muted);
+  position: relative;
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
   font-size: 0.8125rem;
   font-weight: 600;
+}
+
+.hr-fan-close::after {
+  content: '';
+  position: absolute;
+  inset: -10px -4px;
 }
 
 .hr-hand-label {
@@ -9852,7 +9996,7 @@ li {
 .pl-slot-up.leaving {
   transform: translateY(-80%) scale(0.85);
   opacity: 0;
-  transition: transform 0.22s ease-in, opacity 0.22s ease-in;
+  transition: transform 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
 }
 
 .pl-slot-up.selected .pcard-front {
@@ -10151,7 +10295,7 @@ li {
   top: 0;
   left: 0;
   transform-origin: 50% 120%;
-  transition: transform 0.25s var(--spring), filter 0.2s ease, opacity 0.22s ease-in;
+  transition: transform 0.25s var(--spring), filter 0.2s ease, opacity 0.2s var(--ease-out);
 }
 
 .pl-card:disabled {
@@ -11331,7 +11475,7 @@ li {
   isolation: isolate;
   min-width: 0;
   min-height: 0;
-  transform: translateY(14px);
+  transform: translateY(32px);
 }
 
 /* Bigger cards than in Kings Cup: easier to hit. */
@@ -12038,9 +12182,9 @@ li {
 }
 
 /*
- * Room games (every phone its own seat): the seats around the table show whose turn it is, so the
- * line on top only speaks up when it's your move. It keeps its room when it's quiet (nothing
- * jumps when the turn comes round), just empty.
+ * Room games (every phone its own seat): the line on top is short. It speaks up when it's your
+ * move and quietly says whose it is otherwise, in the same room (nothing jumps when the turn comes
+ * round).
  */
 .play-screen.clean .ar-status-sub,
 .play-screen.clean .ar-hint,
@@ -12079,11 +12223,12 @@ li {
   box-shadow: none;
 }
 
+/* Not your move: the line still says whose it is (quietly), no empty gap. */
 .play-screen.clean .ar-status:not(.mine) > *,
 .play-screen.clean .as .pl-status:not(.mine) > *,
 .play-screen.clean .hr-status:not(.mine) > .hr-status-text,
 .play-screen.clean .pl-player .pl-status:not(.mine) > .pl-status-text {
-  visibility: hidden;
+  color: var(--muted);
 }
 
 /* Hose runter: someone saying STOP is still heard, whoever's turn it is. */
@@ -13186,10 +13331,15 @@ li {
   place-items: center;
 }
 
+/* A fixed height (three lines of hint and the line saying what's missing), whatever the tool and
+   the language: the map above keeps its size while you draw. */
 .pt-tool-hint {
-  min-height: 2.6em;
+  flex: none;
+  height: calc(4 * 1.4em + 2px);
+  overflow: hidden;
   margin: 0;
   font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .pt-ed-actions {
@@ -13997,7 +14147,7 @@ button.profile-avatar:not(:disabled):active {
 
 .rs-take {
   position: absolute;
-  bottom: 0;
+  bottom: -28px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -14095,7 +14245,7 @@ button.profile-avatar:not(:disabled):active {
   --jade: #57a57e;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .cc > * {
@@ -14197,96 +14347,186 @@ button.profile-avatar:not(:disabled):active {
   fill: var(--jade, #57a57e);
 }
 
-.cc-others {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
+/* Choose colour: a wheel of all four. */
+.cc-wheel {
+  width: calc(var(--w) * 0.56);
+  height: calc(var(--w) * 0.56);
+  border-radius: 50%;
+  background: conic-gradient(var(--crimson, #c8524e) 0 25%, var(--azure, #4a86cb) 0 50%, var(--amber, #dfae4c) 0 75%, var(--jade, #57a57e) 0);
+  box-shadow: 0 0 0 calc(var(--w) * 0.035) #fff;
 }
 
-.cc-others::-webkit-scrollbar {
-  display: none;
+/* The table: the others round it on an arc, the deck and the pile in the middle on a felt whose
+   rim takes the active colour. Sizes from the screen (--dw deck, --pw pile). */
+.cc-table {
+  --dw: clamp(56px, 16vw, 70px);
+  --pw: clamp(84px, 25vw, 108px);
+  --cy: 61%;
+  position: relative;
+  flex: 1 1 0;
+  min-height: 250px;
+}
+
+.cc-felt {
+  --active: var(--line);
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: var(--cy);
+  height: min(62%, 80vw);
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--active) 70%, transparent), inset 0 0 28px -6px color-mix(in srgb, var(--active) 45%, transparent);
+  transition: box-shadow 0.45s var(--ease-out);
+}
+
+.cc-felt.crimson {
+  --active: var(--crimson);
+}
+
+.cc-felt.azure {
+  --active: var(--azure);
+}
+
+.cc-felt.amber {
+  --active: var(--amber);
+}
+
+.cc-felt.jade {
+  --active: var(--jade);
+}
+
+.cc-dir {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .cc-seat {
-  flex: none;
-  min-width: 88px;
+  position: absolute;
+  width: 76px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 16px;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
+  gap: 4px;
+  transform: translate(-50%, -50%);
+  transition: left 0.3s var(--ease-out), top 0.3s var(--ease-out);
 }
 
-.cc-seat.on {
-  box-shadow: inset 0 0 0 2px var(--accent);
+/* Their hand face down: a little fanned stack, the number on its corner. */
+.cc-seat-deck {
+  position: relative;
+  width: 56px;
+  height: 50px;
+}
+
+.cc-seat-deck .cc-back {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 30px;
+  height: 40px;
+  margin-left: -15px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 2.5px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
+  transform-origin: 50% 110%;
+  transform: translateX(calc(var(--k) * 3px)) rotate(calc(var(--k) * 6deg));
+  transition: transform 0.25s var(--ease-out);
+}
+
+.cc-seat-n {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* One card left: the number says so loudly. */
+.cc-seat.last .cc-seat-n {
+  background: var(--bad);
+  color: #fff;
 }
 
 .cc-seat-who {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   max-width: 100%;
+  padding: 2px 8px 2px 2px;
+  border-radius: 14px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .cc-seat-name {
-  max-width: 90px;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
-/* Their hand face down: a small fan of backs, the number beside it. */
-.cc-backs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 38px;
+/* Whose turn: their name lit, their stack up a little. */
+.cc-seat.on .cc-seat-who {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
-.cc-backs-fan {
-  position: relative;
-  width: 44px;
-  height: 34px;
+.cc-seat.on .cc-seat-deck .cc-back {
+  transform: translateY(-4px) translateX(calc(var(--k) * 4px)) rotate(calc(var(--k) * 8deg));
 }
 
-.cc-backs .cc-back {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 22px;
-  height: 30px;
-  margin-left: -11px;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 2px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
-  transform-origin: 50% 120%;
-  transform: translateX(calc(var(--k) * 3px)) rotate(calc(var(--k) * 7deg));
+.cc-seat.small {
+  width: 62px;
 }
 
-.cc-backs-n {
-  min-width: 1.2em;
-  font-weight: 700;
-  font-size: 1.15rem;
-  font-variant-numeric: tabular-nums;
+.cc-seat.small .cc-seat-deck {
+  width: 46px;
+  height: 42px;
 }
 
-/* One card left: the number says so loudly. */
-.cc-seat.last .cc-backs-n {
-  color: var(--bad);
+.cc-seat.small .cc-seat-deck .cc-back {
+  width: 24px;
+  height: 32px;
+  margin-left: -12px;
+}
+
+.cc-seat.small .cc-seat-who {
+  padding: 2px 6px;
+}
+
+/* Many round the table: the name alone (it's what tells them apart). */
+.cc-seat.small .cc-seat-who .bd-avatar {
+  display: none;
+}
+
+.cc-seat.small .cc-seat-name {
+  font-size: 0.72rem;
 }
 
 .cc-middle {
-  flex: 1 1 0;
-  min-height: 170px;
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 28px;
+  gap: 16px;
 }
 
 .cc-deck {
@@ -14294,6 +14534,7 @@ button.profile-avatar:not(:disabled):active {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .cc-back {
@@ -14302,15 +14543,64 @@ button.profile-avatar:not(:disabled):active {
   height: 96px;
   border-radius: 13px;
   background: conic-gradient(var(--crimson) 0 25%, var(--azure) 0 50%, var(--amber) 0 75%, var(--jade) 0);
-  box-shadow: inset 0 0 0 5px #24242a, 0 2px 0 #24242a, 0 4px 0 rgba(36, 36, 42, 0.7);
+  box-shadow: inset 0 0 0 5px #24242a;
+}
+
+/* The deck: three backs a little apart, a stack with some height to it. */
+.cc-deck-stack {
+  position: relative;
+  width: var(--dw);
+  height: calc(var(--dw) * 1.33);
+  transition: transform 0.15s var(--ease-out);
+}
+
+.cc-deck-stack .cc-back {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: calc(var(--dw) * 0.18);
+  box-shadow: inset 0 0 0 4px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cc-deck-stack .cc-back:nth-child(1) {
+  transform: translate(3px, 4px);
+}
+
+.cc-deck-stack .cc-back:nth-child(2) {
+  transform: translate(1.5px, 2px);
 }
 
 .cc-deck:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
-.cc-deck:not(:disabled):active .cc-back {
-  transform: scale(0.95);
+.cc-deck:not(:disabled):active .cc-deck-stack {
+  transform: scale(0.96);
+}
+
+/* Nothing fits: the deck rises and falls, ringed, until you draw. */
+.cc-deck.must .cc-deck-stack {
+  animation: cc-must 1.2s var(--ease-in-out, ease-in-out) infinite;
+}
+
+.cc-deck.must .cc-deck-stack .cc-back:last-child {
+  box-shadow: inset 0 0 0 4px #24242a, 0 0 0 3px var(--accent), 0 6px 16px -4px rgba(0, 0, 0, 0.4);
+}
+
+.cc-deck.must .cc-deck-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+@keyframes cc-must {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .cc-deck-label {
@@ -14319,19 +14609,74 @@ button.profile-avatar:not(:disabled):active {
   font-size: 0.85rem;
 }
 
+/* The pile: the last few cards lying as they fell, the newest on top. */
 .cc-pile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  position: relative;
+  width: var(--pw);
+  height: calc(var(--pw) * 1.33);
+  margin-bottom: calc(0.85rem + 8px);
+}
+
+.cc-pile-card {
+  position: absolute;
+  inset: 0;
+  transform: var(--rest);
+}
+
+.cc-pile-card .cc-card {
+  --w: var(--pw);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 8px -2px rgba(0, 0, 0, 0.35);
+}
+
+.cc-pile-card.top {
+  z-index: 1;
+}
+
+/* A card picked: the pile is where it goes (tap it). */
+.cc-pile.ready::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: calc(var(--pw) * 0.24);
+  border: 2px dashed color-mix(in srgb, var(--accent) 80%, transparent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.cc-penalty {
+  position: absolute;
+  z-index: 3;
+  top: -14px;
+  right: -16px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  animation: cc-pop 0.3s var(--ease-out);
+}
+
+@keyframes cc-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
 }
 
 .cc-active {
+  position: absolute;
+  left: calc(50% + (var(--dw) + 16px) / 2);
+  top: calc(var(--cy) + var(--pw) * 0.665 - (0.85rem + 8px) / 2 + 10px);
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .cc-active .cc-shape {
@@ -14339,42 +14684,88 @@ button.profile-avatar:not(:disabled):active {
   height: 14px;
 }
 
-.cc-pile.crimson .cc-active .cc-shape {
+.cc-active.crimson .cc-shape {
   fill: var(--crimson);
 }
 
-.cc-pile.azure .cc-active .cc-shape {
+.cc-active.azure .cc-shape {
   fill: var(--azure);
 }
 
-.cc-pile.amber .cc-active .cc-shape {
+.cc-active.amber .cc-shape {
   fill: var(--amber);
 }
 
-.cc-pile.jade .cc-active .cc-shape {
+.cc-active.jade .cc-shape {
   fill: var(--jade);
 }
 
-.cc-status {
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+/* A word over the table for a moment: last card, forgot it, takes 8, sits out. */
+.cc-toast {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: calc(var(--cy) - var(--pw) * 0.9);
+  max-width: 90%;
+  padding: 8px 16px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: var(--bg);
   font-weight: 700;
   text-align: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: cc-toast 1.7s var(--ease-out) both;
 }
 
-.cc-dir {
-  color: var(--muted);
-  font-size: 1.1rem;
+.cc-toast.good {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
-.cc-last {
+.cc-toast.bad {
+  background: var(--bad);
+  color: #fff;
+}
+
+@keyframes cc-toast {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.92);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px) scale(1);
+  }
+}
+
+.cc-status {
+  align-self: center;
+  max-width: 100%;
   margin: 0;
+  padding: 6px 16px;
+  border-radius: 18px;
+  font-weight: 700;
+  text-align: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* Your turn: lit, so it can't be missed. */
+.cc-status.mine {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.cc-hint {
+  margin: -4px 0 0;
   min-height: 1.3em;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   text-align: center;
 }
 
@@ -14382,24 +14773,39 @@ button.profile-avatar:not(:disabled):active {
   display: flex;
   justify-content: center;
   gap: 10px;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .cc-call,
-.cc-catch,
+.cc-take,
 .cc-pass {
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 20px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 22px;
   font-weight: 700;
+  transition: transform 0.15s var(--ease-out);
 }
 
+.cc-call:active,
+.cc-take:active,
+.cc-pass:active {
+  transform: scale(0.96);
+}
+
+/* Down to one: the button to say so can't be missed. */
 .cc-call {
   background: var(--accent);
   color: var(--on-accent);
+  animation: cc-call 0.9s var(--ease-in-out, ease-in-out) infinite alternate;
 }
 
-.cc-catch {
+@keyframes cc-call {
+  to {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+}
+
+.cc-take {
   background: var(--bad);
   color: #fff;
 }
@@ -14410,27 +14816,116 @@ button.profile-avatar:not(:disabled):active {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-/* Your hand (a fan, components/HandFan.tsx): the playable ones stand up. */
+/* Your hand (a fan, components/HandFan.tsx, or laid out flat): what you may play stands up, the
+   one you picked higher, ringed. The rest (and all of it off your turn) greyed. */
 .cc-hand-card {
-  flex: none;
-  transition: transform 0.15s var(--ease-out), opacity 0.15s;
+  display: block;
+  transition: transform 0.18s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* Not playable now (on your turn): greyed, not see-through, so the fan doesn't show through. */
-.cc-hand-card.dim > * {
-  filter: brightness(0.62);
+.cc-hand-card > .cc-card {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
+  transition: filter 0.2s, box-shadow 0.18s;
+}
+
+/* Greyed, not see-through, so the fan doesn't show through. */
+.cc-hand-card.dim > .cc-card {
+  filter: brightness(0.6) saturate(0.6);
 }
 
 .cc-hand-card.ok {
-  transform: translateY(-14px);
+  transform: translateY(-10px);
+  cursor: grab;
+  touch-action: none;
 }
 
-.cc-hand-card.ok:active {
-  transform: translateY(-14px) scale(0.96);
+.cc-hand-card.picked {
+  transform: translateY(-30px);
 }
 
-.cc-hand-card .cc-card {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
+.cc-hand-card.picked > .cc-card {
+  box-shadow: 0 0 0 3px var(--accent), 0 8px 18px -6px rgba(0, 0, 0, 0.45);
+}
+
+.cc-hand-card.dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.cc-hand-card.dragging > .cc-card {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 14px 28px -8px rgba(0, 0, 0, 0.5);
+}
+
+.fan-slot:has(.cc-hand-card.dragging) {
+  z-index: 10;
+}
+
+/* A big hand laid out flat: one row to swipe through, every card whole. */
+.cc-browse {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  padding: 34px 8px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.cc-browse::-webkit-scrollbar {
+  display: none;
+}
+
+.cc-browse .cc-hand-card {
+  flex: none;
+  scroll-snap-align: center;
+  touch-action: pan-x;
+}
+
+.cc-browse .cc-card {
+  --w: 78px;
+}
+
+.fan-spacer {
+  flex: none;
+  width: 40px;
+}
+
+.fan-tools {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.fan-tools .sort-btn {
+  margin-bottom: 0;
+}
+
+/* Cards on their way (to whoever draws them): above everything, through nothing. */
+.cc-fly {
+  position: fixed;
+  z-index: 1000;
+  margin: 0;
+  pointer-events: none;
+  border-radius: 13%;
+  box-shadow: inset 0 0 0 3px #24242a, 0 4px 10px -2px rgba(0, 0, 0, 0.4);
+  --crimson: #c8524e;
+  --azure: #4a86cb;
+  --amber: #dfae4c;
+  --jade: #57a57e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-deck.must .cc-deck-stack,
+  .cc-call {
+    animation: none;
+  }
 }
 
 .cc-colors {
@@ -14477,8 +14972,9 @@ button.profile-avatar:not(:disabled):active {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Spellbound (fz-): round and trump on top, everyone's bid as chips, the trick in the
-   middle, your hand at the bottom (two overlapping rows once it holds more than ten). ---------- */
+/* ---------- Spellbound (fz-): round and trump on top; the others round the table, each with the
+   tricks they took beside them; the deck with the trump card turned up at the side, the trick in the
+   middle; you, what you can do, your hand at the bottom. ---------- */
 .fz {
   --fire: #b8473a;
   --water: #4a7a9b;
@@ -14486,7 +14982,7 @@ button.profile-avatar:not(:disabled):active {
   --astral: #7d68a0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .fz > * {
@@ -14507,48 +15003,56 @@ button.profile-avatar:not(:disabled):active {
   font-variant-numeric: tabular-nums;
 }
 
-.fz-seats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+.fz-table-area {
+  --tw: clamp(62px, 18vw, 78px);
+  position: relative;
+  flex: 1 1 0;
+  min-height: 250px;
 }
 
 .fz-seat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  height: 44px;
-  padding: 0 8px 0 5px;
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.fz-seat.on {
-  box-shadow: inset 0 0 0 2px var(--accent);
-}
-
-.fz-seat-text {
+  position: absolute;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  line-height: 1.1;
+  align-items: center;
+  gap: 3px;
+  max-width: 96px;
+  transform: translate(-50%, -50%);
+  transition: left 0.3s var(--ease-out), top 0.3s var(--ease-out);
+}
+
+.fz-seat-who {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 2px 10px 2px 2px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.fz-seat.on .fz-seat-who {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
 }
 
 .fz-seat-name {
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .fz-seat-meta {
   display: flex;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -14561,62 +15065,81 @@ button.profile-avatar:not(:disabled):active {
   color: var(--muted);
 }
 
-/* A card, as in the deck's art: cream paper, the figure drawn on it (art.webp), the number and the
-   faction's sign in its ink in the top left corner. The 13s are seals: the sign big in gold rings. */
+/* The tricks taken: face down beside the player (on the side towards the middle), one per trick. */
+.fz-tricks {
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 30px;
+}
+
+.fz-seat .fz-tricks {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 4px);
+}
+
+.fz-seat.right .fz-tricks {
+  left: auto;
+  right: calc(100% + 4px);
+}
+
+.fz-tricks i {
+  position: absolute;
+  left: calc(var(--k) * 3px);
+  top: 0;
+  width: 20px;
+  height: 30px;
+  border-radius: 3px;
+  background: #202124;
+  box-shadow: inset 0 0 0 1px #b99a5f, 0 1px 2px rgba(0, 0, 0, 0.35);
+  transform: rotate(calc(var(--k) * 2deg - 3deg));
+}
+
+/* A card: all in its faction's colour (an SVG, 100 × 150), the number in two corners, the signs. */
 .fz-card {
   --w: 60px;
-  --ink: #3a3328;
-  position: relative;
   display: block;
   width: var(--w);
   height: calc(var(--w) * 1.5);
-  border-radius: calc(var(--w) * 0.1);
-  background-color: #f6eedc;
-  background-size: 800% 700%;
-  background-repeat: no-repeat;
-  box-shadow: inset 0 0 0 1px rgba(90, 70, 40, 0.22), 0 1px 2px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  border-radius: calc(var(--w) * 0.09);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-display);
 }
 
-.fz-card.fire {
-  --ink: #9c3427;
+.fz-card-ground {
+  fill: #6b6b6b;
 }
 
-.fz-card.water {
-  --ink: #2f6283;
+.fz-card.fire .fz-card-ground {
+  fill: var(--fire, #b8473a);
 }
 
-.fz-card.nature {
-  --ink: #3f6e50;
+.fz-card.water .fz-card-ground {
+  fill: var(--water, #4a7a9b);
 }
 
-.fz-card.astral {
-  --ink: #5e4a86;
+.fz-card.nature .fz-card-ground {
+  fill: var(--nature, #5f8a6e);
 }
 
-.fz-index {
-  position: absolute;
-  top: calc(var(--w) * 0.06);
-  left: calc(var(--w) * 0.07);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--w) * 0.02);
-  color: var(--ink);
+.fz-card.astral .fz-card-ground {
+  fill: var(--astral, #7d68a0);
 }
 
-.fz-rank {
-  font-family: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+.fz-card.archmage .fz-card-ground {
+  fill: #1f1d33;
+}
+
+.fz-card.fool .fz-card-ground {
+  fill: #ebe5d6;
+}
+
+.fz-idx {
+  font-size: 17px;
   font-weight: 700;
-  font-size: calc(var(--w) * 0.27);
-  line-height: 0.95;
-  letter-spacing: -0.02em;
-  font-variant-numeric: lining-nums;
-}
-
-.fz-index .fz-sigil {
-  width: calc(var(--w) * 0.19);
-  height: calc(var(--w) * 0.19);
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.04em;
 }
 
 .fz-sigil {
@@ -14647,111 +15170,254 @@ button.profile-avatar:not(:disabled):active {
   color: #fff;
 }
 
-.fz-seal {
-  position: absolute;
-  inset: 22% 14% 10%;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 calc(var(--w) * 0.02) #b99a5f, inset 0 0 0 calc(var(--w) * 0.05) #f6eedc, inset 0 0 0 calc(var(--w) * 0.06) #b99a5f;
-  aspect-ratio: 1;
-  margin: auto 0;
-}
-
-.fz-seal .fz-sigil {
-  width: 46%;
-  height: 46%;
-}
-
 .fz-card.back {
-  background: none;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* The trick: the cards in the order they were played, each with who played it. */
-.fz-trick {
-  flex: 1 1 0;
-  min-height: 120px;
+/* Beside the table: the deck, the trump card turned up on it. */
+.fz-deck {
+  position: absolute;
+  z-index: 1;
+  left: 4px;
+  bottom: 4px;
   display: flex;
-  flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
-  gap: 8px;
+  align-items: flex-end;
+}
+
+.fz-deck-stack {
   position: relative;
+  width: 44px;
+  height: 66px;
 }
 
-.fz-trick .fz-card {
-  --w: clamp(56px, 17vw, 76px);
+.fz-deck-stack > .fz-card,
+.fz-deck-top {
+  position: absolute;
+  inset: 0;
 }
 
-.fz-trick.small {
-  flex: none;
-  min-height: 0;
-}
-
-.fz-trick.small .fz-card {
+.fz-deck-stack .fz-card {
   --w: 44px;
 }
 
-.fz-trick-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+.fz-deck-stack > .fz-card:nth-child(1) {
+  transform: translate(3px, 3px);
 }
 
-.fz-trick-card.done {
-  opacity: 0.45;
+.fz-deck-stack > .fz-card:nth-child(2) {
+  transform: translate(1.5px, 1.5px);
 }
 
-.fz-trick-card.won {
-  opacity: 1;
-  transform: translateY(-6px);
+.fz-trump-card {
+  position: relative;
+  margin-left: -8px;
+  transform: rotate(9deg);
+  perspective: 600px;
 }
 
-.fz-trick-who {
-  max-width: 64px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 600;
+.fz-flip {
+  position: relative;
+  display: block;
+  transform-style: preserve-3d;
 }
 
-.fz-took {
+.fz-flip > .fz-card {
+  --w: 54px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.fz-flip > .fz-card.back {
   position: absolute;
-  bottom: 0;
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 600;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+.fz-trump-card.hidden .fz-flip {
+  transform: rotateY(180deg);
+}
+
+/* Turned over with a flourish: it lifts, spins round and settles, rays of its colour behind it. */
+.fz-trump-card.reveal .fz-flip {
+  animation: fz-flip 0.9s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+@keyframes fz-flip {
+  0% {
+    transform: rotateY(180deg) translateY(0) scale(1);
+  }
+  45% {
+    transform: rotateY(90deg) translateY(-26px) scale(1.35);
+  }
+  100% {
+    transform: rotateY(0) translateY(0) scale(1);
+  }
+}
+
+.fz-burst {
+  --c: #e2c27a;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 240px;
+  height: 240px;
+  margin: -120px 0 0 -120px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--c) 70%, transparent) 0 6deg, transparent 6deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 18%, transparent 68%);
+  mask: radial-gradient(circle, #000 18%, transparent 68%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fz-trump-card.fire .fz-burst {
+  --c: var(--fire);
+}
+
+.fz-trump-card.water .fz-burst {
+  --c: var(--water);
+}
+
+.fz-trump-card.nature .fz-burst {
+  --c: var(--nature);
+}
+
+.fz-trump-card.astral .fz-burst {
+  --c: var(--astral);
+}
+
+.fz-trump-card.reveal .fz-burst {
+  animation: fz-burst 1.3s var(--ease-out) 0.25s;
+}
+
+@keyframes fz-burst {
+  0% {
+    opacity: 0;
+    transform: rotate(0) scale(0.4);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(60deg) scale(1.15);
+  }
+}
+
+/* The trump's colour pouring over the screen, behind everything on it. */
+.fz-flood {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* The trick: in the middle, each card in front of whoever played it, a little turned. */
+.fz-pile {
+  position: absolute;
+  left: 50%;
+  top: var(--cy, 56%);
+  width: 0;
+  height: 0;
+}
+
+.fz-trick-card {
+  position: absolute;
+  left: calc(var(--tw) / -2);
+  top: calc(var(--tw) * -0.75);
+  transform: var(--rest);
+  transition: transform 0.25s var(--ease-out), filter 0.25s;
+}
+
+.fz-trick-card .fz-card {
+  --w: var(--tw);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 3px 10px -3px rgba(0, 0, 0, 0.45);
+}
+
+/* The trick decided: the winning card on top, ringed; the rest a shade darker. */
+.fz-trick-card.won {
+  z-index: 10 !important;
+  transform: var(--rest) translateY(-6px) scale(1.06);
+}
+
+.fz-trick-card.won .fz-card {
+  box-shadow: 0 0 0 3px var(--accent), 0 8px 20px -6px rgba(0, 0, 0, 0.5);
+}
+
+.fz-trick-card.lost {
+  filter: brightness(0.78);
+}
+
+.fz-mine {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-mine-bid {
+  font-weight: 700;
 }
 
 .fz-status {
+  align-self: center;
+  max-width: 100%;
   margin: 0;
+  padding: 6px 16px;
+  border-radius: 18px;
   text-align: center;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
+  transition: background-color 0.2s, color 0.2s;
 }
 
+/* Your move: lit, so it can't be missed. */
+.fz-status.mine {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* What you can do now: always this tall, so the hand below never moves. */
 .fz-picks {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 8px;
+  height: 52px;
+}
+
+.fz-picks .big-btn {
+  width: auto;
+  min-width: 200px;
+}
+
+.fz-bids {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.fz-bids::-webkit-scrollbar {
+  display: none;
 }
 
 .fz-bid-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 24px;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
+  transition: transform 0.15s var(--ease-out);
 }
 
 .fz-bid-btn:active,
@@ -14763,11 +15429,13 @@ button.profile-avatar:not(:disabled):active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 48px;
-  padding: 0 16px;
+  height: 44px;
+  padding: 0 12px;
   border-radius: 14px;
   color: #fff;
   font-weight: 700;
+  font-size: 0.9rem;
+  transition: transform 0.15s var(--ease-out);
 }
 
 .fz-pick.fire {
@@ -14787,13 +15455,13 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .fz-hand-card {
-  border-radius: calc(var(--w, 60px) * 0.1);
-  transition: transform 0.15s var(--ease-out), opacity 0.15s;
+  border-radius: calc(var(--w, 60px) * 0.09);
+  transition: transform 0.15s var(--ease-out);
 }
 
-/* Not playable now (on your turn): greyed, not see-through, so the fan doesn't show through. */
+/* Not playable now: greyed, not see-through, so the fan doesn't show through. */
 .fz-hand-card.dim > * {
-  filter: brightness(0.62);
+  filter: brightness(0.6) saturate(0.6);
 }
 
 .fz-hand-card.ok {
@@ -14805,10 +15473,34 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .fz-hand-card .fz-card {
-  box-shadow: inset 0 0 0 1px rgba(90, 70, 40, 0.22), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
 }
 
-.fz-table {
+/* Dealt: each card comes down from the deck into your hand, one after another. */
+.fz-fan.dealing .fz-hand-card > .fz-card {
+  animation: fz-deal-in 0.45s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 110ms + 120ms);
+}
+
+@keyframes fz-deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-46vh) scale(0.55) rotate(-12deg);
+  }
+}
+
+/* Your move: the hand hops once. */
+.fz-fan.hop .fz-hand-card > .fz-card {
+  animation: fz-hop 0.5s var(--ease-out) calc(var(--i, 0) * 25ms);
+}
+
+@keyframes fz-hop {
+  40% {
+    transform: translateY(-10px);
+  }
+}
+
+.fz-results {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -14861,8 +15553,27 @@ button.profile-avatar:not(:disabled):active {
   font-variant-numeric: tabular-nums;
 }
 
-.fz-trick-card.turned .fz-trick-who {
-  max-width: none;
+/* Copies of cards on their way (dealt, a trick taken): above everything, through nothing. */
+.card-fly {
+  position: fixed;
+  z-index: 1000;
+  margin: 0;
+  pointer-events: none;
+}
+
+.card-fly > .fz-card,
+.card-fly .fz-card {
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fz-trump-card.reveal .fz-flip,
+  .fz-trump-card.reveal .fz-burst,
+  .fz-fan.dealing .fz-hand-card > .fz-card,
+  .fz-fan.hop .fz-hand-card > .fz-card {
+    animation: none;
+  }
 }
 
 /* A round's result (Spellbound, Color Clash): the rows come in one after another, 40 ms apart. */
@@ -15010,4 +15721,226 @@ button.profile-avatar:not(:disabled):active {
   content: '';
   position: absolute;
   inset: -14px -48px;
+}
+
+/* A page's back button and large title, held at the top while the page scrolls under them (out
+   over the status bar, in the page's own colour). */
+.screen-head {
+  --head-pad: max(8px, env(safe-area-inset-top));
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: calc(var(--head-pad) * -1) calc(var(--gutter) * -1) -8px;
+  padding: var(--head-pad) var(--gutter) 8px;
+  background: var(--bg);
+}
+
+/* What scrolls under the held title fades out into it, no hard edge. */
+.screen-head::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(var(--bg), transparent);
+  pointer-events: none;
+}
+
+/* The dealer's phone: the question, the deck and what's below it, each in a room of its own fixed
+   height and together in the middle of the screen, so the deck stays in one place the whole game
+   (not pushed by "It's lower", the card shown or the result). */
+.ftd-deckphone {
+  --rh: clamp(56px, 7dvh, 72px);
+  justify-content: center;
+  gap: 14px;
+}
+
+.ftd-deckphone-head {
+  flex: none;
+  justify-content: flex-end;
+  height: calc(0.75rem * 1.4 + 6px + 1.7rem * 1.05 * 2);
+}
+
+.ftd-deckphone .ftd-deck.big {
+  flex: none;
+  margin-top: 0;
+}
+
+.ftd-deckphone-low {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: calc(3 * var(--rh) + 16px + 10px + 1.4em);
+}
+
+.ftd-deckphone .ftd-rank {
+  height: var(--rh);
+}
+
+.ftd-deckphone-low .ftd-ask-sub {
+  min-height: 1.4em;
+  margin: 0;
+}
+
+.ftd-deckphone-next {
+  margin-top: auto;
+}
+
+/* A card covered on its right by the next one in a hand: its bottom corner would peek out under the
+   next card's rounded corner as a stray bit of a number or suit, so it isn't drawn. */
+.pl-card.covered .pcard-corner.bottom,
+.sp-hand .sp-card:not(:last-child) .pcard-corner.bottom {
+  visibility: hidden;
+}
+
+/* In a game the bar's buttons are solid, not glass: Safari can draw a blurred-glass button over a
+   table of turned and moving cards (a ring, a fan) as an empty circle, symbol and all. The bar is
+   its own layer above the table too. */
+.play-screen > .top-bar {
+  position: relative;
+  z-index: 8;
+}
+
+html[data-look] .play-screen > .top-bar .round-btn {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* The cards under the fanned-out ones: their edges peek out under the bottom card. */
+.rs-fan-card.under::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: calc(var(--cw) * 0.12);
+  background: #f3efe6;
+  box-shadow:
+    -3px 3px 0 0 #e6e1d6,
+    -6px 6px 0 0 #d8d2c5,
+    -9px 9px 0 0 #cbc4b6;
+  transform: translate(calc(var(--under) * -1px), calc(var(--under) * 1px));
+}
+
+/* What just happened, big in the middle for a moment: it pops in, holds, and fades. */
+.rs-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  max-width: 90%;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  animation: rs-flash 1.6s var(--ease-out) both;
+}
+
+.rs-flash.slap {
+  background: var(--good);
+  color: #0d1a0f;
+}
+
+.rs-flash.wrong,
+.rs-flash.out {
+  background: #c4473d;
+  color: #fff;
+}
+
+@keyframes rs-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -54%) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-flash {
+    animation-name: rs-flash-fade;
+  }
+
+  @keyframes rs-flash-fade {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%);
+    }
+    12%,
+    80% {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+/* Pressed: every button answers the finger. Text buttons dim, as on an iPhone; the rest give a
+   little (the ones with their own press answer keep it). */
+.text-btn {
+  transition: opacity 0.12s ease;
+}
+
+.text-btn:not(:disabled):active {
+  opacity: 0.5;
+}
+
+.hs-suit,
+.sb-lib-search,
+.lib-more {
+  transition: transform 0.16s var(--ease-out);
+}
+
+.hs-suit:active,
+.lib-more:active {
+  transform: scale(0.95);
+}
+
+.sb-lib-search:active {
+  transform: scale(0.98);
+}
+
+/* Speed: tapped too fast at cards that don't fit, the hand rests a moment. */
+.sp-hand.locked .sp-card {
+  filter: grayscale(0.6) brightness(0.7);
+}
+
+.sp-locked {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  padding: 8px 16px;
+  border-radius: 18px;
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: sp-dim 0.15s var(--ease-out) both;
 }

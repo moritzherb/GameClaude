@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -162,6 +163,7 @@ function Table({
   const hand = me >= 0 ? g.hands[me] : [];
   const top = toBeat(g);
   const myTurn = me >= 0 && g.phase === 'play' && g.turn === me;
+  useYourTurn(myTurn);
   const owe = me >= 0 && g.phase === 'exchange' ? g.owed.find((o) => o.from === me) : undefined;
   const passed = passedSince(g);
   const last = g.log.at(-1);

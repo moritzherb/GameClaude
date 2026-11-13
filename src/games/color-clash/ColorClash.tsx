@@ -1,19 +1,19 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
-import HandFan from '../../components/HandFan';
+import HandFan, { SortButton } from '../../components/HandFan';
 import Sheet from '../../components/Sheet';
 import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { sortByColour, useSortedHand } from '../../lib/handSort';
+import { flyIn, reducedMotion, seatArc } from '../../lib/cardFly';
+import { useCardDrag } from '../../lib/useCardDrag';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import {
-  acceptOverload,
   callLast,
-  catchLast,
-  challengeOverload,
   COLORS,
   draw,
   MAX_PLAYERS,
@@ -22,7 +22,7 @@ import {
   pass,
   play,
   playable,
-  top,
+  take,
   type Card,
   type Color,
   type Entry,
@@ -48,10 +48,10 @@ const KIND_NAME: Record<Card['kind'], string> = {
   block: tx('Block'),
   turnaround: tx('Turnaround'),
   burden: tx('Burden'),
-  spectrum: tx('Spectrum'),
+  spectrum: tx('Choose colour'),
   overload: tx('Overload'),
 };
-const LABEL: Partial<Record<Card['kind'], string>> = { block: '⊘', turnaround: '↻', burden: '+2', spectrum: '✦', overload: '+4' };
+const LABEL: Partial<Record<Card['kind'], string>> = { block: '⊘', turnaround: '⇄', burden: '+2', overload: '+4' };
 
 /** Color Clash: every player on their own phone, their hand at the bottom. */
 export default function ColorClash() {
@@ -140,15 +140,68 @@ function Table({
   onNewGame: () => void;
 }) {
   const [wild, setWild] = useState<Card | null>(null);
+  const [sel, setSel] = useState<number | null>(null);
+  const [browse, setBrowse] = useState(false);
   const [sorted, toggleSort] = useSortedHand();
+  const table = useRef<HTMLDivElement>(null);
+  const size = useSize(table);
+  // Where the card you just played was (in your hand, or where you let go of it): it flies from there.
+  const launch = useRef<{ rect: DOMRect; at: number } | null>(null);
   const name = (i: number) => seats[i]?.name ?? t('Someone');
   const hand = me >= 0 ? g.hands[me] : [];
   const shown = sorted ? sortByColour(hand, (c) => c.color, worth, COLORS) : hand;
-  const myTurn = me >= 0 && g.turn === me && g.winner == null && !g.overload;
-  const facing = me >= 0 && g.overload?.target === me;
-  const canCall = me >= 0 && ((g.lastCard?.seat === me && !g.lastCard.called) || (myTurn && hand.length === 2 && g.calling !== me));
-  const canCatch = me >= 0 && !!g.lastCard && !g.lastCard.called && g.lastCard.seat !== me;
-  const topCard = top(g);
+  const playing = g.winner == null;
+  const myTurn = me >= 0 && g.turn === me && playing;
+  useYourTurn(myTurn);
+  const canPlay = (c: Card) => myTurn && playable(g, me, c);
+  const anyFits = myTurn && hand.some((c) => playable(g, me, c));
+  // Nothing to play: the deck is where to go (it says so, gently, until you do).
+  const mustDraw = myTurn && !g.penalty && g.drawn == null && !anyFits;
+  const mustTake = myTurn && !!g.penalty && !anyFits;
+  const canCall = me >= 0 && g.lastCard?.seat === me && !g.lastCard.called && playing;
+  const picked = sel != null ? hand.find((c) => c.id === sel && canPlay(c)) : undefined;
+  const big = hand.length > 8;
+
+  // Your hand shrinks back below a browse's worth: the fan again.
+  useEffect(() => {
+    if (!big) setBrowse(false);
+  }, [big]);
+
+  // Every move once on every phone: the card played flies onto the pile, the cards drawn fly from
+  // the deck to whoever draws them, a word pops up for the rest.
+  const [toast, setToast] = useState<{ key: number; text: string; tone: 'good' | 'bad' | 'plain' } | null>(null);
+  const seen = useRef(g.seq);
+  const topRef = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    if (g.seq === seen.current) return;
+    seen.current = g.seq;
+    const box = table.current;
+    if (!box) return;
+    const seatDeck = (i: number) => (i === me ? document.querySelector('.cc-hand') : box.querySelector(`[data-seat="${i}"] .cc-seat-deck`));
+    const deck = box.querySelector('.cc-deck-stack');
+    let delay = 0;
+    for (const e of g.events) {
+      if (e.k === 'play') {
+        const el = topRef.current;
+        const from = e.by === me && launch.current && performance.now() - launch.current.at < 4000 ? launch.current.rect : seatDeck(e.by)?.getBoundingClientRect();
+        launch.current = null;
+        if (el && from) flyIn(el, from);
+        sfx.pop();
+      } else if (e.k === 'draw' || e.k === 'take' || e.k === 'forgot') {
+        const to = seatDeck(e.by)?.getBoundingClientRect();
+        if (deck && to) delay = flyBacks(deck.getBoundingClientRect(), to, e.n, delay);
+      }
+    }
+    const last = [...g.events].reverse().find((e) => e.k !== 'play' && e.k !== 'draw');
+    if (last) setToast({ key: g.seq, text: toastText(last, name, me), tone: last.k === 'called' ? 'good' : last.k === 'forgot' ? 'bad' : 'plain' });
+    if (g.events.some((e) => e.k === 'forgot' && e.by === me)) buzz([20, 40, 20]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g.seq]);
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 1700);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   if (g.winner != null) {
     return (
@@ -178,32 +231,87 @@ function Table({
     );
   }
 
-  const status = facing
-    ? t('An Overload for you: take it or challenge it')
-    : g.overload
-      ? t('{name} decides on the Overload', { name: name(g.overload.target) })
-      : myTurn
-        ? g.drawn != null
-          ? t('Play the card you drew, or keep it')
+  const status = g.penalty
+    ? myTurn
+      ? anyFits
+        ? t('{n} cards for you: pass them on with a {card}, or take them', { n: g.penalty.n, card: t(KIND_NAME[g.penalty.kind]) })
+        : t('{n} cards for you: take them, then play', { n: g.penalty.n })
+      : t('{name} takes {n} or passes them on', { name: name(g.turn), n: g.penalty.n })
+    : myTurn
+      ? g.drawn != null
+        ? t('Play the card you drew, or keep it')
+        : mustDraw
+          ? t('Nothing fits: draw a card')
           : t('Your turn')
-        : t('{name}’s turn', { name: name(g.turn) });
+      : t('{name}’s turn', { name: name(g.turn) });
+  const hint = myTurn && picked ? t('Tap it again or drag it onto the pile') : myTurn && anyFits && !g.penalty && g.drawn == null ? t('Tap a card to pick it') : ' ';
 
-  const onCard = (c: Card) => {
-    if (!myTurn || !playable(g, me, c)) return;
-    if (!c.color) return setWild(c);
-    sfx.pop();
+  const playCard = (c: Card, from: HTMLElement | null) => {
+    if (!canPlay(c)) return false;
+    if (from) launch.current = { rect: from.getBoundingClientRect(), at: performance.now() };
+    if (!c.color) {
+      setWild(c);
+      return false;
+    }
     buzz(10);
+    setSel(null);
     act((x) => play(x, me, c.id));
+    return true;
+  };
+  const onTap = (c: Card, el: HTMLElement) => {
+    if (!canPlay(c)) return;
+    if (sel === c.id) return void playCard(c, el);
+    sfx.tick();
+    buzz(6);
+    setSel(c.id);
+  };
+  const onPile = () => {
+    if (!picked) return;
+    playCard(picked, document.querySelector<HTMLElement>(`[data-card="${picked.id}"]`));
+  };
+  const onDeck = () => {
+    if (!myTurn) return;
+    if (g.penalty) {
+      buzz([15, 30, 15]);
+      return act((x) => take(x, me));
+    }
+    if (g.drawn != null) return;
+    buzz(10);
+    setSel(null);
+    act((x) => draw(x, me));
   };
 
+  // The others round the table, in turn order from your left; you at the bottom.
+  const others = seats.map((_, i) => i).filter((i) => i !== me);
+  const order = me >= 0 ? others.map((_, k) => (me + 1 + k) % seats.length) : others;
+  const spots = seatSpots(order.length, size.w, size.h);
+  const pile = g.discard.slice(-4);
+  const topCard = pile[pile.length - 1];
+
   return (
-    <div className="cc fill">
-      <div className="cc-others">
-        {seats.map((s, i) =>
-          i === me ? null : (
-            <div key={s.id} className={`cc-seat${g.turn === i ? ' on' : ''}${g.hands[i].length === 1 ? ' last' : ''}`}>
-              {/* Their hand, face down: as many cards as they hold, the number with it. */}
-              <Backs n={g.hands[i].length} label={t('{name}: {n} cards', { name: s.name, n: g.hands[i].length })} />
+    <div className={`cc fill${big ? ' big-hand' : ''}`}>
+      <div className="cc-table" ref={table}>
+        <div className={`cc-felt ${g.color}`} aria-hidden>
+          <span className="cc-dir">{g.dir === 1 ? '↻' : '↺'}</span>
+        </div>
+        {order.map((i, k) => {
+          const s = seats[i];
+          const n = g.hands[i].length;
+          const spot = spots[k];
+          return (
+            <div
+              key={s.id}
+              data-seat={i}
+              className={`cc-seat${g.turn === i ? ' on' : ''}${n === 1 ? ' last' : ''}${order.length > 5 ? ' small' : ''}`}
+              style={spot ? { left: spot.x, top: spot.y } : undefined}
+            >
+              {/* Their hand, face down, as a little stack: as many cards as they hold, the number on it. */}
+              <span className="cc-seat-deck" role="img" aria-label={t('{name}: {n} cards', { name: s.name, n })}>
+                {Array.from({ length: Math.min(n, 6) }, (_, j) => (
+                  <i key={j} className="cc-back" style={{ '--k': j - (Math.min(n, 6) - 1) / 2 } as CSSProperties} />
+                ))}
+                <span className="cc-seat-n">{n}</span>
+              </span>
               <span className="cc-seat-who">
                 <span className="bd-avatar xs" style={{ background: s.color }}>
                   <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
@@ -211,80 +319,139 @@ function Table({
                 <span className="cc-seat-name">{s.name}</span>
               </span>
             </div>
-          ),
+          );
+        })}
+
+        <div className="cc-middle">
+          <button
+            type="button"
+            className={`cc-deck${mustDraw || mustTake ? ' must' : ''}`}
+            disabled={!myTurn || (g.drawn != null && !g.penalty)}
+            onClick={onDeck}
+            aria-label={g.penalty && myTurn ? t('Take {n} cards', { n: g.penalty.n }) : t('Draw a card')}
+          >
+            <span className="cc-deck-stack">
+              <i className="cc-back" />
+              <i className="cc-back" />
+              <i className="cc-back" />
+            </span>
+            <span className="cc-deck-label">{g.penalty && myTurn ? t('Take {n}', { n: g.penalty.n }) : t('Draw')}</span>
+          </button>
+          <div className={`cc-pile${picked ? ' ready' : ''}`} data-drop="pile" onClick={onPile} aria-label={t('Top card; the colour is {color}', { color: t(COLOR_NAME[g.color]) })}>
+            {pile.map((c) => (
+              <span
+                key={c.id}
+                ref={c === topCard ? topRef : undefined}
+                className={`cc-pile-card${c === topCard ? ' top' : ''}`}
+                style={{ '--rest': rest(c.id) } as CSSProperties}
+              >
+                <CardFace card={c} big />
+              </span>
+            ))}
+            {g.penalty && <span className="cc-penalty">+{g.penalty.n}</span>}
+          </div>
+        </div>
+        <span className={`cc-active ${g.color}`}>
+          <Shape color={g.color} />
+          {t(COLOR_NAME[g.color])}
+        </span>
+        {toast && (
+          <span key={toast.key} className={`cc-toast ${toast.tone}`} role="status">
+            {toast.text}
+          </span>
         )}
       </div>
 
-      <div className="cc-middle">
-        <button type="button" className="cc-deck" disabled={!myTurn || g.drawn != null} onClick={() => act((x) => draw(x, me))} aria-label={t('Draw a card')}>
-          <span className="cc-back" />
-          <span className="cc-deck-label">{t('Draw')}</span>
-        </button>
-        <div className={`cc-pile ${g.color}`} aria-label={t('Top card; the colour is {color}', { color: t(COLOR_NAME[g.color]) })}>
-          <CardFace card={topCard} big />
-          <span className="cc-active">
-            <Shape color={g.color} />
-            {t(COLOR_NAME[g.color])}
-          </span>
-        </div>
-      </div>
-
-      <p className="cc-status" aria-live="polite">
+      <p className={`cc-status${myTurn ? ' mine' : ''}`} aria-live="polite">
         {status}
-        <span className="cc-dir">{g.dir === 1 ? '↻' : '↺'}</span>
       </p>
-      <p className="cc-last">{g.last ? lastText(g.last, name) : ' '}</p>
+      <p className="cc-hint">{hint}</p>
 
       <div className="cc-actions">
         {canCall && (
-          <button type="button" className="cc-call" onClick={() => act((x) => callLast(x, me))}>
+          <button
+            type="button"
+            className="cc-call"
+            onClick={() => {
+              buzz([10, 30, 10]);
+              act((x) => callLast(x, me));
+            }}
+          >
             {t('Last card!')}
           </button>
         )}
-        {canCatch && (
-          <button
-            type="button"
-            className="cc-catch"
-            onClick={() => {
-              buzz([20, 30, 20]);
-              act((x) => catchLast(x, me));
-            }}
-          >
-            {t('Caught {name}!', { name: name(g.lastCard!.seat) })}
+        {myTurn && g.penalty && (
+          <button type="button" className={`cc-take${mustTake ? ' must' : ''}`} onClick={onDeck}>
+            {t('Take {n} cards', { n: g.penalty.n })}
           </button>
         )}
-        {myTurn && g.drawn != null && (
+        {myTurn && g.drawn != null && !g.penalty && (
           <button type="button" className="cc-pass" onClick={() => act((x) => pass(x, me))}>
             {t('Keep it')}
           </button>
         )}
       </div>
 
-      {/* Your hand, fanned as you'd hold it: what you may play now stands up. */}
-      {me >= 0 ? (
+      {/* Your hand, fanned as you'd hold it: what you may play now stands up, the one you picked
+          higher still. A big hand can be laid out flat to look through. */}
+      {me < 0 ? (
+        <p className="fine-print">{t('Watching')}</p>
+      ) : browse ? (
+        <div className="fan-row cc-hand">
+          <div className="cc-browse" aria-label={t('Your hand')}>
+            {shown.map((c) => {
+              const ok = canPlay(c);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  data-card={c.id}
+                  className={`cc-hand-card${ok ? ' ok' : ' dim'}${sel === c.id && ok ? ' picked' : ''}`}
+                  onClick={(e) => onTap(c, e.currentTarget)}
+                  aria-label={cardName(c)}
+                  aria-disabled={!ok}
+                >
+                  <CardFace card={c} />
+                </button>
+              );
+            })}
+          </div>
+          <div className="fan-tools">
+            <BrowseButton on onClick={() => setBrowse(false)} />
+            <SortButton
+              on={sorted}
+              onClick={() => {
+                sfx.tick();
+                toggleSort();
+              }}
+            />
+          </div>
+        </div>
+      ) : (
         <HandFan
-          className="cc-fan"
+          className="cc-fan cc-hand"
           cards={shown}
           keyOf={(c) => c.id}
-          width={hand.length <= 8 ? 70 : hand.length <= 14 ? 62 : 54}
+          width={hand.length <= 8 ? 84 : hand.length <= 14 ? 72 : 62}
           ratio={1.33}
           sorted={sorted}
           onSort={toggleSort}
+          aside={big ? <BrowseButton onClick={() => setBrowse(true)} /> : undefined}
           label={t('Your hand')}
-          card={(c) => {
-            const ok = myTurn && playable(g, me, c);
-            return (
-              <button type="button" className={`cc-hand-card${ok ? ' ok' : ''}${myTurn && !ok ? ' dim' : ''}`} disabled={!ok} onClick={() => onCard(c)} aria-label={cardName(c)}>
-                <CardFace card={c} />
-              </button>
-            );
-          }}
+          card={(c, angle) => (
+            <HandCard
+              card={c}
+              angle={angle}
+              ok={canPlay(c)}
+              picked={sel === c.id}
+              onTap={(el) => onTap(c, el)}
+              onDrop={(target, el) => !!target?.closest('.cc-table') && playCard(c, el)}
+            />
+          )}
         />
-      ) : (
-        <p className="fine-print">{t('Watching')}</p>
       )}
 
-      {/* Which colour, for a Spectrum or an Overload. */}
+      {/* Which colour, for a Choose colour or an Overload. */}
       <Sheet open={!!wild} onClose={() => setWild(null)} title={t('Which colour?')} closeLabel={t('Cancel')}>
         <div className="cc-colors">
           {COLORS.map((c) => (
@@ -296,8 +463,8 @@ function Table({
                 const card = wild;
                 setWild(null);
                 if (!card) return;
-                sfx.pop();
                 buzz(10);
+                setSel(null);
                 act((x) => play(x, me, card.id, c));
               }}
             >
@@ -307,22 +474,122 @@ function Table({
           ))}
         </div>
       </Sheet>
-
-      {/* An Overload on you: take the four, or challenge it. */}
-      <Sheet open={facing} onClose={() => act((x) => acceptOverload(x, me))} title={t('{name} played an Overload', { name: name(g.overload?.actor ?? 0) })} closeLabel={t('Take 4 cards')}>
-        <p className="lead">{t('Challenge it if you think they still had a card of the colour before. Right: they draw 4. Wrong: you draw 6.')}</p>
-        <BigButton
-          variant="danger"
-          onClick={() => {
-            buzz([20, 40, 20]);
-            act((x) => challengeOverload(x, me));
-          }}
-        >
-          {t('Challenge')}
-        </BigButton>
-      </Sheet>
     </div>
   );
+}
+
+/** One card of your hand: tap to pick it (again to play it), or drag it onto the table. Inside its
+ *  turned slot, so a drag is turned back to follow the finger, the card standing up straight. */
+function HandCard({ card, angle, ok, picked, onTap, onDrop }: { card: Card; angle: number; ok: boolean; picked: boolean; onTap: (el: HTMLElement) => void; onDrop: (target: Element | null, el: HTMLElement | null) => boolean }) {
+  const { ref, drag, handlers } = useCardDrag({ rotated: false, onTap, onDrop: (target) => onDrop(target, ref.current) });
+  let style: CSSProperties | undefined;
+  if (drag) {
+    const r = (angle * Math.PI) / 180;
+    const x = drag.dx * Math.cos(r) + drag.dy * Math.sin(r);
+    const y = -drag.dx * Math.sin(r) + drag.dy * Math.cos(r);
+    style = { transform: `translate(${x}px, ${y}px) rotate(${-angle}deg) scale(1.06)` };
+  }
+  return (
+    <span
+      ref={ref}
+      data-card={card.id}
+      role="button"
+      tabIndex={ok ? 0 : -1}
+      aria-label={cardName(card)}
+      aria-disabled={!ok}
+      className={`cc-hand-card${ok ? ' ok' : ' dim'}${picked && ok ? ' picked' : ''}${drag ? ' dragging' : ''}`}
+      style={style}
+      onKeyDown={(e) => {
+        if (ok && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onTap(e.currentTarget);
+        }
+      }}
+      {...(ok ? handlers : {})}
+    >
+      <CardFace card={card} />
+    </span>
+  );
+}
+
+/** Lays a big hand out flat to look through (or folds it back into a fan). */
+function BrowseButton({ on, onClick }: { on?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={`sort-btn${on ? ' on' : ''}`} aria-pressed={!!on} aria-label={t('Look through your cards')} onClick={onClick}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {on ? <path d="M8 4 4 8l4 4M16 12l4 4-4 4M4 8h11M20 16H9" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+      </svg>
+    </button>
+  );
+}
+
+/** The table's size, kept up to date. */
+function useSize(ref: RefObject<HTMLElement | null>) {
+  const [size, setSize] = useState({ w: 360, h: 360 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setSize({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    if (typeof ResizeObserver !== 'function') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return size;
+}
+
+/** Where the others sit: on an arc round the table, from your left over the top to your right, as
+ *  they'd sit at a real one. The middle (deck and pile) lies a little below centre; with many, the
+ *  arc comes down beside it too. */
+export function seatSpots(n: number, w: number, h: number) {
+  if (!n) return [];
+  const sw = n > 5 ? 62 : 76;
+  const sh = n > 5 ? 70 : 86;
+  const cx = w / 2;
+  const cy = h * 0.61;
+  const rx = Math.max(0, cx - sw / 2 - 2);
+  // Not further out than just round the felt (global.css: .cc-felt, 62% high, 80vw at most; the
+  // table is about the screen less its sides).
+  const felt = Math.min(h * 0.31, (w + 32) * 0.4);
+  const ry = Math.max(0, Math.min(cy - sh / 2 - 2, felt + sh / 2 + 4));
+  const from = n === 1 ? 90 : n === 2 ? 150 : n === 3 ? 162 : n === 4 ? 172 : 196;
+  return seatArc(n, { cx, cy, rx, ry, from, maxY: h - sh / 2 });
+}
+
+/** How a card lies on the pile: a little turned and off centre, the same on every phone. */
+function rest(id: number) {
+  const a = ((id * 37) % 29) - 14;
+  const x = ((id * 53) % 13) - 6;
+  const y = ((id * 71) % 11) - 5;
+  return `translate(${x}px, ${y}px) rotate(${a}deg)`;
+}
+
+/** Cards drawn: backs fly one after the other from the deck to whoever takes them (for everyone to
+ *  see who drew, and how many). Returns when the next one may start. */
+function flyBacks(from: DOMRect, to: DOMRect, n: number, delay: number) {
+  if (reducedMotion()) return delay;
+  const shown = Math.min(n, 8);
+  const gap = n > 4 ? 70 : 110;
+  for (let k = 0; k < shown; k++) {
+    const el = document.createElement('i');
+    el.className = 'cc-back cc-fly';
+    Object.assign(el.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` });
+    document.body.appendChild(el);
+    const dx = to.left + to.width / 2 - (from.left + from.width / 2) + (k - (shown - 1) / 2) * 6;
+    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+    const s = Math.max(0.3, Math.min(1, (to.width / from.width) * 0.6));
+    const a = el.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${s}) rotate(${dx > 0 ? 8 : -8}deg)`, opacity: 1, offset: 0.85 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${s * 0.9})`, opacity: 0 },
+      ],
+      { duration: 460, delay: delay + k * gap, easing: 'cubic-bezier(0.3, 0.7, 0.2, 1)', fill: 'backwards' },
+    );
+    a.onfinish = a.oncancel = () => el.remove();
+  }
+  return delay + shown * gap;
 }
 
 function cardName(c: Card) {
@@ -330,43 +597,24 @@ function cardName(c: Card) {
   return c.color ? `${t(COLOR_NAME[c.color])} ${t(KIND_NAME[c.kind])}` : t(KIND_NAME[c.kind]);
 }
 
-function lastText(e: Entry, name: (i: number) => string) {
+function toastText(e: Entry, name: (i: number) => string, me: number) {
   switch (e.k) {
-    case 'play':
-      return t('{name} plays {card}.', { name: name(e.by), card: cardName(e.card) });
-    case 'draw':
-      return t('{name} draws a card.', { name: name(e.by) });
-    case 'skip':
-      return e.draws ? t('{name} draws {n} and sits out.', { name: name(e.by), n: e.draws }) : t('{name} sits out.', { name: name(e.by) });
-    case 'caught':
-      return t('{name} caught {caller} with one card: {caller} draws 2.', { name: name(e.by), caller: name(e.caller) });
     case 'called':
-      return t('{name}: last card!', { name: name(e.by) });
-    case 'challenge':
-      return e.fair
-        ? t('{name} challenged the Overload and was wrong: draws 6.', { name: name(e.by) })
-        : t('{name} challenged the Overload and was right: {actor} draws 4.', { name: name(e.by), actor: name(e.actor) });
+      return e.by === me ? t('Last card!') : t('{name}: last card!', { name: name(e.by) });
+    case 'forgot':
+      return e.by === me ? t('You forgot “Last card”: +2') : t('{name} forgot “Last card”: +2', { name: name(e.by) });
+    case 'take':
+      return e.by === me ? t('You take {n}', { n: e.n }) : t('{name} takes {n}', { name: name(e.by), n: e.n });
+    case 'skip':
+      return e.by === me ? t('You sit out') : t('{name} sits out', { name: name(e.by) });
+    default:
+      return '';
   }
 }
 
 /** A card's place in a sorted hand within its colour: numbers, then Block, Turnaround, Burden, then the universal ones. */
 const ORDER: Record<Card['kind'], number> = { number: 0, block: 10, turnaround: 11, burden: 12, spectrum: 20, overload: 21 };
 const worth = (c: Card) => ORDER[c.kind] + (c.value ?? 0);
-
-/** A hand face down, as many cards as it holds (a few at most, fanned), with the number beside. */
-function Backs({ n, label }: { n: number; label: string }) {
-  const shown = Math.min(n, 9);
-  return (
-    <span className="cc-backs" role="img" aria-label={label}>
-      <span className="cc-backs-fan">
-        {Array.from({ length: shown }, (_, k) => (
-          <i key={k} className="cc-back" style={{ '--k': k - (shown - 1) / 2 } as CSSProperties} />
-        ))}
-      </span>
-      <span className="cc-backs-n">{n}</span>
-    </span>
-  );
-}
 
 /** The colour's own shape: a diamond, a circle, a triangle, a square. */
 export function Shape({ color }: { color: Color }) {
@@ -380,13 +628,16 @@ export function Shape({ color }: { color: Color }) {
   );
 }
 
-/** A card: its colour, its shape and its number (or action); a universal one dark with all four. */
+/** A card: its colour, its shape and its number (or action); a universal one dark: Choose colour
+ *  with a wheel of all four, Overload with the four shapes and its +4. */
 export function CardFace({ card, big }: { card: Card; big?: boolean }) {
   const label = card.kind === 'number' ? String(card.value) : LABEL[card.kind];
   return (
-    <span className={`cc-card ${card.color ?? 'universal'}${big ? ' big' : ''}`}>
+    <span className={`cc-card ${card.color ?? 'universal'} ${card.kind}${big ? ' big' : ''}`}>
       {card.color ? (
         <Shape color={card.color} />
+      ) : card.kind === 'spectrum' ? (
+        <span className="cc-wheel" aria-hidden />
       ) : (
         <span className="cc-quad" aria-hidden>
           {COLORS.map((c) => (
@@ -394,7 +645,7 @@ export function CardFace({ card, big }: { card: Card; big?: boolean }) {
           ))}
         </span>
       )}
-      <span className="cc-num">{label}</span>
+      {label && <span className="cc-num">{label}</span>}
     </span>
   );
 }

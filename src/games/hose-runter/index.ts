@@ -22,7 +22,7 @@ const hoseRunter: GameDefinition = {
     tx('The dealer looks at their three first: keep them (three more go to the middle) or put them in the middle and play the next three.'),
     tx('Starting left of the dealer: swap one card with the middle, swap all three, or say STOP. No Stop in the first round.'),
     tx('Optional for big groups: passing (“schieben”) instead of swapping, switched on before dealing.'),
-    tx('After a Stop everyone else gets one more turn, then all cards are shown.'),
+    tx('After a Stop everyone else gets one more turn (swap, or stay with your cards), then all cards are shown.'),
     tx('31 in one suit = Pants down 👖 and three aces = Fire 🔥: the round ends at once.'),
     tx('Any other three of a kind = 30½.'),
     // 5 = START_LIVES (written out: rules are translated as whole sentences).

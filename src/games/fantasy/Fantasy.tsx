@@ -1,4 +1,5 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import HandFan from '../../components/HandFan';
@@ -7,10 +8,10 @@ import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { sortByColour, useSortedHand } from '../../lib/handSort';
 import { mix, parseColor, tintTop } from '../../lib/themeColor';
+import { flyCopy, flyIn, reducedMotion, seatArc } from '../../lib/cardFly';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
-import art from './art.webp';
-import { bid, chooseTrump, FACTIONS, legal, MAX_PLAYERS, maxRounds, MIN_PLAYERS, newGame, nextRound, playCard, QUICK_ROUNDS, type Card, type Faction, type Game } from './logic';
+import { bid, chooseTrump, FACTIONS, legal, MAX_PLAYERS, maxRounds, MIN_PLAYERS, newGame, nextRound, playCard, QUICK_ROUNDS, takeTrick, type Card, type Faction, type Game } from './logic';
 
 interface Seat {
   id: string;
@@ -128,8 +129,117 @@ function Table({
   const hand = me >= 0 ? g.hands[me] : [];
   const shown = sorted ? sortByColour(hand, (c) => (c.kind === 'number' ? c.faction : null), (c) => (c.kind === 'number' ? c.rank : c.kind === 'archmage' ? 0 : 1), FACTIONS) : hand;
   const mine = g.turn === me;
-  useTrumpSky(g.trump);
-  const trumpText = g.trump ? (
+  const table = useRef<HTMLDivElement>(null);
+  const size = useSize(table);
+  // Where the card you just played was in your hand: it flies from there.
+  const launch = useRef<DOMRect | null>(null);
+
+  // A fresh deal is dealt out on every phone: backs fly from the deck to everyone, your hand fans
+  // in, then the trump card turns over and its colour floods the table. Until then no bids.
+  const fresh = (g.phase === 'bidding' || g.phase === 'trump') && !g.trick.length && !g.lastTrick && g.bids.every((b) => b == null);
+  const [dealt, setDealt] = useState(() => (fresh ? -1 : g.dealId));
+  const dealing = fresh && dealt !== g.dealId;
+  const perSeat = Math.min(g.round, 4);
+  const dealTime = Math.min(1300, g.players * perSeat * 90);
+  const started = useRef(-1);
+  useLayoutEffect(() => {
+    if (!dealing) return;
+    const box = table.current;
+    const deck = box?.querySelector('.fz-deck-top');
+    if (started.current !== g.dealId && box && deck) {
+      started.current = g.dealId;
+      const from = deck.getBoundingClientRect();
+      const gap = dealTime / Math.max(1, g.players * perSeat);
+      let k = 0;
+      for (let r = 0; r < perSeat; r++)
+        for (let p = 1; p <= g.players; p++) {
+          const seat = (g.dealer + p) % g.players;
+          const to = (seat === me ? document.querySelector('.fz-hand .fan') : box.querySelector(`[data-seat="${seat}"] .fz-seat-who`))?.getBoundingClientRect();
+          if (to) flyCopy(deck, from, seat === me ? new DOMRect(to.left + to.width / 2 - 30, to.top, 60, 90) : to, { delay: k * gap, duration: 420, turn: 8 });
+          k++;
+        }
+      sfx.tick();
+    }
+    const id = window.setTimeout(() => setDealt(g.dealId), dealTime + 450);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g.dealId, dealing]);
+
+  // The trump's colour floods the table from the trump card once it's turned (or picked).
+  const [sky, setSky] = useState<Faction | null>(() => (fresh ? null : g.trump));
+  const [reveal, setReveal] = useState(0);
+  useEffect(() => {
+    if (dealing) return setSky(null);
+    if (g.trump === sky) return;
+    if (!g.trump) return setSky(null);
+    const f = g.trump;
+    setReveal((r) => r + 1);
+    const card = table.current?.querySelector('.fz-trump-card');
+    const done = flood(card?.getBoundingClientRect() ?? null, skyColor(f), 650);
+    const id = window.setTimeout(() => setSky(f), done);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g.trump, dealing]);
+  useTrumpSky(sky);
+
+  // A card played comes from its player (your own from your hand) to where it lies on the trick.
+  const trickRef = useRef<HTMLDivElement>(null);
+  const shownTrick = g.trick;
+  const lastId = shownTrick.at(-1)?.card.id;
+  useLayoutEffect(() => {
+    const p = shownTrick.at(-1);
+    if (!p) return;
+    const el = trickRef.current?.querySelector<HTMLElement>(`[data-trick="${p.card.id}"]`);
+    const from = p.seat === me && launch.current ? launch.current : table.current?.querySelector(`[data-seat="${p.seat}"] .fz-seat-who`)?.getBoundingClientRect();
+    launch.current = null;
+    if (el && from) flyIn(el, from, 360);
+    sfx.pop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastId]);
+  // A trick taken goes to its winner, lying beside them: its cards fly there from the table.
+  const lastSeen = useRef<HTMLElement[]>([]);
+  useLayoutEffect(() => {
+    if (g.trick.length) lastSeen.current = [...(trickRef.current?.querySelectorAll<HTMLElement>('.fz-trick-card') ?? [])].map((el) => el);
+  });
+  const takenKey = g.lastTrick ? g.lastTrick.cards.map((p) => p.card.id).join() : '';
+  const prevTaken = useRef(takenKey);
+  useLayoutEffect(() => {
+    if (takenKey === prevTaken.current) return;
+    prevTaken.current = takenKey;
+    const w = g.lastTrick?.winner;
+    if (w == null) return;
+    const to = (w === me ? document.querySelector('.fz-mine .fz-tricks') : table.current?.querySelector(`[data-seat="${w}"] .fz-tricks`))?.getBoundingClientRect();
+    if (!to) return;
+    lastSeen.current.forEach((el, k) => {
+      const r = el.dataset.rect ? (JSON.parse(el.dataset.rect) as { l: number; t: number; w: number; h: number }) : null;
+      if (r) flyCopy(el, new DOMRect(r.l, r.t, r.w, r.h), new DOMRect(to.left, to.top, to.height / 1.5, to.height), { delay: k * 50, duration: 420 });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [takenKey]);
+  // Remember where the trick's cards lie (they're gone from the page once taken).
+  useLayoutEffect(() => {
+    for (const el of trickRef.current?.querySelectorAll<HTMLElement>('.fz-trick-card') ?? []) {
+      const r = el.getBoundingClientRect();
+      el.dataset.rect = JSON.stringify({ l: r.left, t: r.top, w: r.width, h: r.height });
+    }
+  });
+
+  // Your move: the phone buzzes, and the hand gives a little hop (global.css: .fz-fan.hop).
+  const myMove = !dealing && mine && g.taking == null && (g.phase === 'playing' || g.phase === 'bidding' || g.phase === 'trump');
+  useYourTurn(myMove);
+
+  // A trick nobody takes (its winner gone quiet): after a while the host can take it for them.
+  const [stale, setStale] = useState(false);
+  useEffect(() => {
+    setStale(false);
+    if (g.taking == null) return;
+    const id = window.setTimeout(() => setStale(true), 6000);
+    return () => window.clearTimeout(id);
+  }, [g.taking]);
+
+  const trumpText = dealing ? (
+    '…'
+  ) : g.trump ? (
     <>
       <Sigil faction={g.trump} /> {t(FACTION_NAME[g.trump])}
     </>
@@ -147,17 +257,7 @@ function Table({
           <span className="kicker">{t('Round {n} of {m}', { n: g.round, m: g.rounds })}</span>
           <h2 className="bd-title big">{g.phase === 'over' ? t('{name} wins!', { name: name(order[0].i) }) : t('Round over')}</h2>
         </div>
-        {g.lastTrick && (
-          <div className="fz-trick small" aria-label={t('{name} takes the trick', { name: name(g.lastTrick.winner) })}>
-            {g.lastTrick.cards.map((p) => (
-              <div key={p.card.id} className={`fz-trick-card done${g.lastTrick!.winner === p.seat ? ' won' : ''}`}>
-                <CardFace card={p.card} />
-                <span className="fz-trick-who">{name(p.seat)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="fz-table">
+        <div className="fz-results">
           {order.map(({ s, i }) => (
             <div key={s.id} className="fz-row">
               <span className="bd-avatar xs" style={{ background: s.color }}>
@@ -181,18 +281,41 @@ function Table({
     );
   }
 
-  const status =
-    g.phase === 'trump'
-      ? mine
-        ? t('An Archmage was turned: you pick trump')
-        : t('{name} picks trump', { name: name(g.dealer) })
-      : g.phase === 'bidding'
+  const status = dealing
+    ? t('Dealing…')
+    : g.taking != null
+      ? g.taking === me
+        ? t('Your trick: take it')
+        : t('{name} wins the trick', { name: name(g.taking) })
+      : g.phase === 'trump'
         ? mine
-          ? t('How many tricks will you take?')
-          : t('{name} is bidding', { name: name(g.turn) })
-        : mine
-          ? t('Your card')
-          : t('{name}’s card', { name: name(g.turn) });
+          ? t('An Archmage was turned: you pick trump')
+          : t('{name} picks trump', { name: name(g.dealer) })
+        : g.phase === 'bidding'
+          ? mine
+            ? t('How many tricks will you take?')
+            : t('{name} is bidding', { name: name(g.turn) })
+          : mine
+            ? g.trick.length
+              ? t('Your turn: play a card')
+              : t('Your turn: lead a card')
+            : t('{name}’s turn', { name: name(g.turn) });
+
+  // The others round the table in turn order from your left, you at the bottom.
+  const others = seats.map((_, i) => i).filter((i) => i !== me);
+  const order = me >= 0 ? others.map((_, k) => (me + 1 + k) % seats.length) : others;
+  const cx = size.w / 2;
+  const cy = size.h * 0.56;
+  const n = order.length;
+  // With many, the arc comes down beside the middle too (but stays above the deck in the corner).
+  const spots = seatArc(n, { cx, cy, rx: Math.max(0, cx - 46), ry: Math.max(0, cy - 30), from: n <= 2 ? 150 : n === 3 ? 166 : 186, maxY: size.h - (n >= 4 ? 124 : 30) });
+  // The trick's cards as big as the table has room for.
+  const tw = Math.round(Math.max(52, Math.min(78, size.w * 0.19, size.h * 0.22)));
+  const spotOf = (seat: number) => {
+    const k = order.indexOf(seat);
+    return k >= 0 ? spots[k] : { x: cx, y: size.h + 60 };
+  };
+  const winnerId = g.taking != null ? g.trick.find((p) => p.seat === g.taking)?.card.id : undefined;
 
   return (
     <div className="fz fill">
@@ -203,94 +326,143 @@ function Table({
         </span>
       </div>
 
-      {/* Everyone: their bid, the tricks they have, their score. */}
-      <div className="fz-seats">
-        {seats.map((s, i) => (
-          <div key={s.id} className={`fz-seat${g.turn === i ? ' on' : ''}${i === me ? ' me' : ''}`}>
-            <span className="bd-avatar xs" style={{ background: s.color }}>
-              <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
-            </span>
-            <span className="fz-seat-text">
-              <span className="fz-seat-name">{s.name}</span>
+      <div className="fz-table-area" ref={table} style={{ '--cy': `${Math.round(cy)}px`, '--tw': `${tw}px` } as CSSProperties}>
+        {/* The others: who, their bid and tricks so far, their score; the tricks they took beside them. */}
+        {order.map((i, k) => {
+          const s = seats[i];
+          const spot = spots[k];
+          return (
+            <div key={s.id} data-seat={i} className={`fz-seat${g.turn === i && !dealing ? ' on' : ''}${spot && spot.x > cx + 4 ? ' right' : ''}`} style={spot ? { left: spot.x, top: spot.y } : undefined}>
+              <span className="fz-seat-who">
+                <span className="bd-avatar xs" style={{ background: s.color }}>
+                  <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+                </span>
+                <span className="fz-seat-name">{s.name}</span>
+              </span>
               <span className="fz-seat-meta">
-                <span className="fz-seat-bid">{g.bids[i] == null ? '–' : t('{won}/{bid}', { won: g.won[i], bid: g.bids[i]! })}</span>
+                <span className="fz-seat-bid">{g.bids[i] == null ? t('bidding') : t('{won} of {bid}', { won: g.won[i], bid: g.bids[i]! })}</span>
                 <span className="fz-seat-score">{t('{n} pts', { n: g.scores[i] })}</span>
               </span>
+              <Tricks n={g.won[i]} />
+            </div>
+          );
+        })}
+
+        {/* Beside the table: the rest of the deck, the trump card turned up on it for all to see. */}
+        <div className="fz-deck" aria-label={g.turned ? t('Turned up for trump') : undefined}>
+          <span className="fz-deck-stack">
+            <CardBack />
+            <CardBack />
+            <span className="fz-deck-top">
+              <CardBack />
             </span>
-          </div>
-        ))}
+          </span>
+          {g.turned && (
+            <span key={`${g.dealId}:${reveal}`} className={`fz-trump-card${dealing ? ' hidden' : ' reveal'}${g.trump ? ` ${g.trump}` : ''}`}>
+              <span className="fz-burst" aria-hidden />
+              <span className="fz-flip">
+                <CardFace card={g.turned} />
+                <CardBack />
+              </span>
+            </span>
+          )}
+        </div>
+
+        {/* The trick: each card lies in front of whoever played it, a little turned, overlapping. */}
+        <div className="fz-pile" ref={trickRef}>
+          {g.trick.map((p, k) => {
+            const spot = p.seat === me ? { x: cx, y: size.h + 60 } : spotOf(p.seat);
+            const dx = spot.x - cx;
+            const dy = spot.y - cy;
+            const len = Math.hypot(dx, dy) || 1;
+            const reach = tw * 0.34;
+            return (
+              <div
+                key={p.card.id}
+                data-trick={p.card.id}
+                className={`fz-trick-card${winnerId === p.card.id ? ' won' : ''}${winnerId != null && winnerId !== p.card.id ? ' lost' : ''}`}
+                style={{ '--rest': `translate(${((dx / len) * reach).toFixed(1)}px, ${((dy / len) * reach).toFixed(1)}px) rotate(${tilt(p.card.id)}deg)`, zIndex: k + 1 } as CSSProperties}
+              >
+                <CardFace card={p.card} />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* The trick on the table (or the one just taken). */}
-      <div className="fz-trick">
-        {(g.trick.length ? g.trick : (g.lastTrick?.cards ?? [])).map((p) => (
-          <div key={p.card.id} className={`fz-trick-card${!g.trick.length && g.lastTrick?.winner === p.seat ? ' won' : ''}${!g.trick.length ? ' done' : ''}`}>
-            <CardFace card={p.card} />
-            <span className="fz-trick-who">{name(p.seat)}</span>
-          </div>
-        ))}
-        {!g.trick.length && g.lastTrick && <p className="fz-took">{t('{name} takes the trick', { name: name(g.lastTrick.winner) })}</p>}
-        {/* Before the first card: the card turned up for trump. */}
-        {!g.trick.length && !g.lastTrick && (
-          <div className="fz-trick-card turned">
-            {g.turned ? <CardFace card={g.turned} /> : <CardBack />}
-            <span className="fz-trick-who">{t('Turned up')}</span>
-          </div>
-        )}
-      </div>
+      {/* You: your bid, your tricks beside you, your score. */}
+      {me >= 0 && (
+        <div className="fz-mine">
+          <Tricks n={g.won[me]} />
+          <span className="fz-mine-bid">{g.bids[me] == null ? t('No bid yet') : t('{won} of {bid} tricks', { won: g.won[me], bid: g.bids[me]! })}</span>
+          <span className="fz-seat-score">{t('{n} pts', { n: g.scores[me] })}</span>
+        </div>
+      )}
 
-      <p className="fz-status" aria-live="polite">
+      <p className={`fz-status${myMove ? ' mine' : ''}`} aria-live="polite">
         {status}
       </p>
 
-      {g.phase === 'trump' && mine && (
-        <div className="fz-picks">
-          {FACTIONS.map((f) => (
+      {/* What you can do now, always the same height (so nothing below moves). */}
+      <div className="fz-picks">
+        {g.taking != null && (g.taking === me || (isHost && stale)) ? (
+          <BigButton
+            onClick={() => {
+              buzz([10, 30, 10]);
+              act((x) => takeTrick(x));
+            }}
+          >
+            {g.taking === me ? t('Take the trick') : t('Take it for {name}', { name: name(g.taking) })}
+          </BigButton>
+        ) : !dealing && g.phase === 'trump' && mine ? (
+          FACTIONS.map((f) => (
             <button key={f} type="button" className={`fz-pick ${f}`} onClick={() => act((x) => chooseTrump(x, me, f))}>
               <Sigil faction={f} on /> {t(FACTION_NAME[f])}
             </button>
-          ))}
-        </div>
-      )}
-      {g.phase === 'bidding' && mine && (
-        <div className="fz-picks">
-          {Array.from({ length: g.round + 1 }, (_, n) => (
-            <button
-              key={n}
-              type="button"
-              className="fz-bid-btn"
-              onClick={() => {
-                sfx.pop();
-                buzz(10);
-                act((x) => bid(x, me, n));
-              }}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      )}
+          ))
+        ) : !dealing && g.phase === 'bidding' && mine ? (
+          <div className="fz-bids">
+            {Array.from({ length: g.round + 1 }, (_, n) => (
+              <button
+                key={n}
+                type="button"
+                className="fz-bid-btn"
+                onClick={() => {
+                  sfx.pop();
+                  buzz(10);
+                  act((x) => bid(x, me, n));
+                }}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       {/* Your hand, fanned as you'd hold it: what you may play now stands up. */}
       {me >= 0 ? (
         <HandFan
-          className="fz-fan"
+          className={`fz-fan fz-hand${dealing ? ' dealing' : ''}${myMove ? ' hop' : ''}`}
           cards={shown}
           keyOf={(c) => c.id}
-          width={hand.length <= 8 ? 76 : hand.length <= 13 ? 66 : 58}
+          width={hand.length <= 8 ? 82 : hand.length <= 13 ? 70 : 60}
           ratio={1.5}
           sorted={sorted}
           onSort={toggleSort}
           label={t('Your hand')}
           card={(c) => {
-            const ok = g.phase === 'playing' && mine && legal(g, me, c);
+            const ok = !dealing && g.phase === 'playing' && mine && legal(g, me, c);
+            const k = hand.findIndex((x) => x.id === c.id);
             return (
               <button
                 type="button"
-                className={`fz-hand-card${ok ? ' ok' : ''}${g.phase === 'playing' && mine && !ok ? ' dim' : ''}`}
+                className={`fz-hand-card${ok ? ' ok' : ''}${!ok && g.phase === 'playing' ? ' dim' : ''}`}
+                style={{ '--i': k } as CSSProperties}
                 disabled={!ok}
-                onClick={() => {
-                  sfx.pop();
+                aria-label={cardName(c)}
+                onClick={(e) => {
+                  launch.current = e.currentTarget.getBoundingClientRect();
                   buzz(10);
                   act((x) => playCard(x, me, c.id));
                 }}
@@ -307,6 +479,63 @@ function Table({
   );
 }
 
+/** The tricks someone has taken, face down beside them: a little stack, one card per trick. */
+function Tricks({ n }: { n: number }) {
+  return (
+    <span className="fz-tricks" role="img" aria-label={t('{n} tricks', { n })}>
+      {Array.from({ length: Math.min(n, 8) }, (_, k) => (
+        <i key={k} style={{ '--k': k } as CSSProperties} />
+      ))}
+    </span>
+  );
+}
+
+/** The table's size, kept up to date. */
+function useSize(ref: RefObject<HTMLElement | null>) {
+  const [size, setSize] = useState({ w: 360, h: 360 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setSize({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    if (typeof ResizeObserver !== 'function') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return size;
+}
+
+/** How a card lies on the trick: a little turned, the same on every phone. */
+const tilt = (id: number) => ((id * 37) % 25) - 12;
+
+/** The table's colour under a trump: a deep shade of it in the dark, a pale one in the light. */
+function skyColor(f: Faction) {
+  const root = document.documentElement;
+  const ground = getComputedStyle(root).getPropertyValue('--bg').trim();
+  const c = parseColor(ground);
+  const dark = !c || c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 < 128;
+  return mix(ground, FACTION_COLOR[f], dark ? 0.34 : 0.22);
+}
+
+/** The colour pours out from the trump card over the whole screen; returns when it's done (ms). */
+function flood(from: DOMRect | null, color: string, delay: number) {
+  if (reducedMotion()) return 0;
+  const el = document.createElement('div');
+  el.className = 'fz-flood';
+  el.style.background = color;
+  const x = from ? from.left + from.width / 2 : innerWidth / 2;
+  const y = from ? from.top + from.height / 2 : innerHeight / 2;
+  const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.body.appendChild(el);
+  const duration = 900;
+  const a = el.animate([{ clipPath: `circle(0px at ${x}px ${y}px)` }, { clipPath: `circle(${Math.ceil(r)}px at ${x}px ${y}px)` }], { duration, delay, easing: 'cubic-bezier(0.55, 0, 0.25, 1)', fill: 'both' });
+  // Gone a moment after the page itself has taken the colour.
+  a.onfinish = () => window.setTimeout(() => el.remove(), 120);
+  a.oncancel = () => el.remove();
+  return delay + duration;
+}
+
 /**
  * While a trump is turned up, the whole screen takes its colour (the strip under the clock too): a
  * deep shade of it in the dark, a pale one in the light.
@@ -316,10 +545,7 @@ function useTrumpSky(trump: Faction | null) {
     if (!trump) return;
     const root = document.documentElement;
     const own = root.style.getPropertyValue('--bg');
-    const ground = getComputedStyle(root).getPropertyValue('--bg').trim();
-    const c = parseColor(ground);
-    const dark = !c || c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 < 128;
-    const sky = mix(ground, FACTION_COLOR[trump], dark ? 0.34 : 0.22);
+    const sky = skyColor(trump);
     root.style.setProperty('--bg', sky);
     const release = tintTop(sky);
     return () => {
@@ -330,7 +556,7 @@ function useTrumpSky(trump: Faction | null) {
   }, [trump]);
 }
 
-/** A faction's sign, as on the back of the cards: a flame, a drop, a leaf, a star. */
+/** A faction's sign: a flame, a drop, a leaf, a star. */
 const SIGIL: Record<Faction, ReactNode> = {
   fire: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z" />,
   water: <path d="M12 2.8c-2.8 3.9-6.2 7.6-6.2 11.3a6.2 6.2 0 0 0 12.4 0c0-3.7-3.4-7.4-6.2-11.3z" />,
@@ -351,31 +577,98 @@ export function Sigil({ faction, on }: { faction: Faction; on?: boolean }) {
   );
 }
 
-/** The art of a card, from the sheet (art.webp, 8 across, 7 down): the four factions' 1 to 12, then four Archmages, four Fools. */
-function artAt(i: number): CSSProperties {
-  return { backgroundImage: `url(${art})`, backgroundPosition: `${((i % 8) / 7) * 100}% ${(Math.floor(i / 8) / 6) * 100}%` };
+/** Where the signs sit on a card of each number (100 × 150), as on a deck of playing cards: two
+ *  columns and a middle one; the lower half upside down. */
+const L = 31;
+const C = 50;
+const R = 69;
+const FIVE = [34, 54.5, 75, 95.5, 116];
+const FOUR = [34, 61.3, 88.7, 116];
+const sides = (ys: number[]) => ys.flatMap((y) => [[L, y] as const, [R, y] as const]);
+const PIPS: Record<number, (readonly [number, number])[]> = {
+  2: [[C, 34], [C, 116]],
+  3: [[C, 34], [C, 75], [C, 116]],
+  4: sides([34, 116]),
+  5: [...sides([34, 116]), [C, 75]],
+  6: sides([34, 75, 116]),
+  7: [...sides([34, 75, 116]), [C, 54.5]],
+  8: [...sides([34, 75, 116]), [C, 54.5], [C, 95.5]],
+  9: [...sides(FOUR), [C, 75]],
+  10: [...sides(FOUR), [C, 47.7], [C, 102.3]],
+  11: [...sides(FOUR), [C, 40], [C, 75], [C, 110]],
+  12: [...sides(FIVE), [C, 44.75], [C, 105.25]],
+  13: [...sides(FIVE), [C, 44.75], [C, 75], [C, 105.25]],
+};
+
+/** One sign at (x, y), `size` across, turned upside down in the lower half. */
+function Pip({ f, x, y, size }: { f: Faction; x: number; y: number; size: number }) {
+  const k = size / 24;
+  return (
+    <g transform={`translate(${x} ${y})${y > 75 ? ' rotate(180)' : ''} translate(${-size / 2} ${-size / 2}) scale(${k})`} fill="#fff" color="#fff">
+      {SIGIL[f]}
+    </g>
+  );
 }
 
-function CardFace({ card }: { card: Card }) {
+/** The number and the sign in a corner (top left; the bottom right is the same turned round); no
+ *  number: the sign alone, a little bigger. */
+function Index({ label, children }: { label?: string; children: ReactNode }) {
+  const one = label ? (
+    <>
+      <text x="11" y="19" textAnchor="middle" className="fz-idx">
+        {label}
+      </text>
+      <g transform="translate(5.5 23) scale(0.46)">{children}</g>
+    </>
+  ) : (
+    <g transform="translate(4 5) scale(0.62)">{children}</g>
+  );
+  return (
+    <>
+      {one}
+      <g transform="rotate(180 50 75)">{one}</g>
+    </>
+  );
+}
+
+/** A card: all in its faction's colour, the number in two corners and as many signs in the middle
+ *  as it counts (the 1 one big sign); an Archmage night blue with a gold star, a Fool pale with a moon. */
+export function CardFace({ card }: { card: Card }) {
   if (card.kind !== 'number') {
-    const v = (card.id >> 1) % 4;
-    return <span className={`fz-card ${card.kind}`} role="img" aria-label={card.kind === 'archmage' ? t('Archmage') : t('Fool')} style={artAt(48 + (card.kind === 'fool' ? 4 : 0) + v)} />;
+    const mage = card.kind === 'archmage';
+    const ink = mage ? '#e2c27a' : '#5b5446';
+    const glyph = mage ? STAR : MOON;
+    return (
+      <svg className={`fz-card ${card.kind}`} viewBox="0 0 100 150" role="img" aria-label={mage ? t('Archmage') : t('Fool')}>
+        <rect x="0" y="0" width="100" height="150" rx="9" className="fz-card-ground" />
+        <rect x="4.5" y="4.5" width="91" height="141" rx="6" fill="none" stroke={ink} strokeOpacity="0.45" strokeWidth="0.8" />
+        <g color={ink} fill={ink}>
+          <Index>{glyph}</Index>
+          {mage && <circle cx="50" cy="75" r="27" fill="none" stroke={ink} strokeWidth="0.9" strokeOpacity="0.6" />}
+          <g transform="translate(26 51) scale(2)">{glyph}</g>
+        </g>
+      </svg>
+    );
   }
   const f = card.faction;
   return (
-    <span className={`fz-card ${f}`} role="img" aria-label={`${t(FACTION_NAME[f])} ${card.rank}`} style={card.rank <= 12 ? artAt(FACTIONS.indexOf(f) * 12 + card.rank - 1) : undefined}>
-      {/* The 13 of each faction is its seal: the sign big in the rings of the back. */}
-      {card.rank === 13 && (
-        <span className="fz-seal">
-          <Sigil faction={f} />
-        </span>
-      )}
-      <span className="fz-index">
-        <span className="fz-rank">{card.rank}</span>
-        <Sigil faction={f} />
-      </span>
-    </span>
+    <svg className={`fz-card ${f}`} viewBox="0 0 100 150" role="img" aria-label={`${t(FACTION_NAME[f])} ${card.rank}`}>
+      <rect x="0" y="0" width="100" height="150" rx="9" className="fz-card-ground" />
+      <rect x="4.5" y="4.5" width="91" height="141" rx="6" fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="0.8" />
+      <g fill="#fff" color="#fff">
+        <Index label={String(card.rank)}>{SIGIL[f]}</Index>
+      </g>
+      {card.rank === 1 ? <Pip f={f} x={50} y={75} size={44} /> : PIPS[card.rank].map(([x, y], k) => <Pip key={k} f={f} x={x} y={y} size={card.rank >= 11 ? 15 : 18} />)}
+    </svg>
   );
+}
+
+const STAR = <path d="M12 1.5l2.2 6.6 6.6-2.4-4 5.8 5.7 3.5-6.9.4.9 6.9L12 17.6 7.5 22.3l.9-6.9-6.9-.4 5.7-3.5-4-5.8 6.6 2.4z" />;
+const MOON = <path d="M15.5 3.2A9 9 0 1 0 20.8 15 7.2 7.2 0 0 1 15.5 3.2z" />;
+
+function cardName(c: Card) {
+  if (c.kind === 'number') return `${t(FACTION_NAME[c.faction])} ${c.rank}`;
+  return c.kind === 'archmage' ? t('Archmage') : t('Fool');
 }
 
 /** The back of a card, as drawn: gold rings and rays on near-black, the four signs round a star. */

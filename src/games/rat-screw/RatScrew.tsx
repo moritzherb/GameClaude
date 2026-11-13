@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -26,7 +27,6 @@ const RULE_NAME: Record<SlapRule, string> = {
   joker: tx('Joker'),
   double: tx('Double'),
   sandwich: tx('Sandwich'),
-  'top-bottom': tx('Top bottom'),
   tens: tx('Tens'),
   run: tx('Four in a row'),
   marriage: tx('Marriage'),
@@ -132,6 +132,7 @@ function Table({
   const name = (i: number) => seats[i]?.name ?? t('Someone');
   const mine = me >= 0 ? g.piles[me] : [];
   const myTurn = me >= 0 && g.turn === me && g.claim == null && g.winner == null && mine.length > 0;
+  useYourTurn(myTurn);
   const myClaim = me >= 0 && g.claim === me;
   const out = me >= 0 && g.out[me];
   const others = seats.map((s, i) => ({ s, i })).filter(({ i }) => i !== me);
@@ -191,11 +192,21 @@ function Table({
       {/* The middle: the top card, the ones before it peeking out under it. */}
       <div className="rs-middle" style={{ '--half': (fan.length - 1) / 2 } as CSSProperties} aria-label={t('{n} cards in the middle', { n: g.middle.length })}>
         {fan.map((c, k) => (
-          <div key={`${g.middle.length - fan.length + k}`} className="rs-fan-card" style={{ '--k': k - (fan.length - 1), '--tilt': `${((g.middle.length - fan.length + k) * 37) % 13 - 6}deg` } as CSSProperties}>
+          <div
+            key={`${g.middle.length - fan.length + k}`}
+            // The bottom one shows the edges of the cards under it (more in the pile than fanned out).
+            className={`rs-fan-card${k === 0 && g.middle.length > FAN ? ' under' : ''}`}
+            style={{ '--k': k - (fan.length - 1), '--tilt': `${((g.middle.length - fan.length + k) * 37) % 13 - 6}deg`, '--under': Math.min(3, g.middle.length - FAN) } as CSSProperties}
+          >
             <Face card={c} />
           </div>
         ))}
-        {g.middle.length > FAN && <span className="rs-middle-more">+{g.middle.length - FAN}</span>}
+        {/* What just happened (a slap, a wrong one, a pile taken): big in the middle for a moment. */}
+        {g.last && (
+          <span key={flashKey(g)} className={`rs-flash ${g.last.k}`} aria-hidden>
+            {flashText(g.last, name)}
+          </span>
+        )}
         {myClaim && (
           <BigButton
             className="rs-take"
@@ -250,10 +261,21 @@ function Table({
   );
 }
 
+/** Changes with every new event, so the flash plays again for each one. */
+const flashKey = (g: Game) => `${g.last?.k}:${g.last?.by}:${g.middle.length}:${g.piles.map((p) => p.length).join(',')}`;
+
+/** The flash: the slap rule in big, or who took the pile, or the wrong slap. */
+function flashText(e: Entry, name: (i: number) => string) {
+  if (e.k === 'slap') return `${t(RULE_NAME[e.rule])}!`;
+  if (e.k === 'wrong') return t('Wrong slap');
+  if (e.k === 'out') return t('{name} is out', { name: name(e.by) });
+  return t('{name} takes it', { name: name(e.by) });
+}
+
 function lastText(e: Entry, name: (i: number) => string) {
   const who = name;
   if (e.k === 'slap') return t('{name} slaps: {rule}. The pile ({n}) is theirs.', { name: who(e.by), rule: t(RULE_NAME[e.rule]), n: e.n });
-  if (e.k === 'wrong') return t('{name} slapped wrong: a card under the pile.', { name: who(e.by) });
+  if (e.k === 'wrong') return e.gave === 1 ? t('{name} slapped wrong: a card to the other player.', { name: who(e.by) }) : t('{name} slapped wrong: a card to each of the others.', { name: who(e.by) });
   if (e.k === 'out') return t('{name} slapped wrong without cards: out.', { name: who(e.by) });
   return t('{name} takes the pile ({n}).', { name: who(e.by), n: e.n });
 }

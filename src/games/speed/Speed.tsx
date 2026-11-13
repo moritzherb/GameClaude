@@ -31,16 +31,23 @@ interface Match {
   seats: [Seat, Seat];
   /** 3-2-1 while the middle cards are about to be turned over. */
   count: number;
+  /** Per player, the number of their latest move the host has taken in (so a phone can tell its own move is in). */
+  acks?: Record<string, number>;
 }
 
 type Act = { t: 'ready' } | { t: 'draw' } | { t: 'back' } | { t: 'sort' } | { t: 'play'; card: Card };
 
-type Msg = { g: 'sp'; type: 'state'; match: Match | null } | { g: 'sp'; type: 'act'; act: Act } | { g: 'sp'; type: 'sync' };
+type Msg = { g: 'sp'; type: 'state'; match: Match | null } | { g: 'sp'; type: 'act'; act: Act; n?: number } | { g: 'sp'; type: 'sync' };
 
 const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (d as Msg).g === 'sp';
 
 const STORE_KEY = 'speed:match';
 const COUNT_MS = 650;
+/** Three cards tapped that don't fit within this long (ms)… */
+const SPAM_MISSES = 3;
+const SPAM_WINDOW = 1200;
+/** …and the hand stays locked this long (ms). */
+const SPAM_LOCK = 1500;
 
 function apply(m: Match, fromId: string, act: Act): Match {
   const who = m.seats.findIndex((s) => s.id === fromId);
@@ -87,20 +94,35 @@ function useSpeed() {
 
   // A move made while the connection is down goes out once it's back.
   const queued = useQueuedSend(sendToHost);
+  // A guest's own moves show at once (Speed is a race: no waiting for the host's answer); the host's
+  // state takes over again once it has the move in (or after a while, if the move got lost).
+  const moves = useRef({ n: 0, at: 0 });
   const act = useCallback(
     (a: Act) => {
-      if (isHost) setHostMatch((m) => (m ? apply(m, myId, a) : m));
-      else queued({ g: 'sp', type: 'act', act: a } satisfies Msg);
+      if (isHost) {
+        setHostMatch((m) => (m ? apply(m, myId, a) : m));
+        return;
+      }
+      const n = ++moves.current.n;
+      moves.current.at = Date.now();
+      setGuestMatch((m) => (m ? apply(m, myId, a) : m));
+      queued({ g: 'sp', type: 'act', act: a, n } satisfies Msg);
     },
     [isHost, myId, queued],
   );
 
-  // Host: hear the guests.
+  // Host: hear the guests (and note which of their moves are in).
   useEffect(() => {
     if (!isHost) return;
     return onGame((data, fromId) => {
       if (!isMsg(data) || !fromId) return;
-      if (data.type === 'act') setHostMatch((m) => (m ? apply(m, fromId, data.act) : m));
+      if (data.type === 'act')
+        setHostMatch((m) => {
+          if (!m) return m;
+          const next = apply(m, fromId, data.act);
+          const had = m.acks?.[fromId] ?? 0;
+          return data.n && data.n > had ? { ...next, acks: { ...m.acks, [fromId]: data.n } } : next;
+        });
     });
   }, [isHost, onGame]);
 
@@ -139,9 +161,12 @@ function useSpeed() {
   useEffect(() => {
     if (isHost) return;
     return onGame((data) => {
-      if (isMsg(data) && data.type === 'state') take(data.match);
+      if (!isMsg(data) || data.type !== 'state') return;
+      // Still without this phone's latest move: keep showing it, for up to 2 s.
+      const behind = data.match && (data.match.acks?.[myId] ?? 0) < moves.current.n && Date.now() - moves.current.at < 2000;
+      if (!behind) take(data.match);
     });
-  }, [isHost, onGame, take]);
+  }, [isHost, onGame, take, myId]);
   const ask = useCallback(() => sendToHost({ g: 'sp', type: 'sync' } satisfies Msg), [sendToHost]);
   useResync(!isHost, ask);
 
@@ -164,6 +189,15 @@ export default function Speed() {
   const online = room.members.filter((m) => m.online);
   const [picked, setPicked] = useState<string[]>([]);
   const [shake, setShake] = useState<string | null>(null);
+  // Tapping away at cards that don't fit (hoping one will the moment it can): three misses in
+  // quick succession and your hand locks for a moment.
+  const misses = useRef<number[]>([]);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const id = window.setTimeout(() => setLockedUntil(0), Math.max(0, lockedUntil - Date.now()));
+    return () => window.clearTimeout(id);
+  }, [lockedUntil]);
 
   // Confetti for the winner (and whoever's watching), not for the one who lost.
   const winner = match?.game.winner;
@@ -248,9 +282,18 @@ export default function Speed() {
   const nope = (i: number) => {
     buzz([30, 30, 30]);
     setShake(`${i}-${Date.now()}`);
+    const now = Date.now();
+    misses.current = [...misses.current.filter((at) => now - at < SPAM_WINDOW), now];
+    if (misses.current.length >= SPAM_MISSES) {
+      misses.current = [];
+      sfx.boo();
+      buzz([60, 40, 60]);
+      setLockedUntil(now + SPAM_LOCK);
+    }
   };
 
   const tapCard = (i: number) => {
+    if (lockedUntil > Date.now()) return;
     const side = g.sides[mine];
     const card = side.hand[i];
     if (overDrawn(side)) {
@@ -295,6 +338,7 @@ export default function Speed() {
           other={match.seats[them].name}
           known={known}
           shake={shake}
+          locked={lockedUntil > 0}
           onCard={tapCard}
           onPile={tapPile}
           onSort={() => act({ t: 'sort' })}
@@ -334,13 +378,19 @@ function Opponent({ g, who, seat }: { g: Game; who: Who; seat: Seat }) {
       <span className="bd-avatar xs" style={{ background: seat.color }}>
         <Avatar avatar={seat.avatar} photo={photoOf(seat.id)} />
       </span>
-      <span className="sp-name">{seat.name}</span>
-      <span className="sp-opp-hand" aria-label={t('{n} cards in hand', { n: side.hand.length })}>
+      <span className="sp-opp-text">
+        <span className="sp-name">{seat.name}</span>
+        {/* How close they are: what they hold, what's still in their pile. */}
+        <span className="sp-opp-stats">{t('{h} in hand · {p} in the pile', { h: side.hand.length, p: side.pile.length })}</span>
+      </span>
+      <span className="sp-opp-hand" aria-hidden>
         {side.hand.map((_, i) => (
           <i key={i} className={i >= HAND_MAX ? 'extra' : ''} />
         ))}
       </span>
-      <span className="sp-left">{left === 1 ? t('1 card left') : t('{n} cards left', { n: left })}</span>
+      <span className="sp-opp-left" aria-label={left === 1 ? t('1 card left') : t('{n} cards left', { n: left })}>
+        {left}
+      </span>
       {g.phase === 'ready' && <span className={`sp-opp-ready${g.ready[who] ? ' on' : ''}`}>{g.ready[who] ? t('Ready') : '…'}</span>}
     </div>
   );
@@ -353,6 +403,7 @@ function MyHalf({
   other,
   known,
   shake,
+  locked,
   onCard,
   onPile,
   onSort,
@@ -363,6 +414,7 @@ function MyHalf({
   other: string;
   known: boolean;
   shake: string | null;
+  locked: boolean;
   onCard: (i: number) => void;
   onPile: () => void;
   onSort: () => void;
@@ -375,7 +427,12 @@ function MyHalf({
     <section className="sp-mine">
       {extra > 0 && <p className="sp-warn">{extra === 1 ? t('Too many cards! Put 1 back.') : t('Too many cards! Put {n} back.', { n: extra })}</p>}
 
-      <div className={`sp-hand${side.hand.length > HAND_MAX ? ' crowded' : ''}`}>
+      <div className={`sp-hand${side.hand.length > HAND_MAX ? ' crowded' : ''}${locked ? ' locked' : ''}`}>
+        {locked && (
+          <span className="sp-locked" role="status">
+            {t('Too fast! Wait a moment')}
+          </span>
+        )}
         {side.hand.map((c, i) => {
           const isExtra = i >= HAND_MAX;
           return (
@@ -456,10 +513,13 @@ function Middle({ g, count }: { g: Game; count: number | null }) {
           <span className="sp-stuck-sub">{t('Two new cards are coming…')}</span>
         </span>
       )}
+      {/* The table dimmed and blurred all over while it counts down (it stays; only the number pops). */}
       {count != null && count > 0 && (
-        <span className="sp-count" key={count}>
+        <span className="sp-count">
           {restart && <span className="sp-count-label">{t('New cards in')}</span>}
-          {count}
+          <span className="sp-count-n" key={count}>
+            {count}
+          </span>
         </span>
       )}
     </div>

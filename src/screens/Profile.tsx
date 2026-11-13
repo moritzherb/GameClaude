@@ -55,8 +55,11 @@ export default function Profile() {
 
   return (
     <main className="screen profile-page">
-      <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="large-title">{t('Your profile')}</h1>
+      {/* Back and title stay at the top while the page scrolls under them. */}
+      <div className="screen-head">
+        <TopBar onBack={() => navigate(paths.home)} />
+        <h1 className="large-title">{t('Your profile')}</h1>
+      </div>
       <p className="lead">{t('What the others see when you play together in a room. It stays on this phone.')}</p>
 
       <section className="profile-card">

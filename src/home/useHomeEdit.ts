@@ -12,9 +12,12 @@ const FLICK = 130;
 const EDGE = 26;
 const EDGE_WAIT = 550;
 /** Between two reorders, so the apps sliding away don't swap back under the finger. */
-const SETTLE = 180;
+const SETTLE = 260;
+/** The finger rests over another app this long before the apps make room (as on an iPhone: passing
+ *  over apps on the way somewhere doesn't shuffle them). */
+const DWELL = 220;
 /** The apps making room, and the dragged one landing. */
-const SLIDE = 260;
+const SLIDE = 320;
 const LAND = 200;
 const EASE = 'cubic-bezier(0.2, 0.85, 0.25, 1)';
 
@@ -41,6 +44,10 @@ interface Press {
   frame?: number;
   edge?: number;
   last: number;
+  /** The app (or page end) the finger is resting over, since when, and the timer to act then. */
+  over?: string;
+  overAt?: number;
+  dwell?: number;
 }
 
 /** The pages, when there are several (iPhone, home/Springboard.tsx). */
@@ -143,6 +150,7 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     if (!p) return;
     window.clearTimeout(p.timer);
     window.clearTimeout(p.edge);
+    window.clearTimeout(p.dwell);
     if (p.frame) cancelAnimationFrame(p.frame);
     if (!p.dragging) return;
     root.current?.classList.remove('dragging');
@@ -172,14 +180,26 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
     }
   };
 
-  /** The finger over another app: the dragged one takes its place. */
+  /** Where an app really is in the grid (not where it is mid-slide): its slide doesn't count. */
+  const placeOf = (a: HTMLElement) => {
+    const r = a.getBoundingClientRect();
+    const slide = a.getAnimations()[0]?.effect;
+    if (!slide || !(slide instanceof KeyframeEffect)) return r;
+    // Mid-slide: the transform it has now, taken off.
+    const m = new DOMMatrix(getComputedStyle(a).transform === 'none' ? undefined : getComputedStyle(a).transform);
+    return new DOMRect(r.left - m.e, r.top - m.f, r.width, r.height);
+  };
+
+  /** The finger resting over another app: the dragged one takes its place. */
   const reorder = (p: Press) => {
     const now = Date.now();
-    if (now - p.last < SETTLE) return;
     const over = apps().find((a) => {
       if (a.dataset.id === p.id) return false;
-      const r = a.getBoundingClientRect();
-      return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom && r.right > 0 && r.left < window.innerWidth;
+      const r = placeOf(a);
+      // The middle of the app, not its very edge: brushing past doesn't count.
+      const ix = r.width * 0.15;
+      const iy = r.height * 0.15;
+      return p.x >= r.left + ix && p.x <= r.right - ix && p.y >= r.top + iy && p.y <= r.bottom - iy && r.right > 0 && r.left < window.innerWidth;
     });
     // Over an empty spot of a page: to the end of that page.
     const page = over
@@ -189,13 +209,24 @@ export function useHomeEdit(root: RefObject<HTMLElement | null>, ids: string[], 
           return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
         });
     const target = over ?? [...(page?.querySelectorAll<HTMLElement>('.app[data-id]') ?? [])].pop();
-    if (!target) return;
+    const key = target?.dataset.id;
+    if (key !== p.over) {
+      // Something new under the finger: wait a moment to see whether it stays there.
+      p.over = key;
+      p.overAt = now;
+      window.clearTimeout(p.dwell);
+      p.dwell = key ? window.setTimeout(() => press.current === p && p.dragging && reorder(p), DWELL) : undefined;
+      return;
+    }
+    if (!target || now - (p.overAt ?? now) < DWELL || now - p.last < SETTLE) return;
     const list = idsRef.current;
     const from = list.indexOf(p.id);
     const to = list.indexOf(target.dataset.id!);
     if (from < 0 || to < 0 || from === to) return;
     before.current = new Map(apps().map((a) => [a.dataset.id!, a.getBoundingClientRect()]));
     p.last = now;
+    // The same app under the finger again (after the slide) needs another rest before it moves.
+    p.overAt = now;
     onOrder(moveTo(list, from, to));
   };
 

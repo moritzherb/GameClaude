@@ -14,6 +14,7 @@ import { isNative, toNative, watchScreens } from './lib/native';
 import { BOOT_GROUND, SPLASH_MS, fadeBoot } from './lib/launch';
 import { coverTop } from './lib/themeColor';
 import { watchForUpdates } from './lib/update';
+import ErrorBoundary from './components/ErrorBoundary';
 import { RoomProvider } from './net/RoomProvider';
 import { AppProvider } from './state/AppState';
 
@@ -67,11 +68,15 @@ watchTyping();
 void fontsReady().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <AppProvider>
-        <RoomProvider>
-          <App />
-        </RoomProvider>
-      </AppProvider>
+      {/* Even a crash outside a screen (in what holds the room or the settings) shows a way out
+          instead of a dark page with nothing to press. */}
+      <ErrorBoundary>
+        <AppProvider>
+          <RoomProvider>
+            <App />
+          </RoomProvider>
+        </AppProvider>
+      </ErrorBoundary>
     </StrictMode>,
   );
   // The store app keeps its splash screen up until the first screen is drawn.

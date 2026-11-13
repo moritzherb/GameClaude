@@ -229,7 +229,9 @@ export function applyAction(s: GameState, playerId: string, a: Action): GameStat
     }
 
     case 'pass': {
-      if (!s.allowPass || s.phase !== 'turns' || playerId !== s.turnId) return s;
+      // Passing: when the table allows it, and always in the last turn after a Stop (staying with
+      // the cards you have).
+      if (!(s.allowPass || s.stopperId) || s.phase !== 'turns' || playerId !== s.turnId) return s;
       return advance({ ...s, log: [...s.log, { by: playerId, kind: 'pass' as const }].slice(-8) });
     }
 
@@ -313,6 +315,8 @@ export interface PlayerView {
   /** This phone's own cards (empty for spectators and players who are out). */
   hand: Card[];
   canStop: boolean;
+  /** Passing (keeping your cards) is allowed now: by the table's choice, or in the last turn after a Stop. */
+  canPass: boolean;
   /** True while Stop is blocked because not everyone has had a turn yet. */
   firstLap: boolean;
 }
@@ -332,6 +336,7 @@ export function viewFor(s: GameState, viewerId: string): PlayerView {
     allowPass: s.allowPass,
     hand: s.hands[viewerId] ?? [],
     canStop: canStop(s, viewerId),
+    canPass: s.phase === 'turns' && (s.allowPass || !!s.stopperId),
     firstLap: s.turns < active(s).length,
   };
 }

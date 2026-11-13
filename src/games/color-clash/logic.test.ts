@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { acceptOverload, callLast, catchLast, challengeOverload, draw, newDeck, newGame, pass, play, playable, type Card, type Game } from './logic';
+import { callLast, draw, newDeck, newGame, pass, play, playable, take, type Card, type Game } from './logic';
 
 let id = 1000;
 const n = (color: Card['color'], value: number): Card => ({ id: id++, color, kind: 'number', value });
@@ -15,10 +15,10 @@ const game = (hands: Card[][], topCard: Card, deck: Card[] = []): Game => ({
   color: topCard.color ?? 'crimson',
   drawn: null,
   lastCard: null,
-  calling: null,
-  overload: null,
+  penalty: null,
   winner: null,
-  last: null,
+  events: [],
+  seq: 0,
 });
 
 describe('Color Clash', () => {
@@ -27,7 +27,7 @@ describe('Color Clash', () => {
     expect(d.length).toBe(108);
     expect(new Set(d.map((c) => c.id)).size).toBe(108);
     const g = newGame(4);
-    expect(g.hands.every((h) => h.length === 7 || h.length === 9)).toBe(true);
+    expect(g.hands.every((h) => h.length === 7)).toBe(true);
     expect(g.discard[0].kind).not.toBe('overload');
   });
 
@@ -47,7 +47,7 @@ describe('Color Clash', () => {
   });
 
   it('blocks, turns round and burdens the next player', () => {
-    const three = (top: Card, card: Card) => game([[card, n('jade', 1)], [n('jade', 2)], [n('jade', 3)]], top, [n('amber', 4), n('amber', 5)]);
+    const three = (top: Card, card: Card) => game([[card, n('jade', 1), n('jade', 9)], [n('jade', 2)], [n('jade', 3)]], top, [n('amber', 4), n('amber', 5)]);
     let c = a('crimson', 'block');
     expect(play(three(n('crimson', 1), c), 0, c.id).turn).toBe(2);
     c = a('crimson', 'turnaround');
@@ -56,8 +56,14 @@ describe('Color Clash', () => {
     expect(g.turn).toBe(2);
     c = a('crimson', 'burden');
     const b = play(three(n('crimson', 1), c), 0, c.id);
-    expect(b.hands[1].length).toBe(3);
-    expect(b.turn).toBe(2);
+    expect(b.penalty).toEqual({ kind: 'burden', n: 2 });
+    expect(b.turn).toBe(1);
+    // Taken: two cards, and then it's still their turn to play.
+    const t = take(b, 1);
+    expect(t.hands[1].length).toBe(3);
+    expect(t.turn).toBe(1);
+    expect(t.penalty).toBe(null);
+    expect(t.events).toEqual([{ k: 'take', by: 1, n: 2 }]);
   });
 
   it('makes a Turnaround a Block with two players', () => {
@@ -84,38 +90,69 @@ describe('Color Clash', () => {
     expect(play(g, 0, red.id).discard.at(-1)).toEqual(red);
   });
 
-  it('lets an Overload be taken or challenged', () => {
-    const over = a(null, 'overload');
-    const deck = Array.from({ length: 12 }, (_, k) => n('amber', k % 9));
-    // Played fairly (no red left): a challenge costs the challenger six.
-    let g = play(game([[over, n('azure', 1)], [n('jade', 2)], [n('jade', 3)]], n('crimson', 1), deck), 0, over.id, 'jade');
-    expect(g.overload?.target).toBe(1);
-    expect(acceptOverload(g, 1).hands[1].length).toBe(5);
-    const c = challengeOverload(g, 1);
-    expect(c.hands[1].length).toBe(7);
-    expect(c.turn).toBe(2);
-    // Played with red still in hand (only possible here by building the state): the actor draws four.
-    g = { ...game([[n('crimson', 4)], [n('jade', 2)], [n('jade', 3)]], over, deck), overload: { actor: 0, target: 1, fair: false }, turn: 1 };
-    const u = challengeOverload(g, 1);
-    expect(u.hands[0].length).toBe(5);
-    expect(u.turn).toBe(1);
+  it('passes an Overload on with another, the penalty growing, until someone takes it', () => {
+    const o = () => a(null, 'overload');
+    const [o1, o2, o3] = [o(), o(), o()];
+    const deck = Array.from({ length: 20 }, (_, k) => n('amber', k % 9));
+    let g = game([[o1, n('azure', 1)], [o2, a('jade', 'burden'), n('jade', 2)], [o3, n('jade', 3)], [n('azure', 4)]], n('crimson', 1), deck);
+    g = play(g, 0, o1.id, 'jade');
+    expect(g.penalty).toEqual({ kind: 'overload', n: 4 });
+    // Only another Overload answers it, whatever the colour: no Burden on it.
+    expect(playable(g, 1, g.hands[1][1])).toBe(false);
+    expect(playable(g, 1, o2)).toBe(true);
+    expect(draw(g, 1)).toBe(g);
+    g = play(g, 1, o2.id, 'azure');
+    expect(g.penalty?.n).toBe(8);
+    g = play(g, 2, o3.id, 'azure');
+    expect(g.penalty?.n).toBe(12);
+    expect(g.turn).toBe(3);
+    g = take(g, 3);
+    expect(g.hands[3].length).toBe(13);
+    expect(g.turn).toBe(3);
+    expect(playable(g, 3, g.hands[3][0])).toBe(true);
   });
 
-  it('catches someone at one card who didn’t say so', () => {
+  it('stacks a Burden on a Burden, never an Overload on a Burden', () => {
+    const b1 = a('crimson', 'burden');
+    const b2 = a('azure', 'burden');
+    const over = a(null, 'overload');
+    const deck = Array.from({ length: 10 }, (_, k) => n('amber', k % 9));
+    let g = play(game([[b1, n('jade', 1)], [b2, over, n('jade', 2)], [n('jade', 3)]], n('crimson', 1), deck), 0, b1.id);
+    expect(playable(g, 1, over)).toBe(false);
+    g = play(g, 1, b2.id);
+    expect(g.penalty).toEqual({ kind: 'burden', n: 4 });
+    expect(take(g, 2).hands[2].length).toBe(5);
+  });
+
+  it('wants “Last card” right after going down to one, else 2 cards when the next one moves', () => {
     const red = n('crimson', 5);
-    const deck = [n('amber', 1), n('amber', 2)];
-    let g = play(game([[red, n('jade', 1)], [n('jade', 2)]], n('crimson', 1), deck), 0, red.id);
+    const deck = [n('amber', 1), n('amber', 2), n('amber', 3)];
+    // Not before: with two cards there's nothing to say yet.
+    const g0 = game([[red, n('jade', 1)], [n('crimson', 2), n('jade', 2), n('jade', 3)]], n('crimson', 1), deck);
+    expect(callLast(g0, 0)).toBe(g0);
+    let g = play(g0, 0, red.id);
     expect(g.lastCard).toEqual({ seat: 0, called: false });
-    expect(catchLast(g, 1).hands[0].length).toBe(3);
-    // Said in time: nothing to catch.
-    g = callLast(game([[red, n('jade', 1)], [n('jade', 2)]], n('crimson', 1), deck), 0);
-    g = play(g, 0, red.id);
-    expect(catchLast(g, 1).hands[0].length).toBe(1);
+    // Forgot: the next player's move costs them two.
+    const f = play(g, 1, g.hands[1][0].id);
+    expect(f.hands[0].length).toBe(3);
+    expect(f.lastCard).toBe(null);
+    expect(f.events[0]).toEqual({ k: 'forgot', by: 0, n: 2 });
+    // Said in time: nothing.
+    g = callLast(g, 0);
+    expect(g.lastCard).toEqual({ seat: 0, called: true });
+    expect(play(g, 1, g.hands[1][0].id).hands[0].length).toBe(1);
   });
 
   it('ends when a hand is empty', () => {
     const red = n('crimson', 5);
     const g = play(game([[red], [n('jade', 2)]], n('crimson', 1)), 0, red.id);
     expect(g.winner).toBe(0);
+  });
+
+  it('counts every move', () => {
+    const red = n('crimson', 5);
+    const g = game([[red, n('jade', 1)], [n('jade', 2)]], n('crimson', 1), [n('amber', 4)]);
+    expect(play(g, 0, red.id).seq).toBe(1);
+    expect(draw(g, 0).seq).toBe(1);
   });
 });

@@ -51,6 +51,8 @@ const speed: Record<string, string> = {
   'Pick other players': 'Andere Spieler wählen',
   Sort: 'Sortieren',
   'Sort your cards from low to high': 'Karten von klein nach groß sortieren',
+  '{h} in hand · {p} in the pile': '{h} auf der Hand · {p} im Stapel',
+  'Too fast! Wait a moment': 'Zu schnell! Kurz warten',
 };
 
 export default speed;

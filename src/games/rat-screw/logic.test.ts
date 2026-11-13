@@ -30,7 +30,8 @@ describe('Egyptian Rat Screw', () => {
   it('knows every slap rule', () => {
     expect(slapRule([c(5), c(5)])).toBe('double');
     expect(slapRule([c(5), c(7), c(5)])).toBe('sandwich');
-    expect(slapRule([c(9), c(3), c(4), c(9)])).toBe('top-bottom');
+    // Not a rule (any more): the pile's first card again on top.
+    expect(slapRule([c(9), c(3), c(4), c(9)])).toBe(null);
     expect(slapRule([c(3), c(7)])).toBe('tens');
     expect(slapRule([c(14), c(13), c(9)])).toBe('tens');
     expect(slapRule([c(5), c(6), c(7), c(8)])).toBe('run');
@@ -78,15 +79,18 @@ describe('Egyptian Rat Screw', () => {
     expect(g.challenger).toBe(1);
   });
 
-  it('wins the pile for the first right slap, and a wrong one costs a card under the pile', () => {
+  it('wins the pile for the first right slap; a wrong one gives every other player a card', () => {
     let g = game([[c(9)], [c(5)], [c(6)]], [c(4), c(4)], 2);
     g = slap(g, 1);
     expect(g.piles[1]).toEqual([c(5), c(4), c(4)]);
     expect(g.turn).toBe(1);
-    g = game([[c(9)], [c(5)]], [c(3), c(4)]);
+    g = game([[c(9), c(10), c(11)], [c(5)], [c(6)]], [c(3), c(4)]);
     g = slap(g, 0);
-    expect(g.piles[0]).toEqual([]);
-    expect(g.middle).toEqual([c(9), c(3), c(4)]);
+    expect(g.piles[0]).toEqual([c(11)]);
+    expect(g.piles[1]).toEqual([c(5), c(9)]);
+    expect(g.piles[2]).toEqual([c(6), c(10)]);
+    expect(g.middle).toEqual([c(3), c(4)]);
+    expect(g.last).toEqual({ k: 'wrong', by: 0, gave: 2 });
   });
 
   it('lets a player without cards slap in, and puts them out after a wrong slap', () => {

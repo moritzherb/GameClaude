@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../components/BigButton';
 import { gameNumber } from '../components/GameCard';
 import Intensity from '../components/Intensity';
@@ -31,12 +31,29 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
   const tooMany = !game.playersOptional && !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
   const range = playerRange(game);
   const name = cardName(t(game.name));
+  // Only the middle (the card, the numbers, the rules) scrolls, and only when it's longer than the
+  // room it has: else it stays still, no scrolling and no bounce.
+  const middle = useRef<HTMLDivElement>(null);
+  const [scrolls, setScrolls] = useState(false);
+  useLayoutEffect(() => {
+    const el = middle.current;
+    if (!el) return;
+    el.scrollTop = 0;
+    const check = () => setScrolls(el.scrollHeight > el.clientHeight + 1);
+    check();
+    if (typeof ResizeObserver !== 'function') return;
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    for (const c of Array.from(el.children)) ro.observe(c);
+    return () => ro.disconnect();
+  }, [game.id]);
 
   return (
     <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}`}>
       {/* New look: back to the home screen the game was opened from. */}
       <TopBar onBack={() => navigate(pop ? paths.home : paths.games())} />
 
+      <div ref={middle} className={`detail-middle${scrolls ? ' scrolls' : ''}`}>
       <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
         <span className="detail-no">{t('No. {n}', { n: gameNumber(game) })}</span>
         <span className="detail-emoji" aria-hidden>
@@ -71,6 +88,7 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
         <h2 className="section-title">{t('How to play')}</h2>
         <RulesList rules={game.rules} />
       </section>
+      </div>
 
       <div className={`sticky-action${game.online && game.component ? ' stack' : ''}`}>
         {game.online && !game.component ? (

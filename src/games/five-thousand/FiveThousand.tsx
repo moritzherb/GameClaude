@@ -6,7 +6,7 @@ import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { usePlaying, useTurnBubble } from '../../lib/turn';
+import { usePlaying, useTurnBubble, useYourTurn } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Finished from '../../components/Finished';
@@ -116,6 +116,8 @@ export function FiveThousandTable({
 }) {
   const local = seat === undefined;
   const mine = local || seat === g.current;
+  // Each on their own phone: it buzzes when it's yours.
+  useYourTurn(!local && mine && !g.end);
   const [shaking, setShaking] = useState(false);
   // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
   const [podium, setPodium] = useState(false);
@@ -595,16 +597,19 @@ function Table({
       ))}
       {bank && (
         <Tap className={`fk-bank${bank.banked ? ' banked' : ''}`} disabled={bank.disabled} onClick={bank.onClick} ariaLabel={`${bank.text} ${bank.amount}`}>
-          <span className="fk-bank-icon" aria-hidden>
-            💰
+          {/* Laid out in a box of its own (Safari lays a button's own content out its own way), sized
+              to the circle, the text in it sized to the circle too; still too long, it gets smaller. */}
+          <span className="fk-bank-in">
+            <span className="fk-bank-icon" aria-hidden>
+              💰
+            </span>
+            <FitText className="fk-bank-text" min={0.5}>
+              {bank.text}
+            </FitText>
+            <FitText className="fk-bank-amount" min={0.5}>
+              {bank.amount}
+            </FitText>
           </span>
-          {/* Inside the round button: smaller when long ("noch 500"), never cut off at its edge. */}
-          <FitText className="fk-bank-text" min={0.55}>
-            {bank.text}
-          </FitText>
-          <FitText className="fk-bank-amount" min={0.55}>
-            {bank.amount}
-          </FitText>
         </Tap>
       )}
       {coin && (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bid, chooseTrump, legal, maxRounds, newDeck, newGame, playCard, points, trickWinner, type Card, type Game, type Played } from './logic';
+import { bid, chooseTrump, legal, maxRounds, newDeck, newGame, playCard, points, takeTrick, trickWinner, type Card, type Game, type Played } from './logic';
 
 const num = (faction: 'fire' | 'water' | 'nature' | 'astral', rank: number, id = rank + faction.length * 100): Card => ({ id, kind: 'number', faction, rank });
 const mage = (id: number): Card => ({ id, kind: 'archmage' });
@@ -81,8 +81,30 @@ describe('fantasy trick-taking', () => {
     g = playCard(g, 1, 2);
     g = playCard(g, 2, 3);
     g = playCard(g, 0, 1);
+    // The trick waits on the table for its winner; nothing more can be played.
+    expect(g.taking).toBe(1);
+    expect(g.trick.length).toBe(3);
+    expect(g.won).toEqual([0, 0, 0]);
+    g = takeTrick(g);
     expect(g.won).toEqual([0, 1, 0]);
+    expect(g.trick).toEqual([]);
     expect(g.gained).toEqual([20, 30, 20]);
     expect(g.phase).toBe('summary');
+  });
+
+  it('lets no card go down while a trick waits to be taken; its winner leads next', () => {
+    let g: Game = { ...newGame(3), phase: 'playing', turn: 0, trump: null, bids: [0, 1, 0], hands: [[num('fire', 2, 1), num('water', 2, 11)], [num('fire', 9, 2), num('water', 3, 12)], [num('fire', 4, 3), num('water', 4, 13)]] };
+    g = playCard(playCard(playCard(g, 0, 1), 1, 2), 2, 3);
+    expect(g.turn).toBe(1);
+    expect(legal(g, 1, g.hands[1][0])).toBe(false);
+    g = takeTrick(g);
+    expect(g.lastTrick?.winner).toBe(1);
+    expect(g.phase).toBe('playing');
+    expect(legal(g, 1, g.hands[1][0])).toBe(true);
+  });
+
+  it('deals each round anew', () => {
+    const g = newGame(3);
+    expect(g.dealId).toBeGreaterThan(0);
   });
 });

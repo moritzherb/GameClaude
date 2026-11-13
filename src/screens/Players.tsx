@@ -64,8 +64,11 @@ export default function Players({ next }: { next: string | null }) {
 
   return (
     <main className="screen">
-      <TopBar onBack={done} />
-      <h1 className="large-title">{t('Players')}</h1>
+      {/* Back and title stay at the top while the page scrolls under them. */}
+      <div className="screen-head">
+        <TopBar onBack={done} />
+        <h1 className="large-title">{t('Players')}</h1>
+      </div>
 
       <form className="add-player" onSubmit={submit}>
         <input
