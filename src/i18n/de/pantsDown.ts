@@ -14,8 +14,8 @@ const pantsDown: Record<string, string> = {
     'Links vom Geber geht’s los: eine Karte mit der Mitte tauschen, alle drei tauschen oder STOPP sagen. In der ersten Runde gibt’s kein Stopp.',
   'Optional for big groups: passing (“schieben”) instead of swapping, switched on before dealing.':
     'Optional für große Runden: Schieben statt Tauschen, wird vor dem Austeilen eingeschaltet.',
-  'After a Stop everyone else gets one more turn, then all cards are shown.':
-    'Nach einem Stopp sind alle anderen noch einmal dran, dann kommen alle Karten auf den Tisch.',
+  'After a Stop everyone else gets one more turn (swap, or stay with your cards), then all cards are shown.':
+    'Nach einem Stopp sind alle anderen noch einmal dran (tauschen oder mit den eigenen Karten bleiben), dann kommen alle Karten auf den Tisch.',
   '31 in one suit = Pants down 👖 and three aces = Fire 🔥: the round ends at once.':
     '31 in einer Farbe = Hose runter 👖 und drei Asse = Feuer 🔥: Die Runde ist sofort vorbei.',
   'Any other three of a kind = 30½.': 'Drei Gleiche (außer Asse) = 30½.',
@@ -71,6 +71,7 @@ const pantsDown: Record<string, string> = {
     'Legst du sie in die Mitte, musst du die nächsten drei spielen – egal, was kommt.',
   'Swap {mine} ↔ {middle}': '{mine} ↔ {middle} tauschen',
   'Tap one of your cards and one in the middle to swap.': 'Tipp eine deiner Karten und eine aus der Mitte an, um zu tauschen.',
+  Stay: 'Bleiben',
   Pass: 'Schieben',
   'Swap all 3': 'Alle 3 tauschen',
   'Stop after round 1': 'Stopp erst nach Runde 1',

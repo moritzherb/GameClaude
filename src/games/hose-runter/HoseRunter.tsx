@@ -421,6 +421,12 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
                 {t('Your cards')}
                 {score && <strong> · {t('{points} points', { points: formatPoints(score.points) })}</strong>}
                 {score && score.kind !== 'suit' && <ScoreBadge score={score} />}
+                {/* Picked up: put them down again (here, under the cards, never over them). */}
+                {fanOpen && (
+                  <button type="button" className="hr-fan-close" onClick={() => setFanOpen(false)}>
+                    {t('Put them down')}
+                  </button>
+                )}
               </span>
             </>
           )}
@@ -457,7 +463,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
                   {!known && (
                     <p className="hr-hint">{fanOpen ? t('Tap one of your cards and one in the middle to swap.') : t('Tap your cards to pick them up.')}</p>
                   )}
-                  {view.allowPass && (
+                  {view.allowPass && !view.stopperId && (
                     <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
                       {t('Pass')}
                     </BigButton>
@@ -466,9 +472,16 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
                     <BigButton variant="light" onClick={() => send({ type: 'swapAll' })}>
                       {t('Swap all 3')}
                     </BigButton>
-                    <BigButton variant="danger" disabled={!view.canStop} onClick={() => send({ type: 'stop' })}>
-                      {view.firstLap ? t('Stop after round 1') : view.stopperId ? t('Stop called') : t('Stop')}
-                    </BigButton>
+                    {view.stopperId ? (
+                      // Someone said Stop: your last turn. Happy with your cards? Stay.
+                      <BigButton variant="glass" disabled={!view.canPass} onClick={() => send({ type: 'pass' })}>
+                        {t('Stay')}
+                      </BigButton>
+                    ) : (
+                      <BigButton variant="danger" disabled={!view.canStop} onClick={() => send({ type: 'stop' })}>
+                        {view.firstLap ? t('Stop after round 1') : t('Stop')}
+                      </BigButton>
+                    )}
                   </div>
                 </>
               )}
@@ -512,11 +525,6 @@ function HandFan({
           <PlayingCard card={c} size="lg" />
         </Tap>
       ))}
-      {open && (
-        <button type="button" className="hr-fan-close" onClick={onToggle}>
-          {t('Put them down')}
-        </button>
-      )}
     </div>
   );
 }

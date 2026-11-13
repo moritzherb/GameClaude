@@ -131,6 +131,22 @@ describe('turns', () => {
     expect(g.result?.endedBy).toBe('stop');
   });
 
+  it('in the last turn after a Stop, a player may stay with their cards', () => {
+    let g = start();
+    g = applyAction(g, 'b', { type: 'swapAll' });
+    g = applyAction(g, 'c', { type: 'swapAll' });
+    g = applyAction(g, 'a', { type: 'swapAll' });
+    expect(viewFor(g, 'c').canPass).toBe(false);
+    g = applyAction(g, 'b', { type: 'stop' });
+    expect(viewFor(g, 'c').canPass).toBe(true);
+    const hand = g.hands.c;
+    g = applyAction(g, 'c', { type: 'pass' });
+    expect(g.hands.c).toEqual(hand);
+    expect(g.turnId).toBe('a');
+    g = applyAction(g, 'a', { type: 'pass' });
+    expect(g.phase).toBe('reveal');
+  });
+
   it('Hose runter ends the round at once', () => {
     const d = stacked(
       c(10, 'hearts'), c(13, 'hearts'), c(7, 'clubs'), // b needs the ace of hearts
