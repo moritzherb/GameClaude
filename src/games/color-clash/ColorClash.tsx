@@ -7,6 +7,7 @@ import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { sortByColour, useSortedHand } from '../../lib/handSort';
+import { flyIn, reducedMotion, seatArc } from '../../lib/cardFly';
 import { useCardDrag } from '../../lib/useCardDrag';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
@@ -552,12 +553,7 @@ export function seatSpots(n: number, w: number, h: number) {
   const felt = Math.min(h * 0.31, (w + 32) * 0.4);
   const ry = Math.max(0, Math.min(cy - sh / 2 - 2, felt + sh / 2 + 4));
   const from = n === 1 ? 90 : n === 2 ? 150 : n === 3 ? 162 : n === 4 ? 172 : 196;
-  const to = 180 - from;
-  return Array.from({ length: n }, (_, k) => {
-    const deg = n === 1 ? 90 : from - (k * (from - to)) / (n - 1);
-    const a = (deg * Math.PI) / 180;
-    return { x: Math.round(cx + rx * Math.cos(a)), y: Math.round(Math.min(h - sh / 2, cy - ry * Math.sin(a))) };
-  });
+  return seatArc(n, { cx, cy, rx, ry, from, maxY: h - sh / 2 });
 }
 
 /** How a card lies on the pile: a little turned and off centre, the same on every phone. */
@@ -568,27 +564,10 @@ function rest(id: number) {
   return `translate(${x}px, ${y}px) rotate(${a}deg)`;
 }
 
-const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/** The card just played comes from where it was (your hand, or someone's seat) and lands on the pile. */
-function flyIn(el: HTMLElement, from: DOMRect) {
-  if (reduced() || typeof el.animate !== 'function') return;
-  const to = el.getBoundingClientRect();
-  if (!to.width) return;
-  const dx = from.left + from.width / 2 - (to.left + to.width / 2);
-  const dy = from.top + from.height / 2 - (to.top + to.height / 2);
-  const s = Math.max(0.3, Math.min(1.4, from.width / to.width));
-  const end = getComputedStyle(el).transform;
-  el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${s}) rotate(-6deg)` }, { transform: end === 'none' ? 'none' : end }], {
-    duration: 380,
-    easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-  });
-}
-
 /** Cards drawn: backs fly one after the other from the deck to whoever takes them (for everyone to
  *  see who drew, and how many). Returns when the next one may start. */
 function flyBacks(from: DOMRect, to: DOMRect, n: number, delay: number) {
-  if (reduced()) return delay;
+  if (reducedMotion()) return delay;
   const shown = Math.min(n, 8);
   const gap = n > 4 ? 70 : 110;
   for (let k = 0; k < shown; k++) {

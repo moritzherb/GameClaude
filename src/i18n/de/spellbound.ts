@@ -15,6 +15,8 @@ const spellbound: Record<string, string> = {
     'Bedien die Fraktion der ersten Zahlenkarte, wenn du kannst; Erzmagier und Narr gehen immer.',
   'The first Archmage takes the trick; else the highest trump; else the highest card of the faction led. Fools lose, unless all are Fools: then the first one.':
     'Der erste Erzmagier macht den Stich; sonst der höchste Trumpf; sonst die höchste Karte der ausgespielten Fraktion. Narren verlieren, außer alle sind Narren: dann der erste.',
+  'Whoever wins a trick takes it (“Take the trick”): it lies beside them, and they lead the next.':
+    'Wer einen Stich gewinnt, nimmt ihn („Stich nehmen“): Er liegt dann neben ihm, und er spielt als Nächster aus.',
   'Exactly right: 20 points plus 10 per trick. Off: minus 10 per trick off.': 'Genau getroffen: 20 Punkte plus 10 pro Stich. Daneben: minus 10 pro Stich Abweichung.',
   'Most points after the last round wins.': 'Wer nach der letzten Runde die meisten Punkte hat, gewinnt.',
 
@@ -43,20 +45,27 @@ const spellbound: Record<string, string> = {
   '{name} wins!': '{name} gewinnt!',
   'Round over': 'Runde vorbei',
   '{won} of {bid}': '{won} von {bid}',
-  '{won}/{bid}': '{won}/{bid}',
   'New game': 'Neues Spiel',
   'Next round: {n} cards': 'Nächste Runde: {n} Karten',
   'An Archmage was turned: you pick trump': 'Ein Erzmagier liegt oben: Du wählst Trumpf',
   '{name} picks trump': '{name} wählt Trumpf',
   'How many tricks will you take?': 'Wie viele Stiche machst du?',
   '{name} is bidding': '{name} sagt an',
-  'Your card': 'Deine Karte',
-  '{name}’s card': '{name} ist dran',
-  '{name} takes the trick': '{name} macht den Stich',
   'Your hand': 'Deine Hand',
   Watching: 'Zuschauen',
   '{n} pts': '{n} P.',
-  'Turned up': 'Aufgedeckt',
+  'Dealing…': 'Es wird ausgeteilt…',
+  'Your trick: take it': 'Dein Stich: Nimm ihn',
+  '{name} wins the trick': '{name} macht den Stich',
+  'Your turn: play a card': 'Du bist dran: Spiel eine Karte',
+  'Your turn: lead a card': 'Du bist dran: Spiel aus',
+  bidding: 'sagt an',
+  'Turned up for trump': 'Für Trumpf aufgedeckt',
+  'No bid yet': 'Noch nicht angesagt',
+  '{won} of {bid} tricks': '{won} von {bid} Stichen',
+  'Take the trick': 'Stich nehmen',
+  'Take it for {name}': 'Für {name} nehmen',
+  '{n} tricks': '{n} Stiche',
 };
 
 export default spellbound;

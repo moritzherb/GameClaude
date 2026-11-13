@@ -72,6 +72,8 @@ export default function HandFan<T>({
   const { spots, depth } = fanLayout(cards.length, room, width, ratio);
   return (
     <div className={`fan-row ${className}`}>
+      {/* As wide as the buttons on the other side, so the fan is in the middle of the screen. */}
+      {(onSort || aside) && <span className="fan-spacer" aria-hidden />}
       <div ref={box} className="fan" aria-label={label} style={{ '--cw': `${width}px`, height: Math.round(width * ratio + depth + 20) } as CSSProperties}>
         {cards.map((c, i) => {
           const s = spots[i];

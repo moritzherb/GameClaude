@@ -42,8 +42,12 @@ export interface Game {
   scores: number[];
   /** Last round's points, per seat (for the summary). */
   gained: number[];
-  /** The trick just won (shown for a moment) and by whom. */
+  /** The trick just won and by whom (until the next card). */
   lastTrick: { cards: Played[]; winner: number } | null;
+  /** A full trick lies on the table until whoever won it takes it: their seat. */
+  taking: number | null;
+  /** New with every deal, so every phone deals it out once. */
+  dealId: number;
 }
 
 export function newDeck(): Card[] {
@@ -58,7 +62,7 @@ const left = (g: Pick<Game, 'players'>, seat: number, by = 1) => (seat + by) % g
 
 export function newGame(players: number, quick = false, deck?: Card[]): Game {
   const rounds = quick ? Math.min(QUICK_ROUNDS, maxRounds(players)) : maxRounds(players);
-  const g: Game = { players, rounds, round: 0, dealer: players - 1, hands: [], turned: null, trump: null, bids: [], won: [], trick: [], turn: 0, phase: 'bidding', scores: Array(players).fill(0), gained: Array(players).fill(0), lastTrick: null };
+  const g: Game = { players, rounds, round: 0, dealer: players - 1, hands: [], turned: null, trump: null, bids: [], won: [], trick: [], turn: 0, phase: 'bidding', scores: Array(players).fill(0), gained: Array(players).fill(0), lastTrick: null, taking: null, dealId: 0 };
   return deal(g, deck);
 }
 
@@ -70,7 +74,7 @@ export function deal(g0: Game, deck: Card[] = shuffle(newDeck())): Game {
   let rest = [...deck];
   for (let k = 0; k < round; k++) for (let p = 1; p <= g0.players; p++) hands[(dealer + p) % g0.players].push(rest.pop()!);
   const turned = rest.length ? rest.pop()! : null;
-  const g: Game = { ...g0, round, dealer, hands, turned, trump: null, bids: Array(g0.players).fill(null), won: Array(g0.players).fill(0), trick: [], lastTrick: null, gained: Array(g0.players).fill(0), turn: left(g0, dealer), phase: 'bidding' };
+  const g: Game = { ...g0, round, dealer, hands, turned, trump: null, bids: Array(g0.players).fill(null), won: Array(g0.players).fill(0), trick: [], lastTrick: null, taking: null, dealId: g0.dealId + 1 + Math.floor(Math.random() * 1e6) * 100, gained: Array(g0.players).fill(0), turn: left(g0, dealer), phase: 'bidding' };
   // A number sets its faction; a Fool (or nothing left) means no trump; an Archmage: the dealer picks.
   if (turned?.kind === 'number') return { ...g, trump: turned.faction };
   if (turned?.kind === 'archmage') return { ...g, phase: 'trump', turn: dealer };
@@ -100,7 +104,7 @@ export function leadFaction(trick: Played[]): Faction | null {
 /** Whether a seat may play this card now: following the lead faction if they can (Archmages and
  *  Fools always allowed). */
 export function legal(g: Game, seat: number, card: Card): boolean {
-  if (g.phase !== 'playing' || seat !== g.turn) return false;
+  if (g.phase !== 'playing' || seat !== g.turn || g.taking != null) return false;
   if (card.kind !== 'number') return true;
   const lead = leadFaction(g.trick);
   if (!lead || card.faction === lead) return true;
@@ -122,17 +126,24 @@ export function trickWinner(trick: Played[], trump: Faction | null): number {
 /** Points for a round: exact 20 + 10 per trick, else −10 per trick off. */
 export const points = (bidN: number, wonN: number) => (bidN === wonN ? 20 + 10 * bidN : -10 * Math.abs(bidN - wonN));
 
-/** Play a card; the last of a trick settles it (and the last trick the round). */
+/** Play a card; the last of a trick decides who wins it, and it waits on the table for them. */
 export function playCard(g: Game, seat: number, cardId: number): Game {
   const card = g.hands[seat]?.find((c) => c.id === cardId);
   if (!card || !legal(g, seat, card)) return g;
   const hands = g.hands.map((h, i) => (i === seat ? h.filter((c) => c.id !== cardId) : h));
   const trick = [...g.trick, { seat, card }];
-  if (trick.length < g.players) return { ...g, hands, trick, turn: left(g, seat) };
+  if (trick.length < g.players) return { ...g, hands, trick, turn: left(g, seat), lastTrick: null };
   const winner = trickWinner(trick, g.trump);
+  return { ...g, hands, trick, turn: winner, taking: winner };
+}
+
+/** The trick's winner takes it (it goes beside them); they lead the next. The last one settles the round. */
+export function takeTrick(g: Game): Game {
+  const winner = g.taking;
+  if (winner == null) return g;
   const won = g.won.map((w, i) => (i === winner ? w + 1 : w));
-  const next = { ...g, hands, trick: [], won, turn: winner, lastTrick: { cards: trick, winner } };
-  if (hands.every((h) => !h.length)) {
+  const next: Game = { ...g, trick: [], won, turn: winner, taking: null, lastTrick: { cards: g.trick, winner } };
+  if (g.hands.every((h) => !h.length)) {
     const gained = g.bids.map((b, i) => points(b ?? 0, won[i]));
     const scores = g.scores.map((s, i) => s + gained[i]);
     return { ...next, gained, scores, phase: g.round >= g.rounds ? 'over' : 'summary' };
