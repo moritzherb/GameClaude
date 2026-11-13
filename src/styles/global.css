@@ -1581,6 +1581,9 @@ li {
   background: rgba(0, 0, 0, 0.35);
   /* Straight along: the strip under the clock dims with it frame by frame (components/Sheet.tsx). */
   animation: sheet-dim-in 0.2s linear;
+  /* Over a sheet the page under it never scrolls: only the sheet's own list does. */
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 /* Closing: the dim goes (a fifth quicker than it came), and nothing more is tapped through it. */
@@ -1632,7 +1635,8 @@ li {
 .sheet {
   width: 100%;
   max-width: var(--max);
-  max-height: 88dvh;
+  /* Of the screen, or of the part over the keyboard (Sheet.tsx fits its backdrop to that). */
+  max-height: min(88dvh, calc(100% - 24px));
   /* Only the text in the middle scrolls (.sheet-body): the grabber, title and close button stay put,
      however it scrolls or bounces. */
   overflow: hidden;
@@ -1664,6 +1668,11 @@ li {
   background: inherit;
 }
 
+/* A sheet to search through: always its full height, the matches listed from the top. */
+.sheet.tall {
+  height: min(88dvh, calc(100% - 24px));
+}
+
 /* The close button: always at the bottom, still while the text above it scrolls. */
 .sheet-foot {
   flex: none;
@@ -1676,6 +1685,7 @@ li {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  touch-action: pan-y;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;

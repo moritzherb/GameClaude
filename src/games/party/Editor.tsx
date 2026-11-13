@@ -556,6 +556,7 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
           setQuery('');
         }}
         title={editing != null ? t('Field {n}', { n: editing }) : ''}
+        tall
       >
         {editing != null && (
           <div className="pt-kinds">
