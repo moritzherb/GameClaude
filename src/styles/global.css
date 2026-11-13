@@ -8676,14 +8676,17 @@ li {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 2rem;
-  letter-spacing: 0.25em;
+  /* The typed code as narrow as the placeholder: a touch apart, the last letter's space balanced
+     by an indent so it stays centred. */
+  letter-spacing: 0.08em;
+  text-indent: 0.08em;
   text-align: center;
   text-transform: uppercase;
 }
 
 .code-input::placeholder {
   color: var(--line);
-  letter-spacing: normal;
+  letter-spacing: 0.08em;
 }
 
 .code-input:focus {
