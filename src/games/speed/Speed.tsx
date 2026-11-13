@@ -31,11 +31,13 @@ interface Match {
   seats: [Seat, Seat];
   /** 3-2-1 while the middle cards are about to be turned over. */
   count: number;
+  /** Per player, the number of their latest move the host has taken in (so a phone can tell its own move is in). */
+  acks?: Record<string, number>;
 }
 
 type Act = { t: 'ready' } | { t: 'draw' } | { t: 'back' } | { t: 'sort' } | { t: 'play'; card: Card };
 
-type Msg = { g: 'sp'; type: 'state'; match: Match | null } | { g: 'sp'; type: 'act'; act: Act } | { g: 'sp'; type: 'sync' };
+type Msg = { g: 'sp'; type: 'state'; match: Match | null } | { g: 'sp'; type: 'act'; act: Act; n?: number } | { g: 'sp'; type: 'sync' };
 
 const isMsg = (d: unknown): d is Msg => typeof d === 'object' && d !== null && (d as Msg).g === 'sp';
 
@@ -87,20 +89,35 @@ function useSpeed() {
 
   // A move made while the connection is down goes out once it's back.
   const queued = useQueuedSend(sendToHost);
+  // A guest's own moves show at once (Speed is a race: no waiting for the host's answer); the host's
+  // state takes over again once it has the move in (or after a while, if the move got lost).
+  const moves = useRef({ n: 0, at: 0 });
   const act = useCallback(
     (a: Act) => {
-      if (isHost) setHostMatch((m) => (m ? apply(m, myId, a) : m));
-      else queued({ g: 'sp', type: 'act', act: a } satisfies Msg);
+      if (isHost) {
+        setHostMatch((m) => (m ? apply(m, myId, a) : m));
+        return;
+      }
+      const n = ++moves.current.n;
+      moves.current.at = Date.now();
+      setGuestMatch((m) => (m ? apply(m, myId, a) : m));
+      queued({ g: 'sp', type: 'act', act: a, n } satisfies Msg);
     },
     [isHost, myId, queued],
   );
 
-  // Host: hear the guests.
+  // Host: hear the guests (and note which of their moves are in).
   useEffect(() => {
     if (!isHost) return;
     return onGame((data, fromId) => {
       if (!isMsg(data) || !fromId) return;
-      if (data.type === 'act') setHostMatch((m) => (m ? apply(m, fromId, data.act) : m));
+      if (data.type === 'act')
+        setHostMatch((m) => {
+          if (!m) return m;
+          const next = apply(m, fromId, data.act);
+          const had = m.acks?.[fromId] ?? 0;
+          return data.n && data.n > had ? { ...next, acks: { ...m.acks, [fromId]: data.n } } : next;
+        });
     });
   }, [isHost, onGame]);
 
@@ -139,9 +156,12 @@ function useSpeed() {
   useEffect(() => {
     if (isHost) return;
     return onGame((data) => {
-      if (isMsg(data) && data.type === 'state') take(data.match);
+      if (!isMsg(data) || data.type !== 'state') return;
+      // Still without this phone's latest move: keep showing it, for up to 2 s.
+      const behind = data.match && (data.match.acks?.[myId] ?? 0) < moves.current.n && Date.now() - moves.current.at < 2000;
+      if (!behind) take(data.match);
     });
-  }, [isHost, onGame, take]);
+  }, [isHost, onGame, take, myId]);
   const ask = useCallback(() => sendToHost({ g: 'sp', type: 'sync' } satisfies Msg), [sendToHost]);
   useResync(!isHost, ask);
 

@@ -12125,9 +12125,9 @@ li {
 }
 
 /*
- * Room games (every phone its own seat): the seats around the table show whose turn it is, so the
- * line on top only speaks up when it's your move. It keeps its room when it's quiet (nothing
- * jumps when the turn comes round), just empty.
+ * Room games (every phone its own seat): the line on top is short. It speaks up when it's your
+ * move and quietly says whose it is otherwise, in the same room (nothing jumps when the turn comes
+ * round).
  */
 .play-screen.clean .ar-status-sub,
 .play-screen.clean .ar-hint,
@@ -12166,11 +12166,12 @@ li {
   box-shadow: none;
 }
 
+/* Not your move: the line still says whose it is (quietly), no empty gap. */
 .play-screen.clean .ar-status:not(.mine) > *,
 .play-screen.clean .as .pl-status:not(.mine) > *,
 .play-screen.clean .hr-status:not(.mine) > .hr-status-text,
 .play-screen.clean .pl-player .pl-status:not(.mine) > .pl-status-text {
-  visibility: hidden;
+  color: var(--muted);
 }
 
 /* Hose runter: someone saying STOP is still heard, whoever's turn it is. */
@@ -15170,4 +15171,11 @@ button.profile-avatar:not(:disabled):active {
 
 .ftd-deckphone-next {
   margin-top: auto;
+}
+
+/* A card covered on its right by the next one in a hand: its bottom corner would peek out under the
+   next card's rounded corner as a stray bit of a number or suit, so it isn't drawn. */
+.pl-card.covered .pcard-corner.bottom,
+.sp-hand .sp-card:not(:last-child) .pcard-corner.bottom {
+  visibility: hidden;
 }
