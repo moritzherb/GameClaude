@@ -15130,3 +15130,44 @@ button.profile-avatar:not(:disabled):active {
   background: linear-gradient(var(--bg), transparent);
   pointer-events: none;
 }
+
+/* The dealer's phone: the question, the deck and what's below it, each in a room of its own fixed
+   height and together in the middle of the screen, so the deck stays in one place the whole game
+   (not pushed by "It's lower", the card shown or the result). */
+.ftd-deckphone {
+  --rh: clamp(56px, 7dvh, 72px);
+  justify-content: center;
+  gap: 14px;
+}
+
+.ftd-deckphone-head {
+  flex: none;
+  justify-content: flex-end;
+  height: calc(0.75rem * 1.4 + 6px + 1.7rem * 1.05 * 2);
+}
+
+.ftd-deckphone .ftd-deck.big {
+  flex: none;
+  margin-top: 0;
+}
+
+.ftd-deckphone-low {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: calc(3 * var(--rh) + 16px + 10px + 1.4em);
+}
+
+.ftd-deckphone .ftd-rank {
+  height: var(--rh);
+}
+
+.ftd-deckphone-low .ftd-ask-sub {
+  min-height: 1.4em;
+  margin: 0;
+}
+
+.ftd-deckphone-next {
+  margin-top: auto;
+}
