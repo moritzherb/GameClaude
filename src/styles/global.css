@@ -11418,7 +11418,7 @@ li {
   isolation: isolate;
   min-width: 0;
   min-height: 0;
-  transform: translateY(14px);
+  transform: translateY(32px);
 }
 
 /* Bigger cards than in Kings Cup: easier to hit. */
@@ -15178,4 +15178,19 @@ button.profile-avatar:not(:disabled):active {
 .pl-card.covered .pcard-corner.bottom,
 .sp-hand .sp-card:not(:last-child) .pcard-corner.bottom {
   visibility: hidden;
+}
+
+/* In a game the bar's buttons are solid, not glass: Safari can draw a blurred-glass button over a
+   table of turned and moving cards (a ring, a fan) as an empty circle, symbol and all. The bar is
+   its own layer above the table too. */
+.play-screen > .top-bar {
+  position: relative;
+  z-index: 8;
+}
+
+html[data-look] .play-screen > .top-bar .round-btn {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--surface-2);
+  color: var(--ink);
 }
