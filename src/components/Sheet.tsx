@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { t } from '../i18n';
 import { useTopTint } from '../lib/useTopTint';
 import BigButton from './BigButton';
@@ -15,8 +15,13 @@ interface Props {
  *  .slide-down). */
 const OUT = 220;
 
-/** Bottom sheet with one big close button. Tapping outside also closes it. It slides back down
- *  the way it came when it closes, its dimmed backdrop (and the strip under the clock) with it. */
+/** How far down (of its height) or how fast (px/ms) a sheet has to be pulled to close. */
+const PULL_CLOSE = 0.3;
+const FLICK = 0.6;
+
+/** Bottom sheet with one big close button. Tapping outside also closes it, and so does pulling it
+ *  down (as the grabber on top says). It slides back down the way it came when it closes, its
+ *  dimmed backdrop (and the strip under the clock) with it. */
 export default function Sheet({ open, onClose, title, children, closeLabel = t('Got it') }: Props) {
   const titleId = useId();
   const box = useRef<HTMLDivElement>(null);
@@ -47,6 +52,108 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
+  // Pulled down by a finger (or the mouse on its top): it follows, the dim fading with it; let go far
+  // enough down, or flicked, it closes from there, else it springs back. From the top (the grabber
+  // and title) always; from inside only when scrolled to the top and pulled down, else it scrolls.
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const el = box.current;
+    const dim = backdrop.current;
+    if (!open || !el || !dim) return;
+    let at: { y: number; x: number; decided: boolean; dragging: boolean } | null = null;
+    let dy = 0;
+    let last = { y: 0, t: 0 };
+    let speed = 0;
+    const settle = () => {
+      el.style.transition = 'transform 0.28s var(--ease-out)';
+      dim.style.transition = 'opacity 0.28s linear';
+      el.style.transform = '';
+      dim.style.opacity = '';
+      const done = () => {
+        el.style.transition = '';
+        dim.style.transition = '';
+      };
+      el.addEventListener('transitionend', done, { once: true });
+    };
+    const begin = (x: number, y: number, target: EventTarget | null) => {
+      const t = target as Element | null;
+      if (t?.closest?.('input, textarea, select, [data-sheet-nodrag]')) return;
+      at = { x, y, decided: false, dragging: false };
+      dy = 0;
+      last = { y, t: performance.now() };
+      speed = 0;
+    };
+    // True while it's a pull (the caller then stops the page from scrolling).
+    const move = (x: number, y: number, top: boolean) => {
+      if (!at) return false;
+      if (!at.decided) {
+        const ddx = x - at.x;
+        const ddy = y - at.y;
+        const down = ddy > 0 && (top || el.scrollTop <= 0);
+        if (Math.max(Math.abs(ddx), Math.abs(ddy)) < 4) return down;
+        at.decided = true;
+        if (!down || Math.abs(ddx) > ddy) {
+          at = null;
+          return false;
+        }
+        at.dragging = true;
+        at.y = y;
+        el.style.transition = '';
+        dim.style.transition = '';
+      }
+      dy = Math.max(0, y - at.y);
+      const now = performance.now();
+      speed = (y - last.y) / Math.max(1, now - last.t);
+      last = { y, t: now };
+      el.style.transform = `translateY(${dy}px)`;
+      dim.style.opacity = String(Math.max(0, 1 - dy / Math.max(1, el.offsetHeight)));
+      return true;
+    };
+    const end = () => {
+      const was = at;
+      at = null;
+      if (!was?.dragging) return;
+      if (dy > el.offsetHeight * PULL_CLOSE || speed > FLICK) close.current();
+      else settle();
+    };
+    const fromTop = (t: EventTarget | null) => !!(t as Element | null)?.closest?.('.sheet-grabber, .sheet-title');
+    let touchTop = false;
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return (at = null);
+      touchTop = fromTop(e.target);
+      begin(e.touches[0].clientX, e.touches[0].clientY, e.target);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (move(e.touches[0].clientX, e.touches[0].clientY, touchTop) && e.cancelable) e.preventDefault();
+    };
+    // The mouse: from the top only (inside, a mouse selects and scrolls).
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0 || !fromTop(e.target)) return;
+      begin(e.clientX, e.clientY, e.target);
+      const mv = (m: PointerEvent) => move(m.clientX, m.clientY, true);
+      const up = () => {
+        window.removeEventListener('pointermove', mv);
+        window.removeEventListener('pointerup', up);
+        end();
+      };
+      window.addEventListener('pointermove', mv);
+      window.addEventListener('pointerup', up);
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    el.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+      el.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [open]);
+
   // Turned round half way (closed while still coming up, or opened again while going down): it
   // goes on from where it is instead of jumping to the start. Read off the screen as it is before
   // the change is drawn; only when it is on screen (a fresh one starts from the bottom).
@@ -59,6 +166,16 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
         ? ({ '--sheet-from': getComputedStyle(box.current).transform, '--backdrop-from': getComputedStyle(backdrop.current).opacity } as CSSProperties)
         : undefined;
   }
+
+  // A pull's own position stays only until the sheet turns (the animation then takes over from it).
+  useLayoutEffect(() => {
+    for (const el of [box.current, backdrop.current]) {
+      if (!el) continue;
+      el.style.transform = '';
+      el.style.opacity = '';
+      el.style.transition = '';
+    }
+  }, [open]);
 
   if (!open && !shown) return null;
   const leaving = !open;

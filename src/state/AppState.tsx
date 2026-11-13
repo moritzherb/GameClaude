@@ -4,7 +4,7 @@ import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
 import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
 import { usePersistentState } from '../lib/storage';
-import { GROUND, setTheme, setThemeColor } from '../lib/themeColor';
+import { GROUND, setThemeColor } from '../lib/themeColor';
 
 export interface Player {
   id: string;
@@ -45,11 +45,8 @@ export interface Settings {
   phone?: PhoneSetting;
   /** The home screen's wallpaper (new look): a made one's id, 'photo', or missing for the plain ground. */
   wallpaper?: string;
-  /** Light or dark (missing: as the phone is). */
-  theme?: ThemeSetting;
 }
 
-export type ThemeSetting = 'auto' | 'light' | 'dark';
 
 export const AVATARS = [
   '🦄', '🐸', '🐙', '🦊', '🐼', '🐯', '🦖', '🐵', '🐧', '🦩', '🐨', '🦁', '🐷', '🐻', '🦆', '🐶', '🐱', '🐰',
@@ -130,10 +127,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Set before the children render, so every t() call below uses the chosen language.
   setLang(settings.lang ?? 'en');
   // Also before the children render (and measure themselves): the look, and whose home screen.
+  // Light or dark is the phone's own setting (the system's): the app has no switch of its own.
   if (typeof document !== 'undefined') {
     document.documentElement.dataset.look = lookFor(settings.look);
     document.documentElement.dataset.os = platformFor(settings.phone);
-    setTheme(settings.theme === 'light' || settings.theme === 'dark' ? settings.theme : null);
   }
 
   // The browser's bar (Android) and the strip under the clock take the look's ground colour

@@ -13,7 +13,7 @@ import { navigate, paths } from '../lib/router';
 import { loadPhoto, readPhoto, savePhoto, WALLPAPERS } from '../lib/wallpaper';
 import { cloudOn } from '../net/cloud';
 import { resetHome } from '../home/order';
-import { useApp, type ThemeSetting } from '../state/AppState';
+import { useApp } from '../state/AppState';
 
 type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean' | 'knowAll';
 
@@ -29,13 +29,6 @@ const OPTIONS: { key: Toggle; icon: RowGlyph; label: string; hint: string }[] = 
 const LOOKS: { id: Look; label: string }[] = [
   { id: 'pop', label: tx('New') },
   { id: 'classic', label: tx('Classic') },
-];
-
-/** Light or dark, or as the phone is. */
-const THEMES: { id: ThemeSetting; label: string }[] = [
-  { id: 'auto', label: tx('Auto') },
-  { id: 'light', label: tx('Light') },
-  { id: 'dark', label: tx('Dark') },
 ];
 
 /** In the new look: whose home screen. */
@@ -264,7 +257,7 @@ export default function Settings() {
             <span className="setting-text">
               <span className="setting-label">{t('Look and home screen')}</span>
               <span className="setting-hint">
-                {[LOOKS.find((x) => x.id === lookFor(settings.look))?.label, THEMES.find((x) => x.id === (settings.theme ?? 'auto'))?.label].map((x) => t(x ?? '')).join(' · ')}
+                {t(LOOKS.find((x) => x.id === lookFor(settings.look))?.label ?? '')}
               </span>
             </span>
             <span className="look-chevron" aria-hidden="true">
@@ -280,15 +273,6 @@ export default function Settings() {
                   <span className="setting-hint">{t('Only the look: every game plays the same')}</span>
                 </span>
                 <Choice label={t('Look')} value={lookFor(settings.look)} options={LOOKS} onPick={(look) => updateSettings({ look })} />
-              </div>
-
-              <div className="setting-row look-row">
-                <span className="setting-emoji" aria-hidden="true"><RowIcon name="theme" /></span>
-                <span className="setting-text">
-                  <span className="setting-label">{t('Appearance')}</span>
-                  <span className="setting-hint">{t('Light, dark, or like your phone')}</span>
-                </span>
-                <Choice label={t('Appearance')} value={settings.theme ?? 'auto'} options={THEMES} onPick={(theme) => updateSettings({ theme })} />
               </div>
 
               {lookFor(settings.look) === 'pop' && (
