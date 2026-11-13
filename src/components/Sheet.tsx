@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { t } from '../i18n';
 import { useTopTint } from '../lib/useTopTint';
 import BigButton from './BigButton';
@@ -47,13 +47,27 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
+  // Turned round half way (closed while still coming up, or opened again while going down): it
+  // goes on from where it is instead of jumping to the start. Read off the screen as it is before
+  // the change is drawn; only when it is on screen (a fresh one starts from the bottom).
+  const was = useRef(open);
+  const from = useRef<CSSProperties | undefined>(undefined);
+  if (was.current !== open) {
+    was.current = open;
+    from.current =
+      box.current && backdrop.current
+        ? ({ '--sheet-from': getComputedStyle(box.current).transform, '--backdrop-from': getComputedStyle(backdrop.current).opacity } as CSSProperties)
+        : undefined;
+  }
+
   if (!open && !shown) return null;
   const leaving = !open;
   const view = last.current;
   return (
-    <div className={`sheet-backdrop${leaving ? ' leaving' : ''}`} ref={backdrop} onClick={leaving ? undefined : onClose}>
+    <div className={`sheet-backdrop${leaving ? ' leaving' : ''}`} ref={backdrop} style={from.current} onClick={leaving ? undefined : onClose}>
       <div
         ref={box}
+        style={from.current}
         className={`sheet ${leaving ? 'slide-down' : 'slide-up'}`}
         role="dialog"
         aria-modal
