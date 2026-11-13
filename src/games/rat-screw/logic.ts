@@ -23,11 +23,11 @@ export const isFace = (c: Card) => c.value >= 11;
 export const isJoker = (c: Card) => c.suit === 'joker';
 
 /** Why a pile may be slapped. */
-export type SlapRule = 'joker' | 'double' | 'sandwich' | 'top-bottom' | 'tens' | 'run' | 'marriage';
+export type SlapRule = 'joker' | 'double' | 'sandwich' | 'tens' | 'run' | 'marriage';
 
 export type Entry =
   | { k: 'slap'; by: number; rule: SlapRule; n: number }
-  | { k: 'wrong'; by: number; paid: boolean }
+  | { k: 'wrong'; by: number; gave: number }
   | { k: 'won'; by: number; n: number }
   | { k: 'out'; by: number };
 
@@ -84,7 +84,6 @@ export function slapRule(middle: Card[]): SlapRule | null {
   if (isJoker(top)) return 'joker';
   if (below && !isJoker(below) && below.value === top.value) return 'double';
   if (third && !isJoker(third) && third.value === top.value) return 'sandwich';
-  if (n >= 2 && !isJoker(middle[0]) && middle[0].value === top.value) return 'top-bottom';
   const a = tenValue(top);
   if (a != null && below) {
     const b = tenValue(below);
@@ -148,8 +147,8 @@ function collect(g: Game, seat: number, last: Entry): Game {
   return { ...g, piles, middle: [], tries: 0, challenger: null, claim: null, turn: seat, last };
 }
 
-/** A slap: the pile if it may be slapped now; else a card of theirs goes under the pile (or, with
- *  none left to pay with, they're out). */
+/** A slap: the pile if it may be slapped now; else every other player gets one of their cards, under
+ *  their own pile (or, with none left to pay with, they're out). */
 export function slap(g: Game, seat: number): Game {
   if (g.winner != null || g.out[seat]) return g;
   const rule = slapRule(g.middle);
@@ -159,9 +158,18 @@ export function slap(g: Game, seat: number): Game {
     const out = g.out.map((o, i) => (i === seat ? true : o));
     return settle({ ...g, out, last: { k: 'out', by: seat } });
   }
-  const [card, ...rest] = pile;
-  const piles = g.piles.map((p, i) => (i === seat ? rest : p));
-  const next = { ...g, piles, middle: [card, ...g.middle], last: { k: 'wrong', by: seat, paid: true } as Entry };
+  // One card each, round the table from their left, for as long as they have cards.
+  const piles = g.piles.map((p) => [...p]);
+  const n = g.piles.length;
+  let gave = 0;
+  for (let k = 1; k < n && piles[seat].length; k++) {
+    const to = (seat + k) % n;
+    if (g.out[to]) continue;
+    piles[to].push(piles[seat].shift()!);
+    gave++;
+  }
+  const rest = piles[seat];
+  const next = { ...g, piles, last: { k: 'wrong', by: seat, gave } as Entry };
   // Their last card was on turn: the turn moves on.
   if (seat === g.turn && !rest.length && g.claim == null) return { ...next, turn: nextWithCards(next, seat) };
   return next;

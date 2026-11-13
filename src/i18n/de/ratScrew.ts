@@ -17,9 +17,9 @@ const ratScrew: Record<string, string> = {
     'Beantwortet: Jetzt muss der Nächste darauf antworten. Nicht rechtzeitig: Wer das letzte Bild oder Ass gelegt hat, nimmt den ganzen Stapel und fängt an.',
   'Slapping beats everything: the first one to slap the pile when a slap rule holds takes it.':
     'Draufhauen schlägt alles: Wer zuerst auf den Stapel haut, wenn eine Hau-Regel gilt, nimmt ihn.',
-  'Slap rules: Double (5, 5), Sandwich (5, 7, 5), Top bottom (the same as the pile’s first card), Tens (two cards adding up to 10, also with a J, Q or K between; an Ace counts 1), Joker, Four in a row (5, 6, 7, 8 or Q, K, A, 2, up or down), Marriage (a Queen on a King or the other way round).':
-    'Hau-Regeln: Doppelt (5, 5), Sandwich (5, 7, 5), Oben-unten (gleich wie die erste Karte im Stapel), Zehner (zwei Karten ergeben 10, auch mit B, D oder K dazwischen; ein Ass zählt 1), Joker, Vier in Folge (5, 6, 7, 8 oder D, K, A, 2, auf- oder absteigend), Hochzeit (eine Dame auf einem König oder umgekehrt).',
-  'Slapped wrong: one of your cards goes under the pile.': 'Falsch gehauen: Eine deiner Karten kommt unter den Stapel.',
+  'Slap rules: Double (5, 5), Sandwich (5, 7, 5), Tens (two cards adding up to 10, also with a J, Q or K between; an Ace counts 1), Joker, Four in a row (5, 6, 7, 8 or Q, K, A, 2, up or down), Marriage (a Queen on a King or the other way round).':
+    'Hau-Regeln: Doppelt (5, 5), Sandwich (5, 7, 5), Zehner (zwei Karten ergeben 10, auch mit B, D oder K dazwischen; ein Ass zählt 1), Joker, Vier in Folge (5, 6, 7, 8 oder D, K, A, 2, auf- oder absteigend), Hochzeit (eine Dame auf einem König oder umgekehrt).',
+  'Slapped wrong: every other player gets one of your cards, under their own pile.': 'Falsch gehauen: Jeder andere bekommt eine deiner Karten, unter seinen eigenen Stapel.',
   'Out of cards: slap in to get back into the game. A wrong slap without cards and you’re out.':
     'Keine Karten mehr: Hau dich wieder ins Spiel. Hau ohne Karten falsch, bist du raus.',
   'Whoever ends up with every card wins.': 'Wer am Ende alle Karten hat, gewinnt.',
@@ -27,7 +27,6 @@ const ratScrew: Record<string, string> = {
   Marriage: 'Hochzeit',
   Sandwich: 'Sandwich',
   Tens: 'Zehner',
-  'Top bottom': 'Oben-unten',
   Joker: 'Joker',
   Out: 'Raus',
   'Slap!': 'Hau drauf!',
@@ -45,11 +44,15 @@ const ratScrew: Record<string, string> = {
   'You have every card!': 'Du hast alle Karten!',
   '{name} has every card!': '{name} hat alle Karten!',
   '{name} slaps: {rule}. The pile ({n}) is theirs.': '{name} haut drauf ({rule}) und nimmt den Stapel ({n}).',
-  '{name} slapped wrong: a card under the pile.': '{name} hat falsch gehauen: eine Karte unter den Stapel.',
+  '{name} slapped wrong: a card to each of the others.': '{name} hat falsch gehauen: eine Karte an jeden anderen.',
+  '{name} slapped wrong: a card to the other player.': '{name} hat falsch gehauen: eine Karte an den anderen.',
   '{name} slapped wrong without cards: out.': '{name} hat ohne Karten falsch gehauen: raus.',
   '{name} takes the pile ({n}).': '{name} nimmt den Stapel ({n}).',
   '{name}: {n} cards': '{name}: {n} Karten',
   '{n} cards in the middle': '{n} Karten in der Mitte',
+  'Wrong slap': 'Falsch gehauen',
+  '{name} is out': '{name} ist raus',
+  '{name} takes it': '{name} nimmt ihn',
 };
 
 export default ratScrew;
