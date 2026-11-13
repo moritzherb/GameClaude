@@ -223,8 +223,12 @@ function Table({
           >
             {t('Take the pile')}
           </BigButton>
+        ) : g.last ? (
+          <p key={flashKey(g)} className={`rs-last ${g.last.k}`} role="status">
+            {lastText(g.last, name)}
+          </p>
         ) : (
-          <p className="rs-last">{g.last ? lastText(g.last, name) : ' '}</p>
+          <p className="rs-last none" />
         )}
       </div>
 
