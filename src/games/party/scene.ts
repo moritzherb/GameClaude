@@ -266,7 +266,7 @@ export class Scene {
     this.tunnels = new Set(board.tunnels.map(cellKey));
     const to = jumps(board);
     this.bridges = Object.entries(to)
-      .filter(([from]) => board.fields[+from].kind === 'back-bridge')
+      .filter(([from]) => board.fields[+from].kind === 'back-bridge' || board.fields[+from].kind === 'fwd-bridge')
       .map(([from, j]) => ({ from: +from, to: j }));
     this.tunnelEnds = new Set();
     for (const [from, j] of Object.entries(to)) {
@@ -1014,7 +1014,8 @@ export class Scene {
         ctx.stroke();
       }
     }
-
+    // Where a tunnel runs under a river: its line seen faintly through the water, dashed.
+    this.drawTunnels(project, nearY, true);
 
     // Fields, the far ones first: a little block each, the picture on top.
     const order = this.spots.map((_, i) => i).sort((a, b) => this.spots[b].y - this.spots[a].y);
@@ -1302,7 +1303,7 @@ export class Scene {
   }
 
   /** The mole's tunnels: from each tunnel cell, a band of earth towards each neighbour it joins. */
-  private drawTunnels(project: (x: number, y: number, up?: number) => Proj | null, nearY: number) {
+  private drawTunnels(project: (x: number, y: number, up?: number) => Proj | null, nearY: number, underWater = false) {
     const { ctx } = this;
     const dirs = [
       { x: 1, y: 0 },
@@ -1315,6 +1316,8 @@ export class Scene {
     for (const k of this.tunnels) {
       const [x, y] = k.split(',').map(Number);
       if (y + 0.6 < nearY) continue;
+      // Over the water: only the cells it covers.
+      if (underWater && !this.water.has(k)) continue;
       const c = project(x, y);
       if (!c) continue;
       const ends: Proj[] = [];
@@ -1329,13 +1332,17 @@ export class Scene {
     }
     // All the earth first, then all the dark trail down its middle: drawn cell by cell in one go, a
     // cell's earth covered the end of the trail before it, and the tunnel looked broken up.
-    for (const [color, width] of [
-      ['#8a5a34', 0.3],
-      ['#5c3a1f', 0.12],
-    ] as const) {
+    const layers = underWater
+      ? ([['rgba(60, 36, 16, 0.45)', 0.12]] as const)
+      : ([
+          ['#8a5a34', 0.3],
+          ['#5c3a1f', 0.12],
+        ] as const);
+    for (const [color, width] of layers) {
       ctx.strokeStyle = color;
       for (const { c, ends } of cells) {
         ctx.lineWidth = Math.max(2, c.s * width);
+        ctx.setLineDash(underWater ? [c.s * 0.12, c.s * 0.1] : []);
         ctx.beginPath();
         if (!ends.length) {
           ctx.moveTo(c.sx - 0.5, c.sy);
@@ -1348,6 +1355,7 @@ export class Scene {
         ctx.stroke();
       }
     }
+    ctx.setLineDash([]);
     ctx.lineCap = 'butt';
   }
 }

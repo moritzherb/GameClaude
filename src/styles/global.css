@@ -1557,6 +1557,23 @@ h3 {
 }
 
 .sheet-body {
+  background: inherit;
+}
+
+/* The close button stays in reach at the bottom of a long sheet, over what scrolls under it (out to
+   the sheet's edge, its padding included). */
+.sheet-foot {
+  position: sticky;
+  z-index: 2;
+  bottom: calc(-16px - env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  margin-bottom: calc(-16px - env(safe-area-inset-bottom));
+  padding: 6px 0 calc(16px + env(safe-area-inset-bottom));
+  background: inherit;
+}
+
+.sheet-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -13674,4 +13691,51 @@ h3 {
    circles. */
 .avatar-stack span.avatar-glyph {
   all: unset;
+}
+
+/* Party editor: the field search stays at the top of its sheet while the fields scroll under it. */
+.pt-kinds {
+  background: inherit;
+}
+
+.pt-kind-search-wrap {
+  position: sticky;
+  z-index: 2;
+  top: -8px;
+  margin-top: -8px;
+  padding: 8px 0;
+  background: inherit;
+}
+
+/* A tunnel under a river: seen faintly through the water, hatched. */
+.pt-cell-tunnel.under {
+  opacity: 0.6;
+}
+
+.pt-cell-tunnel.under::before,
+.pt-cell-tunnel.under .pt-arm {
+  background: repeating-linear-gradient(45deg, #3e2612 0 2px, transparent 2px 5px);
+}
+
+/* What's still missing before a board can be played (it's saved as a draft till then). */
+.pt-ed-blocker {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pt-tool:disabled {
+  opacity: 0.4;
+}
+
+/* A board saved unfinished: tap it to go on with it. */
+.pt-board-card.draft {
+  background: transparent;
+  box-shadow: none;
+  border: 1.5px dashed var(--line);
+}
+
+.pt-kind-search-wrap .pt-kind-search {
+  width: 100%;
 }

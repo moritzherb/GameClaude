@@ -39,6 +39,7 @@ describe('boards', () => {
       const to = jumps(b);
       b.fields.forEach((f, i) => {
         if (f.kind === 'back-bridge' || f.kind === 'mole') expect(to[i]).toBeLessThan(i);
+        if (f.kind === 'fwd-bridge') expect(to[i]).toBeGreaterThan(i);
       });
     }
   });
@@ -47,6 +48,8 @@ describe('boards', () => {
     const board = BOARDS[0];
     // Field 21: across the river from it, field 13.
     expect(jumpTarget(board, 21, 'back-bridge')).toBe(13);
+    // And the other way: a bridge ahead goes on over the water to a later field.
+    expect(jumpTarget(board, 13, 'fwd-bridge')).toBe(21);
     // Field 28: the tunnel runs down the side to field 16 (passing 17 and 18 on the way).
     expect(jumpTarget(board, 28, 'mole')).toBe(16);
     // No water next to it, no tunnel next to it: nowhere to go.

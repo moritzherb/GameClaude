@@ -98,14 +98,16 @@ export function jumpTarget(board: Geometry, i: number, kind: FieldKind): number 
   const s = board.spots[i];
   if (!s) return null;
   const at = new Map(board.spots.map((c, k) => [cellKey(c), k]));
-  if (kind === 'back-bridge') {
+  if (kind === 'back-bridge' || kind === 'fwd-bridge') {
+    // Back: to a field before this one; ahead: to one after it.
+    const ahead = kind === 'fwd-bridge';
     const wet = new Set(board.water.map(cellKey));
     for (const d of STEPS) {
       let k = 1;
       while (wet.has(cellKey({ x: s.x + d.x * k, y: s.y + d.y * k })) && k < 30) k++;
       if (k === 1) continue;
       const j = at.get(cellKey({ x: s.x + d.x * k, y: s.y + d.y * k }));
-      if (j != null && j < i) return j;
+      if (j != null && (ahead ? j > i : j < i)) return j;
     }
     return null;
   }
@@ -131,6 +133,9 @@ export function jumpTarget(board: Geometry, i: number, kind: FieldKind): number 
   return null;
 }
 
+/** The fields that take you somewhere else (and so need somewhere to go). */
+export const isJump = (kind: FieldKind | undefined) => kind === 'back-bridge' || kind === 'fwd-bridge' || kind === 'mole';
+
 /** Every bridge back and tunnel on a board: field → where it takes you. */
 export function jumps(board: Geometry & Pick<Board, 'fields'>): Record<number, number> {
   const out: Record<number, number> = {};
@@ -148,12 +153,12 @@ function classic(): Board {
   const fields = [
     F('start'), F('shots', 1), F('shots', 2), F('rule'), F('ex'), F('bridge', 0),
     F('give', 2), F('rps'), F('ace'), F('clock', 0), F('waterfall'), F('safe'),
-    F('twins'), F('mystery'), F('leader'), F('snus'), F('seats'), F('bridge', 1),
+    F('twins'), F('fwd-bridge'), F('leader'), F('snus'), F('seats'), F('bridge', 1),
     F('chance'), F('reverse'), F('double'), F('back-bridge'), F('choose'), F('tschick'),
     F('three-six-nine'), F('age', 1), F('duel'), F('silence'), F('mole'), F('roll-again'),
     F('shop'), F('prison'), F('cheek'), F('toilet'), F('give', 5), F('shots', 3),
     F('snail'), F('roll-back'), F('girls'), F('boys'), F('swap-drink'), F('mate'),
-    F('hands'), F('clock', 1), F('age', 0), F('ex'), F('tschick'), F('goal'),
+    F('hands'), F('clock', 1), F('age', 0), F('mystery'), F('tschick'), F('goal'),
   ];
   const cols = 7;
   // The snake five wide, with a free column on either side.
@@ -239,7 +244,7 @@ function check(b: Board): Board | null {
   // Tunnels run beside the path, not under it.
   const tunnels = b.tunnels.filter((c) => !seen.has(cellKey(c)));
   const board = { ...b, fields, tunnels };
-  board.fields = fields.map((f, i) => ((f.kind === 'back-bridge' || f.kind === 'mole') && jumpTarget(board, i, f.kind) == null ? field('safe') : f));
+  board.fields = fields.map((f, i) => (isJump(f.kind) && jumpTarget(board, i, f.kind) == null ? field('safe') : f));
   return board;
 }
 
@@ -267,3 +272,49 @@ export function deleteBoard(id: string) {
 }
 
 export const allBoards = () => [...BOARDS, ...customBoards()];
+
+/**
+ * A board not finished yet, kept to go on with later: the map as drawn, fields maybe still empty
+ * (null), no finish yet. `base` is the board it changes (none: a new one).
+ */
+export interface Draft {
+  id: string;
+  base?: string;
+  name: string;
+  rows: number;
+  spots: Cell[];
+  kinds: (Field | null)[];
+  water: Cell[];
+  tunnels: Cell[];
+}
+
+const DRAFTS = 'party-drafts';
+
+/** The drafts as saved, any that make no sense left out. */
+export function drafts(): Draft[] {
+  const raw = load<unknown>(DRAFTS, []);
+  if (!Array.isArray(raw)) return [];
+  const cell = (c: unknown) => {
+    const p = c as Cell;
+    return p && Number.isInteger(p.x) && Number.isInteger(p.y) && inside(p, MAX_COLS, MAX_ROWS) ? { x: p.x, y: p.y } : null;
+  };
+  const cells = (list: unknown) => (Array.isArray(list) ? list.map(cell).filter((c): c is Cell => !!c) : []);
+  return raw
+    .filter((d): d is Draft => !!d && typeof (d as Draft).id === 'string' && Array.isArray((d as Draft).spots))
+    .map((d) => {
+      const spots = cells(d.spots);
+      const kinds = spots.map((_, i) => {
+        const f = Array.isArray(d.kinds) ? d.kinds[i] : null;
+        return f && f.kind in FIELDS ? field(f.kind, f.n) : null;
+      });
+      return { id: d.id, base: typeof d.base === 'string' ? d.base : undefined, name: String(d.name || '').slice(0, 40), rows: Math.min(MAX_ROWS, Math.max(4, Number(d.rows) || 10)), spots, kinds, water: cells(d.water), tunnels: cells(d.tunnels) };
+    });
+}
+
+export function saveDraft(d: Draft) {
+  save(DRAFTS, [...drafts().filter((x) => x.id !== d.id), d]);
+}
+
+export function deleteDraft(id: string) {
+  save(DRAFTS, drafts().filter((d) => d.id !== id));
+}

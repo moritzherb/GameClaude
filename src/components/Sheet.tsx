@@ -65,9 +65,12 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
           {view.title}
         </h2>
         <div className="sheet-body">{view.children}</div>
-        <BigButton variant="light" onClick={leaving ? undefined : onClose}>
-          {view.closeLabel}
-        </BigButton>
+        {/* Always in reach: at the bottom, however far the sheet scrolls. */}
+        <div className="sheet-foot">
+          <BigButton variant="light" onClick={leaving ? undefined : onClose}>
+            {view.closeLabel}
+          </BigButton>
+        </div>
       </div>
     </div>
   );

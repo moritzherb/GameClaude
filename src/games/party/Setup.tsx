@@ -8,7 +8,7 @@ import { cloudOn } from '../../net/cloud';
 import type { Player } from '../../state/AppState';
 import { PawnIcon } from './bits';
 import { FetchBoardSheet, ShareBoardSheet } from './BoardCode';
-import type { Board } from './boards';
+import type { Board, Draft } from './boards';
 import { PAWNS, type PawnDef } from './pawns';
 
 const THEME_EMOJI: Record<string, string> = { classic: '🎲' };
@@ -21,13 +21,16 @@ interface Props {
   pawns: Record<string, PawnDef>;
   onPawns: (p: Record<string, PawnDef>) => void;
   onEdit: (b: Board, asNew: boolean) => void;
+  /** Boards saved unfinished: tapping one goes on with it in the editor. */
+  drafts: Draft[];
+  onDraft: (d: Draft) => void;
   /** A board someone shared, loaded by its code: save it and pick it. */
   onShared: (b: Board) => void;
   onStart: () => void;
 }
 
 /** Before the game: which board, and everyone's pawn. */
-export default function Setup({ players, boards, boardId, onBoard, pawns, onPawns, onEdit, onShared, onStart }: Props) {
+export default function Setup({ players, boards, boardId, onBoard, pawns, onPawns, onEdit, drafts, onDraft, onShared, onStart }: Props) {
   const [picking, setPicking] = useState<Player | null>(null);
   const [sharing, setSharing] = useState<Board | null>(null);
   const [fetching, setFetching] = useState(false);
@@ -64,6 +67,23 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
               </span>
               <span className="pt-board-name">{b.custom ? b.name : t(b.name)}</span>
               <span className="pt-board-sub">{b.custom ? t('Your own · {n} fields', { n: b.fields.length - 1 }) : t('{n} fields', { n: b.fields.length - 1 })}</span>
+            </button>
+          ))}
+          {drafts.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className="pt-board-card draft"
+              onClick={() => {
+                sfx.tick();
+                onDraft(d);
+              }}
+            >
+              <span className="pt-board-emoji" aria-hidden>
+                ✏️
+              </span>
+              <span className="pt-board-name">{d.name}</span>
+              <span className="pt-board-sub">{t('Draft · {n} fields', { n: Math.max(0, d.spots.length - 1) })}</span>
             </button>
           ))}
         </div>
