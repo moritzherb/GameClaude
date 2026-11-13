@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import PlayingCard from '../../components/PlayingCard';
@@ -309,6 +310,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
   const seat = (id: string) => view.seats.find((s) => s.id === id);
   const me = seat(myId);
   const myTurn = view.turnId === myId;
+  useYourTurn(myTurn);
   const dealerPhase = view.phase === 'dealer';
   const dealer = seat(view.dealerId);
   const turnSeat = seat(view.turnId);

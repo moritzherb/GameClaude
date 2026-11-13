@@ -6,7 +6,7 @@ import { t } from '../../i18n';
 import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { useTurnBubble } from '../../lib/turn';
+import { useTurnBubble, useYourTurn } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
@@ -114,6 +114,8 @@ export function TrashTable({
   const [nope, setNope] = useState(0);
   const local = me === undefined;
   const mine = local || me === g.turn;
+  // Each on their own phone: it buzzes when it's yours.
+  useYourTurn(!local && mine && g.winner == null);
   const bottom: Who = local ? 0 : (me ?? 0);
   const top: Who = bottom === 0 ? 1 : 0;
   // On one phone the middle turns to the player opposite; on their own phone nobody needs that.
@@ -200,7 +202,7 @@ export function TrashTable({
     const k = kindOf(base);
     if (base.phase !== 'place' || !card || !mine) return false;
     if (who !== base.turn) return miss(t('That’s not your side'));
-    if (k === 'toss') return miss(t('No use: drag it onto the discard pile'));
+    if (k === 'toss') return miss(t('Fits nowhere: drag it onto the discard pile'));
     const slot = base.sides[who][i];
     if (!slot) return false;
     if (k !== 'wild' && i !== slotFor(card)) return miss(t('Not there: this card goes into slot {slot}', { slot: SLOT_LABELS[slotFor(card) as number] }));
@@ -240,7 +242,7 @@ export function TrashTable({
     : g.phase === 'draw'
       ? t('{name}: draw a card', { name: player.name })
       : kind === 'toss'
-        ? t('No use: onto the discard pile')
+        ? t('Fits nowhere: onto the discard pile')
         : kind === 'swap'
           ? t('Swap it for your Jack, or drag it onto the discard pile')
           : kind === 'wild'

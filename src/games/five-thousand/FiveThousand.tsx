@@ -6,7 +6,7 @@ import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { usePlaying, useTurnBubble } from '../../lib/turn';
+import { usePlaying, useTurnBubble, useYourTurn } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Finished from '../../components/Finished';
@@ -116,6 +116,8 @@ export function FiveThousandTable({
 }) {
   const local = seat === undefined;
   const mine = local || seat === g.current;
+  // Each on their own phone: it buzzes when it's yours.
+  useYourTurn(!local && mine && !g.end);
   const [shaking, setShaking] = useState(false);
   // After a win the winning roll stays on the table with the big 5000; standings come on a tap.
   const [podium, setPodium] = useState(false);

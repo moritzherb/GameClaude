@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -538,6 +539,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
   const [leaving, setLeaving] = useState<Card[]>([]);
   const mine = view.sides[view.me];
   const myTurn = view.turn === view.me && view.phase === 'play';
+  useYourTurn(myTurn);
   const hand = sorted(view.hand);
   const up = mine.up.filter((c): c is Card => !!c);
   const zone = hand.length ? 'hand' : up.length ? 'up' : mine.down.some(Boolean) ? 'down' : null;

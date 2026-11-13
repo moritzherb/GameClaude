@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import HandFan from '../../components/HandFan';
@@ -223,11 +224,9 @@ function Table({
     }
   });
 
-  // Your turn: a nudge you can feel, and the hand gives a little hop (global.css: .fz-fan.hop).
+  // Your move: the phone buzzes, and the hand gives a little hop (global.css: .fz-fan.hop).
   const myMove = !dealing && mine && g.taking == null && (g.phase === 'playing' || g.phase === 'bidding' || g.phase === 'trump');
-  useEffect(() => {
-    if (myMove) buzz(12);
-  }, [myMove, g.phase]);
+  useYourTurn(myMove);
 
   // A trick nobody takes (its winner gone quiet): after a while the host can take it for them.
   const [stale, setStale] = useState(false);

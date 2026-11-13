@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -131,6 +132,7 @@ function Table({
   const name = (i: number) => seats[i]?.name ?? t('Someone');
   const mine = me >= 0 ? g.piles[me] : [];
   const myTurn = me >= 0 && g.turn === me && g.claim == null && g.winner == null && mine.length > 0;
+  useYourTurn(myTurn);
   const myClaim = me >= 0 && g.claim === me;
   const out = me >= 0 && g.out[me];
   const others = seats.map((s, i) => ({ s, i })).filter(({ i }) => i !== me);

@@ -8,6 +8,7 @@ import { newRoomCode, peerIdFor, type Member, type Profile, type ToGuest, type T
 import { SUPABASE_LINE } from './realtime';
 import { DataConnection, Peer, type PeerError } from './relay';
 import { forgetSavedGames } from './saved';
+import { useApp } from '../state/AppState';
 
 export type RoomStatus = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'error' | 'closed';
 
@@ -105,6 +106,9 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [cheers, setCheers] = useState<Cheers | null>(null);
+  const app = useApp();
+  const refreshProfiles = useRef(app.refreshProfiles);
+  refreshProfiles.current = app.refreshProfiles;
   const [game, setGame] = useState<string | null>(null);
   const gameRef = useRef<string | null>(null);
 
@@ -132,8 +136,10 @@ export function RoomProvider({ children }: { children: ReactNode }) {
   const setAllMembers = (list: Member[]) => {
     membersRef.current = list;
     setMembers(list);
-    // Everyone met here can join the crew for the one-phone games later.
+    // Everyone met here can join the crew for the one-phone games later; the ones already in it
+    // look as they do now (a photo put up since, say).
     rememberPeople(list, profileRef.current?.clientId);
+    refreshProfiles.current(list.map((m) => ({ personId: m.id, name: m.name, avatar: m.avatar, color: m.color, photo: m.photo })));
   };
 
   const emitGame = (data: unknown, fromId: string | null) => listeners.current.forEach((l) => l(data, fromId));

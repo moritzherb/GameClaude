@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import HandFan, { SortButton } from '../../components/HandFan';
@@ -151,6 +152,7 @@ function Table({
   const shown = sorted ? sortByColour(hand, (c) => c.color, worth, COLORS) : hand;
   const playing = g.winner == null;
   const myTurn = me >= 0 && g.turn === me && playing;
+  useYourTurn(myTurn);
   const canPlay = (c: Card) => myTurn && playable(g, me, c);
   const anyFits = myTurn && hand.some((c) => playable(g, me, c));
   // Nothing to play: the deck is where to go (it says so, gently, until you do).
@@ -193,7 +195,6 @@ function Table({
     const last = [...g.events].reverse().find((e) => e.k !== 'play' && e.k !== 'draw');
     if (last) setToast({ key: g.seq, text: toastText(last, name, me), tone: last.k === 'called' ? 'good' : last.k === 'forgot' ? 'bad' : 'plain' });
     if (g.events.some((e) => e.k === 'forgot' && e.by === me)) buzz([20, 40, 20]);
-    else if (g.turn === me && g.events.length) buzz(12);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [g.seq]);
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -153,6 +154,7 @@ function Table({
   const hand = me >= 0 ? g.hands[me] : [];
   const o = me >= 0 ? options(g, me) : { call: false, draw: false, play: false, mustCall: false };
   const myTurn = me >= 0 && g.phase === 'play' && g.turn === me;
+  useYourTurn(myTurn);
   const low = lowestClaim(g);
   const top = g.pile.at(-1);
   const last = g.log.at(-1);
