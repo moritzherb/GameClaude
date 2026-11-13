@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import BigButton from '../components/BigButton';
 import { CrewContext } from '../components/Finished';
-import GameBar from '../components/GameBar';
+import GameBar, { isClean } from '../components/GameBar';
 import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { markPlayed } from '../lib/recent';
-import { TurnContext, type TurnPlayer } from '../lib/turn';
+import { PlayingContext, TurnContext, type TurnPlayer } from '../lib/turn';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useRoom } from '../net/RoomProvider';
@@ -22,6 +22,8 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   const [confirmExit, setConfirmExit] = useState(false);
   // Who's on, named by the game: a bubble in the bar on a clean table.
   const [turn, setTurn] = useState<TurnPlayer | null>(null);
+  // Whether the game is past its setup screen (a game that doesn't say: always).
+  const [playing, setPlaying] = useState<boolean | null>(null);
   useWakeLock();
   // Everyone in the room: a game played to its end counts for them on this phone too.
   const crew = useMemo(
@@ -56,14 +58,16 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   }
 
   return (
-    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`}>
-      <GameBar game={game} turn={turn} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
+    <main className={`screen play-screen${isClean(game, settings.clean) ? ' clean' : ''}`}>
+      <GameBar game={game} turn={turn} playing={playing ?? true} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}
 
       <CrewContext.Provider value={crew}>
         <TurnContext.Provider value={setTurn}>
+          <PlayingContext.Provider value={setPlaying}>
           <Game />
+          </PlayingContext.Provider>
         </TurnContext.Provider>
       </CrewContext.Provider>
 

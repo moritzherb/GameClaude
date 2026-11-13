@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import FitText from '../../components/FitText';
 import BigButton from '../../components/BigButton';
 import NextName from '../../components/NextName';
 import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { useTurnBubble } from '../../lib/turn';
+import { usePlaying, useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Finished from '../../components/Finished';
@@ -37,6 +38,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const [starterId, setStarterId] = useState(() => pick(players).id);
   const [g, setG] = useState<Game | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
+  usePlaying(!!g);
 
   /* ---------- Setup: who starts ---------- */
   if (!g) {
@@ -596,8 +598,13 @@ function Table({
           <span className="fk-bank-icon" aria-hidden>
             💰
           </span>
-          <span className="fk-bank-text">{bank.text}</span>
-          <span className="fk-bank-amount">{bank.amount}</span>
+          {/* Inside the round button: smaller when long ("noch 500"), never cut off at its edge. */}
+          <FitText className="fk-bank-text" min={0.55}>
+            {bank.text}
+          </FitText>
+          <FitText className="fk-bank-amount" min={0.55}>
+            {bank.amount}
+          </FitText>
         </Tap>
       )}
       {coin && (

@@ -5,6 +5,7 @@ import TrashOnline from './TrashOnline';
 
 const trash: GameDefinition = {
   id: 'trash',
+  table: 'full',
   name: tx('Trash'),
   emoji: '🗑️',
   tagline: tx('Turn your ten cards over first. Then do it with nine.'),

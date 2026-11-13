@@ -76,4 +76,10 @@ export interface GameDefinition {
   phones?: string;
   /** Has in-game explanations that groups who know the game can switch off in Settings. */
   explains?: boolean;
+  /**
+   * The clean table: 'clean' always (nothing on the table is worth showing besides the game, e.g. a
+   * card to read out), 'full' never (who's on and what lies in the middle are the game), else the
+   * players' switch in the bar decides.
+   */
+  table?: 'clean' | 'full';
 }

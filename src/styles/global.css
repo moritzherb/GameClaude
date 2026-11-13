@@ -6621,7 +6621,15 @@ h3 {
   font-weight: 700;
   font-size: max(10px, calc(var(--bank) * 0.13));
   text-align: center;
-  max-width: 90%;
+}
+
+/* Kept inside the circle (FitText makes them smaller to fit). */
+.fk-bank-text,
+.fk-bank-amount {
+  display: block;
+  max-width: 78%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .fk-die {
@@ -11851,8 +11859,8 @@ h3 {
   display: none;
 }
 
-/* 5000: the table with the cup, the dice and the bank; set-aside dice below it. */
-.play-screen.clean .fk > .fk-board,
+/* 5000: the table with the cup, the dice and the bank; set-aside dice below it. Everyone's points
+   stay along the top. */
 .play-screen.clean .fk > .kc-status {
   display: none;
 }
@@ -11865,8 +11873,39 @@ h3 {
   display: none;
 }
 
-.play-screen.clean .sw-board {
-  justify-content: center;
+/* Schweinerei on a clean table: one row over the board, the points left and the bonus throw right,
+   so the board gets the rest of the screen. */
+.play-screen.clean .sw {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-auto-rows: auto;
+  column-gap: 12px;
+}
+
+.play-screen.clean .sw > * {
+  grid-column: 1 / -1;
+}
+
+.play-screen.clean .sw.mx > .mx-status.mx-status {
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: flex-start;
+}
+
+.play-screen.clean .sw.mx > .mx-status .mx-claim.mx-claim {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.play-screen.clean .sw > .sw-board {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.play-screen.clean .sw > .mx-table {
+  grid-row: 2;
 }
 
 .play-screen.clean .mx-status:not(.verdict) {
@@ -11888,20 +11927,8 @@ h3 {
   display: none;
 }
 
-/* No room kept empty under the table: it reaches down to the bottom, so the stack and the glass sit
-   in the middle of the screen, and Next shows over the table's foot while a card is up. */
-.play-screen.clean .kl {
-  position: relative;
-}
-
-.play-screen.clean .kl > .sticky-action {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  padding: 0;
-  background: none;
-}
+/* Clean or not, Next stays where it is, as it is, under the table: the table only grows into the
+   room the hidden lines leave. */
 
 /* Bus Driver: the cards, the question and everyone's hand. Row numbers, sips per row and
    counters go (their room stays, so nothing shifts). */

@@ -5,7 +5,7 @@ import Sheet from '../../components/Sheet';
 import { t } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { shuffle } from '../../lib/random';
-import { useTurnBubble } from '../../lib/turn';
+import { usePlaying, useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { byId, DECK, GLASS_ID, STANDING_RULES, type TaskCard } from './cards';
@@ -42,6 +42,7 @@ export default function Klatschen({ players, exit }: GameProps) {
   const known = useApp().knows('klatschen');
   const [s, setS] = useState<State | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
+  usePlaying(!!s);
 
   /* ---------- Before the game: the three standing rules ---------- */
   if (!s) {

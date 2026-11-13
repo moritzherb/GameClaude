@@ -4,6 +4,7 @@ import TenBut from './TenBut';
 
 const tenBut: GameDefinition = {
   id: 'ten-but',
+  table: 'clean',
   name: tx('He’s a 10/10, but…'),
   emoji: '🔟',
   tagline: tx('Perfect. Except for one thing.'),

@@ -8,7 +8,7 @@ import { t } from '../../i18n';
 import { newDeck, type Card } from '../../lib/cards';
 import { buzz, cheer, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
-import { useTurnBubble } from '../../lib/turn';
+import { usePlaying, useTurnBubble } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Answers, { Verdict, VERDICT_DELAY_MS } from './Answers';
@@ -86,6 +86,7 @@ export default function BusDriver({ players, exit }: GameProps) {
   const question = questions[s.round];
   const seat = s.seats[s.turn];
   useTurnBubble(s.stage === 'turn' ? seat?.player : null);
+  usePlaying(s.stage !== 'setup');
   const dealer = players.find((p) => p.id === s.dealerId);
 
   const start = (dealerId = s.dealerId) =>
