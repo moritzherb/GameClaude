@@ -7154,9 +7154,40 @@ li {
   white-space: nowrap;
 }
 
+.sp-opp-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sp-opp-stats {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .sp-opp-hand {
   display: flex;
   margin-left: auto;
+}
+
+/* All they have left, big: the race at a glance. */
+.sp-opp-left {
+  flex: none;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .sp-opp-hand i {
@@ -7276,19 +7307,41 @@ li {
 .sp-count {
   position: absolute;
   inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border-radius: inherit;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.32);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   color: var(--accent);
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 6rem;
   line-height: 1;
-  animation: pop-in 0.3s var(--spring) both;
+  /* The whole table dims and blurs at once and stays so (only the number below pops). */
+  animation: sp-dim 0.2s var(--ease-out) both;
   pointer-events: none;
+}
+
+@keyframes sp-dim {
+  from {
+    opacity: 0;
+  }
+}
+
+.sp-count-n {
+  display: block;
+  animation: sp-count-n 0.3s var(--ease-out) both;
+}
+
+@keyframes sp-count-n {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
 }
 
 .sp-count-label {
@@ -7341,6 +7394,7 @@ li {
 }
 
 .sp-hand {
+  position: relative;
   display: flex;
   justify-content: center;
   gap: 0;
@@ -15868,4 +15922,25 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .sb-lib-search:active {
   transform: scale(0.98);
+}
+
+/* Speed: tapped too fast at cards that don't fit, the hand rests a moment. */
+.sp-hand.locked .sp-card {
+  filter: grayscale(0.6) brightness(0.7);
+}
+
+.sp-locked {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  padding: 8px 16px;
+  border-radius: 18px;
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: sp-dim 0.15s var(--ease-out) both;
 }
