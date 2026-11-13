@@ -488,7 +488,11 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
 
       <p className="fine-print pt-tool-hint">
         {t(hint)}
-        {blocker && drawn && <span className="pt-ed-blocker">{t('Not ready to play: {what}', { what: blocker })}</span>}
+        {/* Its line is always kept (empty when there's nothing to say), so the map above never
+            changes size when it comes or goes. */}
+        <span className="pt-ed-blocker" aria-hidden={!(blocker && drawn)}>
+          {blocker && drawn ? t('Not ready to play: {what}', { what: blocker }) : '\u00a0'}
+        </span>
       </p>
 
       <div className="pt-ed-actions">

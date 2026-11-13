@@ -367,27 +367,65 @@ li {
 }
 
 /*
- * A game's page (its rules, before it starts): the start button is always on screen, pinned to the
- * bottom edge, and the rules scroll underneath it. The page keeps room at the end so its last
- * lines can scroll up above the button.
+ * A game's page (its rules, before it starts): exactly the screen's height. The back button at the
+ * top and the start button at the bottom stay put; only the middle (the card, the numbers, the
+ * rules) scrolls, and only when it's longer than its room (else it's still: no scroll, no bounce).
  */
 .screen.game-detail {
-  --bar: calc(18px + 64px + 2px + env(safe-area-inset-bottom));
-  padding-bottom: calc(var(--bar) + 16px);
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
 }
 
-.screen.game-detail.two-buttons {
-  --bar: calc(18px + 64px + 10px + 56px + 2px + env(safe-area-inset-bottom));
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    .screen.game-detail {
+      height: calc(var(--app-h, 100dvh) + env(safe-area-inset-top));
+      min-height: 0;
+    }
+  }
+}
+
+.game-detail > .top-bar {
+  flex: none;
+}
+
+.detail-middle {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* Out to the screen's edges, so shadows and rings aren't cut at the sides. */
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 0 var(--gutter) 8px;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.detail-middle::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-middle > * {
+  flex-shrink: 0;
+}
+
+.detail-middle.scrolls {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* What scrolls fades out into the button bar. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
 }
 
 .game-detail > .sticky-action {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-width: var(--max);
-  margin: 0 auto;
-  padding-inline: var(--gutter);
+  position: static;
+  flex: none;
+  margin-top: 0;
+  padding-top: 6px;
+  background: none;
 }
 
 .center {
@@ -13225,10 +13263,15 @@ li {
   place-items: center;
 }
 
+/* A fixed height (three lines of hint and the line saying what's missing), whatever the tool and
+   the language: the map above keeps its size while you draw. */
 .pt-tool-hint {
-  min-height: 2.6em;
+  flex: none;
+  height: calc(4 * 1.4em + 2px);
+  overflow: hidden;
   margin: 0;
   font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .pt-ed-actions {
