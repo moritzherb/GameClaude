@@ -1,0 +1,62 @@
+// Spellbound (fantasy trick-taking).
+const spellbound: Record<string, string> = {
+  Spellbound: 'Zauberstich',
+  'Say how many tricks you’ll take. Then take exactly that many.': 'Sag an, wie viele Stiche du machst. Dann mach genau so viele.',
+  'Every player’s phone': 'Ein Handy pro Spieler',
+  'Everyone joins the same room on their own phone. 60 cards: Fire, Water, Nature and Astral 1 to 13, four Archmages, four Fools.':
+    'Alle sind mit dem eigenen Handy im selben Raum. 60 Karten: Feuer, Wasser, Natur und Astral von 1 bis 13, vier Erzmagier, vier Narren.',
+  'Round 1: one card each, round 2: two, and so on (3 players play 20 rounds, 4 play 15, 5 play 12, 6 play 10; a quick match 5).':
+    'Runde 1: eine Karte pro Person, Runde 2: zwei und so weiter (zu dritt 20 Runden, zu viert 15, zu fünft 12, zu sechst 10; ein schnelles Spiel 5).',
+  'A card is turned up for trump: a number makes its faction trump, a Fool means no trump, an Archmage lets the dealer pick.':
+    'Eine Karte wird für Trumpf aufgedeckt: Eine Zahl macht ihre Fraktion zu Trumpf, ein Narr heißt kein Trumpf, bei einem Erzmagier wählt der Geber.',
+  'From left of the dealer, everyone says how many tricks they’ll take (0 up to the round’s cards). It can’t be changed.':
+    'Links vom Geber beginnend sagt jeder an, wie viele Stiche er macht (0 bis zur Kartenzahl der Runde). Das gilt dann.',
+  'Follow the faction of the first number card played if you can; an Archmage or a Fool may always be played.':
+    'Bedien die Fraktion der ersten Zahlenkarte, wenn du kannst; Erzmagier und Narr gehen immer.',
+  'The first Archmage takes the trick; else the highest trump; else the highest card of the faction led. Fools lose, unless all are Fools: then the first one.':
+    'Der erste Erzmagier macht den Stich; sonst der höchste Trumpf; sonst die höchste Karte der ausgespielten Fraktion. Narren verlieren, außer alle sind Narren: dann der erste.',
+  'Exactly right: 20 points plus 10 per trick. Off: minus 10 per trick off.': 'Genau getroffen: 20 Punkte plus 10 pro Stich. Daneben: minus 10 pro Stich Abweichung.',
+  'Most points after the last round wins.': 'Wer nach der letzten Runde die meisten Punkte hat, gewinnt.',
+
+  Fire: 'Feuer',
+  Water: 'Wasser',
+  Nature: 'Natur',
+  Astral: 'Astral',
+  Archmage: 'Erzmagier',
+  Fool: 'Narr',
+  'Waiting for {name} to deal…': 'Warte, bis {name} austeilt…',
+  'Waiting for the host to deal…': 'Warte, bis der Host austeilt…',
+  '3 to 6 players, 60 cards': '3 bis 6 Spieler, 60 Karten',
+  'Say how many tricks you’ll take each round. Hitting it exactly is what scores.': 'Sag jede Runde an, wie viele Stiche du machst. Punkte gibt’s nur, wenn es genau stimmt.',
+  'Who plays?': 'Wer spielt?',
+  'Quick match': 'Schnelles Spiel',
+  '{n} rounds': '{n} Runden',
+  'All {n} rounds': 'Alle {n} Runden',
+  'All rounds': 'Alle Runden',
+  'At least 3 players': 'Mindestens 3 Spieler',
+  'Deal the cards': 'Karten austeilen',
+  Someone: 'Jemand',
+  'The dealer picks': 'Geber wählt',
+  'No trump': 'Kein Trumpf',
+  Trump: 'Trumpf',
+  'Round {n} of {m}': 'Runde {n} von {m}',
+  '{name} wins!': '{name} gewinnt!',
+  'Round over': 'Runde vorbei',
+  '{won} of {bid}': '{won} von {bid}',
+  '{won}/{bid}': '{won}/{bid}',
+  'New game': 'Neues Spiel',
+  'Next round: {n} cards': 'Nächste Runde: {n} Karten',
+  'An Archmage was turned: you pick trump': 'Ein Erzmagier liegt oben: Du wählst Trumpf',
+  '{name} picks trump': '{name} wählt Trumpf',
+  'How many tricks will you take?': 'Wie viele Stiche machst du?',
+  '{name} is bidding': '{name} sagt an',
+  'Your card': 'Deine Karte',
+  '{name}’s card': '{name} ist dran',
+  '{name} takes the trick': '{name} macht den Stich',
+  'Your hand': 'Deine Hand',
+  Watching: 'Zuschauen',
+  '{n} pts': '{n} P.',
+  'Turned up': 'Aufgedeckt',
+};
+
+export default spellbound;

@@ -20,6 +20,7 @@ import { GameApp, GameGlyph, IconArt } from './AppIcon';
 import { useHomeEdit, type Pager } from './useHomeEdit';
 import { useRows } from './useRows';
 import { GAMES } from '../games/registry';
+import LibrarySearch from './LibrarySearch';
 import { CrewWidget, LastWidget } from './Widgets';
 
 export interface HomeProps {
@@ -83,6 +84,7 @@ export default function Springboard({ players, recent, returning, dock, wall, on
   // Back from a game: the page it was opened on (the second, the App Library) again.
   const want = useRef(returning ? lastPage : 0);
   const [page, setPage] = useState(() => Math.max(0, want.current));
+  const [libSearch, setLibSearch] = useState(false);
   const pageRef = useRef(page);
   const countRef = useRef(count);
   countRef.current = count;
@@ -112,7 +114,7 @@ export default function Springboard({ players, recent, returning, dock, wall, on
 
   const pager = useMemo<Pager>(() => ({ page: () => pageRef.current, last: () => countRef.current - 2, go }), [go]);
   const edit = useHomeEdit(main, games.map((g) => g.id), onOrder, { pager, onRemove });
-  const [folder, setFolder] = useState<Category | null>(null);
+  const [folder, setFolder] = useState<{ category: Category; from: DOMRect } | null>(null);
 
   useLayoutEffect(() => {
     const el = grid.current;
@@ -314,13 +316,14 @@ export default function Springboard({ players, recent, returning, dock, wall, on
             </section>
           ))}
           <section className="sb-page sb-library" aria-label={t('App Library')}>
-            <Tap className="sb-lib-search" onClick={() => onSearch()}>
+            {/* The library's own search (an A–Z list), not Spotlight. */}
+            <Tap className="sb-lib-search" onClick={() => setLibSearch(true)}>
               <SearchIcon />
               {t('App Library')}
             </Tap>
             <div className="sb-folders">
               {CATEGORIES.map((c) => (
-                <LibraryGroup key={c.id} category={c} onOpen={() => setFolder(c)} />
+                <LibraryGroup key={c.id} category={c} onOpen={(from) => setFolder({ category: c, from })} />
               ))}
             </div>
           </section>
@@ -343,7 +346,8 @@ export default function Springboard({ players, recent, returning, dock, wall, on
       <nav className="sb-dock" aria-label={t('Dock')}>
         {dock}
       </nav>
-      {folder && <LibraryFolder category={folder} onClose={() => setFolder(null)} />}
+      {folder && <LibraryFolder category={folder.category} from={folder.from} onClose={() => setFolder(null)} />}
+      {libSearch && <LibrarySearch onClose={() => setLibSearch(false)} />}
     </main>
   );
 }
@@ -351,7 +355,7 @@ export default function Springboard({ players, recent, returning, dock, wall, on
 const inCategory = (category: Category) => GAMES.filter((g) => g.categories.includes(category.id));
 
 /** One folder of the App Library: three games big, the rest small in the fourth corner (a tap opens them all). */
-export function LibraryGroup({ category, onOpen }: { category: Category; onOpen: () => void }) {
+export function LibraryGroup({ category, onOpen }: { category: Category; onOpen: (from: DOMRect) => void }) {
   const list = inCategory(category);
   if (!list.length) return null;
   const many = list.length > 4;
@@ -364,7 +368,7 @@ export function LibraryGroup({ category, onOpen }: { category: Category; onOpen:
           <GameApp key={g.id} game={g} />
         ))}
         {rest.length > 0 && (
-          <Tap className="lib-more" onClick={onOpen} ariaLabel={`${t(category.label)}: ${t('All games')}`}>
+          <Tap className="lib-more" onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())} ariaLabel={`${t(category.label)}: ${t('All games')}`}>
             {rest.map((g) => (
               <IconArt key={g.id} color={g.color} size="sm">
                 <GameGlyph game={g} />
@@ -380,12 +384,24 @@ export function LibraryGroup({ category, onOpen }: { category: Category; onOpen:
 
 /**
  * A folder of the App Library opened: all its games over the blurred home screen, as the iPhone
- * opens one. A tap beside it (or Escape) closes it.
+ * opens one: it grows out of the corner that was tapped and shrinks back into it. A tap beside it
+ * (or Escape) closes it.
  */
-function LibraryFolder({ category, onClose }: { category: Category; onClose: () => void }) {
+function LibraryFolder({ category, from, onClose }: { category: Category; from: DOMRect; onClose: () => void }) {
   const [closing, setClosing] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   useTopTint(wrap);
+  // Where it comes from: the tapped corner, as a point in the panel and its size against the panel's.
+  useLayoutEffect(() => {
+    const el = panel.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    if (!box.width) return;
+    el.style.setProperty('--from-x', `${from.left + from.width / 2 - box.left}px`);
+    el.style.setProperty('--from-y', `${from.top + from.height / 2 - box.top}px`);
+    el.style.setProperty('--from-scale', `${Math.min(0.9, Math.max(0.1, from.width / box.width))}`);
+  }, [from]);
   const close = useCallback(() => {
     setClosing(true);
     window.setTimeout(onClose, 180);
@@ -400,7 +416,7 @@ function LibraryFolder({ category, onClose }: { category: Category; onClose: () 
       <h2 className="sb-folder-title" onClick={close}>
         {t(category.label)}
       </h2>
-      <div className="sb-folder" role="dialog" aria-modal="true" aria-label={t(category.label)} style={{ '--k': category.color } as CSSProperties}>
+      <div ref={panel} className="sb-folder" role="dialog" aria-modal="true" aria-label={t(category.label)} style={{ '--k': category.color } as CSSProperties}>
         <div className="os-grid sb-folder-grid">
           {inCategory(category).map((g) => (
             <GameApp key={g.id} game={g} />

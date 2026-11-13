@@ -124,6 +124,9 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-weight: 400;
+  /* Letter pairs spaced by the font's own kerning, and type drawn for its size (optical sizing). */
+  font-kerning: normal;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
@@ -311,6 +314,12 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+}
+
+/* No word left alone on a paragraph's last line (a widow): the browser evens out the last lines. */
+p,
+li {
+  text-wrap: pretty;
 }
 
 :focus-visible {
@@ -1518,20 +1527,62 @@ h3 {
   justify-content: center;
   background: rgba(0, 0, 0, 0.35);
   /* Straight along: the strip under the clock dims with it frame by frame (components/Sheet.tsx). */
-  animation: fade-in 0.2s linear;
+  animation: sheet-dim-in 0.2s linear;
 }
 
 /* Closing: the dim goes (a fifth quicker than it came), and nothing more is tapped through it. */
 .sheet-backdrop.leaving {
-  animation: fade-out 0.16s linear forwards;
+  animation: sheet-dim-out 0.16s linear forwards;
   pointer-events: none;
+}
+
+/* Up and down from wherever it is (Sheet sets --sheet-from / --backdrop-from when it turns round
+   half way), else from the bottom and from clear. */
+.sheet.slide-up {
+  animation-name: sheet-up;
+}
+
+.sheet.slide-down {
+  animation-name: sheet-down;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: var(--sheet-from, translateY(100%));
+  }
+}
+
+@keyframes sheet-down {
+  from {
+    transform: var(--sheet-from, none);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-dim-in {
+  from {
+    opacity: var(--backdrop-from, 0);
+  }
+}
+
+@keyframes sheet-dim-out {
+  from {
+    opacity: var(--backdrop-from, 1);
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 .sheet {
   width: 100%;
   max-width: var(--max);
   max-height: 88dvh;
-  overflow-y: auto;
+  /* Only the text in the middle scrolls (.sheet-body): the grabber, title and close button stay put,
+     however it scrolls or bounces. */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1557,9 +1608,33 @@ h3 {
 }
 
 .sheet-body {
+  background: inherit;
+}
+
+/* The close button: always at the bottom, still while the text above it scrolls. */
+.sheet-foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+}
+
+.sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* Out to the sheet's edges, so rows, rings and shadows aren't cut at the sides. */
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 2px var(--gutter);
+}
+
+.sheet-grabber,
+.sheet-title {
+  flex: none;
 }
 
 /* ---------- Players ---------- */
@@ -2125,7 +2200,7 @@ h3 {
   height: 30px;
   padding: 0 12px 0 3px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--chip) 22%, var(--surface));
+  background: color-mix(in oklab, var(--chip) 22%, var(--surface));
   font-family: var(--font-body);
   font-size: 0.9rem;
   font-weight: 700;
@@ -4191,13 +4266,13 @@ h3 {
 
 .kc-crown-body {
   fill: var(--sun);
-  stroke: color-mix(in srgb, var(--sun) 60%, #000);
+  stroke: color-mix(in oklab, var(--sun) 60%, #000);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 
 .kc-crown-band {
-  fill: color-mix(in srgb, var(--sun) 78%, #000);
+  fill: color-mix(in oklab, var(--sun) 78%, #000);
 }
 
 .kc-crown-gem {
@@ -4205,7 +4280,7 @@ h3 {
 }
 
 .kc-crown-tip {
-  fill: color-mix(in srgb, var(--sun) 55%, #000);
+  fill: color-mix(in oklab, var(--sun) 55%, #000);
   transition: fill 0.4s ease;
 }
 
@@ -5064,7 +5139,7 @@ h3 {
   grid-column: 1 / -1;
   flex-direction: row;
   gap: 10px;
-  background: color-mix(in srgb, var(--sun) 35%, var(--surface));
+  background: color-mix(in oklab, var(--sun) 35%, var(--surface));
 }
 
 .mx-value-name {
@@ -5140,7 +5215,7 @@ h3 {
 }
 
 .sw-score.on {
-  background: color-mix(in srgb, var(--who) 22%, var(--surface));
+  background: color-mix(in oklab, var(--who) 22%, var(--surface));
   box-shadow: inset 0 0 0 2px var(--who);
 }
 
@@ -5157,7 +5232,7 @@ h3 {
   height: 34px;
   padding: 0 10px 0 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--sun) 22%, var(--surface));
+  background: color-mix(in oklab, var(--sun) 22%, var(--surface));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sun) 60%, transparent);
   font-size: 0.8rem;
   font-weight: 700;
@@ -5181,6 +5256,7 @@ h3 {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .sw-bonus.won {
@@ -6604,7 +6680,15 @@ h3 {
   font-weight: 700;
   font-size: max(10px, calc(var(--bank) * 0.13));
   text-align: center;
-  max-width: 90%;
+}
+
+/* Kept inside the circle (FitText makes them smaller to fit). */
+.fk-bank-text,
+.fk-bank-amount {
+  display: block;
+  max-width: 78%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .fk-die {
@@ -6656,7 +6740,7 @@ h3 {
 
 .fk-die.dull.red,
 .fk-table.dead .fk-die.red {
-  color: color-mix(in srgb, var(--card-red) 55%, #b6b2a8);
+  color: color-mix(in oklab, var(--card-red) 55%, #b6b2a8);
 }
 
 .fk-die:disabled {
@@ -9257,7 +9341,7 @@ h3 {
   gap: 12px;
   padding: 14px 10px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface));
   isolation: isolate;
   min-width: 0;
   min-height: 0;
@@ -10832,7 +10916,7 @@ h3 {
 }
 
 .as-seat.turn {
-  background: color-mix(in srgb, var(--chip) 30%, var(--surface));
+  background: color-mix(in oklab, var(--chip) 30%, var(--surface));
   box-shadow: inset 0 0 0 2px var(--chip);
 }
 
@@ -11083,11 +11167,11 @@ h3 {
 }
 
 .as-rank-president {
-  background: color-mix(in srgb, var(--c-yellow) 35%, var(--surface));
+  background: color-mix(in oklab, var(--c-yellow) 35%, var(--surface));
 }
 
 .as-rank-arschloch {
-  background: color-mix(in srgb, #8b5a2b 30%, var(--surface));
+  background: color-mix(in oklab, #8b5a2b 30%, var(--surface));
 }
 
 .as-rank-emoji {
@@ -11581,12 +11665,12 @@ h3 {
 
 .ar-reveal.lied .ar-reveal-stamp {
   color: var(--bad);
-  background: color-mix(in srgb, var(--bad) 12%, var(--surface));
+  background: color-mix(in oklab, var(--bad) 12%, var(--surface));
 }
 
 .ar-reveal.true .ar-reveal-stamp {
   color: var(--good-ink, var(--good));
-  background: color-mix(in srgb, var(--good) 14%, var(--surface));
+  background: color-mix(in oklab, var(--good) 14%, var(--surface));
 }
 
 .ar-reveal-text {
@@ -11834,8 +11918,8 @@ h3 {
   display: none;
 }
 
-/* 5000: the table with the cup, the dice and the bank; set-aside dice below it. */
-.play-screen.clean .fk > .fk-board,
+/* 5000: the table with the cup, the dice and the bank; set-aside dice below it. Everyone's points
+   stay along the top. */
 .play-screen.clean .fk > .kc-status {
   display: none;
 }
@@ -11848,8 +11932,39 @@ h3 {
   display: none;
 }
 
-.play-screen.clean .sw-board {
-  justify-content: center;
+/* Schweinerei on a clean table: one row over the board, the points left and the bonus throw right,
+   so the board gets the rest of the screen. */
+.play-screen.clean .sw {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-auto-rows: auto;
+  column-gap: 12px;
+}
+
+.play-screen.clean .sw > * {
+  grid-column: 1 / -1;
+}
+
+.play-screen.clean .sw.mx > .mx-status.mx-status {
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: flex-start;
+}
+
+.play-screen.clean .sw.mx > .mx-status .mx-claim.mx-claim {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.play-screen.clean .sw > .sw-board {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.play-screen.clean .sw > .mx-table {
+  grid-row: 2;
 }
 
 .play-screen.clean .mx-status:not(.verdict) {
@@ -11871,20 +11986,8 @@ h3 {
   display: none;
 }
 
-/* No room kept empty under the table: it reaches down to the bottom, so the stack and the glass sit
-   in the middle of the screen, and Next shows over the table's foot while a card is up. */
-.play-screen.clean .kl {
-  position: relative;
-}
-
-.play-screen.clean .kl > .sticky-action {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  padding: 0;
-  background: none;
-}
+/* Clean or not, Next stays where it is, as it is, under the table: the table only grows into the
+   room the hidden lines leave. */
 
 /* Bus Driver: the cards, the question and everyone's hand. Row numbers, sips per row and
    counters go (their room stays, so nothing shifts). */
@@ -12715,7 +12818,7 @@ h3 {
   min-height: 40px;
   padding: 0 16px;
   border-radius: 999px;
-  background: color-mix(in srgb, #f2c94c 30%, var(--surface-2));
+  background: color-mix(in oklab, #f2c94c 30%, var(--surface-2));
   font-weight: 700;
 }
 
@@ -12725,7 +12828,7 @@ h3 {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--field) 28%, var(--surface-2));
+  background: color-mix(in oklab, var(--field) 28%, var(--surface-2));
 }
 
 .pt-verdict-emoji {
@@ -12826,7 +12929,7 @@ h3 {
   min-height: 46px;
   padding: 6px 10px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--field) 32%, var(--surface-2));
+  background: color-mix(in oklab, var(--field) 32%, var(--surface-2));
   text-align: left;
   font-size: 0.82rem;
   font-weight: 700;
@@ -13552,7 +13655,7 @@ h3 {
   text-wrap: balance;
 }
 
-:is(.ar-pile-count, .as-rank-sips, .crew-count, .fk-bank-amount, .fk-burst-num, .ftd-sips-num, .hr-decide-score, .hs-row-num, .hs-stake-num, .ph-summary-n, .pt-clock-time, .pt-count, .pt-cube-n, .pt-double-n, .pt-stepper-n, .pt-pot, .sp-count, .sp-pile-count, .tr-count, .sw-score-num, .cloud-code-value, .room-code) {
+:is(.ar-pile-count, .as-rank-sips, .crew-count, .fk-bank-amount, .fk-burst-num, .ftd-sips-num, .hr-decide-score, .hs-row-num, .hs-stake-num, .ph-summary-n, .pt-clock-time, .pt-count, .pt-cube-n, .pt-double-n, .pt-stepper-n, .pt-pot, .sp-count, .sp-pile-count, .tr-count, .sw-score-num, .cloud-code-value, .room-code, .cc-seat-n, .cc-result-n, .fz-seat-meta, .fz-gain, .fz-total, .fz-bid) {
   font-variant-numeric: tabular-nums;
 }
 
@@ -13640,7 +13743,9 @@ h3 {
 .player-avatar,
 .profile-color,
 .kc-chip,
-.sw-bonus {
+.sw-bonus,
+.chip,
+.sb-lib-search {
   position: relative;
 }
 
@@ -13652,7 +13757,9 @@ h3 {
 .player-avatar::after,
 .profile-color::after,
 .kc-chip::after,
-.sw-bonus::after {
+.sw-bonus::after,
+.chip::after,
+.sb-lib-search::after {
   content: '';
   position: absolute;
   top: min(0px, calc((100% - 44px) / 2));
@@ -13674,4 +13781,1233 @@ h3 {
    circles. */
 .avatar-stack span.avatar-glyph {
   all: unset;
+}
+
+/* Party editor: the field search stays at the top of its sheet while the fields scroll under it. */
+.pt-kinds {
+  background: inherit;
+}
+
+.pt-kind-search-wrap {
+  position: sticky;
+  z-index: 2;
+  top: -8px;
+  margin-top: -8px;
+  padding: 8px 0;
+  background: inherit;
+}
+
+/* A tunnel under a river: seen faintly through the water, hatched. */
+.pt-cell-tunnel.under {
+  opacity: 0.6;
+}
+
+.pt-cell-tunnel.under::before,
+.pt-cell-tunnel.under .pt-arm {
+  background: repeating-linear-gradient(45deg, #3e2612 0 2px, transparent 2px 5px);
+}
+
+/* What's still missing before a board can be played (it's saved as a draft till then). */
+.pt-ed-blocker {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pt-tool:disabled {
+  opacity: 0.4;
+}
+
+/* A board saved unfinished: tap it to go on with it. */
+.pt-board-card.draft {
+  background: transparent;
+  box-shadow: none;
+  border: 1.5px dashed var(--line);
+}
+
+.pt-kind-search-wrap .pt-kind-search {
+  width: 100%;
+}
+
+/* The profile picture is a button too (tap it for a new photo). */
+button.profile-avatar:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Settings: the look's own rows open under one row (Hick: a short list to choose from). */
+.look-chevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 16px;
+  transition: transform 0.2s var(--ease-out);
+}
+
+.look-toggle.open .look-chevron {
+  transform: rotate(90deg);
+}
+
+/* ---------- Egyptian Rat Screw (rs-): the others' piles along the top, the middle fanned in the
+   middle, your pile bottom left, Slap bottom right. Piles are as thick as the cards in them. ---------- */
+.rs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rs > * {
+  flex-shrink: 0;
+}
+
+.rs-others {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.rs-others::-webkit-scrollbar {
+  display: none;
+}
+
+.rs-seat {
+  flex: none;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.rs-seat.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.rs-seat.out {
+  opacity: 0.4;
+}
+
+.rs-seat-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.rs-seat-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* A face-down pile: one hairline per card, so its height shows how many there are. */
+.rs-stack {
+  --w: 34px;
+  position: relative;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 1.4 + var(--n) * 0.7px);
+}
+
+.rs-stack.big {
+  --w: 92px;
+  height: calc(var(--w) * 1.4 + var(--n) * 1.2px);
+}
+
+/* A classic back: a fine red lattice inside a white border, as on a pub's deck. */
+.rs-stack i {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--k) * 0.7px);
+  width: var(--w);
+  height: calc(var(--w) * 1.4);
+  border-radius: calc(var(--w) * 0.1);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 5px), #9e3a32;
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.07) #f7f4ee, inset 0 0 0 calc(var(--w) * 0.08) rgba(0, 0, 0, 0.12), 0 0.5px 0 rgba(0, 0, 0, 0.35);
+}
+
+.rs-stack.big i {
+  bottom: calc(var(--k) * 1.2px);
+}
+
+.rs-stack.empty {
+  border-radius: calc(var(--w) * 0.12);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.rs-status {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+/* The middle: the top card big, the ones before it peeking out to the left and up, each a little
+   turned, as real cards lie. */
+.rs-middle {
+  --cw: clamp(96px, 30vw, 132px);
+  position: relative;
+  flex: 1 1 0;
+  min-height: calc(var(--cw) * 1.6);
+  display: grid;
+  place-items: center;
+}
+
+.rs-fan-card {
+  position: absolute;
+  width: var(--cw);
+  height: calc(var(--cw) * 1.4);
+  /* Centred: the top card right of the middle, the ones before it peeking out to the left. */
+  transform: translate(calc((var(--k) + var(--half, 0)) * var(--cw) * 0.22), calc(var(--k) * var(--cw) * 0.06)) rotate(var(--tilt));
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  animation: rs-land 0.18s var(--ease-out);
+}
+
+@keyframes rs-land {
+  from {
+    transform: translate(calc(var(--half, 0) * var(--cw) * 0.22), -24px) rotate(var(--tilt)) scale(1.06);
+    opacity: 0;
+  }
+}
+
+.rs-middle-more {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rs-joker {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--cw) * 0.18);
+  color: #7b3fe4;
+}
+
+.rs-take {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: auto;
+  padding-inline: 24px;
+}
+
+.rs-last {
+  margin: 0;
+  min-height: 1.3em;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.rs-me {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.rs-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.rs-mine.go .rs-stack {
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+/* Your turn: the top card of your pile ringed in the accent. */
+.rs-mine.go .rs-stack i:last-child {
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.07) #f7f4ee, inset 0 0 0 calc(var(--w) * 0.08) rgba(0, 0, 0, 0.12), 0 0 0 3px var(--accent);
+}
+
+.rs-mine:not(:disabled):active .rs-stack {
+  transform: scale(0.97);
+}
+
+.rs-mine-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rs-mine.go .rs-mine-label {
+  color: var(--ink);
+}
+
+/* Slap: a big round pad under the right thumb, flat: the colour says it, an open hand on it. */
+.rs-slap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: clamp(120px, 36vw, 148px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #c4473d;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.12), 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.08s var(--ease-out), background-color 0.08s;
+}
+
+.rs-slap-icon {
+  width: 34%;
+  height: 34%;
+}
+
+.rs-slap:not(:disabled):active {
+  transform: scale(0.94);
+  background: #a93a31;
+}
+
+.rs-slap:disabled {
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* ---------- Color Clash (cc-): cards in four colours, each with its white shape and number. ---------- */
+.cc {
+  --crimson: #c8524e;
+  --azure: #4a86cb;
+  --amber: #dfae4c;
+  --jade: #57a57e;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cc > * {
+  flex-shrink: 0;
+}
+
+.cc-sample {
+  --crimson: #c8524e;
+  --azure: #4a86cb;
+  --amber: #dfae4c;
+  --jade: #57a57e;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cc-card {
+  --w: 58px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--w) * 0.1);
+  width: var(--w);
+  height: calc(var(--w) * 1.33);
+  border-radius: calc(var(--w) * 0.18);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cc-card.big {
+  --w: clamp(96px, 28vw, 120px);
+}
+
+.cc-card.crimson,
+.cc-color.crimson {
+  background: var(--crimson, #c8524e);
+}
+
+.cc-card.azure,
+.cc-color.azure {
+  background: var(--azure, #4a86cb);
+}
+
+.cc-card.amber,
+.cc-color.amber {
+  background: var(--amber, #dfae4c);
+}
+
+.cc-card.jade,
+.cc-color.jade {
+  background: var(--jade, #57a57e);
+}
+
+.cc-card.universal {
+  background: #24242a;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.18);
+}
+
+.cc-card .cc-shape {
+  width: calc(var(--w) * 0.32);
+  height: calc(var(--w) * 0.32);
+  fill: #fff;
+}
+
+.cc-num {
+  font-size: calc(var(--w) * 0.36);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A universal card: the four shapes in their colours, in a square. */
+.cc-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(var(--w) * 0.04);
+}
+
+.cc-quad .cc-shape {
+  width: calc(var(--w) * 0.2);
+  height: calc(var(--w) * 0.2);
+}
+
+.cc-quad .cc-shape:nth-child(1) {
+  fill: var(--crimson, #c8524e);
+}
+
+.cc-quad .cc-shape:nth-child(2) {
+  fill: var(--azure, #4a86cb);
+}
+
+.cc-quad .cc-shape:nth-child(3) {
+  fill: var(--amber, #dfae4c);
+}
+
+.cc-quad .cc-shape:nth-child(4) {
+  fill: var(--jade, #57a57e);
+}
+
+.cc-others {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cc-others::-webkit-scrollbar {
+  display: none;
+}
+
+.cc-seat {
+  flex: none;
+  min-width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cc-seat.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cc-seat-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.cc-seat-name {
+  max-width: 90px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* Their hand face down: a small fan of backs, the number beside it. */
+.cc-backs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+}
+
+.cc-backs-fan {
+  position: relative;
+  width: 44px;
+  height: 34px;
+}
+
+.cc-backs .cc-back {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 22px;
+  height: 30px;
+  margin-left: -11px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
+  transform-origin: 50% 120%;
+  transform: translateX(calc(var(--k) * 3px)) rotate(calc(var(--k) * 7deg));
+}
+
+.cc-backs-n {
+  min-width: 1.2em;
+  font-weight: 700;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* One card left: the number says so loudly. */
+.cc-seat.last .cc-backs-n {
+  color: var(--bad);
+}
+
+.cc-middle {
+  flex: 1 1 0;
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.cc-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-back {
+  display: block;
+  width: 72px;
+  height: 96px;
+  border-radius: 13px;
+  background: conic-gradient(var(--crimson) 0 25%, var(--azure) 0 50%, var(--amber) 0 75%, var(--jade) 0);
+  box-shadow: inset 0 0 0 5px #24242a, 0 2px 0 #24242a, 0 4px 0 rgba(36, 36, 42, 0.7);
+}
+
+.cc-deck:disabled {
+  opacity: 0.5;
+}
+
+.cc-deck:not(:disabled):active .cc-back {
+  transform: scale(0.95);
+}
+
+.cc-deck-label {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.cc-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-active {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cc-active .cc-shape {
+  width: 14px;
+  height: 14px;
+}
+
+.cc-pile.crimson .cc-active .cc-shape {
+  fill: var(--crimson);
+}
+
+.cc-pile.azure .cc-active .cc-shape {
+  fill: var(--azure);
+}
+
+.cc-pile.amber .cc-active .cc-shape {
+  fill: var(--amber);
+}
+
+.cc-pile.jade .cc-active .cc-shape {
+  fill: var(--jade);
+}
+
+.cc-status {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cc-dir {
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.cc-last {
+  margin: 0;
+  min-height: 1.3em;
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.cc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.cc-call,
+.cc-catch,
+.cc-pass {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.cc-call {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.cc-catch {
+  background: var(--bad);
+  color: #fff;
+}
+
+.cc-pass {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Your hand (a fan, components/HandFan.tsx): the playable ones stand up. */
+.cc-hand-card {
+  flex: none;
+  transition: transform 0.15s var(--ease-out), opacity 0.15s;
+}
+
+/* Not playable now (on your turn): greyed, not see-through, so the fan doesn't show through. */
+.cc-hand-card.dim > * {
+  filter: brightness(0.62);
+}
+
+.cc-hand-card.ok {
+  transform: translateY(-14px);
+}
+
+.cc-hand-card.ok:active {
+  transform: translateY(-14px) scale(0.96);
+}
+
+.cc-hand-card .cc-card {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
+}
+
+.cc-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cc-color {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.cc-color .cc-shape {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+}
+
+.cc-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cc-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.cc-result-n {
+  margin-left: auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Spellbound (fz-): round and trump on top, everyone's bid as chips, the trick in the
+   middle, your hand at the bottom (two overlapping rows once it holds more than ten). ---------- */
+.fz {
+  --fire: #b8473a;
+  --water: #4a7a9b;
+  --nature: #5f8a6e;
+  --astral: #7d68a0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fz > * {
+  flex-shrink: 0;
+}
+
+.fz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.fz-round {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-seats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.fz-seat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 5px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.fz-seat.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.fz-seat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.fz-seat-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.fz-seat-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fz-seat-bid {
+  font-weight: 700;
+}
+
+.fz-seat-score {
+  color: var(--muted);
+}
+
+/* A card, as in the deck's art: cream paper, the figure drawn on it (art.webp), the number and the
+   faction's sign in its ink in the top left corner. The 13s are seals: the sign big in gold rings. */
+.fz-card {
+  --w: 60px;
+  --ink: #3a3328;
+  position: relative;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 1.5);
+  border-radius: calc(var(--w) * 0.1);
+  background-color: #f6eedc;
+  background-size: 800% 700%;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(90, 70, 40, 0.22), 0 1px 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.fz-card.fire {
+  --ink: #9c3427;
+}
+
+.fz-card.water {
+  --ink: #2f6283;
+}
+
+.fz-card.nature {
+  --ink: #3f6e50;
+}
+
+.fz-card.astral {
+  --ink: #5e4a86;
+}
+
+.fz-index {
+  position: absolute;
+  top: calc(var(--w) * 0.06);
+  left: calc(var(--w) * 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--w) * 0.02);
+  color: var(--ink);
+}
+
+.fz-rank {
+  font-family: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: calc(var(--w) * 0.27);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums;
+}
+
+.fz-index .fz-sigil {
+  width: calc(var(--w) * 0.19);
+  height: calc(var(--w) * 0.19);
+}
+
+.fz-sigil {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.12em;
+}
+
+.fz-sigil.fire {
+  color: #b8473a;
+}
+
+.fz-sigil.water {
+  color: #4a7a9b;
+}
+
+.fz-sigil.nature {
+  color: #5f8a6e;
+}
+
+.fz-sigil.astral {
+  color: #7d68a0;
+}
+
+/* On a faction's own colour (the trump buttons): white. */
+.fz-sigil.on {
+  color: #fff;
+}
+
+.fz-seal {
+  position: absolute;
+  inset: 22% 14% 10%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.02) #b99a5f, inset 0 0 0 calc(var(--w) * 0.05) #f6eedc, inset 0 0 0 calc(var(--w) * 0.06) #b99a5f;
+  aspect-ratio: 1;
+  margin: auto 0;
+}
+
+.fz-seal .fz-sigil {
+  width: 46%;
+  height: 46%;
+}
+
+.fz-card.back {
+  background: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* The trick: the cards in the order they were played, each with who played it. */
+.fz-trick {
+  flex: 1 1 0;
+  min-height: 120px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+}
+
+.fz-trick .fz-card {
+  --w: clamp(56px, 17vw, 76px);
+}
+
+.fz-trick.small {
+  flex: none;
+  min-height: 0;
+}
+
+.fz-trick.small .fz-card {
+  --w: 44px;
+}
+
+.fz-trick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+}
+
+.fz-trick-card.done {
+  opacity: 0.45;
+}
+
+.fz-trick-card.won {
+  opacity: 1;
+  transform: translateY(-6px);
+}
+
+.fz-trick-who {
+  max-width: 64px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.fz-took {
+  position: absolute;
+  bottom: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.fz-status {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.fz-picks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fz-bid-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-bid-btn:active,
+.fz-pick:active {
+  transform: scale(0.94);
+}
+
+.fz-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.fz-pick.fire {
+  background: var(--fire);
+}
+
+.fz-pick.water {
+  background: var(--water);
+}
+
+.fz-pick.nature {
+  background: var(--nature);
+}
+
+.fz-pick.astral {
+  background: var(--astral);
+}
+
+.fz-hand-card {
+  border-radius: calc(var(--w, 60px) * 0.1);
+  transition: transform 0.15s var(--ease-out), opacity 0.15s;
+}
+
+/* Not playable now (on your turn): greyed, not see-through, so the fan doesn't show through. */
+.fz-hand-card.dim > * {
+  filter: brightness(0.62);
+}
+
+.fz-hand-card.ok {
+  transform: translateY(-14px);
+}
+
+.fz-hand-card.ok:active {
+  transform: translateY(-14px) scale(0.96);
+}
+
+.fz-hand-card .fz-card {
+  box-shadow: inset 0 0 0 1px rgba(90, 70, 40, 0.22), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
+}
+
+.fz-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fz-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.fz-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.fz-bid {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-gain {
+  min-width: 44px;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-gain.up {
+  color: var(--good);
+}
+
+.fz-gain.down {
+  color: var(--bad);
+}
+
+.fz-total {
+  min-width: 44px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-trick-card.turned .fz-trick-who {
+  max-width: none;
+}
+
+/* A round's result (Spellbound, Color Clash): the rows come in one after another, 40 ms apart. */
+.fz-row,
+.cc-result {
+  animation: row-in 0.26s var(--ease-out) backwards;
+}
+
+:is(.fz-row, .cc-result):nth-child(2) {
+  animation-delay: 40ms;
+}
+
+:is(.fz-row, .cc-result):nth-child(3) {
+  animation-delay: 80ms;
+}
+
+:is(.fz-row, .cc-result):nth-child(4) {
+  animation-delay: 120ms;
+}
+
+:is(.fz-row, .cc-result):nth-child(5) {
+  animation-delay: 160ms;
+}
+
+:is(.fz-row, .cc-result):nth-child(n + 6) {
+  animation-delay: 200ms;
+}
+
+/* ---------- A hand of cards held as a fan (components/HandFan.tsx) ----------
+   Each card along an arc, a little turned; the lifted ones (playable) stand up out of it. The round
+   button beside it sorts the hand. */
+.fan-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+.fan {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.fan-slot {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: var(--cw);
+  margin-left: calc(var(--cw) / -2);
+  transform-origin: 50% 100%;
+  transition: transform 0.32s var(--ease-out);
+}
+
+.fan-slot > * {
+  display: block;
+  width: 100%;
+}
+
+.fan-slot .fz-card,
+.fan-slot .cc-card {
+  --w: var(--cw);
+}
+
+.sort-btn {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 18px;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s var(--ease-out);
+}
+
+.sort-btn::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+}
+
+.sort-btn.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.sort-btn:disabled {
+  opacity: 0.4;
+}
+
+.sort-btn:not(:disabled):active {
+  transform: scale(0.94);
+}
+
+.sp-info .sort-btn {
+  margin: 0 0 0 auto;
+}
+
+/* The age check: the terms and the privacy policy, quiet, under the buttons. */
+.gate-legal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: -4px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.gate-legal button {
+  position: relative;
+  min-height: 28px;
+  padding: 0 4px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Bigger to hit than it looks: 44 tall. */
+.gate-legal button::after {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+
+/* A short screen (an iPhone SE, a browser's bars): the 18+ a little smaller, so all fits unscrolled. */
+@media (max-height: 720px) {
+  .gate-big {
+    font-size: clamp(5rem, 30vw, 7.25rem);
+  }
+}
+
+/* The grabber says the sheet can be pulled down: bigger to grab than to see. */
+.sheet-grabber {
+  position: relative;
+}
+
+.sheet-grabber::after {
+  content: '';
+  position: absolute;
+  inset: -14px -48px;
 }

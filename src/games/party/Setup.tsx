@@ -8,7 +8,7 @@ import { cloudOn } from '../../net/cloud';
 import type { Player } from '../../state/AppState';
 import { PawnIcon } from './bits';
 import { FetchBoardSheet, ShareBoardSheet } from './BoardCode';
-import type { Board } from './boards';
+import type { Board, Draft } from './boards';
 import { PAWNS, type PawnDef } from './pawns';
 
 const THEME_EMOJI: Record<string, string> = { classic: '🎲' };
@@ -21,16 +21,21 @@ interface Props {
   pawns: Record<string, PawnDef>;
   onPawns: (p: Record<string, PawnDef>) => void;
   onEdit: (b: Board, asNew: boolean) => void;
+  /** Boards saved unfinished: tapping one goes on with it in the editor. */
+  drafts: Draft[];
+  onDraft: (d: Draft) => void;
   /** A board someone shared, loaded by its code: save it and pick it. */
   onShared: (b: Board) => void;
   onStart: () => void;
 }
 
 /** Before the game: which board, and everyone's pawn. */
-export default function Setup({ players, boards, boardId, onBoard, pawns, onPawns, onEdit, onShared, onStart }: Props) {
+export default function Setup({ players, boards, boardId, onBoard, pawns, onPawns, onEdit, drafts, onDraft, onShared, onStart }: Props) {
   const [picking, setPicking] = useState<Player | null>(null);
   const [sharing, setSharing] = useState<Board | null>(null);
   const [fetching, setFetching] = useState(false);
+  // Sharing a board and loading one by its code: one link, then the two (seldom needed).
+  const [codes, setCodes] = useState(false);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
 
   const pick = (p: Player, def: PawnDef) => {
@@ -66,27 +71,65 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
               <span className="pt-board-sub">{b.custom ? t('Your own · {n} fields', { n: b.fields.length - 1 }) : t('{n} fields', { n: b.fields.length - 1 })}</span>
             </button>
           ))}
+          {drafts.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className="pt-board-card draft"
+              onClick={() => {
+                sfx.tick();
+                onDraft(d);
+              }}
+            >
+              <span className="pt-board-emoji" aria-hidden>
+                ✏️
+              </span>
+              <span className="pt-board-name">{d.name}</span>
+              <span className="pt-board-sub">{t('Draft · {n} fields', { n: Math.max(0, d.spots.length - 1) })}</span>
+            </button>
+          ))}
         </div>
         <div className="pt-board-tools">
           {board.custom && (
             <button type="button" className="text-btn pt-link" onClick={() => onEdit(board, false)}>
-              ✏️ {t('Edit this board')}
+              {t('Edit this board')}
             </button>
           )}
           <button type="button" className="text-btn pt-link" onClick={() => onEdit(board, true)}>
-            ＋ {t('Make your own board')}
+            {t('Make your own board')}
           </button>
-          {cloudOn && board.custom && (
-            <button type="button" className="text-btn pt-link" onClick={() => setSharing(board)}>
-              📤 {t('Share this board')}
-            </button>
-          )}
           {cloudOn && (
-            <button type="button" className="text-btn pt-link" onClick={() => setFetching(true)}>
-              📥 {t('Board from a code')}
+            <button type="button" className="text-btn pt-link" onClick={() => setCodes(true)}>
+              {t('Share or load a board')}
             </button>
           )}
         </div>
+        {cloudOn && (
+          <Sheet open={codes} onClose={() => setCodes(false)} title={t('Share or load a board')} closeLabel={t('Cancel')}>
+            <div className="stack">
+              {board.custom && (
+                <BigButton
+                  variant="glass"
+                  onClick={() => {
+                    setCodes(false);
+                    setSharing(board);
+                  }}
+                >
+                  {t('Share this board')}
+                </BigButton>
+              )}
+              <BigButton
+                variant="glass"
+                onClick={() => {
+                  setCodes(false);
+                  setFetching(true);
+                }}
+              >
+                {t('Board from a code')}
+              </BigButton>
+            </div>
+          </Sheet>
+        )}
         {cloudOn && (
           <>
             <ShareBoardSheet board={sharing} onClose={() => setSharing(null)} />

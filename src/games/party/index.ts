@@ -4,6 +4,7 @@ import Party from './Party';
 
 const party: GameDefinition = {
   id: 'party',
+  table: 'clean',
   name: tx('Party'),
   emoji: '♟️',
   tagline: tx('A board game: roll, move, do what the field says.'),

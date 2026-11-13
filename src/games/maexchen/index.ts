@@ -4,6 +4,7 @@ import Maexchen from './Maexchen';
 
 const maexchen: GameDefinition = {
   id: 'maexchen',
+  table: 'clean',
   name: tx('Mäxchen'),
   emoji: '🤥',
   tagline: tx('Two dice, one cup, a lot of lying.'),

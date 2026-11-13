@@ -95,6 +95,12 @@ export const PersonIcon = () => (
     <path d="M4.8 20c.8-3.9 3.7-6.1 7.2-6.1s6.4 2.2 7.2 6.1" />
   </Icon>
 );
+/** Sort: an arrow down beside bars getting shorter. */
+export const SortIcon = () => (
+  <Icon strokeWidth={2}>
+    <path d="M3 16l4 4 4-4M7 20V4M11 4h10M11 8h7M11 12h4" />
+  </Icon>
+);
 export const SlidersIcon = () => (
   <Icon strokeWidth={1.9}>
     <path d="M4 7h16M4 12h16M4 17h16" />

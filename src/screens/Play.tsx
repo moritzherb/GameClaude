@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import BigButton from '../components/BigButton';
 import { CrewContext } from '../components/Finished';
-import GameBar from '../components/GameBar';
+import GameBar, { isClean } from '../components/GameBar';
 import RulesList from '../components/RulesList';
 import Sheet from '../components/Sheet';
 import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { markPlayed } from '../lib/recent';
-import { TurnContext, type TurnPlayer } from '../lib/turn';
+import { PlayingContext, TurnContext, type TurnPlayer } from '../lib/turn';
 import { navigate, paths } from '../lib/router';
 import { useWakeLock } from '../lib/wakeLock';
 import { useApp } from '../state/AppState';
@@ -19,6 +19,8 @@ export default function Play({ game }: { game: GameDefinition }) {
   const [confirmExit, setConfirmExit] = useState(false);
   // Who's on, named by the game: a bubble in the bar on a clean table.
   const [turn, setTurn] = useState<TurnPlayer | null>(null);
+  // Whether the game is past its setup screen (a game that doesn't say: always).
+  const [playing, setPlaying] = useState<boolean | null>(null);
   useWakeLock();
 
   const Game = game.component;
@@ -35,12 +37,14 @@ export default function Play({ game }: { game: GameDefinition }) {
   if (!playable) return null;
 
   return (
-    <main className={`screen play-screen${settings.clean ? ' clean' : ''}`}>
-      <GameBar game={game} turn={turn} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
+    <main className={`screen play-screen${isClean(game, settings.clean) ? ' clean' : ''}`}>
+      <GameBar game={game} turn={turn} playing={playing ?? true} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
 
       <CrewContext.Provider value={players}>
         <TurnContext.Provider value={setTurn}>
+          <PlayingContext.Provider value={setPlaying}>
           <Game players={players} exit={exit} />
+          </PlayingContext.Provider>
         </TurnContext.Provider>
       </CrewContext.Provider>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { usePlaying } from '../../lib/turn';
 import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
@@ -37,6 +38,7 @@ export default function HorseRace({ players, exit }: GameProps) {
   // A narrow list of bets puts the suits on a line of their own.
   const [betsBox, betsSize] = useBox<HTMLDivElement>();
   const [race, setRace] = useState<Race | null>(null);
+  usePlaying(!!race);
   const [auto, setAuto] = useState(false);
 
   // Auto play: one card after the other, with a longer pause when someone gives out sips.

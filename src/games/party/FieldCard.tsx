@@ -6,6 +6,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
 import { BigToss, Countdown, Die, PickPlayer, TOSS_MS, useBigRoll, useRoll } from './bits';
 import { field, FIELDS, param, type Field } from './fields';
+import { isJump } from './boards';
 import { AceCard, FieldIcon } from './FieldIcon';
 import { duel, inTurnOrder, keepsUp, leaders, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
 
@@ -66,6 +67,7 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
       done = { then: 'next', update: (x) => setPawn(x, lander.id, { jailed: true }) };
       break;
     case 'back-bridge':
+    case 'fwd-bridge':
     case 'mole':
       done = { then: 'travel' };
       doneLabel = f.kind === 'mole' ? t('Into the tunnel') : t('Over the bridge');
@@ -127,7 +129,7 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
   }
 
   return (
-    <Card f={f} pos={pos} lander={lander} chosen={chosen} text={info.text(f.kind === 'back-bridge' || f.kind === 'mole' ? (target ?? -1) : n, right.name)}>
+    <Card f={f} pos={pos} lander={lander} chosen={chosen} text={info.text(isJump(f.kind) ? (target ?? -1) : n, right.name)}>
       {body}
       <div className="pt-card-actions">
         {canAce && (

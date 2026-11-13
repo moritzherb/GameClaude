@@ -25,6 +25,7 @@ export type FieldKind =
   | 'reverse'
   | 'double'
   | 'back-bridge'
+  | 'fwd-bridge'
   | 'choose'
   | 'three-six-nine'
   | 'cheek'
@@ -318,6 +319,14 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     title: () => t('Bridge back'),
     text: (n) => (n >= 0 ? t('Over the bridge you go, back to field {n}.', { n }) : t('Over the bridge you go, back to the field across the water.')),
     ace: true,
+  },
+  'fwd-bridge': {
+    emoji: '🌉',
+    color: C.mint,
+    group: 'move',
+    label: () => t('Bridge forward'),
+    title: () => t('Bridge forward'),
+    text: (n) => (n >= 0 ? t('Over the bridge you go, on to field {n}.', { n }) : t('Over the bridge you go, on to the field across the water.')),
   },
   choose: {
     emoji: '🍀',

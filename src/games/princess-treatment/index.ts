@@ -4,6 +4,7 @@ import Treatment from './Treatment';
 
 const princessTreatment: GameDefinition = {
   id: 'princess-treatment',
+  table: 'clean',
   name: tx('Princess/King Treatment'),
   emoji: '👸',
   tagline: tx('Bare Minimum or Princess Treatment? One tap settles it.'),

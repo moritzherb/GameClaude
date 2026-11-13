@@ -8,6 +8,18 @@ export interface TurnPlayer {
   photo?: string;
 }
 
+/**
+ * Whether the game is being played (not its setup screen, where a clean table changes nothing, so
+ * the bar has no switch for it). Set by the game; one that never says is always being played.
+ */
+export const PlayingContext = createContext<(on: boolean | null) => void>(() => {});
+
+export function usePlaying(on: boolean) {
+  const set = useContext(PlayingContext);
+  useEffect(() => set(on), [set, on]);
+  useEffect(() => () => set(null), [set]);
+}
+
 /** Set by the game, shown by the bar around it (see GameBar). */
 export const TurnContext = createContext<(p: TurnPlayer | null) => void>(() => {});
 

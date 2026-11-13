@@ -209,7 +209,7 @@ function ground(): string {
 
 type RGBA = [number, number, number, number];
 
-/** A CSS colour as the browser gives it back: #hex, rgb()/rgba(), color(srgb …). Else null. */
+/** A CSS colour as the browser gives it back: #hex, rgb()/rgba(), color(srgb …), oklab(), oklch(). Else null. */
 export function parseColor(css: string): RGBA | null {
   const s = css.trim().toLowerCase();
   const hex = /^#([0-9a-f]{3,8})$/.exec(s)?.[1];
@@ -229,7 +229,31 @@ export function parseColor(css: string): RGBA | null {
     const [r, g, b, a = 1] = nums(srgb);
     return [r * 255, g * 255, b * 255, a];
   }
+  // What color-mix(in oklab …) and oklch() come back as. Lightness may be a percentage.
+  const ok = /^(oklab|oklch)\((.*)\)$/.exec(s);
+  if (ok) {
+    const [l, x, y, a = 1] = ok[2]
+      .split(/[\s,/]+/)
+      .filter(Boolean)
+      .map((v) => (v.endsWith('%') ? parseFloat(v) / 100 : v === 'none' ? 0 : parseFloat(v)));
+    if ([l, x, y, a].some(Number.isNaN)) return null;
+    const [A, B] = ok[1] === 'oklch' ? [x * Math.cos((y * Math.PI) / 180), x * Math.sin((y * Math.PI) / 180)] : [x, y];
+    return [...fromOklab(l, A, B), a];
+  }
   return null;
+}
+
+/** An OKLab colour in sRGB, 0 to 255 each (clipped to the screen's range). */
+function fromOklab(L: number, A: number, B: number): [number, number, number] {
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
+  const gam = (v: number) => 255 * Math.max(0, Math.min(1, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055));
+  return [
+    gam(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    gam(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    gam(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+  ];
 }
 
 const hexOf = ([r, g, b]: number[]) => '#' + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
@@ -263,13 +287,5 @@ export function tone(css: string, kl: number, kc = 1): string {
   const L = (0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s) * kl;
   const A = (1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s) * kc;
   const B = (0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s) * kc;
-  const l2 = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
-  const m2 = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
-  const s2 = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
-  const gam = (v: number) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
-  return hexOf([
-    gam(4.0767416621 * l2 - 3.3077115913 * m2 + 0.2309699292 * s2),
-    gam(-1.2684380046 * l2 + 2.6097574011 * m2 - 0.3413193965 * s2),
-    gam(-0.0041960863 * l2 - 0.7034186147 * m2 + 1.707614701 * s2),
-  ]);
+  return hexOf(fromOklab(L, A, B));
 }

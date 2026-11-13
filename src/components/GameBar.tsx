@@ -7,24 +7,37 @@ import Avatar from './Avatar';
 import { CleanIcon, HelpIcon, UncleanIcon } from './Icons';
 import TopBar, { RoundButton } from './TopBar';
 
+/** Whether a game shows with a clean table: always, never, or as the players' switch says. */
+export const isClean = (game: GameDefinition, setting: boolean | undefined) => (game.table ? game.table === 'clean' : !!setting);
+
 /**
  * The bar over every game: quit on the left, the game's name, the rules and the clean-table switch.
  * With a clean table it's just the two small buttons (quit and the switch back) and, between them, a
  * small bubble with who's on (the game's own line saying so is hidden): the game gets the rest.
+ * A game that's always clean has the rules there instead of the switch; on a setup screen (nothing
+ * a clean table would change) there's no switch either.
  */
 export default function GameBar({
   game,
   turn,
+  playing,
   onExit,
   onRules,
 }: {
   game: GameDefinition;
   turn: TurnPlayer | null;
+  playing: boolean;
   onExit: () => void;
   onRules: () => void;
 }) {
   const { settings, updateSettings } = useApp();
-  const clean = !!settings.clean;
+  const clean = isClean(game, settings.clean);
+  const switchable = !game.table && playing;
+  const rules = (
+    <RoundButton label={t('Rules')} onClick={onRules}>
+      <HelpIcon />
+    </RoundButton>
+  );
   const toggle = (
     <RoundButton label={clean ? t('Show everything') : t('Clean table')} onClick={() => updateSettings({ clean: !clean })}>
       {clean ? <UncleanIcon /> : <CleanIcon />}
@@ -52,13 +65,15 @@ export default function GameBar({
       icon="close"
       right={
         clean ? (
-          toggle
+          switchable ? (
+            toggle
+          ) : (
+            rules
+          )
         ) : (
           <>
-            {toggle}
-            <RoundButton label={t('Rules')} onClick={onRules}>
-              <HelpIcon />
-            </RoundButton>
+            {switchable && toggle}
+            {rules}
           </>
         )
       }

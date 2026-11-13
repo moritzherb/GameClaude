@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEve
 import { t } from '../i18n';
 import { buzz } from '../lib/fx';
 import { useTopTint } from '../lib/useTopTint';
-import { cropPhoto } from '../lib/photo';
+import { cropPhoto, cropPhotoHd } from '../lib/photo';
 import BigButton from './BigButton';
 
 /** How far in you may zoom (1: the photo just covers the circle). */
@@ -19,7 +19,7 @@ interface View {
  * Pick the part of a photo for the round profile picture: drag it around, zoom with two fingers or
  * the slider. The circle shows what the others will see.
  */
-export default function PhotoCrop({ img, onDone, onCancel }: { img: HTMLImageElement; onDone: (photo: string) => void; onCancel: () => void }) {
+export default function PhotoCrop({ img, onDone, onCancel }: { img: HTMLImageElement; onDone: (photo: string, hd: string) => void; onCancel: () => void }) {
   const backdrop = useRef<HTMLDivElement>(null);
   useTopTint(backdrop);
   const frame = useRef<HTMLDivElement>(null);
@@ -101,7 +101,7 @@ export default function PhotoCrop({ img, onDone, onCancel }: { img: HTMLImageEle
 
   const done = () => {
     const s = base * view.zoom;
-    onDone(cropPhoto(img, -view.x / s, -view.y / s, size / s));
+    onDone(cropPhoto(img, -view.x / s, -view.y / s, size / s), cropPhotoHd(img, -view.x / s, -view.y / s, size / s));
     buzz(15);
   };
 

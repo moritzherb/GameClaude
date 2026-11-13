@@ -4,7 +4,7 @@ import Sheet from '../../components/Sheet';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { cellKey, jumps, jumpTarget, MAX_COLS, MAX_ROWS, MIN_FIELDS, type Board, type Cell } from './boards';
+import { cellKey, isJump, jumps, jumpTarget, MAX_COLS, MAX_ROWS, MIN_FIELDS, type Board, type Cell, type Draft } from './boards';
 import { field, FIELDS, GROUPS, KINDS, param, type Field, type FieldKind } from './fields';
 import { FieldIcon } from './FieldIcon';
 
@@ -18,7 +18,10 @@ const TOOLS: { id: Tool; emoji: string; label: string; hint: string }[] = [
 ];
 
 /** Filling empty fields at random: any kind but those that have to lead somewhere. */
-const FRESH = KINDS.filter((k) => k !== 'back-bridge' && k !== 'mole' && k !== 'bridge');
+const FRESH = KINDS.filter((k) => !isJump(k) && k !== 'bridge');
+
+/** How many steps Undo keeps. */
+const UNDO_STEPS = 60;
 
 const SIDES = [
   { x: 0, y: 1, name: 'n' },
@@ -43,6 +46,8 @@ interface Gesture {
   /** draw: the path on from its end · field: a tap on a field (to choose it) · add/remove: water or tunnel · erase */
   mode: 'draw' | 'field' | 'add' | 'remove' | 'erase' | 'none';
   changed: boolean;
+  /** The board before this stroke (for Undo, if it changes anything). */
+  before: Ed;
   /** The field the finger came down on. */
   field: number | null;
   /** Where (screen y) the finger last made the map a row taller: another row only a cell further up. */
@@ -53,7 +58,11 @@ interface Props {
   board: Board;
   /** Making a new board from this one (else changing it). */
   asNew: boolean;
+  /** Going on with a board saved unfinished (its map, fields, name). */
+  draft?: Draft;
   onSave: (b: Board) => void;
+  /** Kept unfinished, to go on with later. */
+  onDraft: (d: Draft) => void;
   onDelete?: () => void;
   onCancel: () => void;
 }
@@ -63,14 +72,16 @@ interface Props {
  * water and the mole's tunnels round it. Water and tunnels join their neighbours, round corners
  * too. The whole map fits the screen (no scrolling), the tools down the left.
  */
-export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Props) {
-  const [name, setName] = useState(asNew ? '' : board.name);
+export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete, onCancel }: Props) {
+  const [name, setName] = useState(draft ? draft.name : asNew ? '' : board.name);
   // A new board starts empty: you draw your own path, rivers and tunnels (only its look comes
-  // from the board it was made from).
+  // from the board it was made from). A draft goes on where it was left.
   const [ed, setEd] = useState<Ed>(() =>
-    asNew
-      ? { spots: [], kinds: [], water: new Set(), tunnels: new Set() }
-      : { spots: board.spots, kinds: board.fields, water: new Set(board.water.map(cellKey)), tunnels: new Set(board.tunnels.map(cellKey)) },
+    draft
+      ? { spots: draft.spots, kinds: draft.kinds, water: new Set(draft.water.map(cellKey)), tunnels: new Set(draft.tunnels.map(cellKey)) }
+      : asNew
+        ? { spots: [], kinds: [], water: new Set(), tunnels: new Set() }
+        : { spots: board.spots, kinds: board.fields, water: new Set(board.water.map(cellKey)), tunnels: new Set(board.tunnels.map(cellKey)) },
   );
   // Gestures read and change the newest state right away, a step per cell the finger crosses.
   const live = useRef(ed);
@@ -78,10 +89,20 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
     live.current = next;
     setEd(next);
   };
+  // Undo: the board as it was before each change (a whole stroke of the finger is one change).
+  const [history, setHistory] = useState<Ed[]>([]);
+  const remember = (before: Ed) => setHistory((h) => [...h.slice(-(UNDO_STEPS - 1)), before]);
+  const undo = () => {
+    const before = history[history.length - 1];
+    if (!before) return;
+    sfx.tick();
+    buzz(10);
+    commit(before);
+    setHistory((h) => h.slice(0, -1));
+  };
   const { spots, kinds, water, tunnels } = ed;
   const [tool, setTool] = useState<Tool>('path');
   const [editing, setEditing] = useState<number | null>(null);
-  const [clearing, setClearing] = useState(false);
   const [more, setMore] = useState(false);
   const [naming, setNaming] = useState(false);
   /** What's typed into the search over the kinds of field (each time a field is opened, empty). */
@@ -187,6 +208,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
   const setKind = (i: number, next: Field) => {
     feel();
     const cur = live.current;
+    remember(cur);
     commit({ ...cur, kinds: cur.kinds.map((x, k) => (k === i ? next : x)) });
   };
 
@@ -239,7 +261,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
     const k = cellKey(c);
     const i = cur.spots.findIndex((s) => cellKey(s) === k);
     const n = cur.spots.length;
-    const g: Gesture = { id: e.pointerId, from: c, at: c, mode: 'none', changed: false, field: i >= 0 ? i : null };
+    const g: Gesture = { id: e.pointerId, from: c, at: c, mode: 'none', changed: false, field: i >= 0 ? i : null, before: cur };
     gesture.current = g;
     if (tool === 'path') {
       if (i === n - 1 && n > 0) {
@@ -300,6 +322,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
     if (!g || e.pointerId !== g.id) return;
     gesture.current = null;
     setHeldRows(null);
+    if (g.changed) remember(g.before);
     // A tap on a field (not the start): what goes on it.
     const tapped = !g.changed && g.at.x === g.from.x && g.at.y === g.from.y;
     if (tapped && g.field != null && g.field > 0 && (g.mode === 'field' || g.mode === 'draw')) {
@@ -310,6 +333,20 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
 
   const save = () => {
     const keep = (k: string) => toCell(k).y < savedRows;
+    // Not playable yet: kept as a draft, to go on with later.
+    if (blocker) {
+      onDraft({
+        id: draft?.id ?? `draft-${Date.now().toString(36)}`,
+        base: draft ? draft.base : asNew ? undefined : board.id,
+        name: name.trim() || t('My board'),
+        rows: savedRows,
+        spots,
+        kinds,
+        water: [...water].filter(keep).map(toCell),
+        tunnels: [...tunnels].filter((k) => keep(k) && !at.has(k)).map(toCell),
+      });
+      return;
+    }
     onSave({
       id: asNew ? `own-${Date.now().toString(36)}` : board.id,
       name: name.trim() || t('My board'),
@@ -329,6 +366,7 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
     sfx.pop();
     buzz(15);
     const cur = live.current;
+    remember(cur);
     const lastNow = cur.spots.length - 1;
     commit({ ...cur, kinds: cur.kinds.map((x, i) => (i === 0 || x || i === lastNow ? x : field(pick(FRESH)))) });
   };
@@ -342,6 +380,8 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
           ? t('Put the finish on the last field')
           : null;
   const hint = TOOLS.find((x) => x.id === tool)!.hint;
+  /** Anything on the map at all (an empty map isn't worth keeping). */
+  const drawn = spots.length > 0 || water.size > 0 || tunnels.size > 0;
 
   return (
     <div className="pt-editor fill">
@@ -363,6 +403,10 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
               <span className="pt-tool-label">{t(x.label)}</span>
             </button>
           ))}
+          <button type="button" className="pt-tool extra" onClick={undo} disabled={!history.length}>
+            <span className="pt-tool-emoji">↩️</span>
+            <span className="pt-tool-label">{t('Undo')}</span>
+          </button>
           {empty > 0 && spots.length > 2 && (
             <button type="button" className="pt-tool extra" onClick={fillAtRandom} aria-label={t('Fill the empty fields at random')}>
               <span className="pt-tool-emoji">🎲</span>
@@ -404,18 +448,18 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                 const next = tool === 'path' && i == null && (!end || nextTo(end, c));
                 // Where the path comes from and where it goes on: a line to each.
                 const links = i != null ? [spots[i - 1], spots[i + 1]].filter(Boolean).map((n) => (n.x > x ? 'e' : n.x < x ? 'w' : n.y > y ? 'n' : 's')) : [];
-                const jump = here && (here.kind === 'back-bridge' || here.kind === 'mole');
+                const jump = here && isJump(here.kind);
                 return (
                   <div key={k} className={`pt-cell${next ? ' next' : ''}${i === last && last > 0 ? ' end' : ''}`}>
-                    {/* The tunnel under the water: where it crosses a river, the river runs over it. */}
+                    {water.has(k) && <span className="pt-cell-water" style={waterStyle} />}
+                    {/* The tunnel; where it crosses a river it runs under it, seen faintly through the water. */}
                     {tunnels.has(k) && (
-                      <span className="pt-cell-tunnel">
+                      <span className={`pt-cell-tunnel${water.has(k) ? ' under' : ''}`}>
                         {SIDES.filter((d) => near(d.x, d.y, tunnels) || tunnelEnds.has(`${x + d.x},${y + d.y}`)).map((d) => (
                           <span key={d.name} className={`pt-arm ${d.name}`} />
                         ))}
                       </span>
                     )}
-                    {water.has(k) && <span className="pt-cell-water" style={waterStyle} />}
                     {links.map((d) => (
                       <span key={d} className={`pt-route ${d}`} />
                     ))}
@@ -442,14 +486,18 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
         </div>
       </div>
 
-      <p className="fine-print pt-tool-hint">{t(hint)}</p>
+      <p className="fine-print pt-tool-hint">
+        {t(hint)}
+        {blocker && drawn && <span className="pt-ed-blocker">{t('Not ready to play: {what}', { what: blocker })}</span>}
+      </p>
 
       <div className="pt-ed-actions">
         <BigButton size="md" variant="glass" className="pt-ed-cancel" onClick={onCancel}>
           {t('Cancel')}
         </BigButton>
-        <BigButton size="md" onClick={() => setNaming(true)} disabled={!!blocker}>
-          {blocker ?? t('Save · {n} fields', { n: spots.length - 1 })}
+        {/* Unfinished: kept as a draft (to go on with later); finished: a board to play. */}
+        <BigButton size="md" onClick={() => setNaming(true)} disabled={!drawn}>
+          {blocker ? t('Save draft') : t('Save · {n} fields', { n: spots.length - 1 })}
         </BigButton>
       </div>
 
@@ -467,43 +515,34 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
           onKeyDown={(e) => e.key === 'Enter' && save()}
         />
         <BigButton size="xl" onClick={save}>
-          {t('Save board · {n} fields', { n: spots.length - 1 })}
+          {blocker ? t('Save draft') : t('Save board · {n} fields', { n: spots.length - 1 })}
         </BigButton>
       </Sheet>
 
+      {/* One step each (Undo brings back what goes). */}
       <Sheet open={more} onClose={() => setMore(false)} title={t('More')} closeLabel={t('Done')}>
         <div className="stack">
-          {spots.length > 0 && (
-            <BigButton
-              variant="glass"
-              onClick={() => {
-                setMore(false);
-                setClearing(true);
-              }}
-            >
-              {t('Start the path over')}
-            </BigButton>
-          )}
+          <BigButton
+            variant="danger"
+            disabled={!spots.length}
+            onClick={() => {
+              remember(live.current);
+              commit({ ...live.current, spots: [], kinds: [] });
+              setTool('path');
+              setMore(false);
+            }}
+          >
+            {t('Start the path over')}
+          </BigButton>
+          <p className="fine-print">
+            {spots.length ? t('The path and its fields go; water and tunnels stay. Undo brings them back.') : t('There’s no path yet.')}
+          </p>
           {onDelete && (
             <BigButton variant="danger" onClick={onDelete}>
-              {t('Delete board')}
+              {draft ? t('Delete draft') : t('Delete board')}
             </BigButton>
           )}
         </div>
-      </Sheet>
-
-      <Sheet open={clearing} onClose={() => setClearing(false)} title={t('Start the path over?')} closeLabel={t('Cancel')}>
-        <p className="fine-print">{t('The path and its fields go; water and tunnels stay.')}</p>
-        <BigButton
-          variant="danger"
-          onClick={() => {
-            commit({ ...live.current, spots: [], kinds: [] });
-            setTool('path');
-            setClearing(false);
-          }}
-        >
-          {t('Start over')}
-        </BigButton>
       </Sheet>
 
       <Sheet
@@ -516,16 +555,19 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
       >
         {editing != null && (
           <div className="pt-kinds">
-            <input
-              type="search"
-              className="add-player-input pt-kind-search"
-              value={query}
-              placeholder={t('Search fields')}
-              autoComplete="off"
-              enterKeyHint="search"
-              aria-label={t('Search fields')}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            {/* The search stays at the top while the fields scroll under it. */}
+            <div className="pt-kind-search-wrap">
+              <input
+                type="search"
+                className="add-player-input pt-kind-search"
+                value={query}
+                placeholder={t('Search fields')}
+                autoComplete="off"
+                enterKeyHint="search"
+                aria-label={t('Search fields')}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
             {editing === last && matches(query, t('Finish'), t('The path ends here: the finish.')) && (
               <button
                 type="button"
@@ -564,15 +606,19 @@ export default function Editor({ board, asNew, onSave, onDelete, onCancel }: Pro
                   <span className="pt-kind-group-title">{t(group.label)}</span>
                   {inGroup.map((k) => {
                     // A bridge back or a tunnel has to lead somewhere from here.
-                    const jump = k === 'back-bridge' || k === 'mole';
+                    const jump = isJump(k);
                     const to = jump ? jumpTarget(geometry, editing, k) : null;
                     const sub = !jump
                       ? FIELDS[k].text(FIELDS[k].param?.def ?? 0, '')
                       : to != null
-                        ? t('Back to field {n}', { n: to })
+                        ? k === 'fwd-bridge'
+                          ? t('On to field {n}', { n: to })
+                          : t('Back to field {n}', { n: to })
                         : k === 'mole'
                           ? t('Not here yet: dig a tunnel next to this field (Tunnel tool).')
-                          : t('Not here yet: put water next to this field, with a field before it across the water.');
+                          : k === 'fwd-bridge'
+                            ? t('Not here yet: put water next to this field, with a field after it across the water.')
+                            : t('Not here yet: put water next to this field, with a field before it across the water.');
                     return (
                       <button
                         key={k}
