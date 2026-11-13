@@ -13766,3 +13766,8 @@ h3 {
 .pt-kind-search-wrap .pt-kind-search {
   width: 100%;
 }
+
+/* The profile picture is a button too (tap it for a new photo). */
+button.profile-avatar:not(:disabled):active {
+  transform: scale(0.97);
+}

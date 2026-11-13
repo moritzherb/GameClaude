@@ -20,6 +20,7 @@ import { GameApp, GameGlyph, IconArt } from './AppIcon';
 import { useHomeEdit, type Pager } from './useHomeEdit';
 import { useRows } from './useRows';
 import { GAMES } from '../games/registry';
+import LibrarySearch from './LibrarySearch';
 import { CrewWidget, LastWidget } from './Widgets';
 
 export interface HomeProps {
@@ -83,6 +84,7 @@ export default function Springboard({ players, recent, returning, dock, wall, on
   // Back from a game: the page it was opened on (the second, the App Library) again.
   const want = useRef(returning ? lastPage : 0);
   const [page, setPage] = useState(() => Math.max(0, want.current));
+  const [libSearch, setLibSearch] = useState(false);
   const pageRef = useRef(page);
   const countRef = useRef(count);
   countRef.current = count;
@@ -314,7 +316,8 @@ export default function Springboard({ players, recent, returning, dock, wall, on
             </section>
           ))}
           <section className="sb-page sb-library" aria-label={t('App Library')}>
-            <Tap className="sb-lib-search" onClick={() => onSearch()}>
+            {/* The library's own search (an A–Z list), not Spotlight. */}
+            <Tap className="sb-lib-search" onClick={() => setLibSearch(true)}>
               <SearchIcon />
               {t('App Library')}
             </Tap>
@@ -344,6 +347,7 @@ export default function Springboard({ players, recent, returning, dock, wall, on
         {dock}
       </nav>
       {folder && <LibraryFolder category={folder} onClose={() => setFolder(null)} />}
+      {libSearch && <LibrarySearch onClose={() => setLibSearch(false)} />}
     </main>
   );
 }

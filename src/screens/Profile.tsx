@@ -8,7 +8,7 @@ import { RANK_EMOJI, RANK_NAME } from '../games/president/President';
 import type { Rank } from '../games/president/logic';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
-import { loadImage, releaseImage } from '../lib/photo';
+import { keepHd, loadImage, releaseImage, sharp } from '../lib/photo';
 import { navigate, paths } from '../lib/router';
 import { unfill } from '../lib/noAutofill';
 import { loadStats, resetStats } from '../lib/stats';
@@ -60,9 +60,17 @@ export default function Profile() {
       <p className="lead">{t('What the others see when you play together in a room. It stays on this phone.')}</p>
 
       <section className="profile-card">
-        <span className={`profile-avatar${busy ? ' busy' : ''}`} style={{ '--chip': profile.color } as CSSProperties}>
-          <Avatar avatar={profile.avatar} photo={profile.photo} />
-        </span>
+        {/* Tap the picture to change it (a photo), as the button under it does. */}
+        <button
+          type="button"
+          className={`profile-avatar${busy ? ' busy' : ''}`}
+          style={{ '--chip': profile.color } as CSSProperties}
+          onClick={() => file.current?.click()}
+          disabled={busy}
+          aria-label={profile.photo ? t('New photo') : t('Add a photo')}
+        >
+          <Avatar avatar={profile.avatar} photo={sharp(profile.photo)} />
+        </button>
         <div className="profile-buttons">
           <button type="button" className="chip" onClick={() => file.current?.click()} disabled={busy}>
             {profile.photo ? t('New photo') : t('Add a photo')}
@@ -200,7 +208,8 @@ export default function Profile() {
         <PhotoCrop
           img={cropping}
           onCancel={closeCrop}
-          onDone={(photo) => {
+          onDone={(photo, hd) => {
+            keepHd(photo, hd);
             setPhoto(photo);
             sfx.pop();
             closeCrop();
