@@ -191,7 +191,11 @@ html {
 }
 
 body {
+  /* No sideways scroll. Clipped, not hidden: hidden would make the body a scroll box of its own
+     (that never scrolls, the page does), and nothing sticky (a page's title, a button at the
+     bottom) would stay put. Hidden only where clip isn't known. */
   overflow-x: hidden;
+  overflow-x: clip;
   /* An app, not a page: no text selection or callout menu on long presses (inputs excepted). */
   -webkit-user-select: none;
   user-select: none;
@@ -15045,4 +15049,31 @@ button.profile-avatar:not(:disabled):active {
   content: '';
   position: absolute;
   inset: -14px -48px;
+}
+
+/* A page's back button and large title, held at the top while the page scrolls under them (out
+   over the status bar, in the page's own colour). */
+.screen-head {
+  --head-pad: max(8px, env(safe-area-inset-top));
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: calc(var(--head-pad) * -1) calc(var(--gutter) * -1) -8px;
+  padding: var(--head-pad) var(--gutter) 8px;
+  background: var(--bg);
+}
+
+/* What scrolls under the held title fades out into it, no hard edge. */
+.screen-head::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(var(--bg), transparent);
+  pointer-events: none;
 }

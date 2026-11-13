@@ -188,8 +188,11 @@ export default function Settings() {
 
   return (
     <main className="screen settings-page">
-      <TopBar onBack={() => navigate(paths.home)} />
-      <h1 className="large-title">{t('Settings')}</h1>
+      {/* Back and title stay at the top while the page scrolls under them. */}
+      <div className="screen-head">
+        <TopBar onBack={() => navigate(paths.home)} />
+        <h1 className="large-title">{t('Settings')}</h1>
+      </div>
 
       <div className="settings-list">
         <div className="setting-row lang-row">
