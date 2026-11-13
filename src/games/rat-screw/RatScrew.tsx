@@ -207,7 +207,12 @@ function Table({
             {flashText(g.last, name)}
           </span>
         )}
-        {myClaim && (
+      </div>
+
+      {/* Under the middle, clear of the cards: what just happened, or (when the pile is yours) the
+          button to take it, in the same place (so nothing moves). */}
+      <div className="rs-take-slot">
+        {myClaim ? (
           <BigButton
             className="rs-take"
             onClick={() => {
@@ -218,10 +223,14 @@ function Table({
           >
             {t('Take the pile')}
           </BigButton>
+        ) : g.last ? (
+          <p key={flashKey(g)} className={`rs-last ${g.last.k}`} role="status">
+            {lastText(g.last, name)}
+          </p>
+        ) : (
+          <p className="rs-last none" />
         )}
       </div>
-
-      <p className="rs-last">{g.last ? lastText(g.last, name) : ' '}</p>
 
       {/* You: your pile bottom left (tap it to play), the Slap button bottom right. */}
       <div className="rs-me">

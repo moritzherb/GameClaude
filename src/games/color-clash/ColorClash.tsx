@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
@@ -8,7 +8,7 @@ import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { sortByColour, useSortedHand } from '../../lib/handSort';
-import { flyIn, reducedMotion, seatArc } from '../../lib/cardFly';
+import { flyIn, reducedMotion } from '../../lib/cardFly';
 import { useCardDrag } from '../../lib/useCardDrag';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
@@ -144,7 +144,6 @@ function Table({
   const [browse, setBrowse] = useState(false);
   const [sorted, toggleSort] = useSortedHand();
   const table = useRef<HTMLDivElement>(null);
-  const size = useSize(table);
   // Where the card you just played was (in your hand, or where you let go of it): it flies from there.
   const launch = useRef<{ rect: DOMRect; at: number } | null>(null);
   const name = (i: number) => seats[i]?.name ?? t('Someone');
@@ -161,6 +160,8 @@ function Table({
   const canCall = me >= 0 && g.lastCard?.seat === me && !g.lastCard.called && playing;
   const picked = sel != null ? hand.find((c) => c.id === sel && canPlay(c)) : undefined;
   const big = hand.length > 8;
+  // A short phone (an SE) holds its cards a little smaller, so the whole table fits.
+  const tall = typeof window === 'undefined' ? 1 : Math.max(0.74, Math.min(1, window.innerHeight / 860));
 
   // Your hand shrinks back below a browse's worth: the fan again.
   useEffect(() => {
@@ -244,7 +245,7 @@ function Table({
           ? t('Nothing fits: draw a card')
           : t('Your turn')
       : t('{name}’s turn', { name: name(g.turn) });
-  const hint = myTurn && picked ? t('Tap it again or drag it onto the pile') : myTurn && anyFits && !g.penalty && g.drawn == null ? t('Tap a card to pick it') : ' ';
+  const hint = myTurn && picked ? t('Tap it again or drag it onto the pile') : myTurn && anyFits && !g.penalty && g.drawn == null ? t('Tap a card to pick it') : '\u00a0';
 
   const playCard = (c: Card, from: HTMLElement | null) => {
     if (!canPlay(c)) return false;
@@ -284,27 +285,28 @@ function Table({
   // The others round the table, in turn order from your left; you at the bottom.
   const others = seats.map((_, i) => i).filter((i) => i !== me);
   const order = me >= 0 ? others.map((_, k) => (me + 1 + k) % seats.length) : others;
-  const spots = seatSpots(order.length, size.w, size.h);
   const pile = g.discard.slice(-4);
   const topCard = pile[pile.length - 1];
 
   return (
     <div className={`cc fill${big ? ' big-hand' : ''}`}>
-      <div className="cc-table" ref={table}>
-        <div className={`cc-felt ${g.color}`} aria-hidden>
-          <span className="cc-dir">{g.dir === 1 ? '↻' : '↺'}</span>
-        </div>
-        {order.map((i, k) => {
+      {/* The others across the table, in turn order from your left; you at the bottom. */}
+      <div className={`cc-others${order.length > 4 ? ' many' : ''}`}>
+        {order.map((i) => {
           const s = seats[i];
           const n = g.hands[i].length;
-          const spot = spots[k];
           return (
             <div
               key={s.id}
               data-seat={i}
-              className={`cc-seat${g.turn === i ? ' on' : ''}${n === 1 ? ' last' : ''}${order.length > 5 ? ' small' : ''}`}
-              style={spot ? { left: spot.x, top: spot.y } : undefined}
+              className={`cc-seat${g.turn === i ? ' on' : ''}${n === 1 ? ' last' : ''}${order.length > 4 ? ' small' : ''}`}
             >
+              {/* Whose turn: an arrow over them, bobbing. */}
+              {g.turn === i && (
+                <svg className="cc-seat-turn" viewBox="0 0 24 16" aria-hidden>
+                  <path d="M3 3h18L12 14Z" />
+                </svg>
+              )}
               {/* Their hand, face down, as a little stack: as many cards as they hold, the number on it. */}
               <span className="cc-seat-deck" role="img" aria-label={t('{name}: {n} cards', { name: s.name, n })}>
                 {Array.from({ length: Math.min(n, 6) }, (_, j) => (
@@ -312,16 +314,19 @@ function Table({
                 ))}
                 <span className="cc-seat-n">{n}</span>
               </span>
-              <span className="cc-seat-who">
-                <span className="bd-avatar xs" style={{ background: s.color }}>
-                  <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
-                </span>
-                <span className="cc-seat-name">{s.name}</span>
+              <span className="cc-seat-avatar bd-avatar" style={{ background: s.color }}>
+                <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
               </span>
+              <span className="cc-seat-name">{s.name}</span>
             </div>
           );
         })}
+      </div>
 
+      <div className="cc-table" ref={table}>
+        <div className={`cc-felt ${g.color}`} aria-hidden>
+          <span className="cc-dir">{g.dir === 1 ? '↻' : '↺'}</span>
+        </div>
         <div className="cc-middle">
           <button
             type="button"
@@ -432,7 +437,7 @@ function Table({
           className="cc-fan cc-hand"
           cards={shown}
           keyOf={(c) => c.id}
-          width={hand.length <= 8 ? 84 : hand.length <= 14 ? 72 : 62}
+          width={Math.round((hand.length <= 7 ? 96 : hand.length <= 10 ? 86 : hand.length <= 14 ? 74 : 64) * tall)}
           ratio={1.33}
           sorted={sorted}
           onSort={toggleSort}
@@ -445,7 +450,7 @@ function Table({
               ok={canPlay(c)}
               picked={sel === c.id}
               onTap={(el) => onTap(c, el)}
-              onDrop={(target, el) => !!target?.closest('.cc-table') && playCard(c, el)}
+              onDrop={(target, el) => !!target?.closest('.cc-pile') && playCard(c, el)}
             />
           )}
         />
@@ -521,40 +526,6 @@ function BrowseButton({ on, onClick }: { on?: boolean; onClick: () => void }) {
       </svg>
     </button>
   );
-}
-
-/** The table's size, kept up to date. */
-function useSize(ref: RefObject<HTMLElement | null>) {
-  const [size, setSize] = useState({ w: 360, h: 360 });
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const measure = () => setSize({ w: el.clientWidth, h: el.clientHeight });
-    measure();
-    if (typeof ResizeObserver !== 'function') return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [ref]);
-  return size;
-}
-
-/** Where the others sit: on an arc round the table, from your left over the top to your right, as
- *  they'd sit at a real one. The middle (deck and pile) lies a little below centre; with many, the
- *  arc comes down beside it too. */
-export function seatSpots(n: number, w: number, h: number) {
-  if (!n) return [];
-  const sw = n > 5 ? 62 : 76;
-  const sh = n > 5 ? 70 : 86;
-  const cx = w / 2;
-  const cy = h * 0.61;
-  const rx = Math.max(0, cx - sw / 2 - 2);
-  // Not further out than just round the felt (global.css: .cc-felt, 62% high, 80vw at most; the
-  // table is about the screen less its sides).
-  const felt = Math.min(h * 0.31, (w + 32) * 0.4);
-  const ry = Math.max(0, Math.min(cy - sh / 2 - 2, felt + sh / 2 + 4));
-  const from = n === 1 ? 90 : n === 2 ? 150 : n === 3 ? 162 : n === 4 ? 172 : 196;
-  return seatArc(n, { cx, cy, rx, ry, from, maxY: h - sh / 2 });
 }
 
 /** How a card lies on the pile: a little turned and off centre, the same on every phone. */
@@ -633,7 +604,10 @@ export function Shape({ color }: { color: Color }) {
 export function CardFace({ card, big }: { card: Card; big?: boolean }) {
   const label = card.kind === 'number' ? String(card.value) : LABEL[card.kind];
   return (
-    <span className={`cc-card ${card.color ?? 'universal'} ${card.kind}${big ? ' big' : ''}`}>
+    <span className={`cc-card ${card.color ?? 'universal'} ${card.kind}${big ? ' big' : ''}${card.value === 6 || card.value === 9 ? ' turnable' : ''}`}>
+      {/* The corners, as on a real card: what it is, readable with the cards fanned over it. */}
+      <Corner card={card} label={label} />
+      <Corner card={card} label={label} bottom />
       {card.color ? (
         <Shape color={card.color} />
       ) : card.kind === 'spectrum' ? (
@@ -646,6 +620,16 @@ export function CardFace({ card, big }: { card: Card; big?: boolean }) {
         </span>
       )}
       {label && <span className="cc-num">{label}</span>}
+    </span>
+  );
+}
+
+/** A card's corner: its number (or action) over its shape; a Choose colour's a little wheel. */
+function Corner({ card, label, bottom }: { card: Card; label?: string; bottom?: boolean }) {
+  return (
+    <span className={`cc-corner${bottom ? ' bottom' : ''}`} aria-hidden>
+      {label && <span className="cc-corner-n">{label}</span>}
+      {card.color ? <Shape color={card.color} /> : card.kind === 'spectrum' ? <span className="cc-corner-wheel" /> : null}
     </span>
   );
 }

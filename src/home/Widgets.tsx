@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import AppDie from '../components/AppDie';
 import Avatar from '../components/Avatar';
 import Tap from '../components/Tap';
@@ -6,6 +6,7 @@ import type { GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import { launch } from '../lib/launch';
 import { navigate, paths } from '../lib/router';
+import { useFitWords } from '../lib/useFitWords';
 import type { Player } from '../state/AppState';
 import { GameGlyph, glyphsOf } from './AppIcon';
 
@@ -51,8 +52,14 @@ export function LastWidget({ game, onShuffle }: { game: GameDefinition | null; o
       </Tap>
     );
   }
+  return <LastGame game={game} />;
+}
+
+function LastGame({ game }: { game: GameDefinition }) {
   // It may break after a slash between words ("Princess/ King").
   const name = t(game.name).replace(/(?<=\p{L})\/(?=\p{L})/gu, '/\u200b');
+  const title = useRef<HTMLSpanElement>(null);
+  useFitWords(title, name);
   return (
     <Tap
       className="widget w-last"
@@ -64,15 +71,12 @@ export function LastWidget({ game, onShuffle }: { game: GameDefinition | null; o
       <span className="w-pop" aria-hidden>
         <GameGlyph game={game} />
       </span>
-      <span className="w-title" style={{ '--longest': longestWord(name) } as CSSProperties}>
+      <span className="w-title" ref={title}>
         {name}
       </span>
     </Tap>
   );
 }
-
-/** Characters in the longest word, for the size of the type. */
-const longestWord = (text: string) => Math.max(1, ...text.split(/[\s\u200b]+/).map((w) => [...w].length));
 
 /** A Material "cookie": a circle with nine soft bumps, as a clip-path. */
 const COOKIE = `polygon(${Array.from({ length: 72 }, (_, i) => {

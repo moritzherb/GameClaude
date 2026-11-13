@@ -9,6 +9,7 @@ import { GameGlyph } from '../home/AppIcon';
 import { useLook } from '../home/usePlatform';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
+import { useFitWords } from '../lib/useFitWords';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 
@@ -31,6 +32,9 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
   const tooMany = !game.playersOptional && !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
   const range = playerRange(game);
   const name = cardName(t(game.name));
+  // The estimate in the CSS, checked against the font as drawn: no word ever sticks out.
+  const title = useRef<HTMLHeadingElement>(null);
+  useFitWords(title, name.text);
   // Only the middle (the card, the numbers, the rules) scrolls, and only when it's longer than the
   // room it has: else it stays still, no scrolling and no bounce.
   const middle = useRef<HTMLDivElement>(null);
@@ -59,7 +63,7 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
         <span className="detail-emoji" aria-hidden>
           {pop ? <GameGlyph game={game} /> : game.emoji}
         </span>
-        <h1 className="detail-name" style={{ '--longest': name.longest } as CSSProperties}>
+        <h1 ref={title} className="detail-name" style={{ '--longest': name.longest } as CSSProperties}>
           {name.text}
         </h1>
         <p className="detail-tagline">{t(game.tagline)}</p>
