@@ -14003,3 +14003,359 @@ button.profile-avatar:not(:disabled):active {
 .rs-slap:disabled {
   opacity: 0.4;
 }
+
+/* ---------- Color Clash (cc-): cards in four colours, each with its white shape and number. ---------- */
+.cc {
+  --crimson: #c8524e;
+  --azure: #4a86cb;
+  --amber: #dfae4c;
+  --jade: #57a57e;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cc > * {
+  flex-shrink: 0;
+}
+
+.cc-sample {
+  --crimson: #c8524e;
+  --azure: #4a86cb;
+  --amber: #dfae4c;
+  --jade: #57a57e;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cc-card {
+  --w: 58px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--w) * 0.1);
+  width: var(--w);
+  height: calc(var(--w) * 1.33);
+  border-radius: calc(var(--w) * 0.18);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cc-card.big {
+  --w: clamp(96px, 28vw, 120px);
+}
+
+.cc-card.crimson,
+.cc-color.crimson {
+  background: var(--crimson, #c8524e);
+}
+
+.cc-card.azure,
+.cc-color.azure {
+  background: var(--azure, #4a86cb);
+}
+
+.cc-card.amber,
+.cc-color.amber {
+  background: var(--amber, #dfae4c);
+}
+
+.cc-card.jade,
+.cc-color.jade {
+  background: var(--jade, #57a57e);
+}
+
+.cc-card.universal {
+  background: #24242a;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.18);
+}
+
+.cc-card .cc-shape {
+  width: calc(var(--w) * 0.32);
+  height: calc(var(--w) * 0.32);
+  fill: #fff;
+}
+
+.cc-num {
+  font-size: calc(var(--w) * 0.36);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A universal card: the four shapes in their colours, in a square. */
+.cc-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(var(--w) * 0.04);
+}
+
+.cc-quad .cc-shape {
+  width: calc(var(--w) * 0.2);
+  height: calc(var(--w) * 0.2);
+}
+
+.cc-quad .cc-shape:nth-child(1) {
+  fill: var(--crimson, #c8524e);
+}
+
+.cc-quad .cc-shape:nth-child(2) {
+  fill: var(--azure, #4a86cb);
+}
+
+.cc-quad .cc-shape:nth-child(3) {
+  fill: var(--amber, #dfae4c);
+}
+
+.cc-quad .cc-shape:nth-child(4) {
+  fill: var(--jade, #57a57e);
+}
+
+.cc-others {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cc-others::-webkit-scrollbar {
+  display: none;
+}
+
+.cc-seat {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px 0 6px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cc-seat.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cc-seat-name {
+  max-width: 90px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cc-seat-n {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.cc-middle {
+  flex: 1 1 0;
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.cc-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-back {
+  display: block;
+  width: 72px;
+  height: 96px;
+  border-radius: 13px;
+  background: conic-gradient(var(--crimson) 0 25%, var(--azure) 0 50%, var(--amber) 0 75%, var(--jade) 0);
+  box-shadow: inset 0 0 0 5px #24242a, 0 2px 0 #24242a, 0 4px 0 rgba(36, 36, 42, 0.7);
+}
+
+.cc-deck:disabled {
+  opacity: 0.5;
+}
+
+.cc-deck:not(:disabled):active .cc-back {
+  transform: scale(0.95);
+}
+
+.cc-deck-label {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.cc-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-active {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cc-active .cc-shape {
+  width: 14px;
+  height: 14px;
+}
+
+.cc-pile.crimson .cc-active .cc-shape {
+  fill: var(--crimson);
+}
+
+.cc-pile.azure .cc-active .cc-shape {
+  fill: var(--azure);
+}
+
+.cc-pile.amber .cc-active .cc-shape {
+  fill: var(--amber);
+}
+
+.cc-pile.jade .cc-active .cc-shape {
+  fill: var(--jade);
+}
+
+.cc-status {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cc-dir {
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.cc-last {
+  margin: 0;
+  min-height: 1.3em;
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.cc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.cc-call,
+.cc-catch,
+.cc-pass {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.cc-call {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.cc-catch {
+  background: var(--bad);
+  color: #fff;
+}
+
+.cc-pass {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Your hand along the bottom, overlapping when there are many; the playable ones stand up. */
+.cc-hand {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 14px 4px max(8px, env(safe-area-inset-bottom));
+}
+
+.cc-hand::-webkit-scrollbar {
+  display: none;
+}
+
+.cc-hand-card {
+  flex: none;
+  transition: transform 0.15s var(--ease-out), opacity 0.15s;
+}
+
+.cc-hand-card:disabled {
+  opacity: 0.55;
+}
+
+.cc-hand-card.ok {
+  transform: translateY(-10px);
+}
+
+.cc-hand-card.ok:active {
+  transform: translateY(-10px) scale(0.95);
+}
+
+.cc-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cc-color {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.cc-color .cc-shape {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+}
+
+.cc-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cc-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.cc-result-n {
+  margin-left: auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
