@@ -14359,3 +14359,359 @@ button.profile-avatar:not(:disabled):active {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Spellbound (fz-): round and trump on top, everyone's bid as chips, the trick in the
+   middle, your hand at the bottom (two overlapping rows once it holds more than ten). ---------- */
+.fz {
+  --fire: #cf5a3e;
+  --water: #3f7fc4;
+  --nature: #4b9a63;
+  --astral: #7c5cc4;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fz > * {
+  flex-shrink: 0;
+}
+
+.fz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.fz-round {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-seats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.fz-seat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 5px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.fz-seat.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.fz-seat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.fz-seat-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.fz-seat-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fz-seat-bid {
+  font-weight: 700;
+}
+
+.fz-seat-score {
+  color: var(--muted);
+}
+
+/* A card: faction colour, rank big, its sign under it. Archmage dark with a gold rim, Fool pale. */
+.fz-card {
+  --w: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--w) * 0.06);
+  width: var(--w);
+  height: calc(var(--w) * 1.4);
+  border-radius: calc(var(--w) * 0.16);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.fz-card.fire {
+  background: var(--fire, #cf5a3e);
+}
+
+.fz-card.water {
+  background: var(--water, #3f7fc4);
+}
+
+.fz-card.nature {
+  background: var(--nature, #4b9a63);
+}
+
+.fz-card.astral {
+  background: var(--astral, #7c5cc4);
+}
+
+.fz-card.archmage {
+  background: #23212b;
+  box-shadow: inset 0 0 0 2px #d8b25a;
+  color: #f1d58f;
+}
+
+.fz-card.fool {
+  background: #ecebe6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  color: #55534c;
+}
+
+.fz-card.back {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.14) 0 3px, transparent 3px 8px), #3b3650;
+}
+
+.fz-card-rank {
+  font-size: calc(var(--w) * 0.42);
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-card-glyph {
+  font-size: calc(var(--w) * 0.3);
+}
+
+.fz-card-name {
+  font-family: var(--font-body);
+  font-size: calc(var(--w) * 0.17);
+  font-weight: 700;
+}
+
+/* The trick: the cards in the order they were played, each with who played it. */
+.fz-trick {
+  flex: 1 1 0;
+  min-height: 120px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+}
+
+.fz-trick .fz-card {
+  --w: clamp(48px, 14vw, 64px);
+}
+
+.fz-trick.small {
+  flex: none;
+  min-height: 0;
+}
+
+.fz-trick.small .fz-card {
+  --w: 44px;
+}
+
+.fz-trick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+}
+
+.fz-trick-card.done {
+  opacity: 0.45;
+}
+
+.fz-trick-card.won {
+  opacity: 1;
+  transform: translateY(-6px);
+}
+
+.fz-trick-who {
+  max-width: 64px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.fz-took {
+  position: absolute;
+  bottom: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.fz-status {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.fz-picks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fz-bid-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-bid-btn:active,
+.fz-pick:active {
+  transform: scale(0.94);
+}
+
+.fz-pick {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.fz-pick.fire {
+  background: var(--fire);
+}
+
+.fz-pick.water {
+  background: var(--water);
+}
+
+.fz-pick.nature {
+  background: var(--nature);
+}
+
+.fz-pick.astral {
+  background: var(--astral);
+}
+
+.fz-hand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.fz-hand-row {
+  --w: 52px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Many cards: they overlap just enough to fit the row, never wider than the screen. */
+.fz-hand-card + .fz-hand-card {
+  margin-left: min(6px, calc((100% - var(--n) * var(--w)) / (var(--n) - 1)));
+}
+
+.fz-hand-card {
+  flex: none;
+  border-radius: calc(var(--w) * 0.16);
+  transition: transform 0.15s var(--ease-out), opacity 0.15s;
+}
+
+.fz-hand-card:disabled {
+  opacity: 0.55;
+}
+
+.fz-hand-card.ok {
+  transform: translateY(-10px);
+}
+
+.fz-hand-card.ok:active {
+  transform: translateY(-10px) scale(0.95);
+}
+
+.fz-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fz-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.fz-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.fz-bid {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-gain {
+  min-width: 44px;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-gain.up {
+  color: var(--good);
+}
+
+.fz-gain.down {
+  color: var(--bad);
+}
+
+.fz-total {
+  min-width: 44px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fz-trick-card.turned .fz-trick-who {
+  max-width: none;
+}
