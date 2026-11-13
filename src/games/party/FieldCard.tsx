@@ -1,4 +1,4 @@
-import { useContext, useState, type CSSProperties, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import BigButton from '../../components/BigButton';
 import { t, tx } from '../../i18n';
 import { storeSafe } from '../../lib/native';
@@ -8,15 +8,17 @@ import { BigToss, Countdown, Die, PickPlayer, TOSS_MS, useBigRoll, useRoll } fro
 import { field, FIELDS, param, type Field } from './fields';
 import { isJump } from './boards';
 import { AceCard, FieldIcon } from './FieldIcon';
-import { duel, inTurnOrder, keepsUp, leaders, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
+import { duel, inTurnOrder, keepsUp, leaders, leftOf, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
 
 /** What happens once a field is done. */
 export interface Outcome {
   update?: (g: Game) => Game;
   /** next: the next player; again: the same player rolls again; travel: over the bridge back or
-   *  through the tunnel; back: that many fields back (Roll back). */
+   *  through the tunnel (or to `to`); back: that many fields back (Roll back). */
   then: 'next' | 'again' | 'travel' | 'back';
   steps?: number;
+  /** Where a travel goes when it isn't a bridge or tunnel: Back to start. */
+  to?: number;
   /** The Ace up the sleeve was played on it. */
   ace?: boolean;
 }
@@ -72,6 +74,17 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
       done = { then: 'travel' };
       doneLabel = f.kind === 'mole' ? t('Into the tunnel') : t('Over the bridge');
       break;
+    case 'home':
+      done = { then: 'travel', to: 0 };
+      doneLabel = t('Back to start');
+      break;
+    case 'neighbors': {
+      const who = [...new Set([leftOf(g, lander.id), rightOf(g, lander.id)])].filter((id) => id !== lander.id).map(byId);
+      if (who.length) body = <Verdict emoji="🍻" title={t('{names}: drink 2', { names: names(who) })} />;
+      break;
+    }
+    case 'chug':
+      return <ChugCard {...{ f, pos, lander, canAce }} onDone={onDone} chosen={chosen} />;
     case 'reverse':
       done = { then: 'next', update: reverse };
       break;
@@ -275,6 +288,48 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
           </BigButton>
         ) : (
           <BigButton size="xl" onClick={() => onDone({ then: 'next', update: (x) => setPawn(x, lander.id, { gate: true }) })}>
+            {t('Done')}
+          </BigButton>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+/** The chug: a clock the others can watch run down. */
+function ChugCard({ f, pos, lander, canAce, chosen, onDone }: Sub & { canAce: boolean }) {
+  const secs = param(f);
+  const [left, setLeft] = useState<number | null>(null);
+  useEffect(() => {
+    if (left == null) return;
+    if (left === 0) {
+      buzz([40, 40, 80]);
+      sfx.pop();
+      return;
+    }
+    sfx.tick();
+    const id = window.setTimeout(() => setLeft(left - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [left]);
+  return (
+    <Card f={f} pos={pos} lander={lander} chosen={chosen} text={textOf(f)}>
+      {left != null && (
+        <span key={left} className="pt-count pop-in" aria-live="assertive">
+          {left || t('Stop!')}
+        </span>
+      )}
+      <div className="pt-card-actions">
+        {canAce && left == null && (
+          <button type="button" className="pt-ace-btn" onClick={() => onDone({ then: 'next', ace: true })}>
+            <AceCard /> {t('Play your Ace')}
+          </button>
+        )}
+        {left == null ? (
+          <BigButton size="xl" onClick={() => setLeft(secs)}>
+            {t('Start the clock')}
+          </BigButton>
+        ) : (
+          <BigButton size="xl" disabled={left > 0} onClick={() => onDone({ then: 'next' })}>
             {t('Done')}
           </BigButton>
         )}

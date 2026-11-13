@@ -83,6 +83,12 @@ export function rightOf(g: Game, id: string) {
   return g.order[(g.order.indexOf(id) + 1) % g.order.length];
 }
 
+/** The player on someone's left: the seat before theirs. */
+export function leftOf(g: Game, id: string) {
+  const n = g.order.length;
+  return g.order[(g.order.indexOf(id) - 1 + n) % n];
+}
+
 /** Everyone in turn order, starting with `from`. */
 export function inTurnOrder(g: Game, from: string): string[] {
   const n = g.order.length;

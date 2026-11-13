@@ -76,6 +76,8 @@ export interface Board {
   tunnels: Cell[];
   /** Made in the editor. */
   custom?: boolean;
+  /** Its picture in the list of boards (else its theme's). */
+  emoji?: string;
 }
 
 /** What a jump needs to know about a board. */
@@ -171,7 +173,22 @@ function classic(): Board {
   return { id: 'classic', name: tx('Classic'), theme: 'classic', cols, rows: spots[spots.length - 1].y + 2, fields, spots, water, tunnels };
 }
 
-export const BOARDS: Board[] = [classic()];
+/** The second board: the group fields (who's single, who's tallest …), word games and a road home. */
+function houseParty(): Board {
+  const fields = [
+    F('start'), F('cheers', 2), F('black'), F('never'), F('shots', 1), F('battery'),
+    F('height', 0), F('dare'), F('rps'), F('tattoo'), F('hydrate'), F('lie'),
+    F('give', 3), F('eyes', 0), F('reflex', 0), F('nohands'), F('category'), F('couples', 0),
+    F('ace'), F('smokers'), F('home'), F('roll-again'), F('hair', 0), F('chug', 5),
+    F('rhyme'), F('glasses'), F('neighbors'), F('waterfall'), F('height', 1), F('stare'),
+    F('hair', 1), F('reflex', 1), F('eyes', 1), F('couples', 1), F('safe'), F('chug', 10),
+    F('cheers', 3), F('ex'), F('goal'),
+  ];
+  const spots = layout(fields.length, 5).map((s) => ({ x: s.x + 1, y: s.y }));
+  return { id: 'house-party', name: tx('House party'), emoji: '🪩', theme: 'classic', cols: 7, rows: spots[spots.length - 1].y + 2, fields, spots, water: [], tunnels: [] };
+}
+
+export const BOARDS: Board[] = [classic(), houseParty()];
 
 /** Room for a board of your own. */
 export const MAX_COLS = 7;

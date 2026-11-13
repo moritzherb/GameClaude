@@ -24,13 +24,13 @@ describe('layout', () => {
 });
 
 describe('boards', () => {
-  it('start at the start, end at the finish, and use every kind of field between them', () => {
+  it('start at the start, end at the finish, and use every kind of field between them (together)', () => {
     for (const b of BOARDS) {
       expect(b.fields[0].kind).toBe('start');
       expect(b.fields[b.fields.length - 1].kind).toBe('goal');
       expect(b.fields.slice(1, -1).every((f) => f.kind !== 'start' && f.kind !== 'goal')).toBe(true);
     }
-    const used = new Set(BOARDS[0].fields.map((f) => f.kind));
+    const used = new Set(BOARDS.flatMap((b) => b.fields.map((f) => f.kind)));
     expect(KINDS.filter((k) => !used.has(k))).toEqual([]);
   });
 

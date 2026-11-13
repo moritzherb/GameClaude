@@ -151,6 +151,20 @@ export const STORE: Record<string, { en: string; de: string }> = {
     de: 'Gib deinem rechten Nachbarn ein High Five. Daneben: Ihr trinkt beide 1.',
   },
 
+  'Shot with no hands': { en: 'Sip with no hands', de: 'Schluck ohne Hände' },
+  'Down a shot without using your hands: hold the glass in your teeth.': {
+    en: 'Take a sip without using your hands.',
+    de: 'Trink einen Schluck, ohne die Hände zu benutzen.',
+  },
+  '{n}-second chug': { en: '{n}-second sip', de: '{n}-Sekunden-Schluck' },
+  'Drink without stopping for {n} seconds. The others count.': {
+    en: 'Sip slowly while the others count to {n}.',
+    de: 'Trink langsam, während die anderen bis {n} zählen.',
+  },
+  Smokers: { en: 'Coffee', de: 'Kaffee' },
+  'Smokers drink': { en: 'Coffee drinkers', de: 'Kaffeetrinker' },
+  'Everyone who smokes drinks 2.': { en: 'Everyone who had a coffee today drinks 2.', de: 'Alle, die heute schon Kaffee hatten, trinken 2.' },
+
   /* ---------- Party: no tobacco (App Store rule 1.4.3): the same games with a box and a tin ---------- */
   'Tschick flip': { en: 'Box flip', de: 'Schachtel-Flip' },
   'Everyone flips the pack in turn, you first. Flat: 1 sip, on its side: 2, upright: 3. Each throw must be as good or better than the one before. The sips add up: whoever can’t keep up drinks them all.':
