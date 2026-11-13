@@ -595,16 +595,19 @@ function Table({
       ))}
       {bank && (
         <Tap className={`fk-bank${bank.banked ? ' banked' : ''}`} disabled={bank.disabled} onClick={bank.onClick} ariaLabel={`${bank.text} ${bank.amount}`}>
-          <span className="fk-bank-icon" aria-hidden>
-            💰
+          {/* Laid out in a box of its own (Safari lays a button's own content out its own way), sized
+              to the circle, the text in it sized to the circle too; still too long, it gets smaller. */}
+          <span className="fk-bank-in">
+            <span className="fk-bank-icon" aria-hidden>
+              💰
+            </span>
+            <FitText className="fk-bank-text" min={0.5}>
+              {bank.text}
+            </FitText>
+            <FitText className="fk-bank-amount" min={0.5}>
+              {bank.amount}
+            </FitText>
           </span>
-          {/* Inside the round button: smaller when long ("noch 500"), never cut off at its edge. */}
-          <FitText className="fk-bank-text" min={0.55}>
-            {bank.text}
-          </FitText>
-          <FitText className="fk-bank-amount" min={0.55}>
-            {bank.amount}
-          </FitText>
         </Tap>
       )}
       {coin && (
