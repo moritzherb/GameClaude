@@ -9,7 +9,7 @@ import type { ExpoConfig } from 'expo/config';
 // Google's sample AdMob app IDs (test ads only).
 const TEST_APP_ID = { ios: 'ca-app-pub-3940256099942544~1458002511', android: 'ca-app-pub-3940256099942544~3347511713' };
 
-const DARK = '#10110e';
+const DARK = '#20211c';
 const LIGHT = '#f1ede3';
 
 const config: ExpoConfig = {
