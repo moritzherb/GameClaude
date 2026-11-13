@@ -1,10 +1,12 @@
 import { useState, type CSSProperties } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
+import HandFan from '../../components/HandFan';
 import Sheet from '../../components/Sheet';
 import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
+import { sortByColour, useSortedHand } from '../../lib/handSort';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import {
@@ -138,8 +140,10 @@ function Table({
   onNewGame: () => void;
 }) {
   const [wild, setWild] = useState<Card | null>(null);
+  const [sorted, toggleSort] = useSortedHand();
   const name = (i: number) => seats[i]?.name ?? t('Someone');
   const hand = me >= 0 ? g.hands[me] : [];
+  const shown = sorted ? sortByColour(hand, (c) => c.color, worth, COLORS) : hand;
   const myTurn = me >= 0 && g.turn === me && g.winner == null && !g.overload;
   const facing = me >= 0 && g.overload?.target === me;
   const canCall = me >= 0 && ((g.lastCard?.seat === me && !g.lastCard.called) || (myTurn && hand.length === 2 && g.calling !== me));
@@ -197,12 +201,15 @@ function Table({
       <div className="cc-others">
         {seats.map((s, i) =>
           i === me ? null : (
-            <div key={s.id} className={`cc-seat${g.turn === i ? ' on' : ''}`}>
-              <span className="bd-avatar xs" style={{ background: s.color }}>
-                <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+            <div key={s.id} className={`cc-seat${g.turn === i ? ' on' : ''}${g.hands[i].length === 1 ? ' last' : ''}`}>
+              {/* Their hand, face down: as many cards as they hold, the number with it. */}
+              <Backs n={g.hands[i].length} label={t('{name}: {n} cards', { name: s.name, n: g.hands[i].length })} />
+              <span className="cc-seat-who">
+                <span className="bd-avatar xs" style={{ background: s.color }}>
+                  <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+                </span>
+                <span className="cc-seat-name">{s.name}</span>
               </span>
-              <span className="cc-seat-name">{s.name}</span>
-              <span className="cc-seat-n">{g.hands[i].length}</span>
             </div>
           ),
         )}
@@ -253,18 +260,29 @@ function Table({
         )}
       </div>
 
-      {/* Your hand: what you may play now stands up. */}
-      <div className="cc-hand" aria-label={t('Your hand')}>
-        {hand.map((c) => {
-          const ok = myTurn && playable(g, me, c);
-          return (
-            <button key={c.id} type="button" className={`cc-hand-card${ok ? ' ok' : ''}`} disabled={!ok} onClick={() => onCard(c)} aria-label={cardName(c)}>
-              <CardFace card={c} />
-            </button>
-          );
-        })}
-        {me < 0 && <p className="fine-print">{t('Watching')}</p>}
-      </div>
+      {/* Your hand, fanned as you'd hold it: what you may play now stands up. */}
+      {me >= 0 ? (
+        <HandFan
+          className="cc-fan"
+          cards={shown}
+          keyOf={(c) => c.id}
+          width={hand.length <= 8 ? 70 : hand.length <= 14 ? 62 : 54}
+          ratio={1.33}
+          sorted={sorted}
+          onSort={toggleSort}
+          label={t('Your hand')}
+          card={(c) => {
+            const ok = myTurn && playable(g, me, c);
+            return (
+              <button type="button" className={`cc-hand-card${ok ? ' ok' : ''}${myTurn && !ok ? ' dim' : ''}`} disabled={!ok} onClick={() => onCard(c)} aria-label={cardName(c)}>
+                <CardFace card={c} />
+              </button>
+            );
+          }}
+        />
+      ) : (
+        <p className="fine-print">{t('Watching')}</p>
+      )}
 
       {/* Which colour, for a Spectrum or an Overload. */}
       <Sheet open={!!wild} onClose={() => setWild(null)} title={t('Which colour?')} closeLabel={t('Cancel')}>
@@ -329,6 +347,25 @@ function lastText(e: Entry, name: (i: number) => string) {
         ? t('{name} challenged the Overload and was wrong: draws 6.', { name: name(e.by) })
         : t('{name} challenged the Overload and was right: {actor} draws 4.', { name: name(e.by), actor: name(e.actor) });
   }
+}
+
+/** A card's place in a sorted hand within its colour: numbers, then Block, Turnaround, Burden, then the universal ones. */
+const ORDER: Record<Card['kind'], number> = { number: 0, block: 10, turnaround: 11, burden: 12, spectrum: 20, overload: 21 };
+const worth = (c: Card) => ORDER[c.kind] + (c.value ?? 0);
+
+/** A hand face down, as many cards as it holds (a few at most, fanned), with the number beside. */
+function Backs({ n, label }: { n: number; label: string }) {
+  const shown = Math.min(n, 9);
+  return (
+    <span className="cc-backs" role="img" aria-label={label}>
+      <span className="cc-backs-fan">
+        {Array.from({ length: shown }, (_, k) => (
+          <i key={k} className="cc-back" style={{ '--k': k - (shown - 1) / 2 } as CSSProperties} />
+        ))}
+      </span>
+      <span className="cc-backs-n">{n}</span>
+    </span>
+  );
 }
 
 /** The colour's own shape: a diamond, a circle, a triangle, a square. */

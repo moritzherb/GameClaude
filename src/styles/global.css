@@ -14181,12 +14181,13 @@ button.profile-avatar:not(:disabled):active {
 
 .cc-seat {
   flex: none;
+  min-width: 88px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
-  height: 40px;
-  padding: 0 12px 0 6px;
-  border-radius: 20px;
+  padding: 8px 10px;
+  border-radius: 16px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -14195,19 +14196,59 @@ button.profile-avatar:not(:disabled):active {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
+.cc-seat-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
 .cc-seat-name {
   max-width: 90px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-.cc-seat-n {
+/* Their hand face down: a small fan of backs, the number beside it. */
+.cc-backs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+}
+
+.cc-backs-fan {
+  position: relative;
+  width: 44px;
+  height: 34px;
+}
+
+.cc-backs .cc-back {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 22px;
+  height: 30px;
+  margin-left: -11px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
+  transform-origin: 50% 120%;
+  transform: translateX(calc(var(--k) * 3px)) rotate(calc(var(--k) * 7deg));
+}
+
+.cc-backs-n {
+  min-width: 1.2em;
   font-weight: 700;
+  font-size: 1.15rem;
   font-variant-numeric: tabular-nums;
-  color: var(--muted);
+}
+
+/* One card left: the number says so loudly. */
+.cc-seat.last .cc-backs-n {
+  color: var(--bad);
 }
 
 .cc-middle {
@@ -14340,34 +14381,27 @@ button.profile-avatar:not(:disabled):active {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-/* Your hand along the bottom, overlapping when there are many; the playable ones stand up. */
-.cc-hand {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 14px 4px max(8px, env(safe-area-inset-bottom));
-}
-
-.cc-hand::-webkit-scrollbar {
-  display: none;
-}
-
+/* Your hand (a fan, components/HandFan.tsx): the playable ones stand up. */
 .cc-hand-card {
   flex: none;
   transition: transform 0.15s var(--ease-out), opacity 0.15s;
 }
 
-.cc-hand-card:disabled {
-  opacity: 0.55;
+/* Not playable now (on your turn): greyed, not see-through, so the fan doesn't show through. */
+.cc-hand-card.dim > * {
+  filter: brightness(0.62);
 }
 
 .cc-hand-card.ok {
-  transform: translateY(-10px);
+  transform: translateY(-14px);
 }
 
 .cc-hand-card.ok:active {
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-14px) scale(0.96);
+}
+
+.cc-hand-card .cc-card {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
 }
 
 .cc-colors {
@@ -14417,10 +14451,10 @@ button.profile-avatar:not(:disabled):active {
 /* ---------- Spellbound (fz-): round and trump on top, everyone's bid as chips, the trick in the
    middle, your hand at the bottom (two overlapping rows once it holds more than ten). ---------- */
 .fz {
-  --fire: #cf5a3e;
-  --water: #3f7fc4;
-  --nature: #4b9a63;
-  --astral: #7c5cc4;
+  --fire: #b8473a;
+  --water: #4a7a9b;
+  --nature: #5f8a6e;
+  --astral: #7d68a0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -14498,68 +14532,111 @@ button.profile-avatar:not(:disabled):active {
   color: var(--muted);
 }
 
-/* A card: faction colour, rank big, its sign under it. Archmage dark with a gold rim, Fool pale. */
+/* A card, as in the deck's art: cream paper, the figure drawn on it (art.webp), the number and the
+   faction's sign in its ink in the top left corner. The 13s are seals: the sign big in gold rings. */
 .fz-card {
-  --w: 52px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: calc(var(--w) * 0.06);
+  --w: 60px;
+  --ink: #3a3328;
+  position: relative;
+  display: block;
   width: var(--w);
-  height: calc(var(--w) * 1.4);
-  border-radius: calc(var(--w) * 0.16);
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1;
+  height: calc(var(--w) * 1.5);
+  border-radius: calc(var(--w) * 0.1);
+  background-color: #f6eedc;
+  background-size: 800% 700%;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(90, 70, 40, 0.22), 0 1px 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
 .fz-card.fire {
-  background: var(--fire, #cf5a3e);
+  --ink: #9c3427;
 }
 
 .fz-card.water {
-  background: var(--water, #3f7fc4);
+  --ink: #2f6283;
 }
 
 .fz-card.nature {
-  background: var(--nature, #4b9a63);
+  --ink: #3f6e50;
 }
 
 .fz-card.astral {
-  background: var(--astral, #7c5cc4);
+  --ink: #5e4a86;
 }
 
-.fz-card.archmage {
-  background: #23212b;
-  box-shadow: inset 0 0 0 2px #d8b25a;
-  color: #f1d58f;
+.fz-index {
+  position: absolute;
+  top: calc(var(--w) * 0.06);
+  left: calc(var(--w) * 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--w) * 0.02);
+  color: var(--ink);
 }
 
-.fz-card.fool {
-  background: #ecebe6;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
-  color: #55534c;
+.fz-rank {
+  font-family: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: calc(var(--w) * 0.27);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums;
+}
+
+.fz-index .fz-sigil {
+  width: calc(var(--w) * 0.19);
+  height: calc(var(--w) * 0.19);
+}
+
+.fz-sigil {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.12em;
+}
+
+.fz-sigil.fire {
+  color: #b8473a;
+}
+
+.fz-sigil.water {
+  color: #4a7a9b;
+}
+
+.fz-sigil.nature {
+  color: #5f8a6e;
+}
+
+.fz-sigil.astral {
+  color: #7d68a0;
+}
+
+/* On a faction's own colour (the trump buttons): white. */
+.fz-sigil.on {
+  color: #fff;
+}
+
+.fz-seal {
+  position: absolute;
+  inset: 22% 14% 10%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.02) #b99a5f, inset 0 0 0 calc(var(--w) * 0.05) #f6eedc, inset 0 0 0 calc(var(--w) * 0.06) #b99a5f;
+  aspect-ratio: 1;
+  margin: auto 0;
+}
+
+.fz-seal .fz-sigil {
+  width: 46%;
+  height: 46%;
 }
 
 .fz-card.back {
-  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.14) 0 3px, transparent 3px 8px), #3b3650;
-}
-
-.fz-card-rank {
-  font-size: calc(var(--w) * 0.42);
-  font-variant-numeric: tabular-nums;
-}
-
-.fz-card-glyph {
-  font-size: calc(var(--w) * 0.3);
-}
-
-.fz-card-name {
-  font-family: var(--font-body);
-  font-size: calc(var(--w) * 0.17);
-  font-weight: 700;
+  background: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* The trick: the cards in the order they were played, each with who played it. */
@@ -14575,7 +14652,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .fz-trick .fz-card {
-  --w: clamp(48px, 14vw, 64px);
+  --w: clamp(56px, 17vw, 76px);
 }
 
 .fz-trick.small {
@@ -14654,6 +14731,9 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .fz-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   height: 48px;
   padding: 0 16px;
   border-radius: 14px;
@@ -14677,40 +14757,26 @@ button.profile-avatar:not(:disabled):active {
   background: var(--astral);
 }
 
-.fz-hand {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 0 max(8px, env(safe-area-inset-bottom));
-}
-
-.fz-hand-row {
-  --w: 52px;
-  display: flex;
-  justify-content: center;
-}
-
-/* Many cards: they overlap just enough to fit the row, never wider than the screen. */
-.fz-hand-card + .fz-hand-card {
-  margin-left: min(6px, calc((100% - var(--n) * var(--w)) / (var(--n) - 1)));
-}
-
 .fz-hand-card {
-  flex: none;
-  border-radius: calc(var(--w) * 0.16);
+  border-radius: calc(var(--w, 60px) * 0.1);
   transition: transform 0.15s var(--ease-out), opacity 0.15s;
 }
 
-.fz-hand-card:disabled {
-  opacity: 0.55;
+/* Not playable now (on your turn): greyed, not see-through, so the fan doesn't show through. */
+.fz-hand-card.dim > * {
+  filter: brightness(0.62);
 }
 
 .fz-hand-card.ok {
-  transform: translateY(-10px);
+  transform: translateY(-14px);
 }
 
 .fz-hand-card.ok:active {
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-14px) scale(0.96);
+}
+
+.fz-hand-card .fz-card {
+  box-shadow: inset 0 0 0 1px rgba(90, 70, 40, 0.22), -2px 2px 6px -2px rgba(0, 0, 0, 0.35);
 }
 
 .fz-table {
@@ -14794,4 +14860,80 @@ button.profile-avatar:not(:disabled):active {
 
 :is(.fz-row, .cc-result):nth-child(n + 6) {
   animation-delay: 200ms;
+}
+
+/* ---------- A hand of cards held as a fan (components/HandFan.tsx) ----------
+   Each card along an arc, a little turned; the lifted ones (playable) stand up out of it. The round
+   button beside it sorts the hand. */
+.fan-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+.fan {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.fan-slot {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: var(--cw);
+  margin-left: calc(var(--cw) / -2);
+  transform-origin: 50% 100%;
+  transition: transform 0.32s var(--ease-out);
+}
+
+.fan-slot > * {
+  display: block;
+  width: 100%;
+}
+
+.fan-slot .fz-card,
+.fan-slot .cc-card {
+  --w: var(--cw);
+}
+
+.sort-btn {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 18px;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s var(--ease-out);
+}
+
+.sort-btn::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+}
+
+.sort-btn.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.sort-btn:disabled {
+  opacity: 0.4;
+}
+
+.sort-btn:not(:disabled):active {
+  transform: scale(0.94);
+}
+
+.sp-info .sort-btn {
+  margin: 0 0 0 auto;
 }

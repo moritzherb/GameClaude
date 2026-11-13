@@ -337,6 +337,7 @@ const app: Record<string, string> = {
   Red: 'Rot',
   Turquoise: 'Türkis',
   'Choose a photo': 'Foto wählen',
+  'Sort your cards': 'Karten sortieren',
 };
 
 export default app;

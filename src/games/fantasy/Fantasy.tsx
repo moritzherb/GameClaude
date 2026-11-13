@@ -1,11 +1,15 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
+import HandFan from '../../components/HandFan';
 import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
+import { sortByColour, useSortedHand } from '../../lib/handSort';
+import { mix, parseColor, tintTop } from '../../lib/themeColor';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
+import art from './art.webp';
 import { bid, chooseTrump, FACTIONS, legal, MAX_PLAYERS, maxRounds, MIN_PLAYERS, newGame, nextRound, playCard, QUICK_ROUNDS, type Card, type Faction, type Game } from './logic';
 
 interface Seat {
@@ -22,7 +26,8 @@ interface Shared {
 
 /** English; render with t(). */
 const FACTION_NAME: Record<Faction, string> = { fire: tx('Fire'), water: tx('Water'), nature: tx('Nature'), astral: tx('Astral') };
-const FACTION_GLYPH: Record<Faction, string> = { fire: '🔥', water: '💧', nature: '🌿', astral: '✨' };
+/** The factions' colours, as on the back of the cards. */
+const FACTION_COLOR: Record<Faction, string> = { fire: '#b8473a', water: '#4a7a9b', nature: '#5f8a6e', astral: '#7d68a0' };
 
 /** Spellbound: say how many tricks you'll take, then take exactly that many. Every player on their own phone. */
 export default function Fantasy() {
@@ -119,9 +124,20 @@ function Table({
   onNewGame: () => void;
 }) {
   const name = (i: number) => seats[i]?.name ?? t('Someone');
+  const [sorted, toggleSort] = useSortedHand();
   const hand = me >= 0 ? g.hands[me] : [];
+  const shown = sorted ? sortByColour(hand, (c) => (c.kind === 'number' ? c.faction : null), (c) => (c.kind === 'number' ? c.rank : c.kind === 'archmage' ? 0 : 1), FACTIONS) : hand;
   const mine = g.turn === me;
-  const trumpText = g.trump ? `${FACTION_GLYPH[g.trump]} ${t(FACTION_NAME[g.trump])}` : g.phase === 'trump' ? t('The dealer picks') : t('No trump');
+  useTrumpSky(g.trump);
+  const trumpText = g.trump ? (
+    <>
+      <Sigil faction={g.trump} /> {t(FACTION_NAME[g.trump])}
+    </>
+  ) : g.phase === 'trump' ? (
+    t('The dealer picks')
+  ) : (
+    t('No trump')
+  );
 
   if (g.phase === 'summary' || g.phase === 'over') {
     const order = seats.map((s, i) => ({ s, i })).sort((a, b) => (g.phase === 'over' ? g.scores[b.i] - g.scores[a.i] : 0));
@@ -217,7 +233,7 @@ function Table({
         {/* Before the first card: the card turned up for trump. */}
         {!g.trick.length && !g.lastTrick && (
           <div className="fz-trick-card turned">
-            {g.turned ? <CardFace card={g.turned} /> : <span className="fz-card back" />}
+            {g.turned ? <CardFace card={g.turned} /> : <CardBack />}
             <span className="fz-trick-who">{t('Turned up')}</span>
           </div>
         )}
@@ -231,7 +247,7 @@ function Table({
         <div className="fz-picks">
           {FACTIONS.map((f) => (
             <button key={f} type="button" className={`fz-pick ${f}`} onClick={() => act((x) => chooseTrump(x, me, f))}>
-              {FACTION_GLYPH[f]} {t(FACTION_NAME[f])}
+              <Sigil faction={f} on /> {t(FACTION_NAME[f])}
             </button>
           ))}
         </div>
@@ -255,61 +271,139 @@ function Table({
         </div>
       )}
 
-      {/* Your hand: what you may play now stands up. Many cards: two rows, overlapping. */}
-      <div className="fz-hand" aria-label={t('Your hand')}>
-        {rows([...hand].sort(order)).map((row, r) => (
-          <div key={r} className="fz-hand-row" style={{ '--n': row.length } as CSSProperties}>
-            {row.map((c) => {
-              const ok = g.phase === 'playing' && mine && legal(g, me, c);
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`fz-hand-card${ok ? ' ok' : ''}`}
-                  disabled={!ok}
-                  onClick={() => {
-                    sfx.pop();
-                    buzz(10);
-                    act((x) => playCard(x, me, c.id));
-                  }}
-                >
-                  <CardFace card={c} />
-                </button>
-              );
-            })}
-          </div>
-        ))}
-        {me < 0 && <p className="fine-print">{t('Watching')}</p>}
-      </div>
+      {/* Your hand, fanned as you'd hold it: what you may play now stands up. */}
+      {me >= 0 ? (
+        <HandFan
+          className="fz-fan"
+          cards={shown}
+          keyOf={(c) => c.id}
+          width={hand.length <= 8 ? 76 : hand.length <= 13 ? 66 : 58}
+          ratio={1.5}
+          sorted={sorted}
+          onSort={toggleSort}
+          label={t('Your hand')}
+          card={(c) => {
+            const ok = g.phase === 'playing' && mine && legal(g, me, c);
+            return (
+              <button
+                type="button"
+                className={`fz-hand-card${ok ? ' ok' : ''}${g.phase === 'playing' && mine && !ok ? ' dim' : ''}`}
+                disabled={!ok}
+                onClick={() => {
+                  sfx.pop();
+                  buzz(10);
+                  act((x) => playCard(x, me, c.id));
+                }}
+              >
+                <CardFace card={c} />
+              </button>
+            );
+          }}
+        />
+      ) : (
+        <p className="fine-print">{t('Watching')}</p>
+      )}
     </div>
   );
 }
 
-/** Up to 10 cards in one row; more in two. */
-function rows(cards: Card[]) {
-  if (cards.length <= 10) return [cards];
-  const top = Math.floor(cards.length / 2);
-  return [cards.slice(0, top), cards.slice(top)];
+/**
+ * While a trump is turned up, the whole screen takes its colour (the strip under the clock too): a
+ * deep shade of it in the dark, a pale one in the light.
+ */
+function useTrumpSky(trump: Faction | null) {
+  useEffect(() => {
+    if (!trump) return;
+    const root = document.documentElement;
+    const own = root.style.getPropertyValue('--bg');
+    const ground = getComputedStyle(root).getPropertyValue('--bg').trim();
+    const c = parseColor(ground);
+    const dark = !c || c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 < 128;
+    const sky = mix(ground, FACTION_COLOR[trump], dark ? 0.34 : 0.22);
+    root.style.setProperty('--bg', sky);
+    const release = tintTop(sky);
+    return () => {
+      if (own) root.style.setProperty('--bg', own);
+      else root.style.removeProperty('--bg');
+      release();
+    };
+  }, [trump]);
 }
 
-/** A hand in order: Archmages, then the factions by rank, then the Fools. */
-function order(a: Card, b: Card) {
-  const key = (c: Card) => (c.kind === 'number' ? FACTIONS.indexOf(c.faction) * 14 + c.rank : c.kind === 'archmage' ? -1 : 99);
-  return key(a) - key(b);
+/** A faction's sign, as on the back of the cards: a flame, a drop, a leaf, a star. */
+const SIGIL: Record<Faction, ReactNode> = {
+  fire: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z" />,
+  water: <path d="M12 2.8c-2.8 3.9-6.2 7.6-6.2 11.3a6.2 6.2 0 0 0 12.4 0c0-3.7-3.4-7.4-6.2-11.3z" />,
+  nature: (
+    <g fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z" />
+      <path d="M3 21c1.2-2.5 4-6 10-9" />
+    </g>
+  ),
+  astral: <path d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.9l-5.8 3.2 1.4-6.4-4.9-4.4 6.5-.7z" strokeLinejoin="round" />,
+};
+
+export function Sigil({ faction, on }: { faction: Faction; on?: boolean }) {
+  return (
+    <svg className={`fz-sigil ${faction}${on ? ' on' : ''}`} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      {SIGIL[faction]}
+    </svg>
+  );
+}
+
+/** The art of a card, from the sheet (art.webp, 8 across, 7 down): the four factions' 1 to 12, then four Archmages, four Fools. */
+function artAt(i: number): CSSProperties {
+  return { backgroundImage: `url(${art})`, backgroundPosition: `${((i % 8) / 7) * 100}% ${(Math.floor(i / 8) / 6) * 100}%` };
 }
 
 function CardFace({ card }: { card: Card }) {
-  if (card.kind !== 'number')
-    return (
-      <span className={`fz-card ${card.kind}`}>
-        <span className="fz-card-glyph">{card.kind === 'archmage' ? '🧙' : '🃏'}</span>
-        <span className="fz-card-name">{card.kind === 'archmage' ? t('Archmage') : t('Fool')}</span>
-      </span>
-    );
+  if (card.kind !== 'number') {
+    const v = (card.id >> 1) % 4;
+    return <span className={`fz-card ${card.kind}`} role="img" aria-label={card.kind === 'archmage' ? t('Archmage') : t('Fool')} style={artAt(48 + (card.kind === 'fool' ? 4 : 0) + v)} />;
+  }
+  const f = card.faction;
   return (
-    <span className={`fz-card ${card.faction}`} aria-label={`${t(FACTION_NAME[card.faction])} ${card.rank}`}>
-      <span className="fz-card-rank">{card.rank}</span>
-      <span className="fz-card-glyph">{FACTION_GLYPH[card.faction]}</span>
+    <span className={`fz-card ${f}`} role="img" aria-label={`${t(FACTION_NAME[f])} ${card.rank}`} style={card.rank <= 12 ? artAt(FACTIONS.indexOf(f) * 12 + card.rank - 1) : undefined}>
+      {/* The 13 of each faction is its seal: the sign big in the rings of the back. */}
+      {card.rank === 13 && (
+        <span className="fz-seal">
+          <Sigil faction={f} />
+        </span>
+      )}
+      <span className="fz-index">
+        <span className="fz-rank">{card.rank}</span>
+        <Sigil faction={f} />
+      </span>
     </span>
+  );
+}
+
+/** The back of a card, as drawn: gold rings and rays on near-black, the four signs round a star. */
+export function CardBack() {
+  const gold = '#b99a5f';
+  const at = (f: Faction, x: number, y: number) => (
+    <g transform={`translate(${x - 5.5} ${y - 5.5}) scale(0.46)`} style={{ color: FACTION_COLOR[f] }} fill="currentColor">
+      {SIGIL[f]}
+    </g>
+  );
+  return (
+    <svg className="fz-card back" viewBox="0 0 100 150" aria-hidden>
+      <rect x="0.6" y="0.6" width="98.8" height="148.8" rx="10" fill="#202124" stroke={gold} strokeWidth="1.2" />
+      <rect x="5" y="5" width="90" height="140" rx="7.5" fill="none" stroke={gold} strokeWidth="0.9" />
+      <rect x="9" y="9" width="82" height="132" rx="5.5" fill="none" stroke={gold} strokeWidth="0.4" />
+      <g fill="none" stroke={gold} strokeLinecap="round">
+        <circle cx="50" cy="75" r="30" strokeWidth="1.1" />
+        <circle cx="50" cy="75" r="25" strokeWidth="0.5" />
+        <circle cx="50" cy="75" r="11.4" strokeWidth="0.5" />
+        <path d="M50 34v82M11 75h78M22.7 47.7l54.6 54.6M77.3 47.7l-54.6 54.6" strokeWidth="0.35" />
+      </g>
+      <g transform="translate(44 69) scale(0.5)" fill={gold}>
+        {SIGIL.astral}
+      </g>
+      {at('fire', 50, 58.5)}
+      {at('water', 66.6, 75)}
+      {at('nature', 50, 91.5)}
+      {at('astral', 33.4, 75)}
+    </svg>
   );
 }

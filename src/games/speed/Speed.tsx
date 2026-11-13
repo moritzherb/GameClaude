@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import BigButton from '../../components/BigButton';
+import { SortButton } from '../../components/HandFan';
 import { CardFace } from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
@@ -401,21 +402,15 @@ function MyHalf({
           {!known && g.phase !== 'over' && <span className="sp-info-hint">{t('Tap your pile to draw. Never more than 5 in your hand.')}</span>}
         </span>
         {g.phase !== 'over' && side.hand.length > 1 && (
-          <button
-            type="button"
-            className="sp-sort"
+          <SortButton
             disabled={extra > 0}
-            onPointerDown={() => {
+            onClick={() => {
               if (extra > 0) return;
               sfx.tick();
               buzz(10);
               onSort();
             }}
-            aria-label={t('Sort your cards from low to high')}
-          >
-            <span aria-hidden>↕</span>
-            {t('Sort')}
-          </button>
+          />
         )}
       </div>
 
