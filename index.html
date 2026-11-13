@@ -7,6 +7,13 @@
          again, before the page is drawn, colours the strip under the clock with it. Once the app runs,
          lib/themeColor.ts sets it to what shows at the top. -->
     <meta name="theme-color" content="#20211c" />
+    <!-- The page's very first picture (before its styles arrive, or reloading after an update) in the
+         start-up screen's dark, never a white flash. -->
+    <style>
+      html {
+        background: #20211c;
+      }
+    </style>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- Not black-translucent: since iOS 27 that lays a frosted blur over the top of the page. With the

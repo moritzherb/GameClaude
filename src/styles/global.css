@@ -187,6 +187,8 @@ body::-webkit-scrollbar,
 /* Nothing sticks out sideways (a screen sliding in, a page following the finger): the page never
    gets wider than the screen, so no gap or zooming out at the side. */
 html {
+  /* Once the styles are in, the page's own ground (index.html starts it dark). */
+  background: var(--bg);
   overflow-x: clip;
   /* Scroll and swipe, but no pinch zoom. */
   touch-action: pan-x pan-y;
@@ -272,7 +274,7 @@ textarea {
 
     /* The start-up screen (index.html) is dark in every look. */
     html:has(#boot:not(.done)) .top-edge {
-      background-color: #000000;
+      background-color: #20211c;
     }
   }
 }

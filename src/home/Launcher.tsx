@@ -4,6 +4,7 @@ import Tap from '../components/Tap';
 import { GAMES } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
+import { buzz, sfx } from '../lib/fx';
 import { navigate, paths } from '../lib/router';
 import { useTopTint } from '../lib/useTopTint';
 import { GameApp } from './AppIcon';
@@ -24,6 +25,8 @@ export default function Launcher({
   favorites,
   onOrder,
   onRemove,
+  onAdd,
+  onVisible,
   returning,
   dock,
   wall,
@@ -37,6 +40,12 @@ export default function Launcher({
   const rows = useRows(grid, 2, 4);
   const main = useRef<HTMLElement>(null);
   const edit = useHomeEdit(main, favorites.map((g) => g.id), onOrder, { onRemove });
+  const shownIds = favorites.slice(0, rows * 4).map((g) => g.id);
+  const shownKey = shownIds.join();
+  useEffect(() => {
+    onVisible?.(shownIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shownKey, onVisible]);
 
   return (
     <main
@@ -88,14 +97,29 @@ export default function Launcher({
         </button>
       ) : (
         <button type="button" className="la-search" onClick={() => setDrawer('search')}>
+          {/* The app's mark, drawn (as text it sat off centre, by as much as the font's own spacing). */}
           <span className="la-mark" aria-hidden>
-            p!
+            <svg viewBox="0.5 0 24 24" width="20" height="20">
+              <rect x="5" y="7.2" width="2.8" height="12.3" rx="1.4" />
+              <circle cx="10.6" cy="11.6" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.8" />
+              <rect x="17.4" y="4.5" width="2.6" height="9.4" rx="1.3" />
+              <circle cx="18.7" cy="18" r="1.5" />
+            </svg>
           </span>
           <span className="la-search-text">{t('Search games')}</span>
           <SearchIcon />
         </button>
       )}
-      {drawer && <Drawer onClose={() => setDrawer(false)} searching={drawer === 'search'} returning={returning} />}
+      {drawer && (
+        <Drawer
+          onClose={() => setDrawer(false)}
+          searching={drawer === 'search'}
+          returning={returning}
+          home={shownIds}
+          full={favorites.length >= rows * 4}
+          onAdd={onAdd}
+        />
+      )}
     </main>
   );
 }
@@ -105,8 +129,62 @@ export default function Launcher({
  * typing there narrows the games right here. Swiping it down closes it (from anywhere on it while
  * the games are scrolled to the top).
  */
-function Drawer({ onClose, searching, returning }: { onClose: () => void; searching: boolean; returning: string | null }) {
+function Drawer({
+  onClose,
+  searching,
+  returning,
+  home,
+  full,
+  onAdd,
+}: {
+  onClose: () => void;
+  searching: boolean;
+  returning: string | null;
+  /** The games showing on the home screen, in order. */
+  home: string[];
+  /** No room left there. */
+  full: boolean;
+  onAdd?: (id: string, after: string | null) => void;
+}) {
   const [closing, setClosing] = useState(false);
+  // Held on a game: a little menu over it (put it on the home screen), as on an Android phone.
+  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const hold = useRef<{ x: number; y: number; timer: number } | null>(null);
+  const held = useRef(false);
+  const letGo = () => {
+    if (hold.current) window.clearTimeout(hold.current.timer);
+    hold.current = null;
+  };
+  const holdHandlers = {
+    onPointerDown: (e: React.PointerEvent) => {
+      const app = (e.target as Element).closest<HTMLElement>('.app[data-id]');
+      held.current = false;
+      if (!app || !onAdd) return;
+      const id = app.dataset.id!;
+      const timer = window.setTimeout(() => {
+        held.current = true;
+        hold.current = null;
+        buzz(15);
+        const r = app.getBoundingClientRect();
+        setMenu({ id, x: Math.min(window.innerWidth - 120, Math.max(120, r.left + r.width / 2)), y: r.top });
+      }, 450);
+      hold.current = { x: e.clientX, y: e.clientY, timer };
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      const h = hold.current;
+      if (h && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 8) letGo();
+    },
+    onPointerUp: letGo,
+    onPointerCancel: letGo,
+    // A hold isn't a tap: the game doesn't open.
+    onClickCapture: (e: React.MouseEvent) => {
+      if (!held.current) return;
+      held.current = false;
+      e.stopPropagation();
+      e.preventDefault();
+    },
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  };
   const [query, setQuery] = useState('');
   const sheet = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLDivElement>(null);
@@ -135,7 +213,15 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
     ? searchGames(query, sorted, (g) => [t(g.name), t(g.tagline), ...g.categories.map((c) => t(CATEGORIES.find((x) => x.id === c)?.label ?? ''))])
     : sorted;
   return (
-    <div ref={wrap} className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`} onClick={(e) => e.target === e.currentTarget && close()}>
+    <div
+      ref={wrap}
+      className={`sheet-backdrop la-drawer-wrap${closing ? ' closing' : ''}`}
+      onClick={(e) => {
+        // Letting go of a hold over its menu clicks here (the nearest box both share): not a tap beside.
+        if (held.current) return void (held.current = false);
+        if (e.target === e.currentTarget) close();
+      }}
+    >
       <div ref={dim} className="la-drawer-dim" aria-hidden />
       <div
         ref={sheet}
@@ -191,7 +277,7 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
           />
         </label>
         {shown.length ? (
-          <div className="os-grid la-drawer-grid" ref={list}>
+          <div className="os-grid la-drawer-grid" ref={list} {...holdHandlers}>
             {shown.map((g) => (
               <GameApp key={g.id} game={g} returning={g.id === returning} />
             ))}
@@ -200,6 +286,48 @@ function Drawer({ onClose, searching, returning }: { onClose: () => void; search
           <p className="la-drawer-none">{t('No game called “{q}”', { q: query.trim() })}</p>
         )}
       </div>
+      {menu && (
+        // Closed by a new touch beside it (letting go of the hold that opened it lands here too).
+        <div className="la-menu-wrap" onPointerDown={() => setMenu(null)}>
+          <div className="la-menu" role="menu" style={{ left: menu.x, top: menu.y }} onPointerDown={(e) => e.stopPropagation()}>
+            {home.includes(menu.id) ? (
+              <span className="la-menu-item done" role="menuitem" aria-disabled>
+                <HomeIcon />
+                {t('On your home screen')}
+              </span>
+            ) : full ? (
+              <span className="la-menu-item done" role="menuitem" aria-disabled>
+                <HomeIcon />
+                {t('No room left on the home screen')}
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="la-menu-item"
+                role="menuitem"
+                onClick={() => {
+                  sfx.pop();
+                  buzz(10);
+                  onAdd?.(menu.id, home[home.length - 1] ?? null);
+                  setMenu(null);
+                }}
+              >
+                <HomeIcon />
+                {t('Add to home screen')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+/** A small house, for the menu over a held game. */
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" />
+    </svg>
   );
 }
