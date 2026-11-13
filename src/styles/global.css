@@ -61,10 +61,12 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Everyday buttons, sheets and lists move without a bounce (the spring above is for the games'
      own moments): in fast and settling, out a little quicker. */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
   /* Something moving from one place to another: slow off, slow in. */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* A sheet coming up, as on an iPhone: quick off, a long gentle settle. */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   font-size: 16px;
   color-scheme: light;
@@ -802,7 +804,7 @@ li {
 }
 
 .ticket-list.dealt > * {
-  animation: rise 0.45s var(--spring) backwards;
+  animation: rise 0.3s var(--ease-out) backwards;
 }
 
 .ticket-list.dealt > :nth-child(2) {
@@ -1179,7 +1181,7 @@ li {
   flex-direction: column;
   gap: 10px;
   /* The list comes in as one piece: one moving layer for the phone instead of one per ticket. */
-  animation: rise 0.45s var(--spring) backwards;
+  animation: rise 0.3s var(--ease-out) backwards;
 }
 
 .ticket {
@@ -8373,7 +8375,7 @@ li {
 }
 
 .fade-up {
-  animation: rise 0.5s var(--spring) backwards;
+  animation: rise 0.3s var(--ease-out) backwards;
 }
 
 /* Swiped back to a screen: the phone already slid it in, so it doesn't rise in a second time. */
@@ -8382,13 +8384,14 @@ li {
   animation: none;
 }
 
-/* Up from below: in fast and settling, no overshoot. Back down a fifth quicker, the way it came. */
+/* Up from below: in fast and settling, no overshoot (a sheet on the iPhone's own curve). Back down
+   quicker, the way it came, off at once. */
 .slide-up {
-  animation: slide-up 0.28s var(--ease-out);
+  animation: slide-up 0.3s var(--ease-drawer);
 }
 
 .slide-down {
-  animation: slide-down 0.22s var(--ease-in) forwards;
+  animation: slide-down 0.2s var(--ease-out) forwards;
 }
 
 @keyframes bob {
@@ -9939,7 +9942,7 @@ li {
 .pl-slot-up.leaving {
   transform: translateY(-80%) scale(0.85);
   opacity: 0;
-  transition: transform 0.22s ease-in, opacity 0.22s ease-in;
+  transition: transform 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
 }
 
 .pl-slot-up.selected .pcard-front {
@@ -10238,7 +10241,7 @@ li {
   top: 0;
   left: 0;
   transform-origin: 50% 120%;
-  transition: transform 0.25s var(--spring), filter 0.2s ease, opacity 0.22s ease-in;
+  transition: transform 0.25s var(--spring), filter 0.2s ease, opacity 0.2s var(--ease-out);
 }
 
 .pl-card:disabled {
@@ -15840,4 +15843,29 @@ html[data-look] .play-screen > .top-bar .round-btn {
       transform: translate(-50%, -50%);
     }
   }
+}
+
+/* Pressed: every button answers the finger. Text buttons dim, as on an iPhone; the rest give a
+   little (the ones with their own press answer keep it). */
+.text-btn {
+  transition: opacity 0.12s ease;
+}
+
+.text-btn:not(:disabled):active {
+  opacity: 0.5;
+}
+
+.hs-suit,
+.sb-lib-search,
+.lib-more {
+  transition: transform 0.16s var(--ease-out);
+}
+
+.hs-suit:active,
+.lib-more:active {
+  transform: scale(0.95);
+}
+
+.sb-lib-search:active {
+  transform: scale(0.98);
 }

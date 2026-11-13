@@ -965,7 +965,7 @@ html[data-os='android'] .lib-box .app-icon {
 
 /* Closing: back into the corner it came from. */
 .sb-folder-wrap.closing .sb-folder {
-  animation: sb-folder-shrink 0.18s ease-in forwards;
+  animation: sb-folder-shrink 0.18s var(--ease-out) forwards;
 }
 
 @keyframes sb-folder-grow {
@@ -1591,7 +1591,8 @@ html[data-os='android'] .app-x {
 
 @keyframes app-x-in {
   from {
-    transform: scale(0);
+    transform: scale(0.5);
+    opacity: 0;
   }
 }
 
