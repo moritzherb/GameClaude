@@ -76,6 +76,10 @@ function useFit(stage: RefObject<HTMLDivElement | null>, card: unknown) {
 
 /** How long the table's tap stays on screen (the stamp, the hop) before the next card. */
 const CHOSEN_MS = 900;
+/** Changed its mind: the new choice still shows this long. */
+const CHANGED_MS = 450;
+/** However often it's changed, the next card comes this long after the first tap at the latest. */
+const CHOSEN_MAX_MS = 1600;
 
 interface State<C> {
   deck: string[];
@@ -125,13 +129,19 @@ export default function CardGame<C>(props: CardGameProps<C>) {
   const stage = useRef<HTMLDivElement>(null);
   useFit(stage, s && !s.over ? s.drawn : null);
 
-  // Tapped: a moment for the stamp, then the next card by itself (another tap in that moment
-  // changes the choice and starts the moment again).
+  // Tapped: a moment for the stamp, then the next card by itself. Another tap in that moment changes
+  // the choice and shows it a little longer, but tapping back and forth doesn't hold the card: it
+  // goes on at the latest a while after the first tap.
   const card = s && !s.over ? s.drawn : 0;
   const chosen = s?.chosen ?? null;
+  const firstTap = useRef<{ card: number; at: number } | null>(null);
   useEffect(() => {
     if (!Choice || !card || chosen == null) return;
-    const id = setTimeout(() => setS((prev) => (prev && !prev.over && prev.drawn === card ? advance(prev) : prev)), CHOSEN_MS);
+    const now = performance.now();
+    if (firstTap.current?.card !== card) firstTap.current = { card, at: now };
+    const first = firstTap.current.at;
+    const due = Math.min(first + CHOSEN_MAX_MS, Math.max(first + CHOSEN_MS, now + CHANGED_MS));
+    const id = setTimeout(() => setS((prev) => (prev && !prev.over && prev.drawn === card ? advance(prev) : prev)), Math.max(0, due - now));
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance only reads what the card key pins
   }, [Choice, card, chosen]);
@@ -227,7 +237,9 @@ export default function CardGame<C>(props: CardGameProps<C>) {
           choose={(c) => {
             sfx.pop();
             buzz([20, 40, 30]);
-            setS({ ...s, chosen: c });
+            // Only for the card that was tapped: a tap landing as the next card comes is not for it.
+            const tapped = s.drawn;
+            setS((prev) => (prev && !prev.over && prev.drawn === tapped ? { ...prev, chosen: c } : prev));
           }}
         />
       )}
