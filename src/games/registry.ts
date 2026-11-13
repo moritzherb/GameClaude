@@ -22,9 +22,10 @@ import whoDrinks from './who-drinks';
 import ratScrew from './rat-screw';
 import colorClash from './color-clash';
 import spellbound from './fantasy';
+import numberFlip from './number-flip';
 
 /** Every game in the app. New games get imported and added here. */
-export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, klatschen, fuckTheDealer, fiveThousand, maexchen, schweinerei, speed, palace, president, arschloch, horseRace, trash, whoDrinks, princessTreatment, tenBut, party, ratScrew, colorClash, spellbound].map(
+export const GAMES: GameDefinition[] = [busDriver, hoseRunter, kingsCup, klatschen, fuckTheDealer, fiveThousand, maexchen, schweinerei, speed, palace, president, arschloch, horseRace, trash, whoDrinks, princessTreatment, tenBut, party, ratScrew, colorClash, spellbound, numberFlip].map(
   // The store app: no swearing or pants in the icons (names: i18n/store.ts).
   (g) => (storeSafe && STORE_EMOJI[g.emoji] ? { ...g, emoji: STORE_EMOJI[g.emoji] } : g),
 );
