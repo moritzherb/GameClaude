@@ -34,7 +34,9 @@ interface Props {
 }
 
 /** The game itself: the board from above, whose turn it is, the die, and the card for each field. */
-export default function Play({ board, players, pawns, exit, onAgain }: Props) {
+export default function Play({ board, players: crew, pawns, exit, onAgain }: Props) {
+  // Who plays this game: the crew as it started. Someone added mid-way joins the next one.
+  const [players] = useState(crew);
   const [g, setG] = useState(() => newGame(board.fields, players.map((p) => p.id)));
   const gRef = useRef(g);
   const commit = (x: Game) => {

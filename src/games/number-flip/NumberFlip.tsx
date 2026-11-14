@@ -29,6 +29,7 @@ import {
 } from './logic';
 import FeltDice, { THROW_MS } from './FeltDice';
 import { woodVars } from './wood';
+import { useCrewButton } from '../../lib/turn';
 
 interface Setup {
   mode: Mode;
@@ -101,6 +102,7 @@ export default function NumberFlip({ players }: GameProps) {
     });
   };
 
+  useCrewButton(m ? null : 'crew');
   if (!m) return <SetupScreen setup={setup} onChange={setSetup} solo={solo} onStart={start} />;
   return <Play m={m} setM={setM} players={players} byId={byId} known={known} onSetup={() => setM(null)} />;
 }
@@ -374,6 +376,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
                     </span>
                     <span className="nf-side back" />
                     <span className="nf-side top" />
+                    <span className="nf-side bottom" />
                     <span className="nf-side left" />
                     <span className="nf-side right" />
                   </span>

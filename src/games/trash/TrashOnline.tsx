@@ -8,6 +8,7 @@ import { useApp, type Player } from '../../state/AppState';
 import { newGame, type Game, type Who } from './logic';
 import { TrashTable } from './Trash';
 import Avatar from '../../components/Avatar';
+import { useCrewButton } from '../../lib/turn';
 
 interface Shared {
   g: Game | null;
@@ -22,6 +23,7 @@ export default function TrashOnline() {
   const online = room.members.filter((m) => m.online);
   const [picked, setPicked] = useState<string[]>([]);
   const [dealer, setDealer] = useState<Who>(() => pick([0, 1] as Who[]));
+  useCrewButton((!state.g || state.seats.length < 2) && isHost ? 'room' : null);
 
   /* ---------- Lobby ---------- */
   if (!state.g || state.seats.length < 2) {

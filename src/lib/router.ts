@@ -417,3 +417,8 @@ export const paths = {
   online: (id: string) => `/online/${id}`,
   join: (code: string) => `/join/${code}`,
 };
+
+/** Link that opens the app straight on the join screen for this room. */
+export function joinLink(code: string) {
+  return `${window.location.origin}${window.location.pathname}#${paths.join(code)}`;
+}

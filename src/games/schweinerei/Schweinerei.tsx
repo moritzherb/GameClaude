@@ -6,7 +6,7 @@ import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { usePlaying, useTurnBubble } from '../../lib/turn';
+import { useCrewButton, usePlaying, useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Pig from './Pigs';
@@ -52,6 +52,7 @@ export default function Schweinerei({ players, exit }: GameProps) {
   const [starterId, setStarterId] = useState(() => pick(players).id);
   const [g, setG] = useState<Game | null>(null);
   usePlaying(!!g);
+  useCrewButton(g ? null : 'crew');
 
   if (!g) {
     return (

@@ -5,7 +5,7 @@ import Finished from '../../components/Finished';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { pick, shuffle } from '../../lib/random';
-import { useTurnBubble } from '../../lib/turn';
+import { useTurnBubble, useCrewButton } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 
@@ -109,6 +109,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
   };
   // Without anything to pick first, the first card is on the table right away.
   const [s, setS] = useState<State<C> | null>(() => (modes ? null : deal('')));
+  useCrewButton(s ? null : 'crew');
 
   /** The next card (with the next reader), or the end once the cards are out. */
   const advance = (prev: State<C>): State<C> => {

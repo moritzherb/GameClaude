@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { load, save } from '../../lib/storage';
 import type { GameProps } from '../types';
 import { allBoards, BOARDS, deleteBoard, deleteDraft, drafts as savedDrafts, saveBoard, saveDraft, type Board, type Draft } from './boards';
@@ -6,6 +6,7 @@ import Editor from './Editor';
 import { pawnById, PAWNS, type PawnDef } from './pawns';
 import Play from './Play';
 import Setup from './Setup';
+import { useCrewButton } from '../../lib/turn';
 
 /** Everyone's pawn: the one they had last time, else the next free classic one. */
 function pawnsFor(ids: string[]): Record<string, PawnDef> {
@@ -32,12 +33,27 @@ function pawnsFor(ids: string[]): Record<string, PawnDef> {
 export default function Party({ players, exit }: GameProps) {
   const [boards, setBoards] = useState(allBoards);
   const [boardId, setBoardId] = useState(() => load<string>('party-board', 'classic'));
-  const [pawns, setPawns] = useState(() => pawnsFor(players.map((p) => p.id)));
+  const [picked, setPawns] = useState(() => pawnsFor(players.map((p) => p.id)));
+  // Someone added to the crew mid-way gets the next free pawn (and plays from the next game).
+  const pawns = useMemo(() => {
+    const missing = players.filter((p) => !picked[p.id]);
+    if (!missing.length) return picked;
+    const used = new Set(Object.values(picked).map((d) => d.id));
+    const out = { ...picked };
+    for (const p of missing) {
+      const free = PAWNS.find((d) => !used.has(d.id)) ?? PAWNS[0];
+      out[p.id] = free;
+      used.add(free.id);
+    }
+    return out;
+  }, [players, picked]);
   const [editing, setEditing] = useState<{ board: Board; asNew: boolean; draft?: Draft } | null>(null);
   // Boards saved unfinished, to go on with.
   const [drafts, setDrafts] = useState(savedDrafts);
   const [game, setGame] = useState(0);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
+  // The crew button on the setup (board and pawns), not in the editor or the game.
+  useCrewButton(!editing && !game ? 'crew' : null);
 
   if (editing) {
     return (

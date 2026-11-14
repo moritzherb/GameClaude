@@ -12,7 +12,8 @@ const SHOW = 124;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 interface Throw {
-  /** Where it ends: the number's face to the front, a little twist. */
+  /** Where it ends: the number's face up. `rz`: how it lies turned on the felt (a turn of the picture,
+   *  not of the die: a die turned about its own axis would show its sides on 2 to 6). */
   rx: number;
   ry: number;
   rz: number;
@@ -85,8 +86,8 @@ function Die({ value, index, rolls, thrown }: { value: number; index: number; ro
     const th = throwFor(value, index, rolls);
     // Lying still: the number up front.
     if (!thrown || done.current === rolls || reducedMotion()) {
-      paint(th.rx, th.ry, th.rz);
-      w.style.transform = '';
+      paint(th.rx, th.ry, 0);
+      w.style.transform = `rotate(${th.rz.toFixed(1)}deg)`;
       sh.style.transform = '';
       sh.style.opacity = '';
       done.current = rolls;
@@ -106,10 +107,10 @@ function Die({ value, index, rolls, thrown }: { value: number; index: number; ro
       // Three bounces, lower each time.
       const hop = Math.abs(Math.sin(Math.PI * 3 * Math.min(1, t * 1.15))) * 42 * (1 - Math.min(1, t * 1.15)) ** 1.6;
       const x = fromX * left;
-      w.style.transform = `translate(${x.toFixed(1)}px, ${(-hop).toFixed(1)}px)`;
+      w.style.transform = `translate(${x.toFixed(1)}px, ${(-hop).toFixed(1)}px) rotate(${th.rz.toFixed(1)}deg)`;
       sh.style.transform = `translateX(${x.toFixed(1)}px) scale(${(1 - hop / 90).toFixed(3)})`;
       sh.style.opacity = String(Math.max(0.25, 1 - hop / 60));
-      paint(th.rx + th.ax * left, th.ry + th.ay * left, th.rz + th.az * left);
+      paint(th.rx + th.ax * left, th.ry + th.ay * left, th.az * left);
       if (t < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);

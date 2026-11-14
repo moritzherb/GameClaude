@@ -5,7 +5,7 @@ import Tap from '../../components/Tap';
 import { t } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { useTurnBubble } from '../../lib/turn';
+import { useCrewButton, useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import mat from './mat.webp';
@@ -21,6 +21,7 @@ export default function Maexchen({ players }: GameProps) {
   const known = useApp().knows('maexchen');
   const [starterId, setStarterId] = useState(() => pick(players).id);
   const [r, setR] = useState<Round | null>(null);
+  useCrewButton(r ? null : 'crew');
 
   if (!r) {
     return (
