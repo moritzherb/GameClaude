@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import Finished from '../../components/Finished';
@@ -28,6 +28,20 @@ import {
   type Mode,
 } from './logic';
 import FeltDice, { THROW_MS } from './FeltDice';
+
+/** The box in 3D: three.js, loaded on its own when the game opens. */
+const Box3DView = lazy(() => import('./Box3DView'));
+const loadBox3D = () => import('./Box3DView');
+
+/** Whether this phone draws 3D (WebGL). */
+function canDraw3D() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
 import { woodVars } from './wood';
 import { useCrewButton } from '../../lib/turn';
 
@@ -118,7 +132,10 @@ function SetupScreen({ setup, onChange, solo, onStart }: { setup: Setup; onChang
   const mode = solo && setup.mode === 'survival' ? 'classic' : setup.mode;
   // The box's wood takes a moment to draw: done while the setup shows, not when the game starts.
   useEffect(() => {
-    const id = window.setTimeout(woodVars, 120);
+    const id = window.setTimeout(() => {
+      woodVars();
+      void loadBox3D();
+    }, 120);
     return () => window.clearTimeout(id);
   }, []);
   return (
@@ -197,6 +214,8 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   const [nope, setNope] = useState<number | null>(null);
   /** The flaps falling right now, in the order they go. */
   const [falling, setFalling] = useState<number[]>([]);
+  // The box in 3D where the phone can; else the flat one.
+  const [three, setThree] = useState(canDraw3D);
   const [now, setNow] = useState(() => Date.now());
 
   const update = (fn: (x: Match) => Match) => setM((x) => (x ? fn(x) : x));
@@ -328,11 +347,84 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
             ? t('Flip {n}, or {a} and {b}', { n: total, a: dice[0], b: dice[1] })
             : t('Flip {n}', { n: total })
           : box.picked.length
-            ? t('{n} more', { n: total - sum(box.picked) })
+            ? total > sum(box.picked)
+              ? t('{n} more', { n: total - sum(box.picked) })
+              : ''
             : t('Flip flaps that add up to {n}', { n: total })
         : box.rolls === 0
           ? t('Roll, then flip flaps that add up to the dice')
           : t('{n} still open', { n: score(box.open) });
+
+  // What's written on the felt: the clock, the hint or the choice of one die (on both boxes).
+  const feltWriting = (withDice: boolean): ReactNode => (
+    <>
+      {setup.mode === 'time' && (
+        <div className="nf-clock" aria-label={t('{n} seconds left', { n: Math.ceil(left) })}>
+          <span className="nf-clock-bar" style={{ transform: `scaleX(${left / TIME_LIMIT})` }} />
+          <span className="nf-clock-n">{Math.ceil(left)}</span>
+        </div>
+      )}
+      {withDice && <FeltDice values={dice} rolls={box.rolls} />}
+      <div className="nf-hint-row">
+        {mayOne ? (
+          <div className="nf-one" role="radiogroup" aria-label={t('How many dice')}>
+            {[false, true].map((one) => (
+              <button key={String(one)} type="button" role="radio" aria-checked={oneDie === one} className={`nf-one-btn${oneDie === one ? ' on' : ''}`} onClick={() => setOneDie(one)}>
+                {one ? t('1 die') : t('2 dice')}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="nf-hint" aria-live="polite">
+            {hint}
+          </p>
+        )}
+      </div>
+      <span className="sr-only nf-dice-sr" data-dice={dice?.join(',') ?? ''} aria-live="polite">
+        {dice && !box.rolling ? dice.join(' + ') : ''}
+      </span>
+    </>
+  );
+  const flapState = { open: box.open, picked: box.picked, falling, interactive: !!dice && !box.rolling && !box.over && !falling.length && m.phase === 'turn' };
+  const flatBox = (
+        <div className={`nf-box size-${setup.size}`} style={woodVars() as CSSProperties}>
+          {(setup.size === 12 ? [flaps(12).slice(0, 6), flaps(12).slice(6)] : [flaps(9)]).map((row) => (
+            <div key={row[0]} className="nf-flaps">
+              {row.map((n) => {
+                const down = !box.open.includes(n);
+                const picked = box.picked.includes(n);
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`nf-flap${down ? ' down' : ''}${picked ? ' picked' : ''}${nope === n ? ' nope' : ''}`}
+                    style={{ '--gx': `${-((n * 67) % 300)}px`, '--d': `${Math.max(0, falling.indexOf(n)) * STAGGER}ms` } as CSSProperties}
+                    aria-label={down ? t('{n}, flipped', { n }) : String(n)}
+                    aria-pressed={picked}
+                    disabled={down || !dice || box.rolling || box.over || falling.length > 0}
+                    onClick={() => tap(n)}
+                  >
+                    {/* A block of wood: its face with the number, its back, its top and its sides. */}
+                    <span className="nf-block" aria-hidden>
+                      <span className="nf-side front">
+                        <span className="nf-flap-face">{n}</span>
+                      </span>
+                      <span className="nf-side back" />
+                      <span className="nf-side top" />
+                      <span className="nf-side bottom" />
+                      <span className="nf-side left" />
+                      <span className="nf-side right" />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+          <div className="nf-felt">
+            {feltWriting(true)}
+          </div>
+        </div>
+  );
 
   return (
     <div className="bd nf-play">
@@ -352,64 +444,37 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
         })}
       </div>
 
-      <div className={`nf-box size-${setup.size}`} style={woodVars() as CSSProperties}>
-        {(setup.size === 12 ? [flaps(12).slice(0, 6), flaps(12).slice(6)] : [flaps(9)]).map((row) => (
-          <div key={row[0]} className="nf-flaps">
-            {row.map((n) => {
-              const down = !box.open.includes(n);
-              const picked = box.picked.includes(n);
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  className={`nf-flap${down ? ' down' : ''}${picked ? ' picked' : ''}${nope === n ? ' nope' : ''}`}
-                  style={{ '--gx': `${-((n * 67) % 300)}px`, '--d': `${Math.max(0, falling.indexOf(n)) * STAGGER}ms` } as CSSProperties}
-                  aria-label={down ? t('{n}, flipped', { n }) : String(n)}
-                  aria-pressed={picked}
-                  disabled={down || !dice || box.rolling || box.over || falling.length > 0}
-                  onClick={() => tap(n)}
-                >
-                  {/* A block of wood: its face with the number, its back, its top and its sides. */}
-                  <span className="nf-block" aria-hidden>
-                    <span className="nf-side front">
-                      <span className="nf-flap-face">{n}</span>
-                    </span>
-                    <span className="nf-side back" />
-                    <span className="nf-side top" />
-                    <span className="nf-side bottom" />
-                    <span className="nf-side left" />
-                    <span className="nf-side right" />
-                  </span>
-                </button>
-              );
-            })}
+      {three ? (
+        <Suspense fallback={flatBox}>
+          <Box3DView
+            size={setup.size}
+            flaps={flapState}
+            dice={dice}
+            rolls={box.rolls}
+            onTap={tap}
+            onFail={() => setThree(false)}
+          >
+            {feltWriting(false)}
+          </Box3DView>
+          {/* The flaps as buttons too, for screen readers (the canvas has none). */}
+          <div className="sr-only">
+            {flaps(setup.size).map((n) => (
+              <button
+                key={n}
+                type="button"
+                className="nf-flap-sr"
+                aria-pressed={box.picked.includes(n)}
+                disabled={!box.open.includes(n) || !dice || box.rolling || box.over || falling.length > 0}
+                onClick={() => tap(n)}
+              >
+                {box.open.includes(n) ? String(n) : t('{n}, flipped', { n })}
+              </button>
+            ))}
           </div>
-        ))}
-        <div className="nf-felt">
-          {setup.mode === 'time' && (
-            <div className="nf-clock" aria-label={t('{n} seconds left', { n: Math.ceil(left) })}>
-              <span className="nf-clock-bar" style={{ transform: `scaleX(${left / TIME_LIMIT})` }} />
-              <span className="nf-clock-n">{Math.ceil(left)}</span>
-            </div>
-          )}
-          <FeltDice values={dice} rolls={box.rolls} />
-          <div className="nf-hint-row">
-            {mayOne ? (
-              <div className="nf-one" role="radiogroup" aria-label={t('How many dice')}>
-                {[false, true].map((one) => (
-                  <button key={String(one)} type="button" role="radio" aria-checked={oneDie === one} className={`nf-one-btn${oneDie === one ? ' on' : ''}`} onClick={() => setOneDie(one)}>
-                    {one ? t('1 die') : t('2 dice')}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="nf-hint" aria-live="polite">
-                {hint}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+        </Suspense>
+      ) : (
+        flatBox
+      )}
 
       <div className="nf-actions">
         {m.phase === 'handover' ? (
