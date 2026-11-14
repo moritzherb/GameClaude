@@ -372,8 +372,8 @@ li {
 
 /* The last thing on its screen: it reaches into the screen's own padding at the bottom, so scrolled
    to the end it stands exactly where it stood while scrolling (else it rose by that padding there). */
-.screen:not(.game-detail) > .sticky-action:last-child,
-.screen:not(.game-detail) > .bd:last-child > .sticky-action:last-child {
+.screen:not(.game-detail) > .sticky-action:not(:has(~ :not(.sheet-backdrop))),
+.screen:not(.game-detail) > .bd:not(:has(~ :not(.sheet-backdrop))) > .sticky-action:last-child {
   margin-bottom: calc(-20px - env(safe-area-inset-bottom));
 }
 
@@ -696,6 +696,7 @@ li {
 .top-bar-side.right {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 .top-bar-title {
@@ -2223,7 +2224,7 @@ li {
 /* Over a game: up to three buttons on the right (the crew, clean table, rules); the left as wide as
    two of them, so with two the name stays in the middle, a little smaller on narrow phones. */
 .top-bar.game-bar {
-  grid-template-columns: minmax(88px, auto) minmax(0, 1fr) minmax(88px, auto);
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr) minmax(96px, auto);
 }
 
 .game-bar .top-bar-title {
@@ -2252,7 +2253,7 @@ li {
 
 .play-screen.clean > .top-bar {
   min-height: 34px;
-  grid-template-columns: minmax(72px, auto) minmax(0, 1fr) minmax(72px, auto);
+  grid-template-columns: minmax(80px, auto) minmax(0, 1fr) minmax(80px, auto);
 }
 
 /* Who's on (the games' own line saying so is hidden): a small bubble between the corner buttons. */
@@ -2302,7 +2303,7 @@ li {
 .play-screen.clean > .top-bar .round-btn {
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: 50%;
   font-size: 1rem;
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   color: var(--muted);
