@@ -10,6 +10,7 @@ import { buzz, sfx } from '../../lib/fx';
 import { sortByColour, useSortedHand } from '../../lib/handSort';
 import { flyIn, reducedMotion } from '../../lib/cardFly';
 import { useCardDrag } from '../../lib/useCardDrag';
+import { useBox } from '../../lib/useBox';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import {
@@ -51,7 +52,6 @@ const KIND_NAME: Record<Card['kind'], string> = {
   spectrum: tx('Choose colour'),
   overload: tx('Overload'),
 };
-const LABEL: Partial<Record<Card['kind'], string>> = { block: '⊘', turnaround: '⇄', burden: '+2', overload: '+4' };
 
 /** Color Clash: every player on their own phone, their hand at the bottom. */
 export default function ColorClash() {
@@ -144,6 +144,7 @@ function Table({
   const [browse, setBrowse] = useState(false);
   const [sorted, toggleSort] = useSortedHand();
   const table = useRef<HTMLDivElement>(null);
+  const [felt, feltBox] = useBox<HTMLDivElement>();
   // Where the card you just played was (in your hand, or where you let go of it): it flies from there.
   const launch = useRef<{ rect: DOMRect; at: number } | null>(null);
   const name = (i: number) => seats[i]?.name ?? t('Someone');
@@ -324,8 +325,9 @@ function Table({
       </div>
 
       <div className="cc-table" ref={table}>
-        <div className={`cc-felt ${g.color}`} aria-hidden>
-          <span className="cc-dir">{g.dir === 1 ? '↻' : '↺'}</span>
+        <div className={`cc-felt ${g.color}`} ref={felt} aria-hidden>
+          {/* Which way play goes round the table (with two it makes no difference). */}
+          {seats.length > 2 && feltBox.w > 0 && <TurnArrows key={g.dir} dir={g.dir} width={feltBox.w} height={feltBox.h} />}
         </div>
         <div className="cc-middle">
           <button
@@ -350,16 +352,12 @@ function Table({
                 className={`cc-pile-card${c === topCard ? ' top' : ''}`}
                 style={{ '--rest': rest(c.id) } as CSSProperties}
               >
-                <CardFace card={c} big />
+                <CardFace card={c} big chosen={c === topCard && !c.color ? g.color : undefined} />
               </span>
             ))}
             {g.penalty && <span className="cc-penalty">+{g.penalty.n}</span>}
           </div>
         </div>
-        <span className={`cc-active ${g.color}`}>
-          <Shape color={g.color} />
-          {t(COLOR_NAME[g.color])}
-        </span>
         {toast && (
           <span key={toast.key} className={`cc-toast ${toast.tone}`} role="status">
             {toast.text}
@@ -370,9 +368,9 @@ function Table({
       <p className={`cc-status${myTurn ? ' mine' : ''}`} aria-live="polite">
         {status}
       </p>
-      <p className="cc-hint">{hint}</p>
-
+      {/* One place under it, as tall whatever it holds: a button to press, or else what to do. */}
       <div className="cc-actions">
+        {!canCall && !(myTurn && g.penalty) && !(myTurn && g.drawn != null) && <p className="cc-hint">{hint}</p>}
         {canCall && (
           <button
             type="button"
@@ -599,37 +597,130 @@ export function Shape({ color }: { color: Color }) {
   );
 }
 
-/** A card: its colour, its shape and its number (or action); a universal one dark: Choose colour
- *  with a wheel of all four, Overload with the four shapes and its +4. */
-export function CardFace({ card, big }: { card: Card; big?: boolean }) {
-  const label = card.kind === 'number' ? String(card.value) : LABEL[card.kind];
+/**
+ * Which way play goes: two arrows following the rim of the table, one on each side, pointing round
+ * the way the turn passes (clockwise: from you to the player on your left). Turned round, they turn.
+ */
+function TurnArrows({ dir, width, height }: { dir: 1 | -1; width: number; height: number }) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const rx = cx - 12;
+  const ry = cy - 12;
+  const at = (deg: number) => {
+    const a = (deg * Math.PI) / 180;
+    return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)] as const;
+  };
+  // An arc of the rim, about 40° long, ending in a head where play goes.
+  const arrow = (mid: number) => {
+    const from = mid - 20 * dir;
+    const to = mid + 20 * dir;
+    const pts: string[] = [];
+    for (let k = 0; k <= 16; k++) pts.push(at(from + ((to - from) * k) / 16).map((v) => v.toFixed(1)).join(' '));
+    const [x, y] = at(to);
+    const [px, py] = at(to - 3 * dir);
+    const len = Math.hypot(x - px, y - py) || 1;
+    const ux = (x - px) / len;
+    const uy = (y - py) / len;
+    const p = (a: number, b: number) => `${a.toFixed(1)} ${b.toFixed(1)}`;
+    const head = `M${p(x + ux * 7, y + uy * 7)}L${p(x - uy * 5, y + ux * 5)}L${p(x + uy * 5, y - ux * 5)}Z`;
+    return (
+      <g key={mid}>
+        <path className="cc-turn-arc" d={`M${pts.join('L')}`} />
+        <path className="cc-turn-head" d={head} />
+      </g>
+    );
+  };
+  return (
+    <svg className="cc-turn" width={width} height={height} aria-hidden>
+      {arrow(180)}
+      {arrow(0)}
+    </svg>
+  );
+}
+
+/**
+ * A card, drawn like the printed deck: a dark edge, a white line, the colour with a pale oval across
+ * it and the number (or action) big in the middle; in the corners what it is over its shape. The
+ * universal ones dark, with the four colours as a wheel. On the pile, a universal card shows the
+ * colour that was chosen: that quarter of its wheel lit, the rest dimmed.
+ */
+export function CardFace({ card, big, chosen }: { card: Card; big?: boolean; chosen?: Color }) {
   return (
     <span className={`cc-card ${card.color ?? 'universal'} ${card.kind}${big ? ' big' : ''}${card.value === 6 || card.value === 9 ? ' turnable' : ''}`}>
+      {card.color && <span className="cc-oval" aria-hidden />}
       {/* The corners, as on a real card: what it is, readable with the cards fanned over it. */}
-      <Corner card={card} label={label} />
-      <Corner card={card} label={label} bottom />
-      {card.color ? (
-        <Shape color={card.color} />
-      ) : card.kind === 'spectrum' ? (
-        <span className="cc-wheel" aria-hidden />
-      ) : (
-        <span className="cc-quad" aria-hidden>
-          {COLORS.map((c) => (
-            <Shape key={c} color={c} />
-          ))}
-        </span>
-      )}
-      {label && <span className="cc-num">{label}</span>}
+      <Corner card={card} />
+      <Corner card={card} bottom />
+      <span className="cc-mid" aria-hidden>
+        {card.color ? (
+          <Mark card={card} />
+        ) : (
+          <>
+            <Wheel chosen={chosen} />
+            <span className="cc-wheel-mark">
+              <Mark card={card} />
+            </span>
+          </>
+        )}
+      </span>
     </span>
   );
 }
 
-/** A card's corner: its number (or action) over its shape; a Choose colour's a little wheel. */
-function Corner({ card, label, bottom }: { card: Card; label?: string; bottom?: boolean }) {
+/** What a card is: its number, +2 / +4, or the sign of its action. */
+function Mark({ card }: { card: Card }) {
+  if (card.kind === 'number') return <span className="cc-num">{card.value}</span>;
+  if (card.kind === 'burden') return <span className="cc-num plus">+2</span>;
+  if (card.kind === 'overload') return <span className="cc-num plus">+4</span>;
+  return <ActionIcon kind={card.kind} />;
+}
+
+/** Block: a ring struck through. Turnaround: an arrow coming round. Choose colour: a four-point star. */
+function ActionIcon({ kind }: { kind: Card['kind'] }) {
+  return (
+    <svg className="cc-icon" viewBox="0 0 40 40" aria-hidden>
+      {kind === 'block' && (
+        <>
+          <circle cx="20" cy="20" r="14" />
+          <path d="M10.1 29.9 29.9 10.1" />
+        </>
+      )}
+      {kind === 'turnaround' && (
+        <>
+          <path d="M26 9.6A12 12 0 1 1 14 9.6" />
+          <path className="fill" d="M20.6 5.6 11.7 5.3 15.9 13.4Z" />
+        </>
+      )}
+      {kind === 'spectrum' && <path className="fill" d="M20 3C21 15 25 19 37 20 25 21 21 25 20 37 19 25 15 21 3 20 15 19 19 15 20 3Z" />}
+    </svg>
+  );
+}
+
+/** The four colours as a wheel, as on the universal cards (and their back). */
+function Wheel({ chosen }: { chosen?: Color }) {
+  const quarter: [Color, string][] = [
+    ['crimson', 'M20 20V3A17 17 0 0 0 3 20Z'],
+    ['azure', 'M20 20H37A17 17 0 0 0 20 3Z'],
+    ['amber', 'M20 20H3A17 17 0 0 0 20 37Z'],
+    ['jade', 'M20 20V37A17 17 0 0 0 37 20Z'],
+  ];
+  return (
+    <svg className={`cc-wheel${chosen ? ' chosen' : ''}`} viewBox="0 0 40 40" aria-hidden>
+      {quarter.map(([c, d]) => (
+        <path key={c} d={d} className={`${c}${chosen === c ? ' on' : ''}`} />
+      ))}
+    </svg>
+  );
+}
+
+/** A card's corner: what it is over its shape (a universal card's, a little wheel). */
+function Corner({ card, bottom }: { card: Card; bottom?: boolean }) {
   return (
     <span className={`cc-corner${bottom ? ' bottom' : ''}`} aria-hidden>
-      {label && <span className="cc-corner-n">{label}</span>}
-      {card.color ? <Shape color={card.color} /> : card.kind === 'spectrum' ? <span className="cc-corner-wheel" /> : null}
+      <span className="cc-corner-n">
+        <Mark card={card} />
+      </span>
+      {card.color ? <Shape color={card.color} /> : <Wheel />}
     </span>
   );
 }

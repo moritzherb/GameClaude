@@ -93,23 +93,23 @@ function drawFor(g: Game, seat: number, n: number): Game {
   return { ...g, deck, discard, hands: g.hands.map((h, i) => (i === seat ? [...h, ...got] : h)) };
 }
 
-/** Seven each; the first card turned up (never an Overload) starts the pile and acts on the first player. */
-export function newGame(players: number, deck: Card[] = shuffle(newDeck()), pickColor: () => Color = () => COLORS[Math.floor(Math.random() * 4)]): Game {
+/** Seven each; the first card turned up starts the pile: always a number (anything else goes back in). */
+export function newGame(players: number, deck: Card[] = shuffle(newDeck())): Game {
   let rest = [...deck];
   const hands: Card[][] = Array.from({ length: players }, () => []);
   for (let k = 0; k < HAND; k++) for (const h of hands) h.push(rest.pop()!);
   let first = rest.pop()!;
-  while (first.kind === 'overload') {
+  while (first.kind !== 'number') {
     rest = shuffle([first, ...rest]);
     first = rest.pop()!;
   }
-  const g: Game = {
+  return {
     deck: rest,
     discard: [first],
     hands,
     turn: 1 % players,
     dir: 1,
-    color: first.color ?? pickColor(),
+    color: first.color!,
     drawn: null,
     lastCard: null,
     penalty: null,
@@ -117,11 +117,6 @@ export function newGame(players: number, deck: Card[] = shuffle(newDeck()), pick
     events: [],
     seq: 0,
   };
-  // The first card acts on the first player (left of the dealer, seat 0).
-  if (first.kind === 'block') return { ...g, turn: step(g, g.turn), events: [{ k: 'skip', by: g.turn }] };
-  if (first.kind === 'turnaround') return { ...g, dir: -1, turn: players === 2 ? 1 : players - 1 };
-  if (first.kind === 'burden') return { ...g, penalty: { kind: 'burden', n: PENALTY.burden } };
-  return g;
 }
 
 export const top = (g: Game) => g.discard[g.discard.length - 1];

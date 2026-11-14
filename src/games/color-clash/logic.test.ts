@@ -28,7 +28,8 @@ describe('Color Clash', () => {
     expect(new Set(d.map((c) => c.id)).size).toBe(108);
     const g = newGame(4);
     expect(g.hands.every((h) => h.length === 7)).toBe(true);
-    expect(g.discard[0].kind).not.toBe('overload');
+    // The first card turned up is always a number: no action on the first player.
+    for (let k = 0; k < 40; k++) expect(newGame(3).discard[0].kind).toBe('number');
   });
 
   it('plays the active colour, the same number or the same action', () => {
