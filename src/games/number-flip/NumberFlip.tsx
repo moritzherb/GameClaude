@@ -351,26 +351,37 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
       </div>
 
       <div className={`nf-box size-${setup.size}`} style={woodVars() as CSSProperties}>
-        <div className="nf-flaps">
-          {flaps(setup.size).map((n) => {
-            const down = !box.open.includes(n);
-            const picked = box.picked.includes(n);
-            return (
-              <button
-                key={n}
-                type="button"
-                className={`nf-flap${down ? ' down' : ''}${picked ? ' picked' : ''}${nope === n ? ' nope' : ''}`}
-                style={{ '--gx': `${-((n * 67) % 300)}px`, '--d': `${Math.max(0, falling.indexOf(n)) * STAGGER}ms` } as CSSProperties}
-                aria-label={down ? t('{n}, flipped', { n }) : String(n)}
-                aria-pressed={picked}
-                disabled={down || !dice || box.rolling || box.over || falling.length > 0}
-                onClick={() => tap(n)}
-              >
-                <span className="nf-flap-face">{n}</span>
-              </button>
-            );
-          })}
-        </div>
+        {(setup.size === 12 ? [flaps(12).slice(0, 6), flaps(12).slice(6)] : [flaps(9)]).map((row) => (
+          <div key={row[0]} className="nf-flaps">
+            {row.map((n) => {
+              const down = !box.open.includes(n);
+              const picked = box.picked.includes(n);
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  className={`nf-flap${down ? ' down' : ''}${picked ? ' picked' : ''}${nope === n ? ' nope' : ''}`}
+                  style={{ '--gx': `${-((n * 67) % 300)}px`, '--d': `${Math.max(0, falling.indexOf(n)) * STAGGER}ms` } as CSSProperties}
+                  aria-label={down ? t('{n}, flipped', { n }) : String(n)}
+                  aria-pressed={picked}
+                  disabled={down || !dice || box.rolling || box.over || falling.length > 0}
+                  onClick={() => tap(n)}
+                >
+                  {/* A block of wood: its face with the number, its back, its top and its sides. */}
+                  <span className="nf-block" aria-hidden>
+                    <span className="nf-side front">
+                      <span className="nf-flap-face">{n}</span>
+                    </span>
+                    <span className="nf-side back" />
+                    <span className="nf-side top" />
+                    <span className="nf-side left" />
+                    <span className="nf-side right" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
         <div className="nf-felt">
           {setup.mode === 'time' && (
             <div className="nf-clock" aria-label={t('{n} seconds left', { n: Math.ceil(left) })}>

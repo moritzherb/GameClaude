@@ -16445,19 +16445,25 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .nf-flaps {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  gap: 3px;
-  padding: 10px 6px 6px;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 4px;
+  padding: 12px 6px 6px;
   border-radius: 4px;
   background: linear-gradient(180deg, #170c04, #2a170a);
   box-shadow:
     inset 0 4px 8px rgba(0, 0, 0, 0.75),
     inset 0 -1px 0 rgba(255, 220, 170, 0.08),
     0 1px 0 rgba(255, 230, 190, 0.25);
-  perspective: 420px;
+  /* Seen from a little above: the blocks' tops and outer sides show. */
+  perspective: 340px;
+  perspective-origin: 50% -130%;
 }
 
-/* The brass rod the flaps hang on: it shows between them, and under a flap that's down. */
+.nf-box.size-12 .nf-flaps {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+/* The brass rod the flaps hang on: it shows between them, and in front of a flap that's down. */
 .nf-flaps::after {
   content: '';
   position: absolute;
@@ -16470,115 +16476,202 @@ html[data-look] .play-screen > .top-bar .round-btn {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
 }
 
-.nf-box.size-12 .nf-flaps {
-  grid-template-columns: repeat(6, 1fr);
-  row-gap: 8px;
-}
-
+/* The button is only where you tap; the block of wood inside it is what moves. */
 .nf-flap {
+  --t: 10px;
   position: relative;
   z-index: 1;
   height: clamp(52px, 9dvh, 72px);
   min-width: 0;
   padding: 0;
   border: 0;
-  border-radius: 3px 3px 2px 2px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 32%, rgba(0, 0, 0, 0) 70%, rgba(96, 54, 18, 0.24)),
-    var(--nf-flap) var(--gx, 0) 0 / 360px 100%;
-  background-color: #e7c58c;
-  box-shadow:
-    inset 1px 0 0 rgba(255, 246, 228, 0.45),
-    inset -1px 0 0 rgba(120, 70, 25, 0.35),
-    inset 0 1px 0 rgba(255, 250, 236, 0.75),
-    inset 0 -2px 0 rgba(110, 62, 20, 0.45),
-    0 2px 3px rgba(0, 0, 0, 0.5);
-  /* Burnt into the wood. */
-  color: #3a210e;
-  font: 800 clamp(18px, 6vw, 26px) / 1 var(--font-display);
-  font-variant-numeric: lining-nums;
-  text-shadow:
-    0 0 1px rgba(58, 33, 14, 0.55),
-    0 1px 0 rgba(255, 240, 214, 0.45);
-  transform-origin: 50% 100%;
-  transition:
-    transform 0.42s var(--ease-out),
-    box-shadow 0.2s var(--ease-out),
-    filter 0.42s var(--ease-out);
+  background: none;
+  transform-style: preserve-3d;
   -webkit-tap-highlight-color: transparent;
 }
 
 .nf-box.size-12 .nf-flap {
-  height: clamp(46px, 7.6dvh, 64px);
-}
-
-.nf-flap-face {
-  display: grid;
-  place-items: center;
-  height: 100%;
-  transition: opacity 0.3s var(--ease-out);
+  height: clamp(44px, 7dvh, 60px);
 }
 
 .nf-flap:disabled {
   cursor: default;
 }
 
-.nf-flap.picked {
-  transform: translateY(-7px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 0 0 3px var(--accent),
-    0 8px 12px -4px rgba(0, 0, 0, 0.5);
+/* Hinged on the rod at its foot, the middle of its thickness. */
+.nf-block {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transition: transform 0.24s var(--ease-out);
 }
 
-/* Flipped: it tips back on its hinge, falls faster and faster, knocks on the bottom of the box,
-   bounces a little and lies there, its number turned away. */
+/* Each side faces out and hides from behind: a solid block, nothing to sort. */
+.nf-side {
+  position: absolute;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* A shadow that deepens as the block turns away from the light (animated on a fall). */
+.nf-side::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #160b03;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nf-side.front {
+  inset: 0;
+  border-radius: 2px 2px 1px 1px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0) 70%, rgba(96, 54, 18, 0.26)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 100%;
+  background-color: #e7c58c;
+  box-shadow:
+    inset 1px 0 0 rgba(255, 246, 228, 0.35),
+    inset -1px 0 0 rgba(120, 70, 25, 0.3),
+    inset 0 -2px 0 rgba(110, 62, 20, 0.4);
+  transform: translateZ(calc(var(--t) / 2));
+}
+
+.nf-side.back {
+  inset: 0;
+  border-radius: 2px 2px 1px 1px;
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0)),
+    var(--nf-flap) calc(var(--gx, 0) - 120px) 0 / 360px 100%;
+  background-color: #d9b47a;
+  transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
+}
+
+/* The top: end grain, lighter, catching the light. */
+.nf-side.top {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--t);
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(90deg, rgba(150, 100, 50, 0.22) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #fbe9c6, #ecd1a0);
+  transform-origin: 50% 0;
+  transform: translateZ(calc(var(--t) / -2)) rotateX(90deg);
+}
+
+.nf-side.left,
+.nf-side.right {
+  top: 0;
+  bottom: 0;
+  width: var(--t);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 100%;
+  background-color: #cfa66d;
+}
+
+.nf-side.left {
+  left: 0;
+  transform-origin: 0 50%;
+  transform: translateZ(calc(var(--t) / -2)) rotateY(-90deg);
+}
+
+.nf-side.left::after,
+.nf-side.right::after {
+  opacity: 0.32;
+}
+
+.nf-side.right {
+  right: 0;
+  transform-origin: 100% 50%;
+  transform: translateZ(calc(var(--t) / -2)) rotateY(90deg);
+}
+
+/* Burnt into the wood. */
+.nf-flap-face {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #3a210e;
+  font: 800 clamp(18px, 6vw, 26px) / 1 var(--font-display);
+  font-variant-numeric: lining-nums;
+  text-shadow:
+    0 0 1px rgba(58, 33, 14, 0.55),
+    0 1px 0 rgba(255, 240, 214, 0.45);
+}
+
+.nf-box.size-12 .nf-flap-face {
+  font-size: clamp(16px, 5vw, 22px);
+}
+
+/* Picked: lifted a little toward you, ringed. */
+.nf-flap.picked .nf-block {
+  transform: translateY(-6px) rotateX(-8deg);
+}
+
+.nf-flap.picked .nf-side.front {
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    inset 0 -2px 0 rgba(110, 62, 20, 0.4);
+}
+
+/* A block lying down is behind the ones still standing: drawn under them. */
 .nf-flap.down {
-  transform: rotateX(76deg);
-  filter: brightness(0.6) sepia(0.25);
-  box-shadow: none;
+  z-index: 0;
+}
+
+/* Down: the block tips back on its hinge, falls faster and faster, knocks on the floor of the box,
+   bounces and lies there, face up in the box's shadow. */
+.nf-flap.down .nf-block {
+  transform: rotateX(88deg);
   transition: none;
-  animation: nf-fall 0.64s var(--d, 0ms) both;
+  animation: nf-fall 0.68s var(--d, 0ms) both;
+}
+
+.nf-flap.down .nf-side::after {
+  opacity: 0.55;
+  animation: nf-shade 0.68s var(--d, 0ms) both;
 }
 
 .nf-flap.down .nf-flap-face {
-  opacity: 0;
-  animation: nf-face-away 0.64s var(--d, 0ms) both;
+  opacity: 0.35;
 }
 
 @keyframes nf-fall {
   0% {
-    transform: translateY(-7px) rotateX(0deg);
-    filter: brightness(1) sepia(0);
-    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45);
+    transform: translateY(-6px) rotateX(-8deg);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.4);
   }
-  55% {
+  56% {
     transform: translateY(0) rotateX(90deg);
-    filter: brightness(0.5) sepia(0.25);
     animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
   }
-  72% {
-    transform: translateY(0) rotateX(64deg);
+  71% {
+    transform: translateY(0) rotateX(70deg);
     animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
   }
-  86% {
-    transform: translateY(0) rotateX(82deg);
+  84% {
+    transform: translateY(0) rotateX(90deg);
     animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
   }
+  92% {
+    transform: translateY(0) rotateX(84deg);
+  }
   100% {
-    transform: translateY(0) rotateX(76deg);
-    filter: brightness(0.6) sepia(0.25);
+    transform: translateY(0) rotateX(88deg);
   }
 }
 
-@keyframes nf-face-away {
-  0%,
-  30% {
-    opacity: 1;
-  }
-  55%,
-  100% {
+@keyframes nf-shade {
+  from {
     opacity: 0;
+  }
+  56% {
+    opacity: 0.55;
   }
 }
 
@@ -16802,11 +16895,11 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 @media (prefers-reduced-motion: reduce) {
   .nf-flap.nope,
-  .nf-flap.down,
-  .nf-flap.down .nf-flap-face {
+  .nf-flap.down .nf-block,
+  .nf-flap.down .nf-side::after {
     animation: none;
   }
-  .nf-flap {
+  .nf-block {
     transition: none;
   }
 }
