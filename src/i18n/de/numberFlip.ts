@@ -41,7 +41,7 @@ const numberFlip: Record<string, string> = {
   '1 die': '1 Würfel',
   '2 dice': '2 Würfel',
   'Rolling …': 'Würfelt …',
-  'Flip your flaps': 'Leg deine Klappen um',
+  'Flip down': 'Umlegen',
   '{n}, flipped': '{n}, umgelegt',
   '{n} seconds left': 'noch {n} Sekunden',
   'Round {n} of {of}': 'Runde {n} von {of}',

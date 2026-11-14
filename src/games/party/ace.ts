@@ -4,6 +4,8 @@
  * outline on the board and as nothing at all in some lists.
  */
 
+import { appFont } from '../../lib/fonts';
+
 /** The Ace field's picture (FIELDS.ace.emoji): wherever it would show, the card is drawn instead. */
 export const ACE = '🂡';
 
@@ -36,9 +38,9 @@ export function paintAce(ctx: CanvasRenderingContext2D, cx: number, bottom: numb
   ctx.fillStyle = RED;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = `900 ${Math.round(h * 0.42)}px system-ui, -apple-system, sans-serif`;
+  ctx.font = `900 ${Math.round(h * 0.42)}px ${appFont('display')}`;
   ctx.fillText('A', cx, y + h * 0.36);
-  ctx.font = `${Math.round(h * 0.34)}px system-ui, -apple-system, sans-serif`;
+  ctx.font = `${Math.round(h * 0.34)}px ${appFont('body')}`;
   ctx.fillText(HEART, cx, y + h * 0.72);
   ctx.restore();
 }

@@ -104,6 +104,9 @@ const PIP_RINGS: { n: number; rings: V[][] }[] = FACES.map((f) => ({
   }),
 }));
 
+/** The turn (CSS rotateX, rotateY) that shows each number at the front. */
+export const FACE_TURN: Record<number, [number, number]> = { 1: [0, 0], 6: [0, 180], 3: [0, -90], 4: [0, 90], 2: [-90, 0], 5: [90, 0] };
+
 /** Where the light comes from: the top left, in front. */
 const LIGHT = norm([-0.45, -0.75, 0.75]);
 const IVORY: V = [247, 244, 236];

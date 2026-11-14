@@ -13813,7 +13813,7 @@ li {
     inset 0 0 0 0.04em #cfc8b8,
     0 0.04em 0.1em rgba(0, 0, 0, 0.3);
   color: #d7261e;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   line-height: 1;
   letter-spacing: 0;
   text-transform: none;
@@ -16389,97 +16389,290 @@ html[data-look] .play-screen > .top-bar .round-btn {
   display: none;
 }
 
-/* The box: a frame of warm wood, the flaps standing in a dark slot, felt below. */
+/* The box: a walnut frame (its sides mitred at the corners, grain running along each piece), the
+   maple flaps standing in a dark slot on a brass rod, felt below. The wood is drawn (wood.ts). */
 .nf-box {
-  --wood: #9a6136;
-  --wood-dark: #6e4223;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin: 0 -8px;
-  padding: 12px 10px 10px;
-  border-radius: 18px;
+  padding: 12px;
+  border-radius: 10px;
+  overflow: hidden;
   background:
-    repeating-linear-gradient(92deg, rgba(255, 235, 200, 0.05) 0 2px, transparent 2px 7px),
-    repeating-linear-gradient(88deg, rgba(60, 25, 5, 0.08) 0 1px, transparent 1px 11px),
-    linear-gradient(180deg, var(--wood), var(--wood-dark));
+    linear-gradient(180deg, rgba(255, 236, 205, 0.18), rgba(255, 236, 205, 0) 24%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.24)),
+    var(--nf-frame) center / cover;
+  background-color: #7d4b26;
   box-shadow:
-    inset 0 1px 0 rgba(255, 230, 190, 0.35),
-    inset 0 -2px 0 rgba(40, 18, 4, 0.35),
-    0 18px 30px -18px rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 rgba(255, 232, 196, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 34px -18px rgba(0, 0, 0, 0.75);
+}
+
+/* The two sides, grain standing up, cut at 45° where they meet the top and bottom. */
+.nf-box::before,
+.nf-box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  background:
+    linear-gradient(90deg, rgba(255, 236, 205, 0.14), rgba(0, 0, 0, 0.16)),
+    var(--nf-frame-up) center / cover;
+  background-color: #7d4b26;
+}
+
+.nf-box::before {
+  left: 0;
+  clip-path: polygon(0 0, 100% 12px, 100% calc(100% - 12px), 0 100%);
+  box-shadow: inset 1px 0 0 rgba(255, 232, 196, 0.3);
+}
+
+.nf-box::after {
+  right: 0;
+  clip-path: polygon(0 12px, 100% 0, 100% 100%, 0 calc(100% - 12px));
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.35);
+}
+
+.nf-flaps,
+.nf-felt {
+  z-index: 1;
 }
 
 .nf-flaps {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  gap: 3px;
-  padding: 10px 6px 6px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #2a170a, #3e2412);
-  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
-  perspective: 420px;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 4px;
+  padding: 12px 6px 6px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #170c04, #2a170a);
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.75),
+    inset 0 -1px 0 rgba(255, 220, 170, 0.08),
+    0 1px 0 rgba(255, 230, 190, 0.25);
+  /* Seen from a little above: the blocks' tops and outer sides show. */
+  perspective: 340px;
+  perspective-origin: 50% -130%;
 }
 
 .nf-box.size-12 .nf-flaps {
-  grid-template-columns: repeat(6, 1fr);
-  row-gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+/* The brass rod the flaps hang on: it shows between them, and in front of a flap that's down. */
+.nf-flaps::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 9px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #fbe3a4 0%, #c79a45 45%, #7a5719 100%);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+/* The button is only where you tap; the block of wood inside it is what moves. */
 .nf-flap {
+  --t: 10px;
   position: relative;
+  z-index: 1;
   height: clamp(52px, 9dvh, 72px);
   min-width: 0;
   padding: 0;
   border: 0;
-  border-radius: 5px 5px 2px 2px;
-  background: linear-gradient(180deg, #f6e0b5 0%, #e7c58c 70%, #d7ae70 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -3px 0 rgba(120, 70, 25, 0.35),
-    0 2px 2px rgba(0, 0, 0, 0.35);
-  color: #3b2411;
-  font: 700 clamp(18px, 6vw, 26px) / 1 Georgia, 'Times New Roman', serif;
-  font-variant-numeric: lining-nums;
-  transform-origin: 50% 100%;
-  transition:
-    transform 0.42s var(--ease-out),
-    box-shadow 0.2s var(--ease-out),
-    filter 0.42s var(--ease-out);
+  background: none;
+  transform-style: preserve-3d;
   -webkit-tap-highlight-color: transparent;
 }
 
 .nf-box.size-12 .nf-flap {
-  height: clamp(46px, 7.6dvh, 64px);
-}
-
-.nf-flap-face {
-  display: grid;
-  place-items: center;
-  height: 100%;
-  transition: opacity 0.3s var(--ease-out);
+  height: clamp(44px, 7dvh, 60px);
 }
 
 .nf-flap:disabled {
   cursor: default;
 }
 
-.nf-flap.picked {
-  transform: translateY(-6px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 0 0 3px var(--accent),
-    0 8px 12px -4px rgba(0, 0, 0, 0.5);
+/* Hinged on the rod at its foot, the middle of its thickness. */
+.nf-block {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transition: transform 0.24s var(--ease-out);
 }
 
-/* Flipped: laid down into the slot, its number turned away. */
+/* Each side faces out and hides from behind: a solid block, nothing to sort. */
+.nf-side {
+  position: absolute;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* A shadow that deepens as the block turns away from the light (animated on a fall). */
+.nf-side::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #160b03;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nf-side.front {
+  inset: 0;
+  border-radius: 2px 2px 1px 1px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0) 70%, rgba(96, 54, 18, 0.26)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 100%;
+  background-color: #e7c58c;
+  box-shadow:
+    inset 1px 0 0 rgba(255, 246, 228, 0.35),
+    inset -1px 0 0 rgba(120, 70, 25, 0.3),
+    inset 0 -2px 0 rgba(110, 62, 20, 0.4);
+  transform: translateZ(calc(var(--t) / 2));
+}
+
+.nf-side.back {
+  inset: 0;
+  border-radius: 2px 2px 1px 1px;
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0)),
+    var(--nf-flap) calc(var(--gx, 0) - 120px) 0 / 360px 100%;
+  background-color: #d9b47a;
+  transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
+}
+
+/* The top: end grain, lighter, catching the light. */
+.nf-side.top {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--t);
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(90deg, rgba(150, 100, 50, 0.22) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #fbe9c6, #ecd1a0);
+  transform-origin: 50% 0;
+  transform: translateZ(calc(var(--t) / -2)) rotateX(90deg);
+}
+
+.nf-side.left,
+.nf-side.right {
+  top: 0;
+  bottom: 0;
+  width: var(--t);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 100%;
+  background-color: #cfa66d;
+}
+
+.nf-side.left {
+  left: 0;
+  transform-origin: 0 50%;
+  transform: translateZ(calc(var(--t) / -2)) rotateY(-90deg);
+}
+
+.nf-side.left::after,
+.nf-side.right::after {
+  opacity: 0.32;
+}
+
+.nf-side.right {
+  right: 0;
+  transform-origin: 100% 50%;
+  transform: translateZ(calc(var(--t) / -2)) rotateY(90deg);
+}
+
+/* Burnt into the wood. */
+.nf-flap-face {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #3a210e;
+  font: 800 clamp(18px, 6vw, 26px) / 1 var(--font-display);
+  font-variant-numeric: lining-nums;
+  text-shadow:
+    0 0 1px rgba(58, 33, 14, 0.55),
+    0 1px 0 rgba(255, 240, 214, 0.45);
+}
+
+.nf-box.size-12 .nf-flap-face {
+  font-size: clamp(16px, 5vw, 22px);
+}
+
+/* Picked: lifted a little toward you, ringed. */
+.nf-flap.picked .nf-block {
+  transform: translateY(-6px) rotateX(-8deg);
+}
+
+.nf-flap.picked .nf-side.front {
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    inset 0 -2px 0 rgba(110, 62, 20, 0.4);
+}
+
+/* A block lying down is behind the ones still standing: drawn under them. */
 .nf-flap.down {
-  transform: rotateX(76deg);
-  filter: brightness(0.62) saturate(0.8);
-  box-shadow: none;
+  z-index: 0;
+}
+
+/* Down: the block tips back on its hinge, falls faster and faster, knocks on the floor of the box,
+   bounces and lies there, face up in the box's shadow. */
+.nf-flap.down .nf-block {
+  transform: rotateX(88deg);
+  transition: none;
+  animation: nf-fall 0.68s var(--d, 0ms) both;
+}
+
+.nf-flap.down .nf-side::after {
+  opacity: 0.55;
+  animation: nf-shade 0.68s var(--d, 0ms) both;
 }
 
 .nf-flap.down .nf-flap-face {
-  opacity: 0;
+  opacity: 0.35;
+}
+
+@keyframes nf-fall {
+  0% {
+    transform: translateY(-6px) rotateX(-8deg);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.4);
+  }
+  56% {
+    transform: translateY(0) rotateX(90deg);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  71% {
+    transform: translateY(0) rotateX(70deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+  }
+  84% {
+    transform: translateY(0) rotateX(90deg);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  92% {
+    transform: translateY(0) rotateX(84deg);
+  }
+  100% {
+    transform: translateY(0) rotateX(88deg);
+  }
+}
+
+@keyframes nf-shade {
+  from {
+    opacity: 0;
+  }
+  56% {
+    opacity: 0.55;
+  }
 }
 
 .nf-flap.nope {
@@ -16508,65 +16701,54 @@ html[data-look] .play-screen > .top-bar .round-btn {
   gap: 10px;
   min-height: clamp(128px, 22dvh, 176px);
   padding: 18px 12px 12px;
-  border-radius: 10px;
-  background: radial-gradient(130% 110% at 50% 25%, #2f7d5a 0%, #22603f 55%, #194a31 100%);
-  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  background:
+    var(--nf-felt) 0 0 / 128px 128px,
+    radial-gradient(130% 110% at 50% 25%, #2f7d5a 0%, #22603f 55%, #194a31 100%);
+  box-shadow:
+    inset 0 5px 12px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 230, 190, 0.25);
   overflow: hidden;
 }
 
 .nf-dice {
   display: flex;
-  gap: 18px;
-  min-height: 56px;
+  gap: 22px;
+  min-height: 60px;
+  transition: opacity 0.3s var(--ease-out);
 }
 
-.nf-die {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 4px;
-  width: 56px;
-  height: 56px;
-  padding: 10px;
-  border-radius: 13px;
-  background: linear-gradient(160deg, #ffffff, #ece7dc);
-  box-shadow:
-    inset 0 -3px 0 rgba(0, 0, 0, 0.12),
-    0 8px 14px -6px rgba(0, 0, 0, 0.6);
+.nf-dice.idle {
+  opacity: 0.4;
 }
 
-.nf-die.idle {
-  opacity: 0.35;
+.nf-die3d {
+  position: relative;
+  width: 60px;
+  height: 60px;
 }
 
-.nf-die.idle .nf-pip.on {
-  background: #b9b2a3;
+.nf-die3d-body,
+.nf-die3d-shadow {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
 
-.nf-pip.on {
+.nf-die3d-body canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Its shadow on the felt: small and faint while it's in the air. */
+.nf-die3d-shadow {
+  inset: auto 6px -2px;
+  height: 14px;
   border-radius: 50%;
-  background: #1d1b16;
-}
-
-.nf-die.rolling {
-  animation: nf-roll 0.9s var(--ease-out) both;
-  animation-delay: calc(var(--i) * 60ms);
-}
-
-@keyframes nf-roll {
-  0% {
-    transform: translate(-140px, 30px) rotate(-320deg);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  70% {
-    transform: translate(6px, -4px) rotate(12deg);
-  }
-  100% {
-    transform: none;
-  }
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
 }
 
 .nf-hint-row {
@@ -16712,11 +16894,12 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nf-die.rolling,
-  .nf-flap.nope {
+  .nf-flap.nope,
+  .nf-flap.down .nf-block,
+  .nf-flap.down .nf-side::after {
     animation: none;
   }
-  .nf-flap {
+  .nf-block {
     transition: none;
   }
 }
@@ -16810,19 +16993,6 @@ html[data-look] .play-screen > .top-bar .round-btn {
   box-shadow: inset 0 0 0 2px var(--mt-o);
 }
 
-/* The turn indicator: a small tab on top of whoever is on. */
-.mt-player.on::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  width: 28px;
-  height: 5px;
-  margin-left: -14px;
-  border-radius: 3px 3px 0 0;
-  background: var(--mt-turn);
-}
-
 .mt-player-text {
   display: flex;
   flex: 1;
@@ -16868,7 +17038,8 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .mt-big {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 7px;
   width: min(100%, calc(100dvh - 290px));
   aspect-ratio: 1;
@@ -16878,7 +17049,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .mt-small {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  min-height: 0;
   gap: 3px;
   padding: 4px;
   border-radius: 10px;
@@ -16894,6 +17068,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .mt-small.owned {
   opacity: 1;
+}
+
+.mt-small .mt-cell {
+  transition: opacity 0.4s var(--ease-out), background-color 0.15s var(--ease-out), transform 0.12s var(--ease-out);
 }
 
 .mt-small.owned .mt-cell {
@@ -16912,7 +17090,18 @@ html[data-look] .play-screen > .top-bar .round-btn {
   position: absolute;
   inset: 12%;
   pointer-events: none;
-  animation: mt-take 0.32s var(--ease-out) both;
+  will-change: transform, opacity;
+  animation: mt-take 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mt-small-owner .mt-mark path,
+.mt-small-owner .mt-mark circle {
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.mt-small-owner .mt-mark path + path {
+  animation-delay: 0.16s;
 }
 
 .mt-small-owner .mt-mark {
@@ -16921,7 +17110,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 @keyframes mt-take {
   from {
-    transform: scale(0.6);
+    transform: scale(0.82);
     opacity: 0;
   }
 }
@@ -16945,10 +17134,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 .mt-cell {
-  display: grid;
-  place-items: center;
+  position: relative;
   min-width: 0;
-  padding: 18%;
+  min-height: 0;
+  padding: 0;
   border: 0;
   border-radius: 5px;
   background: var(--fill);
@@ -16959,6 +17148,13 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .mt-small.live .mt-cell:not(:disabled):active {
   transform: scale(0.9);
   background: var(--fill-2);
+}
+
+.mt-cell .mt-mark {
+  position: absolute;
+  inset: 20%;
+  width: auto;
+  height: auto;
 }
 
 .mt-cell:disabled {
@@ -16978,6 +17174,8 @@ html[data-look] .play-screen > .top-bar .round-btn {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  /* Always as tall: two lines of info and a button's height, whatever shows. */
+  height: 112px;
 }
 
 .mt-foot .big-btn {
@@ -16985,7 +17183,8 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 .mt-info {
-  min-height: 2.7em;
+  height: 2.7em;
+  overflow: hidden;
   margin: 0;
   font-size: 15px;
   font-weight: 600;
