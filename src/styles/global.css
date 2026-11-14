@@ -372,8 +372,8 @@ li {
 
 /* The last thing on its screen: it reaches into the screen's own padding at the bottom, so scrolled
    to the end it stands exactly where it stood while scrolling (else it rose by that padding there). */
-.screen:not(.game-detail) > .sticky-action:last-child,
-.screen:not(.game-detail) > .bd:last-child > .sticky-action:last-child {
+.screen:not(.game-detail) > .sticky-action:not(:has(~ :not(.sheet-backdrop))),
+.screen:not(.game-detail) > .bd:not(:has(~ :not(.sheet-backdrop))) > .sticky-action:last-child {
   margin-bottom: calc(-20px - env(safe-area-inset-bottom));
 }
 
@@ -696,6 +696,7 @@ li {
 .top-bar-side.right {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 .top-bar-title {
@@ -2223,7 +2224,7 @@ li {
 /* Over a game: up to three buttons on the right (the crew, clean table, rules); the left as wide as
    two of them, so with two the name stays in the middle, a little smaller on narrow phones. */
 .top-bar.game-bar {
-  grid-template-columns: minmax(88px, auto) minmax(0, 1fr) minmax(88px, auto);
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr) minmax(96px, auto);
 }
 
 .game-bar .top-bar-title {
@@ -2248,11 +2249,6 @@ li {
  */
 .play-screen.clean {
   gap: 10px;
-}
-
-.play-screen.clean > .top-bar {
-  min-height: 34px;
-  grid-template-columns: minmax(72px, auto) minmax(0, 1fr) minmax(72px, auto);
 }
 
 /* Who's on (the games' own line saying so is hidden): a small bubble between the corner buttons. */
@@ -2297,15 +2293,6 @@ li {
   padding-top: 0;
   display: flex;
   justify-content: center;
-}
-
-.play-screen.clean > .top-bar .round-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  font-size: 1rem;
-  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
-  color: var(--muted);
 }
 
 .who-drinks {
@@ -16546,12 +16533,12 @@ html[data-look] .play-screen > .top-bar .round-btn {
   transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
 }
 
-/* Top and bottom: end grain, smooth, the top catching the light. Each side a hair wider than the
-   block, so the edges meet with no gap. */
+/* Top and bottom: end grain, smooth, the top catching the light. Exactly as wide as the block:
+   nothing sticks out past its edges. */
 .nf-side.top,
 .nf-side.bottom {
-  left: -0.5px;
-  right: -0.5px;
+  left: 0;
+  right: 0;
   height: var(--t);
 }
 
@@ -16564,15 +16551,19 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-side.bottom {
   bottom: 0;
-  background: linear-gradient(0deg, #c99e63, #b58a52);
+  /* The same wood as the face: lying down, it darkens with the block. */
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 90px;
+  background-color: #d9b47a;
   transform-origin: 50% 100%;
   transform: translateZ(calc(var(--t) / -2)) rotateX(-90deg);
 }
 
 .nf-side.left,
 .nf-side.right {
-  top: -0.5px;
-  bottom: -0.5px;
+  top: 0;
+  bottom: 0;
   width: var(--t);
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
@@ -16588,7 +16579,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-side.left::after,
 .nf-side.right::after {
-  opacity: 0.32;
+  opacity: 0.18;
 }
 
 .nf-side.right {
