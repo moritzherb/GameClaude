@@ -4,7 +4,7 @@
  * The same seed draws the same plank every time.
  */
 
-type RGB = [number, number, number];
+export type RGB = [number, number, number];
 
 function hash(x: number, y: number, seed: number) {
   let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(seed, 982451653);
@@ -39,7 +39,7 @@ function fbm(x: number, y: number, seed: number, octaves: number) {
   return sum / (1 - 0.5 ** octaves);
 }
 
-interface Plank {
+export interface Plank {
   /** Its size in CSS px; drawn at `scale` pixels to each. */
   w: number;
   h: number;
@@ -58,8 +58,9 @@ interface Plank {
 /** Along the grain the wood changes slowly: worked out every few pixels there and smoothed in between. */
 const ALONG = 3;
 
-function drawPlank(p: Plank): string {
-  if (typeof document === 'undefined') return '';
+/** A plank drawn on a canvas (null without a document). */
+export function plankCanvas(p: Plank): HTMLCanvasElement | null {
+  if (typeof document === 'undefined') return null;
   const W = Math.round(p.w * p.scale);
   const H = Math.round(p.h * p.scale);
   const sw = p.upright ? W : Math.ceil(W / ALONG);
@@ -68,7 +69,7 @@ function drawPlank(p: Plank): string {
   small.width = sw;
   small.height = sh;
   const sctx = small.getContext('2d');
-  if (!sctx) return '';
+  if (!sctx) return null;
   const img = sctx.createImageData(sw, sh);
   const px = img.data;
   const k = 1 / p.scale;
@@ -95,11 +96,15 @@ function drawPlank(p: Plank): string {
   c.width = W;
   c.height = H;
   const ctx = c.getContext('2d');
-  if (!ctx) return '';
+  if (!ctx) return null;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(small, 0, 0, W, H);
-  return c.toDataURL('image/jpeg', 0.92);
+  return c;
+}
+
+function drawPlank(p: Plank): string {
+  return plankCanvas(p)?.toDataURL('image/jpeg', 0.92) ?? '';
 }
 
 /** Felt: fine fibres, lighter and darker, on a see-through ground (laid over the felt's colour). */
@@ -125,6 +130,10 @@ function drawFelt(size: number, seed: number): string {
   return c.toDataURL('image/png');
 }
 
+/** The frame's walnut and the flaps' maple. */
+export const WALNUT = { light: [170, 112, 62] as RGB, dark: [86, 48, 22] as RGB, rings: 0.62, ringScale: 0.055 };
+export const MAPLE = { light: [246, 222, 176] as RGB, dark: [205, 157, 99] as RGB, rings: 0.42, ringScale: 0.07 };
+
 let cached: Record<string, string> | null = null;
 
 /** The box's materials as CSS custom properties (url(...) each), drawn on first use, sharp on this screen. */
@@ -132,13 +141,13 @@ export function woodVars(): Record<string, string> {
   if (cached) return cached;
   const scale = typeof window === 'undefined' ? 1 : Math.min(2.5, Math.max(1, window.devicePixelRatio || 1));
   const url = (s: string) => (s ? `url("${s}")` : 'none');
-  const walnut = { light: [170, 112, 62] as RGB, dark: [86, 48, 22] as RGB, rings: 0.62, ringScale: 0.055 };
+  const walnut = WALNUT;
   cached = {
     // Walnut for the frame, grain along it; the same wood stood upright for the sides.
     '--nf-frame': url(drawPlank({ w: 440, h: 440, scale, ...walnut, seed: 7 })),
     '--nf-frame-up': url(drawPlank({ w: 24, h: 440, scale, upright: true, ...walnut, seed: 11 })),
     // Pale maple for the flaps, grain up and down.
-    '--nf-flap': url(drawPlank({ w: 360, h: 90, scale, upright: true, light: [246, 222, 176], dark: [205, 157, 99], rings: 0.42, ringScale: 0.07, seed: 23 })),
+    '--nf-flap': url(drawPlank({ w: 360, h: 90, scale, upright: true, ...MAPLE, seed: 23 })),
     '--nf-felt': url(drawFelt(128, 5)),
   };
   return cached;

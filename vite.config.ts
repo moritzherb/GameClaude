@@ -76,6 +76,8 @@ export default defineConfig(({ mode }) =>
           cssCodeSplit: false,
           modulePreload: false,
           chunkSizeWarningLimit: 4000,
+          // One script: what the web build loads on its own (the 3D box) is inside it here.
+          rollupOptions: { output: { codeSplitting: false } },
         },
       }
     : {
