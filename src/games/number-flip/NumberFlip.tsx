@@ -347,7 +347,9 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
             ? t('Flip {n}, or {a} and {b}', { n: total, a: dice[0], b: dice[1] })
             : t('Flip {n}', { n: total })
           : box.picked.length
-            ? t('{n} more', { n: total - sum(box.picked) })
+            ? total > sum(box.picked)
+              ? t('{n} more', { n: total - sum(box.picked) })
+              : ''
             : t('Flip flaps that add up to {n}', { n: total })
         : box.rolls === 0
           ? t('Roll, then flip flaps that add up to the dice')

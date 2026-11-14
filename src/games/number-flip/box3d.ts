@@ -33,7 +33,7 @@ const FH = 5; // flap height
 const FT = 0.8; // flap thickness
 const WALL = 1.3;
 const WALL_H = 2.6;
-const SLOT = 6.6; // inside the back wall, to the divider: the flaps stand at its back, fall forward onto it
+const SLOT = 6.6; // inside the back wall, to the divider: the flaps stand at its front, fall back into it
 const RAIL_D = 1;
 const RAIL_H = 1.1;
 const FELT_D = 11.5;
@@ -46,17 +46,17 @@ const easeIn = (t: number) => t * t;
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 
 /**
- * The angle (radians) a falling flap has at time u (0–1): it tips forward, falls faster and faster,
- * knocks on the floor of the slot, bounces and lies there, its plain back up.
+ * The angle (radians) a falling flap has at time u (0–1): it tips back, falls faster and faster,
+ * knocks on the floor of the slot behind it, bounces and lies there.
  */
 function fallAngle(u: number, from: number) {
-  const down = Math.PI / 2;
+  const down = -Math.PI / 2;
   const deg = (d: number) => (d * Math.PI) / 180;
   if (u < 0.56) return from + (down - from) * easeIn(u / 0.56);
-  if (u < 0.71) return down + (deg(70) - down) * easeOut((u - 0.56) / 0.15);
-  if (u < 0.84) return deg(70) + (down - deg(70)) * easeIn((u - 0.71) / 0.13);
-  if (u < 0.92) return down + (deg(85) - down) * easeOut((u - 0.84) / 0.08);
-  return deg(85) + (down - deg(85)) * easeIn((u - 0.92) / 0.08);
+  if (u < 0.71) return down + (deg(-70) - down) * easeOut((u - 0.56) / 0.15);
+  if (u < 0.84) return deg(-70) + (down - deg(-70)) * easeIn((u - 0.71) / 0.13);
+  if (u < 0.92) return down + (deg(-85) - down) * easeOut((u - 0.84) / 0.08);
+  return deg(-85) + (down - deg(-85)) * easeIn((u - 0.92) / 0.08);
 }
 
 function canvasTexture(c: HTMLCanvasElement, renderer: THREE.WebGLRenderer) {
@@ -162,7 +162,7 @@ export class Box3D {
     this.depth = WALL + SLOT + RAIL_D + FELT_D + WALL;
     const zBack = -this.depth / 2;
     const zInnerBack = zBack + WALL;
-    const zHinge = zInnerBack + 1.1;
+    const zHinge = zInnerBack + SLOT - 0.6;
     const zRail = zInnerBack + SLOT + RAIL_D / 2;
     this.feltZ = zInnerBack + SLOT + RAIL_D + FELT_D / 2;
 
@@ -407,13 +407,13 @@ export class Box3D {
         const order = state.falling.indexOf(f.n);
         if (order < 0) {
           // Already down (a box shown as it is): lying there.
-          this.setFlap(f, Math.PI / 2, 0, 0.86);
+          this.setFlap(f, -Math.PI / 2, 0, 0.6);
           continue;
         }
         const from = f.angle;
         const lift = f.lift;
         this.animate(FALL_MS, order * STAGGER, (u) => {
-          this.setFlap(f, fallAngle(u, from), lift * (1 - clamp01(u / 0.4)), 1 - 0.14 * clamp01(u / 0.56));
+          this.setFlap(f, fallAngle(u, from), lift * (1 - clamp01(u / 0.4)), 1 - 0.4 * clamp01(u / 0.56));
         });
         continue;
       }
@@ -422,7 +422,7 @@ export class Box3D {
         f.down = false;
         this.setFlap(f, 0, 0, 1);
       }
-      const angle = picked ? -0.1 : 0;
+      const angle = picked ? 0.1 : 0;
       const lift = picked ? 0.45 : 0;
       for (const m of f.mats) m.emissive.copy(ACCENT).multiplyScalar(picked ? 0.16 : 0);
       if (angle !== f.angle || lift !== f.lift) {
