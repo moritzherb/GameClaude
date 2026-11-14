@@ -311,6 +311,8 @@ function Table({
   const spots = seatArc(n, { cx, cy, rx: Math.max(0, cx - 46), ry: Math.max(0, cy - 30), from: n <= 2 ? 150 : n === 3 ? 166 : 186, maxY: size.h - (n >= 4 ? 124 : 30) });
   // The trick's cards as big as the table has room for.
   const tw = Math.round(Math.max(52, Math.min(78, size.w * 0.19, size.h * 0.22)));
+  // The trick a little below the middle of the arc: between the others and you, not up by them.
+  const py = Math.min(cy + tw * 0.65, size.h - tw * 1.15);
   const spotOf = (seat: number) => {
     const k = order.indexOf(seat);
     return k >= 0 ? spots[k] : { x: cx, y: size.h + 60 };
@@ -326,7 +328,7 @@ function Table({
         </span>
       </div>
 
-      <div className="fz-table-area" ref={table} style={{ '--cy': `${Math.round(cy)}px`, '--tw': `${tw}px` } as CSSProperties}>
+      <div className="fz-table-area" ref={table} style={{ '--cy': `${Math.round(cy)}px`, '--py': `${Math.round(py)}px`, '--tw': `${tw}px` } as CSSProperties}>
         {/* The others: who, their bid and tricks so far, their score; the tricks they took beside them. */}
         {order.map((i, k) => {
           const s = seats[i];
@@ -373,7 +375,7 @@ function Table({
           {g.trick.map((p, k) => {
             const spot = p.seat === me ? { x: cx, y: size.h + 60 } : spotOf(p.seat);
             const dx = spot.x - cx;
-            const dy = spot.y - cy;
+            const dy = spot.y - py;
             const len = Math.hypot(dx, dy) || 1;
             const reach = tw * 0.34;
             return (
@@ -482,9 +484,11 @@ function Table({
 /** The tricks someone has taken, face down beside them: a little stack, one card per trick. */
 function Tricks({ n }: { n: number }) {
   return (
-    <span className="fz-tricks" role="img" aria-label={t('{n} tricks', { n })}>
+    <span className={`fz-tricks${n ? '' : ' none'}`} role="img" aria-label={t('{n} tricks', { n })}>
       {Array.from({ length: Math.min(n, 8) }, (_, k) => (
-        <i key={k} style={{ '--k': k } as CSSProperties} />
+        <span key={k} className="fz-trick-back" style={{ '--k': k } as CSSProperties}>
+          <CardBack />
+        </span>
       ))}
     </span>
   );
@@ -631,6 +635,16 @@ function Index({ label, children }: { label?: string; children: ReactNode }) {
   );
 }
 
+/**
+ * The fine line round a card's face, stopping short of the two corners with the number in them (as
+ * printed): it runs round the other two corners and leaves the numbers room. `gap`: how far down the
+ * side the corner's number and sign reach.
+ */
+function Frame({ stroke, opacity, gap }: { stroke: string; opacity: number; gap: number }) {
+  const d = `M22 4.5H89.5A6 6 0 0 1 95.5 10.5V${150 - gap}M78 145.5H10.5A6 6 0 0 1 4.5 139.5V${gap}`;
+  return <path d={d} fill="none" stroke={stroke} strokeOpacity={opacity} strokeWidth="0.8" strokeLinecap="round" />;
+}
+
 /** A card: all in its faction's colour, the number in two corners and as many signs in the middle
  *  as it counts (the 1 one big sign); an Archmage night blue with a gold star, a Fool pale with a moon. */
 export function CardFace({ card }: { card: Card }) {
@@ -641,7 +655,7 @@ export function CardFace({ card }: { card: Card }) {
     return (
       <svg className={`fz-card ${card.kind}`} viewBox="0 0 100 150" role="img" aria-label={mage ? t('Archmage') : t('Fool')}>
         <rect x="0" y="0" width="100" height="150" rx="9" className="fz-card-ground" />
-        <rect x="4.5" y="4.5" width="91" height="141" rx="6" fill="none" stroke={ink} strokeOpacity="0.45" strokeWidth="0.8" />
+        <Frame stroke={ink} opacity={0.45} gap={24} />
         <g color={ink} fill={ink}>
           <Index>{glyph}</Index>
           {mage && <circle cx="50" cy="75" r="27" fill="none" stroke={ink} strokeWidth="0.9" strokeOpacity="0.6" />}
@@ -654,7 +668,7 @@ export function CardFace({ card }: { card: Card }) {
   return (
     <svg className={`fz-card ${f}`} viewBox="0 0 100 150" role="img" aria-label={`${t(FACTION_NAME[f])} ${card.rank}`}>
       <rect x="0" y="0" width="100" height="150" rx="9" className="fz-card-ground" />
-      <rect x="4.5" y="4.5" width="91" height="141" rx="6" fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="0.8" />
+      <Frame stroke="#fff" opacity={0.28} gap={38} />
       <g fill="#fff" color="#fff">
         <Index label={String(card.rank)}>{SIGIL[f]}</Index>
       </g>

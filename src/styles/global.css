@@ -15324,35 +15324,51 @@ button.profile-avatar:not(:disabled):active {
   color: var(--muted);
 }
 
-/* The tricks taken: face down beside the player (on the side towards the middle), one per trick. */
+/* The tricks taken: face down beside the player (on the side towards the middle), one per trick,
+   a little fanned so the stack shows how many. */
 .fz-tricks {
   position: relative;
   display: inline-block;
-  width: 22px;
-  height: 30px;
+  width: 26px;
+  height: 39px;
 }
 
 .fz-seat .fz-tricks {
   position: absolute;
-  top: 0;
-  left: calc(100% + 4px);
+  top: -2px;
+  left: calc(100% + 8px);
 }
 
+/* On the right of the table they lie to the left, fanned that way too. */
 .fz-seat.right .fz-tricks {
   left: auto;
-  right: calc(100% + 4px);
+  right: calc(100% + 8px);
 }
 
-.fz-tricks i {
+.fz-seat.right .fz-trick-back {
+  left: auto;
+  right: calc(var(--k) * 4px);
+}
+
+.fz-trick-back {
   position: absolute;
-  left: calc(var(--k) * 3px);
+  left: calc(var(--k) * 4px);
   top: 0;
-  width: 20px;
-  height: 30px;
-  border-radius: 3px;
-  background: #202124;
-  box-shadow: inset 0 0 0 1px #b99a5f, 0 1px 2px rgba(0, 0, 0, 0.35);
-  transform: rotate(calc(var(--k) * 2deg - 3deg));
+  transform: rotate(calc(var(--k) * 3deg - 4deg));
+  animation: fz-trick-in 0.3s var(--ease-out);
+}
+
+.fz-trick-back .fz-card {
+  --w: 26px;
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes fz-trick-in {
+  from {
+    opacity: 0;
+    transform: scale(1.3) rotate(calc(var(--k) * 3deg - 4deg));
+  }
 }
 
 /* A card: all in its faction's colour (an SVG, 100 × 150), the number in two corners, the signs. */
@@ -15467,10 +15483,12 @@ button.profile-avatar:not(:disabled):active {
   transform: translate(1.5px, 1.5px);
 }
 
+/* The trump card turned up lies on the deck, a touch askew. */
 .fz-trump-card {
-  position: relative;
-  margin-left: -8px;
-  transform: rotate(9deg);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transform: translate(2px, -2px) rotate(4deg);
   perspective: 600px;
 }
 
@@ -15481,7 +15499,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .fz-flip > .fz-card {
-  --w: 54px;
+  --w: 44px;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
@@ -15575,7 +15593,7 @@ button.profile-avatar:not(:disabled):active {
 .fz-pile {
   position: absolute;
   left: 50%;
-  top: var(--cy, 56%);
+  top: var(--py, 60%);
   width: 0;
   height: 0;
 }
