@@ -374,6 +374,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
                     </span>
                     <span className="nf-side back" />
                     <span className="nf-side top" />
+                    <span className="nf-side bottom" />
                     <span className="nf-side left" />
                     <span className="nf-side right" />
                   </span>
