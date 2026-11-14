@@ -16229,9 +16229,31 @@ html[data-look] .play-screen > .top-bar .round-btn {
   text-wrap: pretty;
 }
 
+.nf-mode-texts,
+.nf-opt-notes {
+  display: grid;
+}
+
+.nf-mode-texts > .nf-mode-text,
+.nf-opt-notes > .nf-opt-note {
+  grid-area: 1 / 1;
+}
+
+.nf-mode-text:not(.on),
+.nf-opt-note:not(.on) {
+  visibility: hidden;
+}
+
 .nf-opts {
-  gap: 8px;
+  --nf-row: 36px;
+  --nf-gap: 8px;
+  gap: var(--nf-gap);
   padding: 10px 14px 12px;
+}
+
+/* The tournament's Rounds row isn't there: its room is kept under the panel. */
+.nf-opts.no-rounds {
+  margin-bottom: calc(var(--nf-row) + var(--nf-gap));
 }
 
 .nf-opt {
@@ -16282,7 +16304,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 @media (max-height: 620px) {
   .nf-turn-round,
-  .nf-opt-note {
+  .nf-opt-notes {
     display: none;
   }
   .nf-mode {
@@ -16297,11 +16319,16 @@ html[data-look] .play-screen > .top-bar .round-btn {
     height: 32px;
   }
   .nf-opts {
-    gap: 6px;
+    --nf-row: 32px;
+    --nf-gap: 6px;
     padding: 8px 12px;
   }
   .nf-setup .section-title {
     margin-bottom: 6px;
+  }
+  /* Room for the longest mode text and the tournament's Rounds row, without scrolling. */
+  .bd.nf-setup {
+    gap: 12px;
   }
 }
 

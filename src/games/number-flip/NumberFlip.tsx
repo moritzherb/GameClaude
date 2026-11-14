@@ -169,14 +169,33 @@ function SetupScreen({ setup, onChange, solo, onStart }: { setup: Setup; onChang
             </button>
           ))}
         </div>
-        <p className="nf-mode-text">{solo && setup.mode === 'survival' ? t('Survival needs 2 or more players.') : t(MODE_INFO[mode].text)}</p>
+        {/* Every mode's text in the same place, only the picked one seen: as tall as the longest, so
+            nothing below moves when the mode changes. */}
+        <div className="nf-mode-texts">
+          {[...MODES, 'solo' as const].map((id) => {
+            const on = id === 'solo' ? solo && setup.mode === 'survival' : id === mode && !(solo && setup.mode === 'survival');
+            return (
+              <p key={id} className={`nf-mode-text${on ? ' on' : ''}`} aria-hidden={!on}>
+                {id === 'solo' ? t('Survival needs 2 or more players.') : t(MODE_INFO[id].text)}
+              </p>
+            );
+          })}
+        </div>
       </section>
 
-      <section className="panel nf-opts">
-        {mode === 'tournament' && <Choice label={t('Rounds')} options={[5, 10] as const} value={setup.rounds} name={(n) => String(n)} onPick={(n) => set({ rounds: n })} />}
+      {/* Rounds only for a tournament: last, with its room kept when it's not there. */}
+      <section className={`panel nf-opts${mode === 'tournament' ? '' : ' no-rounds'}`}>
         <Choice label={t('Box')} options={[9, 12] as const} value={setup.size} name={(n) => `1–${n}`} onPick={(n) => set({ size: n })} />
         <Choice label={t('Level')} options={['normal', 'hard'] as const} value={setup.level} name={(l) => (l === 'hard' ? t('Hard') : t('Normal'))} onPick={(l) => set({ level: l })} />
-        <p className="nf-opt-note">{setup.level === 'hard' ? t('Hard: only the total, or the two dice themselves.') : t('Normal: any open flaps that add up.')}</p>
+        <div className="nf-opt-notes">
+          <p className={`nf-opt-note${setup.level === 'normal' ? ' on' : ''}`} aria-hidden={setup.level !== 'normal'}>
+            {t('Normal: any open flaps that add up.')}
+          </p>
+          <p className={`nf-opt-note${setup.level === 'hard' ? ' on' : ''}`} aria-hidden={setup.level !== 'hard'}>
+            {t('Hard: only the total, or the two dice themselves.')}
+          </p>
+        </div>
+        {mode === 'tournament' && <Choice label={t('Rounds')} options={[5, 10] as const} value={setup.rounds} name={(n) => String(n)} onPick={(n) => set({ rounds: n })} />}
       </section>
 
       <div className="sticky-action">
