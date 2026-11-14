@@ -302,6 +302,10 @@ const app: Record<string, string> = {
   'It stays in the App Library and in the search.': 'Es bleibt in der App-Mediathek und in der Suche.',
   'It stays with all games and in the search.': 'Es bleibt bei allen Spielen und in der Suche.',
   'Remove from home screen': 'Von der Startseite entfernen',
+  Remove: 'Entfernen',
+  'Add to home screen': 'Zur Startseite hinzufügen',
+  'On your home screen': 'Schon auf der Startseite',
+  'No room left on the home screen': 'Kein Platz mehr auf der Startseite',
   'Reset home screen': 'Startseite zurücksetzen',
   'Every game back, in the first order': 'Alle Spiele zurück, in der ersten Reihenfolge',
   // Settings: the look

@@ -91,11 +91,26 @@ export default function PopHome() {
     },
     [os],
   );
+  // Android: what fits on its home screen; taking one off leaves its place free (the next game
+  // doesn't move up into it), so a game can be put there from all games.
+  const visible = useRef<string[] | null>(null);
   const remove = (id: string) => {
-    const next = [...hidden, id];
+    const shown = visible.current;
+    const beyond = os === 'android' && shown ? ordered.map((g) => g.id).filter((x) => !shown.includes(x)) : [];
+    const next = [...new Set([...hidden, id, ...beyond])];
     setHidden(next);
     saveHidden(os, next);
     setRemoving(null);
+  };
+  // Back on the home screen (Android, held in all games): no longer hidden, and placed right after
+  // the last app that shows, so it shows too.
+  const add = (id: string, after: string | null) => {
+    const next = hidden.filter((x) => x !== id);
+    setHidden(next);
+    saveHidden(os, next);
+    const rest = order.filter((x) => x !== id);
+    const at = after ? rest.indexOf(after) + 1 : 0;
+    keepOrder([...rest.slice(0, at), id, ...rest.slice(at)]);
   };
 
   // The shuffle, as on the classic home: a quick roulette of games, then the picked one opens.
@@ -157,6 +172,10 @@ export default function PopHome() {
     onShuffle: shuffle,
     onOrder: keepOrder,
     onRemove: (id: string) => setRemoving(findGame(id) ?? null),
+    onAdd: add,
+    onVisible: (ids: string[]) => {
+      visible.current = ids;
+    },
   };
 
   return (
@@ -171,7 +190,7 @@ export default function PopHome() {
               <p>{os === 'android' ? t('It stays with all games and in the search.') : t('It stays in the App Library and in the search.')}</p>
             </div>
             <button type="button" className="os-alert-btn danger" onClick={() => remove(removing.id)}>
-              {t('Remove from home screen')}
+              {t('Remove')}
             </button>
             <button type="button" className="os-alert-btn" onClick={() => setRemoving(null)}>
               {t('Cancel')}

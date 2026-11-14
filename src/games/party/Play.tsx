@@ -198,7 +198,7 @@ export default function Play({ board, players, pawns, exit, onAgain }: Props) {
     commit(x);
     if (o.then === 'travel' && !o.ace) {
       setPhase({ kind: 'busy' });
-      const to = targets[pos] ?? pos;
+      const to = o.to ?? targets[pos] ?? pos;
       await scene.current?.travel(id, to, f.kind === 'mole');
       commit(setPawn(gRef.current, id, { pos: to }));
       return next();

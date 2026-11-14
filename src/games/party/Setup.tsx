@@ -65,7 +65,7 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
               }}
             >
               <span className="pt-board-emoji" aria-hidden>
-                {THEME_EMOJI[b.theme]}
+                {b.emoji ?? THEME_EMOJI[b.theme]}
               </span>
               <span className="pt-board-name">{b.custom ? b.name : t(b.name)}</span>
               <span className="pt-board-sub">{b.custom ? t('Your own · {n} fields', { n: b.fields.length - 1 }) : t('{n} fields', { n: b.fields.length - 1 })}</span>

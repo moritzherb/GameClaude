@@ -40,6 +40,10 @@ export interface HomeProps {
   onOrder: (ids: string[]) => void;
   /** The "−" on a wiggling app: take it off the home screen (after asking). */
   onRemove: (id: string) => void;
+  /** Android, from all games: put one back on the home screen, after the one given (or first). */
+  onAdd?: (id: string, after: string | null) => void;
+  /** Android: the games that fit on the home screen now (the rest only in all games). */
+  onVisible?: (ids: string[]) => void;
 }
 
 /** How far to pull home down before the search opens (px), and how much the finger's way counts. */

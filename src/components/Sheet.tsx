@@ -9,6 +9,8 @@ interface Props {
   title: ReactNode;
   children: ReactNode;
   closeLabel?: string;
+  /** Always as tall as it may be (a list to search through: it doesn't shrink with fewer matches). */
+  tall?: boolean;
 }
 
 /** How long a sheet takes to go back down (a fifth quicker than it comes up; ms, as in global.css:
@@ -22,7 +24,7 @@ const FLICK = 0.5;
 /** Bottom sheet with one big close button. Tapping outside also closes it, and so does pulling it
  *  down (as the grabber on top says). It slides back down the way it came when it closes, its
  *  dimmed backdrop (and the strip under the clock) with it. */
-export default function Sheet({ open, onClose, title, children, closeLabel = t('Got it') }: Props) {
+export default function Sheet({ open, onClose, title, children, closeLabel = t('Got it'), tall }: Props) {
   const titleId = useId();
   const box = useRef<HTMLDivElement>(null);
   const backdrop = useRef<HTMLDivElement>(null);
@@ -51,6 +53,30 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
+
+  // The keyboard up (a field in the sheet): the sheet stands over it, in the part of the screen that
+  // still shows, instead of being pushed under it or the page scrolling away beneath it.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const el = backdrop.current;
+    if (!open || !vv || !el) return;
+    const fit = () => {
+      const covered = window.innerHeight - vv.height > 1 || vv.offsetTop > 1;
+      el.style.top = covered ? `${vv.offsetTop}px` : '';
+      el.style.height = covered ? `${vv.height}px` : '';
+      el.style.bottom = covered ? 'auto' : '';
+    };
+    fit();
+    vv.addEventListener('resize', fit);
+    vv.addEventListener('scroll', fit);
+    return () => {
+      vv.removeEventListener('resize', fit);
+      vv.removeEventListener('scroll', fit);
+      el.style.top = '';
+      el.style.height = '';
+      el.style.bottom = '';
+    };
+  }, [open]);
 
   // Pulled down by a finger (or the mouse on its top): it follows, the dim fading with it; let go far
   // enough down, or flicked, it closes from there, else it springs back. From the top (the grabber
@@ -188,7 +214,7 @@ export default function Sheet({ open, onClose, title, children, closeLabel = t('
       <div
         ref={box}
         style={from.current}
-        className={`sheet ${leaving ? 'slide-down' : 'slide-up'}`}
+        className={`sheet ${leaving ? 'slide-down' : 'slide-up'}${tall ? ' tall' : ''}`}
         role="dialog"
         aria-modal
         aria-labelledby={titleId}

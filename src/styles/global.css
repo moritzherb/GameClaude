@@ -187,6 +187,8 @@ body::-webkit-scrollbar,
 /* Nothing sticks out sideways (a screen sliding in, a page following the finger): the page never
    gets wider than the screen, so no gap or zooming out at the side. */
 html {
+  /* Once the styles are in, the page's own ground (index.html starts it dark). */
+  background: var(--bg);
   overflow-x: clip;
   /* Scroll and swipe, but no pinch zoom. */
   touch-action: pan-x pan-y;
@@ -272,7 +274,7 @@ textarea {
 
     /* The start-up screen (index.html) is dark in every look. */
     html:has(#boot:not(.done)) .top-edge {
-      background-color: #000000;
+      background-color: #20211c;
     }
   }
 }
@@ -1579,6 +1581,9 @@ li {
   background: rgba(0, 0, 0, 0.35);
   /* Straight along: the strip under the clock dims with it frame by frame (components/Sheet.tsx). */
   animation: sheet-dim-in 0.2s linear;
+  /* Over a sheet the page under it never scrolls: only the sheet's own list does. */
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 /* Closing: the dim goes (a fifth quicker than it came), and nothing more is tapped through it. */
@@ -1630,7 +1635,8 @@ li {
 .sheet {
   width: 100%;
   max-width: var(--max);
-  max-height: 88dvh;
+  /* Of the screen, or of the part over the keyboard (Sheet.tsx fits its backdrop to that). */
+  max-height: min(88dvh, calc(100% - 24px));
   /* Only the text in the middle scrolls (.sheet-body): the grabber, title and close button stay put,
      however it scrolls or bounces. */
   overflow: hidden;
@@ -1662,6 +1668,11 @@ li {
   background: inherit;
 }
 
+/* A sheet to search through: always its full height, the matches listed from the top. */
+.sheet.tall {
+  height: min(88dvh, calc(100% - 24px));
+}
+
 /* The close button: always at the bottom, still while the text above it scrolls. */
 .sheet-foot {
   flex: none;
@@ -1674,6 +1685,7 @@ li {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  touch-action: pan-y;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -16173,5 +16185,872 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
   .rs-seat .rs-stack {
     --w: 24px;
+  }
+}
+
+/* ---------- Number Flip: a wooden box, its flaps, green felt and two dice ---------- */
+
+.nf-setup .nf-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 46%), 1fr));
+  gap: 8px;
+}
+
+.nf-mode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  border: 2px solid transparent;
+  transition: border-color 0.18s var(--ease-out), transform 0.16s var(--ease-out);
+}
+
+.nf-mode:active {
+  transform: scale(0.97);
+}
+
+.nf-mode.on {
+  border-color: var(--accent);
+}
+
+.nf-mode:disabled {
+  opacity: 0.4;
+}
+
+.nf-mode-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.nf-mode-name {
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.nf-mode-text {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.nf-opts {
+  gap: 8px;
+  padding: 10px 14px 12px;
+}
+
+.nf-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nf-opt-label {
+  margin-right: auto;
+  font-weight: 700;
+}
+
+.nf-pill {
+  min-width: 72px;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 0.18s var(--ease-out), color 0.18s var(--ease-out), transform 0.14s var(--ease-out);
+}
+
+.nf-pill:active {
+  transform: scale(0.96);
+}
+
+.nf-pill.on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.nf-opt-note {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.nf-play {
+  gap: clamp(8px, 1.8dvh, 14px);
+}
+
+@media (max-height: 620px) {
+  .nf-turn-round,
+  .nf-opt-note {
+    display: none;
+  }
+  .nf-mode {
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+  .nf-mode-text {
+    margin-top: 6px;
+    font-size: 13px;
+  }
+  .nf-pill {
+    height: 32px;
+  }
+  .nf-opts {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .nf-setup .section-title {
+    margin-bottom: 6px;
+  }
+}
+
+.nf-end .nf-mode-text {
+  text-align: center;
+}
+
+.nf-turn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.nf-turn-round,
+.nf-end-kicker {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nf-turn-who {
+  font-size: clamp(20px, 3.4dvh, 24px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.nf-players {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nf-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.6;
+  transition: opacity 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+.nf-chip.on {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--p);
+}
+
+.nf-chip.done {
+  opacity: 0.85;
+}
+
+.nf-chip-name {
+  max-width: 7em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-chip-stat {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-chip-stat:empty {
+  display: none;
+}
+
+/* The box: a frame of warm wood, the flaps standing in a dark slot, felt below. */
+.nf-box {
+  --wood: #9a6136;
+  --wood-dark: #6e4223;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 -8px;
+  padding: 12px 10px 10px;
+  border-radius: 18px;
+  background:
+    repeating-linear-gradient(92deg, rgba(255, 235, 200, 0.05) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(88deg, rgba(60, 25, 5, 0.08) 0 1px, transparent 1px 11px),
+    linear-gradient(180deg, var(--wood), var(--wood-dark));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 230, 190, 0.35),
+    inset 0 -2px 0 rgba(40, 18, 4, 0.35),
+    0 18px 30px -18px rgba(0, 0, 0, 0.7);
+}
+
+.nf-flaps {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 3px;
+  padding: 10px 6px 6px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2a170a, #3e2412);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+  perspective: 420px;
+}
+
+.nf-box.size-12 .nf-flaps {
+  grid-template-columns: repeat(6, 1fr);
+  row-gap: 8px;
+}
+
+.nf-flap {
+  position: relative;
+  height: clamp(52px, 9dvh, 72px);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #f6e0b5 0%, #e7c58c 70%, #d7ae70 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -3px 0 rgba(120, 70, 25, 0.35),
+    0 2px 2px rgba(0, 0, 0, 0.35);
+  color: #3b2411;
+  font: 700 clamp(18px, 6vw, 26px) / 1 Georgia, 'Times New Roman', serif;
+  font-variant-numeric: lining-nums;
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.42s var(--ease-out),
+    box-shadow 0.2s var(--ease-out),
+    filter 0.42s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nf-box.size-12 .nf-flap {
+  height: clamp(46px, 7.6dvh, 64px);
+}
+
+.nf-flap-face {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.nf-flap:disabled {
+  cursor: default;
+}
+
+.nf-flap.picked {
+  transform: translateY(-6px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 0 3px var(--accent),
+    0 8px 12px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Flipped: laid down into the slot, its number turned away. */
+.nf-flap.down {
+  transform: rotateX(76deg);
+  filter: brightness(0.62) saturate(0.8);
+  box-shadow: none;
+}
+
+.nf-flap.down .nf-flap-face {
+  opacity: 0;
+}
+
+.nf-flap.nope {
+  animation: nf-nope 0.32s var(--ease-out);
+}
+
+@keyframes nf-nope {
+  0%,
+  100% {
+    translate: 0;
+  }
+  25% {
+    translate: -4px;
+  }
+  75% {
+    translate: 4px;
+  }
+}
+
+.nf-felt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: clamp(128px, 22dvh, 176px);
+  padding: 18px 12px 12px;
+  border-radius: 10px;
+  background: radial-gradient(130% 110% at 50% 25%, #2f7d5a 0%, #22603f 55%, #194a31 100%);
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.nf-dice {
+  display: flex;
+  gap: 18px;
+  min-height: 56px;
+}
+
+.nf-die {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+  width: 56px;
+  height: 56px;
+  padding: 10px;
+  border-radius: 13px;
+  background: linear-gradient(160deg, #ffffff, #ece7dc);
+  box-shadow:
+    inset 0 -3px 0 rgba(0, 0, 0, 0.12),
+    0 8px 14px -6px rgba(0, 0, 0, 0.6);
+}
+
+.nf-die.idle {
+  opacity: 0.35;
+}
+
+.nf-die.idle .nf-pip.on {
+  background: #b9b2a3;
+}
+
+.nf-pip.on {
+  border-radius: 50%;
+  background: #1d1b16;
+}
+
+.nf-die.rolling {
+  animation: nf-roll 0.9s var(--ease-out) both;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
+@keyframes nf-roll {
+  0% {
+    transform: translate(-140px, 30px) rotate(-320deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    transform: translate(6px, -4px) rotate(12deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.nf-hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+}
+
+.nf-one {
+  display: flex;
+  gap: 6px;
+}
+
+.nf-one-btn {
+  min-width: 64px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  color: #f3ead6;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 0.18s var(--ease-out), color 0.18s var(--ease-out), transform 0.14s var(--ease-out);
+}
+
+.nf-one-btn:active {
+  transform: scale(0.96);
+}
+
+.nf-one-btn.on {
+  background: #f3ead6;
+  color: #1d4a33;
+}
+
+.nf-hint {
+  margin: 0;
+  color: #f3ead6;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.nf-clock {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nf-clock-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #f3ead6;
+  transform-origin: 0 50%;
+  transition: transform 0.25s linear;
+}
+
+.nf-clock-n {
+  min-width: 2ch;
+  color: #f3ead6;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.nf-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nf-table {
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.nf-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.nf-row + .nf-row {
+  border-top: 1px solid var(--line);
+}
+
+.nf-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.nf-row.best .nf-row-name::after {
+  content: ' ★';
+  color: var(--accent);
+}
+
+.nf-row-lives {
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.nf-row-score,
+.nf-row-total {
+  min-width: 3ch;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.nf-row-total {
+  min-width: 5ch;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.nf-drinks {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.nf-end-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-die.rolling,
+  .nf-flap.nope {
+    animation: none;
+  }
+  .nf-flap {
+    transition: none;
+  }
+}
+
+/* ---------- Mega Tic Tac Toe: two players on top, nine boards in one, the turn below ---------- */
+
+.mt-play,
+.mt-pick {
+  --mt-x: #ff7a59;
+  --mt-o: #4ea8ff;
+}
+
+.mt-play.turn-x {
+  --mt-turn: var(--mt-x);
+}
+
+.mt-play.turn-o {
+  --mt-turn: var(--mt-o);
+}
+
+.mt-play {
+  gap: clamp(10px, 2dvh, 16px);
+}
+
+.mt-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 3.2;
+}
+
+.mt-mark.x {
+  stroke: var(--mt-x);
+}
+
+.mt-mark.o {
+  stroke: var(--mt-o);
+}
+
+.mt-mark path,
+.mt-mark circle {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: mt-draw 0.24s var(--ease-out) both;
+}
+
+.mt-mark path + path {
+  animation-delay: 0.09s;
+}
+
+@keyframes mt-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+.mt-players {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mt-player {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  opacity: 0.55;
+  box-shadow: inset 0 0 0 2px transparent;
+  transition: opacity 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
+}
+
+.mt-player.on,
+.mt-player.won {
+  opacity: 1;
+}
+
+.mt-player.x.on,
+.mt-player.x.won {
+  box-shadow: inset 0 0 0 2px var(--mt-x);
+}
+
+.mt-player.o.on,
+.mt-player.o.won {
+  box-shadow: inset 0 0 0 2px var(--mt-o);
+}
+
+/* The turn indicator: a small tab on top of whoever is on. */
+.mt-player.on::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 28px;
+  height: 5px;
+  margin-left: -14px;
+  border-radius: 3px 3px 0 0;
+  background: var(--mt-turn);
+}
+
+.mt-player-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mt-player-name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-player-sub {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-player-face {
+  position: relative;
+  flex: none;
+}
+
+.mt-player-mark {
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.mt-player-mark .mt-mark {
+  stroke-width: 4;
+}
+
+.mt-big {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  width: min(100%, calc(100dvh - 290px));
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
+
+.mt-small {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--surface);
+  opacity: 0.42;
+  transition: opacity 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), background-color 0.25s var(--ease-out);
+}
+
+.mt-small.live {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--mt-turn);
+}
+
+.mt-small.owned {
+  opacity: 1;
+}
+
+.mt-small.owned .mt-cell {
+  opacity: 0.18;
+}
+
+.mt-small.draw {
+  opacity: 0.55;
+}
+
+.mt-small.draw .mt-cell {
+  opacity: 0.5;
+}
+
+.mt-small-owner {
+  position: absolute;
+  inset: 12%;
+  pointer-events: none;
+  animation: mt-take 0.32s var(--ease-out) both;
+}
+
+.mt-small-owner .mt-mark {
+  stroke-width: 2.6;
+}
+
+@keyframes mt-take {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* The game won: the three boards in a row stand out, the rest steps back. */
+.mt-play.over .mt-small {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.mt-play.over .mt-small.line {
+  opacity: 1;
+}
+
+.mt-play.over .mt-small.line.x {
+  background: color-mix(in srgb, var(--mt-x) 22%, var(--surface));
+}
+
+.mt-play.over .mt-small.line.o {
+  background: color-mix(in srgb, var(--mt-o) 22%, var(--surface));
+}
+
+.mt-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 18%;
+  border: 0;
+  border-radius: 5px;
+  background: var(--fill);
+  transition: background-color 0.15s var(--ease-out), transform 0.12s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mt-small.live .mt-cell:not(:disabled):active {
+  transform: scale(0.9);
+  background: var(--fill-2);
+}
+
+.mt-cell:disabled {
+  cursor: default;
+}
+
+.mt-cell.last {
+  background: var(--fill-2);
+}
+
+.mt-cell.in-line {
+  opacity: 0.4;
+}
+
+.mt-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.mt-foot .big-btn {
+  align-self: stretch;
+}
+
+.mt-info {
+  min-height: 2.7em;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+  animation: mt-info 0.2s var(--ease-out);
+}
+
+.mt-info.note {
+  color: var(--mt-turn);
+}
+
+@keyframes mt-info {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.mt-restart:disabled {
+  opacity: 0.35;
+}
+
+.mt-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mt-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 12px 6px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  box-shadow: inset 0 0 0 2px transparent;
+  transition: box-shadow 0.18s var(--ease-out);
+}
+
+.mt-pick-row.on {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.mt-pick-name {
+  flex: 1;
+}
+
+.mt-pick-mark {
+  width: 22px;
+  height: 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-mark path,
+  .mt-mark circle,
+  .mt-small-owner,
+  .mt-info {
+    animation: none;
   }
 }

@@ -43,7 +43,29 @@ export type FieldKind =
   | 'swap-drink'
   | 'mole'
   | 'mate'
-  | 'hands';
+  | 'hands'
+  | 'black'
+  | 'never'
+  | 'lie'
+  | 'battery'
+  | 'height'
+  | 'smokers'
+  | 'tattoo'
+  | 'stare'
+  | 'dare'
+  | 'cheers'
+  | 'nohands'
+  | 'couples'
+  | 'home'
+  | 'hair'
+  | 'eyes'
+  | 'chug'
+  | 'reflex'
+  | 'category'
+  | 'rhyme'
+  | 'glasses'
+  | 'neighbors'
+  | 'hydrate';
 
 /**
  * One field on the board. `n` is the field's setting where it has one: how many shots or sips,
@@ -102,6 +124,22 @@ const C = {
   gold: '#f2c94c',
   brown: '#a9744f',
 };
+
+/** "Everyone who … drinks 2": a field for the group, any of them can be "Choose one"'s pick. */
+const all = (emoji: string, color: string, label: () => string, title: () => string, text: () => string): FieldInfo => ({
+  emoji,
+  color,
+  group: 'everyone',
+  label,
+  title,
+  text,
+  choose: true,
+});
+
+const HAIR = [tx('Brunettes'), tx('Blondes'), tx('Black hair'), tx('Redheads')];
+const HAIR_TITLE = [tx('Brunettes drink'), tx('Blondes drink'), tx('Black hair drinks'), tx('Redheads drink')];
+const HAIR_TEXT = [tx('Everyone with brown hair drinks 2.'), tx('Everyone with blonde hair drinks 2.'), tx('Everyone with black hair drinks 2.'), tx('Everyone with red hair drinks 2.')];
+const pick = (list: string[], n: number) => t(list[n] ?? list[0]);
 
 const evenOdd: FieldParam = { values: [0, 1], def: 0, label: (n) => (n ? t('Odd') : t('Even')) };
 
@@ -492,6 +530,161 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Everyone hides a hand behind their back. On 3, 2, 1 it comes out, palm up or back of the hand up. The fewer drink 2.'),
     choose: true,
   },
+  black: all('🖤', C.grey, () => t('Black'), () => t('Wearing black'), () => t('Everyone wearing something black drinks 2.')),
+  never: {
+    emoji: '🙊',
+    color: C.lilac,
+    group: 'game',
+    label: () => t('Never have I ever'),
+    title: () => t('Never have I ever'),
+    text: () => t('Say “Never have I ever …” and something you’ve never done. Whoever has done it drinks 1.'),
+    choose: true,
+  },
+  lie: {
+    emoji: '🤥',
+    color: C.orange,
+    group: 'game',
+    label: () => t('2 truths, 1 lie'),
+    title: () => t('2 truths, 1 lie'),
+    text: () => t('Tell two truths and one lie about yourself. Whoever guesses wrong drinks 1. Nobody finds the lie: give out 3.'),
+    choose: true,
+  },
+  battery: all('🪫', C.lime, () => t('Battery'), () => t('Lowest battery drinks'), () => t('Everyone checks their phone: the lowest battery drinks 2.')),
+  height: {
+    emoji: '📏',
+    color: C.yellow,
+    group: 'everyone',
+    label: (n) => (n ? t('Tallest') : t('Shortest')),
+    title: (n) => (n ? t('Tallest drinks') : t('Shortest drinks')),
+    text: (n) => (n ? t('The tallest player drinks 2.') : t('The shortest player drinks 2.')),
+    choose: true,
+    param: { values: [0, 1], def: 0, label: (n) => (n ? t('Tallest') : t('Shortest')) },
+  },
+  // In the store app no tobacco (App Store rule 1.4.3): coffee instead, see i18n/store.ts.
+  smokers: all(storeSafe ? '☕' : '🚬', C.brown, () => t('Smokers'), () => t('Smokers drink'), () => t('Everyone who smokes drinks 2.')),
+  tattoo: all('🖋️', C.indigo, () => t('Tattoo'), () => t('Tattoos drink'), () => t('Everyone with a tattoo drinks 2.')),
+  stare: {
+    emoji: '👀',
+    color: C.blue,
+    group: 'game',
+    label: () => t('Staring contest'),
+    title: () => t('Staring contest'),
+    text: () => t('Pick a player and look each other in the eyes. Whoever blinks or laughs first drinks 2.'),
+    ace: true,
+    choose: true,
+  },
+  dare: {
+    emoji: '😈',
+    color: C.red,
+    group: 'drink',
+    label: () => t('Dare or drink'),
+    title: () => t('Dare or drink'),
+    text: () => t('The others set you a dare. Do it, or drink 3.'),
+    ace: true,
+    choose: true,
+  },
+  cheers: {
+    emoji: '🥂',
+    color: C.gold,
+    group: 'everyone',
+    label: () => t('Cheers'),
+    title: () => t('Everyone drinks'),
+    text: (n) => t('Cheers! Everyone drinks {n}.', { n }),
+    choose: true,
+    param: { values: [1, 2, 3], def: 2, label: (n) => t('{n} sips', { n }) },
+  },
+  nohands: {
+    emoji: '👐',
+    color: C.pink,
+    group: 'drink',
+    label: () => t('No hands'),
+    title: () => t('Shot with no hands'),
+    text: () => t('Down a shot without using your hands: hold the glass in your teeth.'),
+    ace: true,
+    choose: true,
+  },
+  couples: {
+    emoji: '💘',
+    color: C.red,
+    group: 'everyone',
+    label: (n) => (n ? t('Couples') : t('Singles')),
+    title: (n) => (n ? t('Couples drink') : t('Singles drink')),
+    text: (n) => (n ? t('Everyone in a relationship drinks 2.') : t('Everyone who’s single drinks 2.')),
+    choose: true,
+    param: { values: [0, 1], def: 0, label: (n) => (n ? t('Couples') : t('Singles')) },
+  },
+  home: {
+    emoji: '🏠',
+    color: C.indigo,
+    group: 'move',
+    label: () => t('Back to start'),
+    title: () => t('Back to start'),
+    text: () => t('All the way back to the start. Bad luck.'),
+    ace: true,
+  },
+  hair: {
+    emoji: '💇',
+    color: C.wood,
+    group: 'everyone',
+    label: (n) => pick(HAIR, n),
+    title: (n) => pick(HAIR_TITLE, n),
+    text: (n) => pick(HAIR_TEXT, n),
+    choose: true,
+    param: { values: [0, 1, 2, 3], def: 0, label: (n) => pick(HAIR, n) },
+  },
+  eyes: {
+    emoji: '👁️',
+    color: C.teal,
+    group: 'everyone',
+    label: (n) => (n ? t('Blue eyes') : t('Green eyes')),
+    title: (n) => (n ? t('Blue eyes drink') : t('Green eyes drink')),
+    text: (n) => (n ? t('Everyone with blue eyes drinks 2.') : t('Everyone with green eyes drinks 2.')),
+    choose: true,
+    param: { values: [0, 1], def: 0, label: (n) => (n ? t('Blue eyes') : t('Green eyes')) },
+  },
+  chug: {
+    emoji: '⏱️',
+    color: C.red,
+    group: 'drink',
+    label: (n) => t('{n}-second chug', { n }),
+    title: (n) => t('{n}-second chug', { n }),
+    text: (n) => t('Drink without stopping for {n} seconds. The others count.', { n }),
+    ace: true,
+    choose: true,
+    param: { values: [5, 10], def: 5, label: (n) => t('{n} seconds', { n }) },
+  },
+  reflex: {
+    emoji: '🙋',
+    color: C.orange,
+    group: 'everyone',
+    label: (n) => (n ? t('Floor') : t('Hands up')),
+    title: (n) => (n ? t('Touch the floor!') : t('Hands up!')),
+    text: (n) =>
+      n ? t('Shout it: everyone touches the floor. Whoever is last drinks 2.') : t('Shout it: everyone throws their hands up. Whoever is last drinks 2.'),
+    choose: true,
+    param: { values: [0, 1], def: 0, label: (n) => (n ? t('Floor') : t('Hands up')) },
+  },
+  category: {
+    emoji: '🗂️',
+    color: C.lilac,
+    group: 'game',
+    label: () => t('Category'),
+    title: () => t('Category'),
+    text: () => t('Pick a category (car brands, cities …). In turn, everyone names something in it, you start. Whoever repeats one or can’t think of one drinks 2.'),
+    choose: true,
+  },
+  rhyme: {
+    emoji: '🎤',
+    color: C.mint,
+    group: 'game',
+    label: () => t('Rhyme'),
+    title: () => t('Rhyme round'),
+    text: () => t('Say a word. In turn, everyone says one that rhymes with it. Whoever repeats one or can’t find one drinks 2.'),
+    choose: true,
+  },
+  glasses: all('👓', C.blue, () => t('Glasses'), () => t('Glasses drink'), () => t('Everyone wearing glasses drinks 2.')),
+  neighbors: all('👥', C.teal, () => t('Neighbours'), () => t('Neighbours drink'), () => t('The players on your left and right drink 2.')),
+  hydrate: all('💧', C.blue, () => t('Water break'), () => t('Water break'), () => t('Everyone has a glass of water before the game goes on.')),
 };
 
 /** The field kinds in the order the board editor lists them. */
