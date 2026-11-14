@@ -122,7 +122,7 @@ function Match({ pair, onSwap }: { pair: [Player, Player]; onSwap: () => void })
           : t('{name}: free choice, any open board', { name: who(g.turn).name })));
 
   return (
-    <div className={`bd mt-play turn-${g.turn === 'X' ? 'x' : 'o'}${g.winner ? ' over' : ''}`}>
+    <div className={`bd mt-play turn-${g.turn === 'X' ? 'x' : 'o'}${g.winner ? ' over' : ''}${known ? ' known' : ''}`}>
       {g.winner && <Finished game="mega-ttt" players={pair} />}
       <div className="mt-players">
         {(['X', 'O'] as Mark[]).map((m) => {

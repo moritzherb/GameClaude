@@ -17195,6 +17195,12 @@ html[data-look] .play-screen > .top-bar .round-btn {
   color: var(--mt-turn);
 }
 
+/* Nothing to say about where to play: Restart right under the board, what happens (a board won,
+   who drinks) under it, in the room kept for it, so nothing moves when it shows. */
+.mt-play.known:not(.over) .mt-info {
+  order: 1;
+}
+
 @keyframes mt-info {
   from {
     opacity: 0;
