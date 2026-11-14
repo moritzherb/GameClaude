@@ -6,6 +6,7 @@ import Editor from './Editor';
 import { pawnById, PAWNS, type PawnDef } from './pawns';
 import Play from './Play';
 import Setup from './Setup';
+import { useCrewButton } from '../../lib/turn';
 
 /** Everyone's pawn: the one they had last time, else the next free classic one. */
 function pawnsFor(ids: string[]): Record<string, PawnDef> {
@@ -51,6 +52,8 @@ export default function Party({ players, exit }: GameProps) {
   const [drafts, setDrafts] = useState(savedDrafts);
   const [game, setGame] = useState(0);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
+  // The crew button on the setup (board and pawns), not in the editor or the game.
+  useCrewButton(!editing && !game ? 'crew' : null);
 
   if (editing) {
     return (

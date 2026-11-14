@@ -8,6 +8,7 @@ import { buzz, celebrate, sfx } from '../../lib/fx';
 import type { Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { canPlay, newGame, other, play, playable, type Game, type Mark } from './logic';
+import { useCrewButton } from '../../lib/turn';
 
 /** Where each small board lies, said the way players say it. */
 const PLACES = ['top left', 'top', 'top right', 'left', 'middle', 'right', 'bottom left', 'bottom', 'bottom right'] as const;
@@ -26,6 +27,7 @@ const PLACE_NAME: Record<(typeof PLACES)[number], string> = {
 export default function MegaTicTacToe({ players }: GameProps) {
   // Who plays: the first two picked (X starts). With exactly two, straight in.
   const [pair, setPair] = useState<[Player, Player] | null>(() => (players.length === 2 ? [players[0], players[1]] : null));
+  useCrewButton(pair ? null : 'crew');
   if (!pair) return <PickTwo players={players} onPick={setPair} />;
   return <Match pair={pair} onSwap={() => setPair([pair[1], pair[0]])} />;
 }

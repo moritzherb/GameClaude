@@ -6,7 +6,7 @@ import { t } from '../../i18n';
 import { rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { useTurnBubble, useYourTurn } from '../../lib/turn';
+import { useCrewButton, useTurnBubble, useYourTurn } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { draw, fitsDown, newGame, nextRound, place, slotFor, swapsJack, takeDiscard, toss, usable, type Game, type Who } from './logic';
@@ -38,6 +38,7 @@ export default function Trash({ players, exit }: GameProps) {
   const [dealer, setDealer] = useState<Who>(() => pick([0, 1] as Who[]));
   const [g, setG] = useState<Game | null>(null);
   const two = pair.map((id) => players.find((p) => p.id === id)).filter((p): p is Player => !!p);
+  useCrewButton(!g || two.length < 2 ? 'crew' : null);
 
   /* ---------- Setup ---------- */
   if (!g || two.length < 2) {

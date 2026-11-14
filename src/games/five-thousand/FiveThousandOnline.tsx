@@ -8,6 +8,7 @@ import { FiveThousandTable } from './FiveThousand';
 import { newGame, type Game } from './logic';
 import Avatar from '../../components/Avatar';
 import { usePhotoOf } from '../../net/photos';
+import { useCrewButton } from '../../lib/turn';
 
 interface Shared {
   g: Game | null;
@@ -24,6 +25,7 @@ export default function FiveThousandOnline() {
   const known = useApp().knows('five-thousand');
   const online = room.members.filter((m) => m.online);
   const [starterId, setStarterId] = useState<string | null>(null);
+  useCrewButton((!state.g || state.seats.length < 2) && isHost ? 'room' : null);
 
   /* ---------- Lobby ---------- */
   if (!state.g || state.seats.length < 2) {

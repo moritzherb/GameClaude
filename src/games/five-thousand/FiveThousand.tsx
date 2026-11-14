@@ -6,7 +6,7 @@ import Tap from '../../components/Tap';
 import { getLang, t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { usePlaying, useTurnBubble, useYourTurn } from '../../lib/turn';
+import { useCrewButton, usePlaying, useTurnBubble, useYourTurn } from '../../lib/turn';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Finished from '../../components/Finished';
@@ -41,6 +41,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const [roster, setRoster] = useState(players);
   const [picked, setPicked] = useState<number[]>([]);
   usePlaying(!!g);
+  useCrewButton(g ? null : 'crew');
 
   /* ---------- Setup: who starts ---------- */
   if (!g) {

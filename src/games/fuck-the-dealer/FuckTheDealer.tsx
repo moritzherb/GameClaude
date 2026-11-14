@@ -19,6 +19,7 @@ import { direction, guess, MISSES_TO_PASS, newGame, next, nextGuesser, possible,
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
 import { usePhotoOf } from '../../net/photos';
+import { useCrewButton } from '../../lib/turn';
 
 /*
  * Played with two phones in a room: the host's phone lies in the middle as the table and
@@ -135,6 +136,8 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
   const known = useApp().knows('fuck-the-dealer');
   const [dealerId, setDealerId] = useState(() => (players.length ? pick(players).id : ''));
   const decks = room.members.filter((m) => !m.host && m.online);
+  // The players are this phone's crew (the other phone is just the deck).
+  useCrewButton('crew');
   const enough = players.length >= 2;
   return (
     <div className="bd">

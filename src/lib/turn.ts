@@ -21,6 +21,20 @@ export function usePlaying(on: boolean) {
   useEffect(() => () => set(null), [set]);
 }
 
+/**
+ * The crew button in the bar: only on a game's setup menu (who deals, the stakes, the mode …), to
+ * add someone before it starts; never while it's being played. 'crew': the players on this phone;
+ * 'room': a room game whose players are the phones in the room (its code to join).
+ */
+export type CrewButton = 'crew' | 'room' | null;
+export const CrewButtonContext = createContext<(kind: CrewButton) => void>(() => {});
+
+export function useCrewButton(kind: CrewButton) {
+  const set = useContext(CrewButtonContext);
+  useEffect(() => set(kind), [set, kind]);
+  useEffect(() => () => set(null), [set]);
+}
+
 /** Set by the game, shown by the bar around it (see GameBar). */
 export const TurnContext = createContext<(p: TurnPlayer | null) => void>(() => {});
 
