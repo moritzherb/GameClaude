@@ -5,7 +5,7 @@ import BigButton from '../../components/BigButton';
 import Finished from '../../components/Finished';
 import { t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
-import type { Player } from '../../state/AppState';
+import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
 import { canPlay, newGame, other, play, playable, type Game, type Mark } from './logic';
 import { useCrewButton } from '../../lib/turn';
@@ -74,6 +74,8 @@ function Match({ pair, onSwap }: { pair: [Player, Player]; onSwap: () => void })
   const [g, setG] = useState<Game>(() => newGame());
   const [note, setNote] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  // "We know the games": no telling where to play, only what happened.
+  const known = useApp().knows('mega-ttt');
   const who = (m: Mark) => (m === 'X' ? pair[0] : pair[1]);
   const open = playable(g);
 
@@ -111,7 +113,9 @@ function Match({ pair, onSwap }: { pair: [Player, Player]; onSwap: () => void })
       ? t('A draw: every board is decided, no three in a row')
       : t('{name} wins! {other} drinks 3', { name: who(g.winner).name, other: loser!.name })
     : (note ??
-      (g.next != null
+      (known
+        ? ''
+        : g.next != null
         ? t('{name}: play in {place}', { name: who(g.turn).name, place: t(PLACE_NAME[PLACES[g.next]]) })
         : g.moves === 0
           ? t('{name} starts: anywhere', { name: who(g.turn).name })

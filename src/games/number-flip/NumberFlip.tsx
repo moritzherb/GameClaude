@@ -29,18 +29,25 @@ import {
 } from './logic';
 import FeltDice, { THROW_MS } from './FeltDice';
 
-/** The box in 3D: three.js, loaded on its own when the game opens. */
-const Box3DView = lazy(() => import('./Box3DView'));
-const loadBox3D = () => import('./Box3DView');
+/** The box in 3D: three.js, loaded on its own when the game opens (kept once it's there). */
+let box3d: typeof import('./Box3DView') | null = null;
+const loadBox3D = () => import('./Box3DView').then((mod) => (box3d = mod));
+const Box3DLazy = lazy(loadBox3D);
 
-/** Whether this phone draws 3D (WebGL). */
+/** Whether this phone draws 3D (WebGL); asked once. */
+let webgl: boolean | null = null;
 function canDraw3D() {
-  try {
-    const c = document.createElement('canvas');
-    return !!(c.getContext('webgl2') || c.getContext('webgl'));
-  } catch {
-    return false;
+  if (webgl == null) {
+    try {
+      const c = document.createElement('canvas');
+      const gl = c.getContext('webgl2') || c.getContext('webgl');
+      webgl = !!gl;
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch {
+      webgl = false;
+    }
   }
+  return webgl;
 }
 import { woodVars } from './wood';
 import { useCrewButton } from '../../lib/turn';
@@ -130,14 +137,16 @@ function SetupScreen({ setup, onChange, solo, onStart }: { setup: Setup; onChang
     onChange({ ...setup, ...patch });
   };
   const mode = solo && setup.mode === 'survival' ? 'classic' : setup.mode;
-  // The box's wood takes a moment to draw: done while the setup shows, not when the game starts.
+  // The box takes a moment to build: done while the setup shows, not when the game starts.
+  const size = setup.size;
   useEffect(() => {
     const id = window.setTimeout(() => {
-      woodVars();
-      void loadBox3D();
-    }, 120);
+      if (!canDraw3D()) woodVars();
+      else void loadBox3D().then((mod) => mod.prepareBox3D(size));
+    }, 300);
     return () => window.clearTimeout(id);
-  }, []);
+  }, [size]);
+  useEffect(() => () => box3d?.dropBox3D(), []);
   return (
     <div className="bd nf-setup">
       <section className="section">
@@ -214,8 +223,9 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   const [nope, setNope] = useState<number | null>(null);
   /** The flaps falling right now, in the order they go. */
   const [falling, setFalling] = useState<number[]>([]);
-  // The box in 3D where the phone can; else the flat one.
+  // The box in 3D where the phone can; else the flat one. Already loaded (in the setup): straight in.
   const [three, setThree] = useState(canDraw3D);
+  const [Box3DView] = useState(() => box3d?.default ?? Box3DLazy);
   const [now, setNow] = useState(() => Date.now());
 
   const update = (fn: (x: Match) => Match) => setM((x) => (x ? fn(x) : x));
@@ -386,7 +396,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
     </>
   );
   const flapState = { open: box.open, picked: box.picked, falling, interactive: !!dice && !box.rolling && !box.over && !falling.length && m.phase === 'turn' };
-  const flatBox = (
+  const flatBox = () => (
         <div className={`nf-box size-${setup.size}`} style={woodVars() as CSSProperties}>
           {(setup.size === 12 ? [flaps(12).slice(0, 6), flaps(12).slice(6)] : [flaps(9)]).map((row) => (
             <div key={row[0]} className="nf-flaps">
@@ -445,7 +455,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
       </div>
 
       {three ? (
-        <Suspense fallback={flatBox}>
+        <Suspense fallback={<div className={`nf-stage size-${setup.size}`}><div className="nf-canvas-host" /></div>}>
           <Box3DView
             size={setup.size}
             flaps={flapState}
@@ -473,7 +483,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
           </div>
         </Suspense>
       ) : (
-        flatBox
+        flatBox()
       )}
 
       <div className="nf-actions">
