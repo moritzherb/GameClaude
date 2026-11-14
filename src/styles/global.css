@@ -16389,35 +16389,85 @@ html[data-look] .play-screen > .top-bar .round-btn {
   display: none;
 }
 
-/* The box: a frame of warm wood, the flaps standing in a dark slot, felt below. */
+/* The box: a walnut frame (its sides mitred at the corners, grain running along each piece), the
+   maple flaps standing in a dark slot on a brass rod, felt below. The wood is drawn (wood.ts). */
 .nf-box {
-  --wood: #9a6136;
-  --wood-dark: #6e4223;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin: 0 -8px;
-  padding: 12px 10px 10px;
-  border-radius: 18px;
+  padding: 12px;
+  border-radius: 10px;
+  overflow: hidden;
   background:
-    repeating-linear-gradient(92deg, rgba(255, 235, 200, 0.05) 0 2px, transparent 2px 7px),
-    repeating-linear-gradient(88deg, rgba(60, 25, 5, 0.08) 0 1px, transparent 1px 11px),
-    linear-gradient(180deg, var(--wood), var(--wood-dark));
+    linear-gradient(180deg, rgba(255, 236, 205, 0.18), rgba(255, 236, 205, 0) 24%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.24)),
+    var(--nf-frame) center / cover;
+  background-color: #7d4b26;
   box-shadow:
-    inset 0 1px 0 rgba(255, 230, 190, 0.35),
-    inset 0 -2px 0 rgba(40, 18, 4, 0.35),
-    0 18px 30px -18px rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 rgba(255, 232, 196, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 34px -18px rgba(0, 0, 0, 0.75);
+}
+
+/* The two sides, grain standing up, cut at 45° where they meet the top and bottom. */
+.nf-box::before,
+.nf-box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  background:
+    linear-gradient(90deg, rgba(255, 236, 205, 0.14), rgba(0, 0, 0, 0.16)),
+    var(--nf-frame-up) center / cover;
+  background-color: #7d4b26;
+}
+
+.nf-box::before {
+  left: 0;
+  clip-path: polygon(0 0, 100% 12px, 100% calc(100% - 12px), 0 100%);
+  box-shadow: inset 1px 0 0 rgba(255, 232, 196, 0.3);
+}
+
+.nf-box::after {
+  right: 0;
+  clip-path: polygon(0 12px, 100% 0, 100% 100%, 0 calc(100% - 12px));
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.35);
+}
+
+.nf-flaps,
+.nf-felt {
+  z-index: 1;
 }
 
 .nf-flaps {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 3px;
   padding: 10px 6px 6px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #2a170a, #3e2412);
-  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #170c04, #2a170a);
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.75),
+    inset 0 -1px 0 rgba(255, 220, 170, 0.08),
+    0 1px 0 rgba(255, 230, 190, 0.25);
   perspective: 420px;
+}
+
+/* The brass rod the flaps hang on: it shows between them, and under a flap that's down. */
+.nf-flaps::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 9px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #fbe3a4 0%, #c79a45 45%, #7a5719 100%);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
 }
 
 .nf-box.size-12 .nf-flaps {
@@ -16427,19 +16477,29 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-flap {
   position: relative;
+  z-index: 1;
   height: clamp(52px, 9dvh, 72px);
   min-width: 0;
   padding: 0;
   border: 0;
-  border-radius: 5px 5px 2px 2px;
-  background: linear-gradient(180deg, #f6e0b5 0%, #e7c58c 70%, #d7ae70 100%);
+  border-radius: 3px 3px 2px 2px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 32%, rgba(0, 0, 0, 0) 70%, rgba(96, 54, 18, 0.24)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 100%;
+  background-color: #e7c58c;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -3px 0 rgba(120, 70, 25, 0.35),
-    0 2px 2px rgba(0, 0, 0, 0.35);
-  color: #3b2411;
-  font: 700 clamp(18px, 6vw, 26px) / 1 var(--font-display);
+    inset 1px 0 0 rgba(255, 246, 228, 0.45),
+    inset -1px 0 0 rgba(120, 70, 25, 0.35),
+    inset 0 1px 0 rgba(255, 250, 236, 0.75),
+    inset 0 -2px 0 rgba(110, 62, 20, 0.45),
+    0 2px 3px rgba(0, 0, 0, 0.5);
+  /* Burnt into the wood. */
+  color: #3a210e;
+  font: 800 clamp(18px, 6vw, 26px) / 1 var(--font-display);
   font-variant-numeric: lining-nums;
+  text-shadow:
+    0 0 1px rgba(58, 33, 14, 0.55),
+    0 1px 0 rgba(255, 240, 214, 0.45);
   transform-origin: 50% 100%;
   transition:
     transform 0.42s var(--ease-out),
@@ -16474,7 +16534,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 /* Flipped: laid down into the slot, its number turned away. */
 .nf-flap.down {
   transform: rotateX(76deg);
-  filter: brightness(0.62) saturate(0.8);
+  filter: brightness(0.6) sepia(0.25);
   box-shadow: none;
 }
 
@@ -16508,9 +16568,14 @@ html[data-look] .play-screen > .top-bar .round-btn {
   gap: 10px;
   min-height: clamp(128px, 22dvh, 176px);
   padding: 18px 12px 12px;
-  border-radius: 10px;
-  background: radial-gradient(130% 110% at 50% 25%, #2f7d5a 0%, #22603f 55%, #194a31 100%);
-  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  background:
+    var(--nf-felt) 0 0 / 128px 128px,
+    radial-gradient(130% 110% at 50% 25%, #2f7d5a 0%, #22603f 55%, #194a31 100%);
+  box-shadow:
+    inset 0 5px 12px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 230, 190, 0.25);
   overflow: hidden;
 }
 

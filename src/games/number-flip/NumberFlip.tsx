@@ -27,6 +27,7 @@ import {
   type Level,
   type Mode,
 } from './logic';
+import { woodVars } from './wood';
 
 interface Setup {
   mode: Mode;
@@ -109,6 +110,11 @@ function SetupScreen({ setup, onChange, solo, onStart }: { setup: Setup; onChang
     onChange({ ...setup, ...patch });
   };
   const mode = solo && setup.mode === 'survival' ? 'classic' : setup.mode;
+  // The box's wood takes a moment to draw: done while the setup shows, not when the game starts.
+  useEffect(() => {
+    const id = window.setTimeout(woodVars, 120);
+    return () => window.clearTimeout(id);
+  }, []);
   return (
     <div className="bd nf-setup">
       <section className="section">
@@ -329,7 +335,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
         })}
       </div>
 
-      <div className={`nf-box size-${setup.size}`}>
+      <div className={`nf-box size-${setup.size}`} style={woodVars() as CSSProperties}>
         <div className="nf-flaps">
           {flaps(setup.size).map((n) => {
             const down = !box.open.includes(n);
@@ -339,6 +345,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
                 key={n}
                 type="button"
                 className={`nf-flap${down ? ' down' : ''}${picked ? ' picked' : ''}${nope === n ? ' nope' : ''}`}
+                style={{ '--gx': `${-((n * 67) % 300)}px` } as CSSProperties}
                 aria-label={down ? t('{n}, flipped', { n }) : String(n)}
                 aria-pressed={picked}
                 disabled={down || !dice || box.rolling || box.over}
