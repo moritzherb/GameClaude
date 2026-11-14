@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { t } from '../i18n';
 import { useTopTint } from '../lib/useTopTint';
 
 /**
  * The phone's alert, asking before something can't be undone: a title, a line, the action (red)
- * and Cancel. Escape or a tap beside it cancels. Same look as the one on the home screen.
+ * and Cancel. Escape or a tap beside it cancels. Same look as the one on the home screen. It lies
+ * over everything, outside the screen it's asked from, so that screen's layout doesn't move.
  */
 export default function Alert({
   title,
@@ -42,7 +44,7 @@ export default function Alert({
     };
   }, []);
 
-  return (
+  return createPortal(
     <div ref={wrap} className="sheet-backdrop os-alert-wrap" onClick={(e) => e.target === e.currentTarget && onCancel()}>
       <div className="os-alert" role="alertdialog" aria-modal="true" aria-labelledby="alert-title" aria-describedby="alert-text">
         <div className="os-alert-text">
@@ -56,6 +58,7 @@ export default function Alert({
           {t('Cancel')}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -27,6 +27,7 @@ import {
   type Level,
   type Mode,
 } from './logic';
+import FeltDice, { THROW_MS } from './FeltDice';
 import { woodVars } from './wood';
 
 interface Setup {
@@ -74,7 +75,10 @@ interface Match {
   phase: 'turn' | 'handover' | 'round' | 'over';
 }
 
-const ROLL_MS = 900;
+const ROLL_MS = THROW_MS + 60;
+/** A flap falling into the box, and the next one after it (ms). */
+const FALL_MS = 640;
+const STAGGER = 90;
 
 export default function NumberFlip({ players }: GameProps) {
   const known = useApp().knows('number-flip');
@@ -189,6 +193,8 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   const daily = useMemo(() => (setup.mode === 'daily' ? dailyRolls(today(), setup.size) : null), [setup.mode, setup.size]);
   const [oneDie, setOneDie] = useState(false);
   const [nope, setNope] = useState<number | null>(null);
+  /** The flaps falling right now, in the order they go. */
+  const [falling, setFalling] = useState<number[]>([]);
   const [now, setNow] = useState(() => Date.now());
 
   const update = (fn: (x: Match) => Match) => setM((x) => (x ? fn(x) : x));
@@ -238,7 +244,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   };
 
   const tap = (n: number) => {
-    if (m.phase !== 'turn' || box.over || box.rolling || !box.dice || !box.open.includes(n)) return;
+    if (m.phase !== 'turn' || box.over || box.rolling || !box.dice || falling.length || !box.open.includes(n)) return;
     const dice = box.dice;
     if (box.picked.includes(n)) {
       sfx.tick();
@@ -254,21 +260,31 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
     }
     sfx.tick();
     buzz(10);
-    if (!isMove(box.open, dice, setup.level, pick)) {
-      setBox({ picked: pick });
-      return;
-    }
-    // A whole move: the flaps go down.
-    const open = box.open.filter((k) => !pick.includes(k));
-    sfx.pop();
-    buzz(25);
-    if (open.length === 0) {
-      celebrate();
-      update((x) => endTurn({ ...x, box: { ...x.box, open, picked: [], dice: null } }));
-      return;
-    }
-    setOneDie(oneDieAllowed(open) && oneDie);
-    setBox({ open, picked: [], dice: null });
+    setBox({ picked: pick });
+  };
+
+  /** The picked flaps go down, one after the other; then roll again (or the box is shut). */
+  const flipDown = () => {
+    if (m.phase !== 'turn' || box.over || box.rolling || !box.dice || falling.length || !isMove(box.open, box.dice, setup.level, box.picked)) return;
+    const order = [...box.picked].sort((a, b) => a - b);
+    const open = box.open.filter((k) => !order.includes(k));
+    setFalling(order);
+    setBox({ open, picked: [] });
+    // Each one lands with a knock.
+    order.forEach((_, i) =>
+      window.setTimeout(() => {
+        sfx.tick();
+        buzz(14);
+      }, FALL_MS * 0.55 + STAGGER * i),
+    );
+    window.setTimeout(() => {
+      setFalling([]);
+      setOneDie((one) => oneDieAllowed(open) && one);
+      if (open.length === 0) {
+        celebrate();
+        update((x) => endTurn({ ...x, box: { ...x.box, dice: null } }));
+      } else setBox({ dice: null });
+    }, FALL_MS + STAGGER * (order.length - 1) + 60);
   };
 
   const nextTurn = () => {
@@ -296,12 +312,13 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
 
   const dice = box.dice;
   const total = dice ? sum(dice) : 0;
-  const mayOne = oneDieAllowed(box.open) && !dice && !box.over;
+  const mayOne = oneDieAllowed(box.open) && !dice && !box.over && !falling.length;
+  const ready = !!dice && !box.rolling && !falling.length && isMove(box.open, dice, setup.level, box.picked);
   const hint = box.over
     ? box.open.length === 0
       ? t('Box shut! Perfect.')
       : t('No move left: {n} stays open', { n: score(box.open) })
-    : box.rolling
+    : box.rolling || known
       ? ''
       : dice
         ? setup.level === 'hard'
@@ -312,9 +329,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
             ? t('{n} more', { n: total - sum(box.picked) })
             : t('Flip flaps that add up to {n}', { n: total })
         : box.rolls === 0
-          ? known
-            ? ''
-            : t('Roll, then flip flaps that add up to the dice')
+          ? t('Roll, then flip flaps that add up to the dice')
           : t('{n} still open', { n: score(box.open) });
 
   return (
@@ -345,10 +360,10 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
                 key={n}
                 type="button"
                 className={`nf-flap${down ? ' down' : ''}${picked ? ' picked' : ''}${nope === n ? ' nope' : ''}`}
-                style={{ '--gx': `${-((n * 67) % 300)}px` } as CSSProperties}
+                style={{ '--gx': `${-((n * 67) % 300)}px`, '--d': `${Math.max(0, falling.indexOf(n)) * STAGGER}ms` } as CSSProperties}
                 aria-label={down ? t('{n}, flipped', { n }) : String(n)}
                 aria-pressed={picked}
-                disabled={down || !dice || box.rolling || box.over}
+                disabled={down || !dice || box.rolling || box.over || falling.length > 0}
                 onClick={() => tap(n)}
               >
                 <span className="nf-flap-face">{n}</span>
@@ -363,11 +378,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
               <span className="nf-clock-n">{Math.ceil(left)}</span>
             </div>
           )}
-          <div className="nf-dice">
-            {(dice ?? [null, null]).map((v, i) => (
-              <Die key={`${i}-${box.rolls}`} value={v} rolling={box.rolling} index={i} />
-            ))}
-          </div>
+          <FeltDice values={dice} rolls={box.rolls} />
           <div className="nf-hint-row">
             {mayOne ? (
               <div className="nf-one" role="radiogroup" aria-label={t('How many dice')}>
@@ -392,8 +403,8 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
             {t('Pass to {name}', { name: byId(m.order[m.turn + 1]).name })}
           </BigButton>
         ) : (
-          <BigButton size="xl" disabled={!!dice || box.rolling || box.over} onClick={roll}>
-            {box.rolling ? t('Rolling …') : dice ? t('Flip your flaps') : t('Roll')}
+          <BigButton size="xl" disabled={dice ? !ready : box.rolling || box.over || falling.length > 0} onClick={dice ? flipDown : roll}>
+            {box.rolling ? t('Rolling …') : dice ? t('Flip down') : t('Roll')}
           </BigButton>
         )}
       </div>
@@ -560,35 +571,5 @@ function RoundEnd({
         )}
       </div>
     </div>
-  );
-}
-
-/* ---------- A die on the felt ---------- */
-
-const PIPS: Record<number, number[]> = {
-  1: [4],
-  2: [0, 8],
-  3: [0, 4, 8],
-  4: [0, 2, 6, 8],
-  5: [0, 2, 4, 6, 8],
-  6: [0, 2, 3, 5, 6, 8],
-};
-
-function Die({ value, rolling, index }: { value: number | null; rolling: boolean; index: number }) {
-  const [face, setFace] = useState(value ?? 1);
-  useEffect(() => {
-    if (!rolling) {
-      if (value) setFace(value);
-      return;
-    }
-    const id = window.setInterval(() => setFace(1 + Math.floor(Math.random() * 6)), 80);
-    return () => window.clearInterval(id);
-  }, [rolling, value]);
-  return (
-    <span className={`nf-die${rolling ? ' rolling' : ''}${value == null ? ' idle' : ''}`} style={{ '--i': index } as CSSProperties} aria-label={value && !rolling ? String(value) : undefined}>
-      {Array.from({ length: 9 }, (_, i) => (
-        <span key={i} className={`nf-pip${PIPS[face].includes(i) ? ' on' : ''}`} />
-      ))}
-    </span>
   );
 }

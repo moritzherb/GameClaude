@@ -16524,22 +16524,62 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 .nf-flap.picked {
-  transform: translateY(-6px);
+  transform: translateY(-7px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     0 0 0 3px var(--accent),
     0 8px 12px -4px rgba(0, 0, 0, 0.5);
 }
 
-/* Flipped: laid down into the slot, its number turned away. */
+/* Flipped: it tips back on its hinge, falls faster and faster, knocks on the bottom of the box,
+   bounces a little and lies there, its number turned away. */
 .nf-flap.down {
   transform: rotateX(76deg);
   filter: brightness(0.6) sepia(0.25);
   box-shadow: none;
+  transition: none;
+  animation: nf-fall 0.64s var(--d, 0ms) both;
 }
 
 .nf-flap.down .nf-flap-face {
   opacity: 0;
+  animation: nf-face-away 0.64s var(--d, 0ms) both;
+}
+
+@keyframes nf-fall {
+  0% {
+    transform: translateY(-7px) rotateX(0deg);
+    filter: brightness(1) sepia(0);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45);
+  }
+  55% {
+    transform: translateY(0) rotateX(90deg);
+    filter: brightness(0.5) sepia(0.25);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  72% {
+    transform: translateY(0) rotateX(64deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+  }
+  86% {
+    transform: translateY(0) rotateX(82deg);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  100% {
+    transform: translateY(0) rotateX(76deg);
+    filter: brightness(0.6) sepia(0.25);
+  }
+}
+
+@keyframes nf-face-away {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .nf-flap.nope {
@@ -16581,57 +16621,41 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-dice {
   display: flex;
-  gap: 18px;
-  min-height: 56px;
+  gap: 22px;
+  min-height: 60px;
+  transition: opacity 0.3s var(--ease-out);
 }
 
-.nf-die {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 4px;
-  width: 56px;
-  height: 56px;
-  padding: 10px;
-  border-radius: 13px;
-  background: linear-gradient(160deg, #ffffff, #ece7dc);
-  box-shadow:
-    inset 0 -3px 0 rgba(0, 0, 0, 0.12),
-    0 8px 14px -6px rgba(0, 0, 0, 0.6);
+.nf-dice.idle {
+  opacity: 0.4;
 }
 
-.nf-die.idle {
-  opacity: 0.35;
+.nf-die3d {
+  position: relative;
+  width: 60px;
+  height: 60px;
 }
 
-.nf-die.idle .nf-pip.on {
-  background: #b9b2a3;
+.nf-die3d-body,
+.nf-die3d-shadow {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
 
-.nf-pip.on {
+.nf-die3d-body canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Its shadow on the felt: small and faint while it's in the air. */
+.nf-die3d-shadow {
+  inset: auto 6px -2px;
+  height: 14px;
   border-radius: 50%;
-  background: #1d1b16;
-}
-
-.nf-die.rolling {
-  animation: nf-roll 0.9s var(--ease-out) both;
-  animation-delay: calc(var(--i) * 60ms);
-}
-
-@keyframes nf-roll {
-  0% {
-    transform: translate(-140px, 30px) rotate(-320deg);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  70% {
-    transform: translate(6px, -4px) rotate(12deg);
-  }
-  100% {
-    transform: none;
-  }
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
 }
 
 .nf-hint-row {
@@ -16777,8 +16801,9 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nf-die.rolling,
-  .nf-flap.nope {
+  .nf-flap.nope,
+  .nf-flap.down,
+  .nf-flap.down .nf-flap-face {
     animation: none;
   }
   .nf-flap {
@@ -16875,19 +16900,6 @@ html[data-look] .play-screen > .top-bar .round-btn {
   box-shadow: inset 0 0 0 2px var(--mt-o);
 }
 
-/* The turn indicator: a small tab on top of whoever is on. */
-.mt-player.on::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  width: 28px;
-  height: 5px;
-  margin-left: -14px;
-  border-radius: 3px 3px 0 0;
-  background: var(--mt-turn);
-}
-
 .mt-player-text {
   display: flex;
   flex: 1;
@@ -16933,7 +16945,8 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .mt-big {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 7px;
   width: min(100%, calc(100dvh - 290px));
   aspect-ratio: 1;
@@ -16943,7 +16956,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .mt-small {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  min-height: 0;
   gap: 3px;
   padding: 4px;
   border-radius: 10px;
@@ -16959,6 +16975,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .mt-small.owned {
   opacity: 1;
+}
+
+.mt-small .mt-cell {
+  transition: opacity 0.4s var(--ease-out), background-color 0.15s var(--ease-out), transform 0.12s var(--ease-out);
 }
 
 .mt-small.owned .mt-cell {
@@ -16977,7 +16997,18 @@ html[data-look] .play-screen > .top-bar .round-btn {
   position: absolute;
   inset: 12%;
   pointer-events: none;
-  animation: mt-take 0.32s var(--ease-out) both;
+  will-change: transform, opacity;
+  animation: mt-take 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mt-small-owner .mt-mark path,
+.mt-small-owner .mt-mark circle {
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.mt-small-owner .mt-mark path + path {
+  animation-delay: 0.16s;
 }
 
 .mt-small-owner .mt-mark {
@@ -16986,7 +17017,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 @keyframes mt-take {
   from {
-    transform: scale(0.6);
+    transform: scale(0.82);
     opacity: 0;
   }
 }
@@ -17010,10 +17041,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 .mt-cell {
-  display: grid;
-  place-items: center;
+  position: relative;
   min-width: 0;
-  padding: 18%;
+  min-height: 0;
+  padding: 0;
   border: 0;
   border-radius: 5px;
   background: var(--fill);
@@ -17024,6 +17055,13 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .mt-small.live .mt-cell:not(:disabled):active {
   transform: scale(0.9);
   background: var(--fill-2);
+}
+
+.mt-cell .mt-mark {
+  position: absolute;
+  inset: 20%;
+  width: auto;
+  height: auto;
 }
 
 .mt-cell:disabled {
@@ -17043,6 +17081,8 @@ html[data-look] .play-screen > .top-bar .round-btn {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  /* Always as tall: two lines of info and a button's height, whatever shows. */
+  height: 112px;
 }
 
 .mt-foot .big-btn {
@@ -17050,7 +17090,8 @@ html[data-look] .play-screen > .top-bar .round-btn {
 }
 
 .mt-info {
-  min-height: 2.7em;
+  height: 2.7em;
+  overflow: hidden;
   margin: 0;
   font-size: 15px;
   font-weight: 600;
