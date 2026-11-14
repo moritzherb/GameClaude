@@ -16229,9 +16229,31 @@ html[data-look] .play-screen > .top-bar .round-btn {
   text-wrap: pretty;
 }
 
+.nf-mode-texts,
+.nf-opt-notes {
+  display: grid;
+}
+
+.nf-mode-texts > .nf-mode-text,
+.nf-opt-notes > .nf-opt-note {
+  grid-area: 1 / 1;
+}
+
+.nf-mode-text:not(.on),
+.nf-opt-note:not(.on) {
+  visibility: hidden;
+}
+
 .nf-opts {
-  gap: 8px;
+  --nf-row: 36px;
+  --nf-gap: 8px;
+  gap: var(--nf-gap);
   padding: 10px 14px 12px;
+}
+
+/* The tournament's Rounds row isn't there: its room is kept under the panel. */
+.nf-opts.no-rounds {
+  margin-bottom: calc(var(--nf-row) + var(--nf-gap));
 }
 
 .nf-opt {
@@ -16282,7 +16304,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 @media (max-height: 620px) {
   .nf-turn-round,
-  .nf-opt-note {
+  .nf-opt-notes {
     display: none;
   }
   .nf-mode {
@@ -16297,11 +16319,16 @@ html[data-look] .play-screen > .top-bar .round-btn {
     height: 32px;
   }
   .nf-opts {
-    gap: 6px;
+    --nf-row: 32px;
+    --nf-gap: 6px;
     padding: 8px 12px;
   }
   .nf-setup .section-title {
     margin-bottom: 6px;
+  }
+  /* Room for the longest mode text and the tournament's Rounds row, without scrolling. */
+  .bd.nf-setup {
+    gap: 12px;
   }
 }
 
@@ -17195,6 +17222,12 @@ html[data-look] .play-screen > .top-bar .round-btn {
   color: var(--mt-turn);
 }
 
+/* Nothing to say about where to play: Restart right under the board, what happens (a board won,
+   who drinks) under it, in the room kept for it, so nothing moves when it shows. */
+.mt-play.known:not(.over) .mt-info {
+  order: 1;
+}
+
 @keyframes mt-info {
   from {
     opacity: 0;
@@ -17309,17 +17342,18 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-stage {
   position: relative;
-  margin: 0 -10px;
+  /* Edge to edge: the box as big as the phone allows. */
+  margin: 0 calc(-1 * var(--gutter));
 }
 
 .nf-canvas-host {
   width: 100%;
-  aspect-ratio: 1.8;
+  aspect-ratio: 1.7;
   max-height: 50dvh;
 }
 
 .nf-stage.size-12 .nf-canvas-host {
-  aspect-ratio: 2.25;
+  aspect-ratio: 2.1;
 }
 
 .nf-canvas {
@@ -17330,33 +17364,45 @@ html[data-look] .play-screen > .top-bar .round-btn {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Under the box (the whole felt is the dice's): the clock, what to do, one die or two. */
 .nf-stage-felt {
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  /* The felt's front, between its edge and the dice. */
-  top: 53%;
-  bottom: 17%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  pointer-events: none;
+  padding: 10px var(--gutter) 0;
 }
 
-.nf-stage-felt .nf-one,
-.nf-stage-felt .nf-one-btn {
-  pointer-events: auto;
-}
-
-.nf-stage-felt .nf-clock {
+.nf-play > .nf-clock {
   position: static;
-  width: 100%;
+}
+
+.nf-play > .nf-clock .nf-clock-bar {
+  background: var(--accent);
+}
+
+.nf-play > .nf-clock .nf-clock-n {
+  color: var(--ink);
+}
+
+/* Two lines' room whatever shows, so the button under it stays put. */
+.nf-stage-felt .nf-hint-row {
+  min-height: calc(2 * 1.35 * 15px);
 }
 
 .nf-stage-felt .nf-hint {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.nf-stage-felt .nf-one-btn {
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.nf-stage-felt .nf-one-btn.on {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .sr-only {
