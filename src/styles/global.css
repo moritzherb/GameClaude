@@ -16917,10 +16917,73 @@ html[data-look] .play-screen > .top-bar .round-btn {
   gap: 6px;
 }
 
+/* No move left: what's still standing shivers, one after the other, and the line under the box
+   says so with a shake. */
+.nf-box.stuck .nf-flap:not(.down) .nf-block {
+  animation: nf-shiver 0.9s var(--ease-out);
+}
+
+.nf-box.stuck .nf-flap:not(.down):nth-child(2n) .nf-block {
+  animation-delay: 40ms;
+}
+
+.nf-box.stuck .nf-flap:not(.down):nth-child(3n) .nf-block {
+  animation-delay: 80ms;
+}
+
+@keyframes nf-shiver {
+  0%,
+  100% {
+    rotate: x 0deg;
+  }
+  15% {
+    rotate: x -9deg;
+  }
+  35% {
+    rotate: x 6deg;
+  }
+  55% {
+    rotate: x -4deg;
+  }
+  75% {
+    rotate: x 2deg;
+  }
+}
+
+.nf-hint.stuck {
+  color: var(--bad);
+  animation: nf-stuck 0.5s var(--ease-out);
+}
+
+.nf-felt .nf-hint.stuck {
+  color: #ffb3ad;
+}
+
+@keyframes nf-stuck {
+  0%,
+  100% {
+    translate: 0;
+  }
+  20% {
+    translate: -6px;
+  }
+  40% {
+    translate: 5px;
+  }
+  60% {
+    translate: -3px;
+  }
+  80% {
+    translate: 2px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nf-flap.nope,
   .nf-flap.down .nf-block,
-  .nf-flap.down .nf-side::after {
+  .nf-flap.down .nf-side::after,
+  .nf-box.stuck .nf-flap .nf-block,
+  .nf-hint.stuck {
     animation: none;
   }
   .nf-block {
@@ -17393,6 +17456,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .nf-stage-felt .nf-hint {
   color: var(--ink);
   line-height: 1.35;
+}
+
+.nf-stage-felt .nf-hint.stuck {
+  color: var(--bad);
 }
 
 .nf-stage-felt .nf-one-btn {
