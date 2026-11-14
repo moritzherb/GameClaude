@@ -110,11 +110,90 @@ function faceUp(n: number) {
   return q;
 }
 
+/** Where on a picture each face of a box goes: x, y, width, height in its pixels. */
+type Cell = [number, number, number, number];
+
+/**
+ * Points each face of a box (its groups, in BoxGeometry's order) at its own part of one picture,
+ * then makes it one piece, drawn with one material.
+ */
+function mapFaces(geo: THREE.BufferGeometry, cells: Cell[], [w, h]: [number, number]) {
+  const uv = geo.getAttribute('uv') as THREE.BufferAttribute;
+  const index = geo.getIndex();
+  const done = new Set<number>();
+  for (const group of geo.groups) {
+    const [x, y, cw, ch] = cells[group.materialIndex ?? 0];
+    // A pixel in from the edge, so the next face's picture doesn't bleed in.
+    const u0 = (x + 2) / w;
+    const u1 = (x + cw - 2) / w;
+    const v0 = 1 - (y + ch - 2) / h;
+    const v1 = 1 - (y + 2) / h;
+    for (let k = group.start; k < group.start + group.count; k++) {
+      const v = index ? index.getX(k) : k;
+      if (done.has(v)) continue;
+      done.add(v);
+      uv.setXY(v, u0 + uv.getX(v) * (u1 - u0), v0 + uv.getY(v) * (v1 - v0));
+    }
+  }
+  uv.needsUpdate = true;
+  geo.clearGroups();
+}
+
+/** The flaps' picture: the numbers six to a row, then a side, the back and the two ends. */
+const ATLAS: [number, number] = [1024, 1024];
+const CELL_W = 160;
+const CELL_H = 256;
+const flapCell = (n: number): Cell => [((n - 1) % 6) * CELL_W, Math.floor((n - 1) / 6) * CELL_H, CELL_W, CELL_H];
+const FLAP_SIDE: Cell = [0, 2 * CELL_H, CELL_W, CELL_H];
+const FLAP_BACK: Cell = [CELL_W, 2 * CELL_H, CELL_W, CELL_H];
+const FLAP_TOP: Cell = [2 * CELL_W, 2 * CELL_H, CELL_W, 64];
+const FLAP_BOTTOM: Cell = [3 * CELL_W, 2 * CELL_H, CELL_W, 64];
+
+function flapAtlas(size: number) {
+  const maple = plankCanvas({ w: 1024, h: 300, scale: 1, upright: true, ...MAPLE, seed: 23 });
+  const c = document.createElement('canvas');
+  [c.width, c.height] = ATLAS;
+  const g = c.getContext('2d')!;
+  /** Maple, a different stretch of the plank for each, tinted for the light that side gets. */
+  const wood = ([x, y, w, h]: Cell, seed: number, tint?: string) => {
+    if (maple) g.drawImage(maple, (seed * 97) % (maple.width - w), 0, w, Math.min(h, maple.height), x, y, w, h);
+    else {
+      g.fillStyle = '#e7c58c';
+      g.fillRect(x, y, w, h);
+    }
+    if (tint) {
+      g.globalCompositeOperation = 'multiply';
+      g.fillStyle = tint;
+      g.fillRect(x, y, w, h);
+      g.globalCompositeOperation = 'source-over';
+    }
+  };
+  for (let n = 1; n <= size; n++) {
+    const cell = flapCell(n);
+    wood(cell, n);
+    // The number, burnt into the wood.
+    const [x, y, w, h] = cell;
+    g.font = `800 ${n > 9 ? 107 : 143}px ${appFont('display')}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.shadowColor = 'rgba(58,33,14,0.6)';
+    g.shadowBlur = 3;
+    g.fillStyle = '#3a210e';
+    g.fillText(String(n), x + w / 2, y + h * 0.52);
+    g.shadowColor = 'transparent';
+  }
+  wood(FLAP_SIDE, 3, '#d6b37c');
+  wood(FLAP_BACK, 5, '#e2c08c');
+  wood(FLAP_TOP, 7, '#f2dcb0');
+  wood(FLAP_BOTTOM, 9, '#c9a06a');
+  return c;
+}
+
 interface Flap {
   n: number;
   pivot: THREE.Group;
   mesh: THREE.Mesh;
-  mats: THREE.MeshStandardMaterial[];
+  mat: THREE.MeshStandardMaterial;
   angle: number;
   lift: number;
   down: boolean;
@@ -131,10 +210,11 @@ interface Anim {
 export class Box3D {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(24, 1, 1, 400);
+  // A long lens: the flaps at the back nearly as big as the front of the box.
+  private camera = new THREE.PerspectiveCamera(18, 1, 1, 500);
   private flaps: Flap[] = [];
   private dice: THREE.Mesh[] = [];
-  private diceMats: THREE.MeshStandardMaterial[][] = [];
+  private diceMat!: THREE.MeshStandardMaterial;
   private anims: Anim[] = [];
   private frame = 0;
   private interactive = false;
@@ -157,7 +237,7 @@ export class Box3D {
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.innerW = size * FW + (size - 1) * FG + 0.6;
     this.width = this.innerW + 2 * WALL;
@@ -246,7 +326,6 @@ export class Box3D {
   }
 
   private buildFlaps(zHinge: number) {
-    const maple = plankCanvas({ w: 1024, h: 300, scale: 1, upright: true, ...MAPLE, seed: 23 });
     // The rod they hang on.
     const rodGeo = new THREE.CylinderGeometry(0.13, 0.13, this.innerW, 16);
     const brass = new THREE.MeshStandardMaterial({ color: '#c99b45', roughness: 0.35, metalness: 0.85 });
@@ -257,50 +336,19 @@ export class Box3D {
     rod.castShadow = true;
     this.scene.add(rod);
 
-    const geo = new THREE.BoxGeometry(FW, FH, FT);
-    geo.translate(0, FH / 2 - 0.1, 0);
-    this.disposables.push(geo);
+    // All their faces on one picture, so a flap is drawn in one go (one material, not six).
+    const atlas = canvasTexture(flapAtlas(this.size), this.renderer);
     const x0 = -this.innerW / 2 + 0.3 + FW / 2;
     for (let i = 0; i < this.size; i++) {
       const n = i + 1;
-      const crop = (w: number, h: number, number: boolean) => {
-        const c = document.createElement('canvas');
-        c.width = w;
-        c.height = h;
-        const g = c.getContext('2d')!;
-        if (maple) g.drawImage(maple, ((n * 97) % (maple.width - w)) | 0, 0, w, Math.min(h, maple.height), 0, 0, w, h);
-        else {
-          g.fillStyle = '#e7c58c';
-          g.fillRect(0, 0, w, h);
-        }
-        if (number) {
-          // Burnt into the wood.
-          const px = n > 9 ? 128 : 172;
-          g.font = `800 ${px}px ${appFont('display')}`;
-          g.textAlign = 'center';
-          g.textBaseline = 'middle';
-          g.shadowColor = 'rgba(58,33,14,0.6)';
-          g.shadowBlur = 3;
-          g.fillStyle = '#3a210e';
-          g.fillText(String(n), w / 2, h * 0.52);
-        }
-        return c;
-      };
-      const front = crop(192, 294, true);
-      const plain = crop(192, 294, false);
-      const end = crop(192, 40, false);
-      const tex = (c: HTMLCanvasElement) => canvasTexture(c, this.renderer);
-      const plainTex = tex(plain);
-      const endTex = tex(end);
-      const mats = [
-        this.material(plainTex, '#d6b37c'), // right side
-        this.material(plainTex, '#d6b37c'), // left side
-        this.material(endTex, '#f2dcb0'), // top: end grain, lit
-        this.material(endTex, '#c9a06a'), // bottom
-        this.material(tex(front)), // front: the number
-        this.material(plainTex, '#e2c08c'), // back
-      ];
-      const mesh = new THREE.Mesh(geo, mats);
+      const geo = new THREE.BoxGeometry(FW, FH, FT);
+      geo.translate(0, FH / 2 - 0.1, 0);
+      // Faces in BoxGeometry's order: right, left, top, bottom, front (the number), back.
+      const c = flapCell(n);
+      mapFaces(geo, [FLAP_SIDE, FLAP_SIDE, FLAP_TOP, FLAP_BOTTOM, c, FLAP_BACK], ATLAS);
+      this.disposables.push(geo);
+      const mat = this.material(atlas);
+      const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.userData.n = n;
@@ -308,26 +356,32 @@ export class Box3D {
       pivot.position.set(x0 + i * (FW + FG), ROD_Y, zHinge);
       pivot.add(mesh);
       this.scene.add(pivot);
-      this.flaps.push({ n, pivot, mesh, mats, angle: 0, lift: 0, down: false, shade: 1 });
+      this.flaps.push({ n, pivot, mesh, mat, angle: 0, lift: 0, down: false, shade: 1 });
     }
   }
 
   private buildDice() {
     const geo = new RoundedBoxGeometry(DIE, DIE, DIE, 4, 0.24);
+    // The six faces on one picture: both dice drawn with one material.
+    mapFaces(
+      geo,
+      DIE_FACES.map((n) => [((n - 1) % 4) * 128, Math.floor((n - 1) / 4) * 128, 128, 128]),
+      [512, 256],
+    );
     this.disposables.push(geo);
-    const faces = DIE_FACES.map((n) => canvasTexture(dieFace(n), this.renderer));
+    const atlas = document.createElement('canvas');
+    atlas.width = 512;
+    atlas.height = 256;
+    const g = atlas.getContext('2d')!;
+    for (let n = 1; n <= 6; n++) g.drawImage(dieFace(n), ((n - 1) % 4) * 128, Math.floor((n - 1) / 4) * 128);
+    this.diceMat = new THREE.MeshStandardMaterial({ map: canvasTexture(atlas, this.renderer), roughness: 0.35, metalness: 0, transparent: true, opacity: 0.4 });
+    this.disposables.push(this.diceMat);
     for (let i = 0; i < 2; i++) {
-      const mats = faces.map((map) => {
-        const m = new THREE.MeshStandardMaterial({ map, roughness: 0.35, metalness: 0, transparent: true, opacity: 0.4 });
-        this.disposables.push(m);
-        return m;
-      });
-      const die = new THREE.Mesh(geo, mats);
+      const die = new THREE.Mesh(geo, this.diceMat);
       die.castShadow = true;
       die.position.set(i ? 1.5 : -1.5, DIE / 2 + 0.08, this.feltZ);
       this.scene.add(die);
       this.dice.push(die);
-      this.diceMats.push(mats);
     }
   }
 
@@ -379,11 +433,11 @@ export class Box3D {
     // Centre it up and down, then the nearest distance at which it still fits.
     for (let pass = 0; pass < 2; pass++) {
       let lo = 10;
-      let hi = 400;
+      let hi = 500;
       for (let k = 0; k < 30; k++) {
         const mid = (lo + hi) / 2;
         const e = place(mid);
-        if (e.maxX <= 0.97 && e.maxY <= 0.97 && e.minY >= -0.97) hi = mid;
+        if (e.maxX <= 0.985 && e.maxY <= 0.97 && e.minY >= -0.97) hi = mid;
         else lo = mid;
       }
       const e = place(hi);
@@ -405,7 +459,7 @@ export class Box3D {
       if (!open) {
         if (f.down) continue;
         f.down = true;
-        for (const m of f.mats) m.emissive.setScalar(0);
+        f.mat.emissive.setScalar(0);
         const order = state.falling.indexOf(f.n);
         if (order < 0) {
           // Already down (a box shown as it is): lying there.
@@ -426,7 +480,7 @@ export class Box3D {
       }
       const angle = picked ? 0.1 : 0;
       const lift = picked ? 0.45 : 0;
-      for (const m of f.mats) m.emissive.copy(ACCENT).multiplyScalar(picked ? 0.16 : 0);
+      f.mat.emissive.copy(ACCENT).multiplyScalar(picked ? 0.16 : 0);
       if (angle !== f.angle || lift !== f.lift) {
         const a0 = f.angle;
         const l0 = f.lift;
@@ -446,8 +500,7 @@ export class Box3D {
     f.pivot.position.y = ROD_Y + lift;
     if (shade !== f.shade) {
       f.shade = shade;
-      const base = ['#d6b37c', '#d6b37c', '#f2dcb0', '#c9a06a', '#ffffff', '#e2c08c'];
-      f.mats.forEach((m, i) => m.color.set(base[i]).multiplyScalar(shade));
+      f.mat.color.setScalar(shade);
     }
   }
 
@@ -455,7 +508,7 @@ export class Box3D {
   setDice(values: number[] | null, rolls: number, last: number[]) {
     const shown = values ?? last;
     this.dice.forEach((d, i) => (d.visible = i < shown.length));
-    for (const mats of this.diceMats) for (const m of mats) m.opacity = values ? 1 : 0.4;
+    this.diceMat.opacity = values ? 1 : 0.4;
     if (values && rolls !== this.lastRoll) {
       this.lastRoll = rolls;
       this.throwDice(values, rolls);
@@ -470,18 +523,25 @@ export class Box3D {
       const x = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453;
       return x - Math.floor(x);
     };
-    return values.map((v, i) => {
-      const x = values.length === 1 ? 0 : i ? 1.55 : -1.55;
-      // Towards the back of the felt, so its front is free for what's written there.
-      const z = this.diceZ() + (rnd(i + 1) - 0.5) * 0.8;
-      const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (rnd(i + 5) - 0.5) * 0.7);
-      return { pos: new THREE.Vector3(x + (rnd(i + 9) - 0.5) * 0.4, DIE / 2 + 0.08, z), quat: yaw.multiply(faceUp(v)), rnd };
+    // Anywhere on the felt, clear of the walls (the front one hides what lies right behind it) and
+    // of each other.
+    const xMin = -this.innerW / 2 + 1.9;
+    const xMax = this.innerW / 2 - 1.9;
+    const zMin = this.feltZ - FELT_D / 2 + 1.7;
+    const zMax = this.feltZ + FELT_D / 2 - 2.2;
+    const spots: THREE.Vector3[] = [];
+    values.forEach((_, i) => {
+      const spot = new THREE.Vector3();
+      for (let k = 0; k < 24; k++) {
+        spot.set(xMin + rnd(i * 50 + k * 2 + 1) * (xMax - xMin), DIE / 2 + 0.08, zMin + rnd(i * 50 + k * 2 + 2) * (zMax - zMin));
+        if (spots.every((o) => o.distanceTo(spot) >= 3.4)) break;
+      }
+      spots.push(spot);
     });
-  }
-
-  /** Where the dice come to rest, front to back. */
-  private diceZ() {
-    return this.feltZ - FELT_D / 2 + 2.7;
+    return values.map((v, i) => {
+      const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (rnd(i + 5) - 0.5) * 0.7);
+      return { pos: spots[i], quat: yaw.multiply(faceUp(v)), rnd };
+    });
   }
 
   private restDice(values: number[], seed: number) {
@@ -493,13 +553,20 @@ export class Box3D {
 
   private throwDice(values: number[], seed: number) {
     const poses = this.restingPose(values, seed);
+    // The die that lands further left leaves the hand further out, so their paths don't cross.
+    const leftmost = poses.length > 1 && poses[1].pos.x < poses[0].pos.x ? 1 : 0;
     poses.forEach((p, i) => {
       const die = this.dice[i];
-      // From the hand, outside the box on the left, over the wall; each from its own side of the
-      // hand, so they don't pass through each other.
-      const from = new THREE.Vector3(-this.width / 2 - DIE * (1 + i * 0.6), DIE / 2 + 4.2, this.diceZ() + (i ? -1.2 : 2.8));
-      const axis = new THREE.Vector3(p.rnd(i + 20) - 0.5, p.rnd(i + 21) - 0.5, p.rnd(i + 22) - 0.5).normalize();
-      const turns = (3 + p.rnd(i + 23) * 2) * Math.PI * 2;
+      const back = poses.length > 1 && i === leftmost ? 1 : 0;
+      // From the hand, outside the box on the left, in over the wall along its own lane.
+      const from = new THREE.Vector3(-this.width / 2 - DIE * (1 + back * 1.2), DIE / 2 + 4.2, p.pos.z + (p.rnd(i + 24) - 0.5) * 1.2);
+      // It rolls the way it goes, about as far as it travels, a little skew.
+      const way = new THREE.Vector3(p.pos.x - from.x, 0, p.pos.z - from.z);
+      const axis = new THREE.Vector3(way.z, 0, -way.x)
+        .normalize()
+        .add(new THREE.Vector3(p.rnd(i + 20) - 0.5, p.rnd(i + 21) - 0.5, p.rnd(i + 22) - 0.5).multiplyScalar(0.5))
+        .normalize();
+      const turns = way.length() / 1.7 + p.rnd(i + 23) * 1.5;
       const spin = new THREE.Quaternion();
       const step = (u: number) => {
         const e = easeOut(u);
@@ -509,12 +576,12 @@ export class Box3D {
         // In from above at the left, three bounces lower each time, rolling out to its place.
         const drop = (from.y - p.pos.y) * (1 - clamp01(u * 4)) ** 2;
         die.position.set(from.x + (p.pos.x - from.x) * e, p.pos.y + hop + drop, from.z + (p.pos.z - from.z) * e);
-        spin.setFromAxisAngle(axis, turns * left);
-        die.quaternion.copy(p.quat).multiply(spin);
+        spin.setFromAxisAngle(axis, -turns * left);
+        die.quaternion.copy(p.quat).premultiply(spin);
       };
       // Into the hand at once: the dice of the last throw don't linger where they lay.
       step(0);
-      this.animate(THROW_MS, i * 70, step);
+      this.animate(THROW_MS, back * 70, step);
     });
   }
 
