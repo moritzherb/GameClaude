@@ -352,7 +352,7 @@ export class Box3D {
     this.renderer.setSize(w, h, false);
     const cam = this.camera;
     cam.aspect = w / h;
-    const elev = (62 * Math.PI) / 180;
+    const elev = (57 * Math.PI) / 180;
     const target = new THREE.Vector3(0, 1.2, 0.6);
     const corners: THREE.Vector3[] = [];
     for (const x of [-this.width / 2, this.width / 2])
