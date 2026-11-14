@@ -1,3 +1,4 @@
+import { appFont, fontsReady } from '../../lib/fonts';
 import { cellKey, jumps, THEMES, type Board, type Cell, type Theme } from './boards';
 import { FIELDS } from './fields';
 import { ACE, paintAce } from './ace';
@@ -61,8 +62,6 @@ const BRIDGE_H = 0.2;
 const BRIDGE_END = 0.42;
 const deckAt = (t: number) => SLAB + BRIDGE_H * (1 - (t / BRIDGE_L) ** 2);
 
-const DISPLAY = '"Big Shoulders Display Variable", Impact, sans-serif';
-const BODY = '"Archivo Variable", system-ui, sans-serif';
 const INK = '#1d1b16';
 
 interface Cam {
@@ -277,6 +276,12 @@ export class Scene {
     this.placeDecor();
     this.buildTextures();
     this.invalidate();
+    // The names are in the app's own type: drawn again once it has loaded, if it hadn't yet.
+    void fontsReady().then(() => {
+      if (this.board !== board) return;
+      this.buildTextures();
+      this.invalidate();
+    });
   }
 
   setPawns(pawns: PawnView[], current: string | null) {
@@ -805,18 +810,18 @@ export class Scene {
     if (f.kind === 'start' || f.kind === 'goal') {
       ctx.font = `64px ${EMOJI_FONT}`;
       ctx.fillText(info.emoji, TEX / 2, TEX / 2 - 18);
-      const { lines } = fit(ctx, label.toUpperCase(), size - 30, 44, 24, (p) => `900 ${p}px ${DISPLAY}`);
+      const { lines } = fit(ctx, label.toUpperCase(), size - 30, 44, 24, (p) => `900 ${p}px ${appFont('display')}`);
       ctx.fillText(lines[0], TEX / 2, TEX / 2 + 50);
       return;
     }
     // The number in the corner; the name big across the front (the picture stands at the back).
-    ctx.font = `700 22px ${BODY}`;
+    ctx.font = `700 22px ${appFont('body')}`;
     ctx.fillStyle = 'rgba(29,27,22,0.55)';
     ctx.textAlign = 'right';
     ctx.fillText(String(i), TEX - m - 14, m + 22);
     ctx.textAlign = 'center';
     ctx.fillStyle = INK;
-    const { lines, px } = fit(ctx, label.toUpperCase(), size - 22, 44, 24, (p) => `900 ${p}px ${DISPLAY}`);
+    const { lines, px } = fit(ctx, label.toUpperCase(), size - 22, 44, 24, (p) => `900 ${p}px ${appFont('display')}`);
     const lh = px * 0.92;
     const y0 = TEX * 0.74 - ((lines.length - 1) * lh) / 2;
     lines.forEach((l, k) => ctx.fillText(l, TEX / 2, y0 + k * lh));
@@ -1151,7 +1156,7 @@ export class Scene {
   /** A name (or a few) over the pawns. */
   private tag(text: string, x: number, y: number, on: boolean) {
     const { ctx } = this;
-    ctx.font = `700 ${on ? 13 : 11}px ${BODY}`;
+    ctx.font = `700 ${on ? 13 : 11}px ${appFont('body')}`;
     const w = ctx.measureText(text).width + 16;
     const h = on ? 22 : 18;
     rounded(ctx, x - w / 2, y - h, w, h, h / 2);
@@ -1170,7 +1175,7 @@ export class Scene {
     const post = s * 0.32;
     ctx.fillStyle = '#6b4423';
     ctx.fillRect(p.sx - s * 0.015, p.sy - post, s * 0.03, post);
-    ctx.font = `900 ${Math.max(8, s * 0.13)}px ${DISPLAY}`;
+    ctx.font = `900 ${Math.max(8, s * 0.13)}px ${appFont('display')}`;
     const w = ctx.measureText(text).width + s * 0.1;
     const h = s * 0.17;
     rounded(ctx, p.sx - w / 2, p.sy - post - h, w, h, s * 0.03);

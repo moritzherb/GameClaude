@@ -8,6 +8,7 @@
  * as the die is, then seen a little from the front (TILT), so you can tell how they lie.
  */
 
+import { appFont } from '../../lib/fonts';
 import { storeSafe } from '../../lib/native';
 
 type V = [number, number, number];
@@ -78,7 +79,7 @@ function picture(w: number, h: number, paint: (g: CanvasRenderingContext2D) => v
   return c;
 }
 
-const display = () => (typeof document !== 'undefined' && getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim()) || 'sans-serif';
+const display = () => appFont('display');
 
 /* ---------- The pack ---------- */
 
@@ -164,7 +165,7 @@ function tinFaces(): Face[] {
     g.fillStyle = '#d7261e';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.font = `${Math.round(r * 0.78)}px sans-serif`;
+    g.font = `${Math.round(r * 0.78)}px ${appFont('body')}`;
     g.fillText('★', r, r * 0.82);
     g.fillStyle = '#1d1b16';
     g.font = `900 ${Math.round(r * 0.3)}px ${display()}`;

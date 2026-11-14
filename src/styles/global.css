@@ -13813,7 +13813,7 @@ li {
     inset 0 0 0 0.04em #cfc8b8,
     0 0.04em 0.1em rgba(0, 0, 0, 0.3);
   color: #d7261e;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   line-height: 1;
   letter-spacing: 0;
   text-transform: none;
@@ -16438,7 +16438,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
     inset 0 -3px 0 rgba(120, 70, 25, 0.35),
     0 2px 2px rgba(0, 0, 0, 0.35);
   color: #3b2411;
-  font: 700 clamp(18px, 6vw, 26px) / 1 Georgia, 'Times New Roman', serif;
+  font: 700 clamp(18px, 6vw, 26px) / 1 var(--font-display);
   font-variant-numeric: lining-nums;
   transform-origin: 50% 100%;
   transition:

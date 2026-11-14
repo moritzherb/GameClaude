@@ -65,6 +65,21 @@ html[data-look='pop'] {
   --radius-lg: 22px;
 }
 
+/*
+ * The phone's own type, for everything (home screen, settings, every game): SF Pro with the iPhone
+ * set (the system's own; only Apple devices have it, elsewhere their system face stands in), Roboto
+ * with Android (it comes with the app).
+ */
+html[data-look='pop'][data-os='ios'] {
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+}
+
+html[data-look='pop'][data-os='android'] {
+  --font-display: 'Roboto Variable', Roboto, system-ui, sans-serif;
+  --font-body: 'Roboto Variable', Roboto, system-ui, sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   html[data-look='pop']:not([data-theme='light']) {
     --bg: #262624;

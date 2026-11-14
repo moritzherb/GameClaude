@@ -1,5 +1,6 @@
 import '@fontsource-variable/archivo';
 import '@fontsource-variable/big-shoulders-display';
+import '@fontsource-variable/roboto';
 import './styles/global.css';
 import './styles/pop.css';
 import './styles/apple.css';
