@@ -2251,11 +2251,6 @@ li {
   gap: 10px;
 }
 
-.play-screen.clean > .top-bar {
-  min-height: 34px;
-  grid-template-columns: minmax(80px, auto) minmax(0, 1fr) minmax(80px, auto);
-}
-
 /* Who's on (the games' own line saying so is hidden): a small bubble between the corner buttons. */
 .turn-bubble {
   display: inline-flex;
@@ -2298,15 +2293,6 @@ li {
   padding-top: 0;
   display: flex;
   justify-content: center;
-}
-
-.play-screen.clean > .top-bar .round-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-size: 1rem;
-  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
-  color: var(--muted);
 }
 
 .who-drinks {
