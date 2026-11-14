@@ -16533,12 +16533,12 @@ html[data-look] .play-screen > .top-bar .round-btn {
   transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
 }
 
-/* Top and bottom: end grain, smooth, the top catching the light. Each side a hair wider than the
-   block, so the edges meet with no gap. */
+/* Top and bottom: end grain, smooth, the top catching the light. Exactly as wide as the block:
+   nothing sticks out past its edges. */
 .nf-side.top,
 .nf-side.bottom {
-  left: -0.5px;
-  right: -0.5px;
+  left: 0;
+  right: 0;
   height: var(--t);
 }
 
@@ -16551,15 +16551,19 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-side.bottom {
   bottom: 0;
-  background: linear-gradient(0deg, #c99e63, #b58a52);
+  /* The same wood as the face: lying down, it darkens with the block. */
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
+    var(--nf-flap) var(--gx, 0) 0 / 360px 90px;
+  background-color: #d9b47a;
   transform-origin: 50% 100%;
   transform: translateZ(calc(var(--t) / -2)) rotateX(-90deg);
 }
 
 .nf-side.left,
 .nf-side.right {
-  top: -0.5px;
-  bottom: -0.5px;
+  top: 0;
+  bottom: 0;
   width: var(--t);
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
@@ -16575,7 +16579,7 @@ html[data-look] .play-screen > .top-bar .round-btn {
 
 .nf-side.left::after,
 .nf-side.right::after {
-  opacity: 0.32;
+  opacity: 0.18;
 }
 
 .nf-side.right {
