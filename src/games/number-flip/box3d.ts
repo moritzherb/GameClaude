@@ -36,7 +36,7 @@ const WALL_H = 2.6;
 const SLOT = 6.6; // inside the back wall, to the divider: the flaps stand at its front, fall back into it
 const RAIL_D = 1;
 const RAIL_H = 1.1;
-const FELT_D = 11.5;
+const FELT_D = 15;
 const ROD_Y = 0.45;
 const DIE = 2.3;
 const ACCENT = new THREE.Color('#b8f01e');
@@ -145,11 +145,13 @@ export class Box3D {
   private innerW: number;
   private raycaster = new THREE.Raycaster();
   private lastRoll = -1;
+  private disposed = false;
 
   constructor(
-    private canvas: HTMLCanvasElement,
+    readonly canvas: HTMLCanvasElement,
     private size: 9 | 12,
-    private onTap: (n: number) => void,
+    /** A flap tapped in the picture (settable: a box built ahead gets its game later). */
+    public onTap: (n: number) => void,
   ) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -348,11 +350,11 @@ export class Box3D {
 
   /** Fits the camera so the whole box (flaps standing included) fills the canvas. */
   resize(w: number, h: number) {
-    if (!w || !h) return;
+    if (!w || !h || this.disposed) return;
     this.renderer.setSize(w, h, false);
     const cam = this.camera;
     cam.aspect = w / h;
-    const elev = (49 * Math.PI) / 180;
+    const elev = (39 * Math.PI) / 180;
     const target = new THREE.Vector3(0, 1.2, 0.6);
     const corners: THREE.Vector3[] = [];
     for (const x of [-this.width / 2, this.width / 2])
@@ -470,10 +472,16 @@ export class Box3D {
     };
     return values.map((v, i) => {
       const x = values.length === 1 ? 0 : i ? 1.55 : -1.55;
-      const z = this.feltZ - 2 + (rnd(i + 1) - 0.5) * 0.8;
+      // Towards the back of the felt, so its front is free for what's written there.
+      const z = this.diceZ() + (rnd(i + 1) - 0.5) * 0.8;
       const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (rnd(i + 5) - 0.5) * 0.7);
       return { pos: new THREE.Vector3(x + (rnd(i + 9) - 0.5) * 0.4, DIE / 2 + 0.08, z), quat: yaw.multiply(faceUp(v)), rnd };
     });
+  }
+
+  /** Where the dice come to rest, front to back. */
+  private diceZ() {
+    return this.feltZ - FELT_D / 2 + 2.7;
   }
 
   private restDice(values: number[], seed: number) {
@@ -487,12 +495,13 @@ export class Box3D {
     const poses = this.restingPose(values, seed);
     poses.forEach((p, i) => {
       const die = this.dice[i];
-      // Each from its own side of the hand, so they don't pass through each other.
-      const from = new THREE.Vector3(-this.innerW / 2 + 0.8 - i * 0.9, DIE / 2 + 2.5, this.feltZ + (i ? -2.4 : 2.6));
+      // From the hand, outside the box on the left, over the wall; each from its own side of the
+      // hand, so they don't pass through each other.
+      const from = new THREE.Vector3(-this.width / 2 - DIE * (1 + i * 0.6), DIE / 2 + 4.2, this.diceZ() + (i ? -1.2 : 2.8));
       const axis = new THREE.Vector3(p.rnd(i + 20) - 0.5, p.rnd(i + 21) - 0.5, p.rnd(i + 22) - 0.5).normalize();
       const turns = (3 + p.rnd(i + 23) * 2) * Math.PI * 2;
       const spin = new THREE.Quaternion();
-      this.animate(THROW_MS, i * 70, (u) => {
+      const step = (u: number) => {
         const e = easeOut(u);
         const left = 1 - e;
         const bounceT = Math.min(1, u * 1.15);
@@ -502,7 +511,10 @@ export class Box3D {
         die.position.set(from.x + (p.pos.x - from.x) * e, p.pos.y + hop + drop, from.z + (p.pos.z - from.z) * e);
         spin.setFromAxisAngle(axis, turns * left);
         die.quaternion.copy(p.quat).multiply(spin);
-      });
+      };
+      // Into the hand at once: the dice of the last throw don't linger where they lay.
+      step(0);
+      this.animate(THROW_MS, i * 70, step);
     });
   }
 
@@ -523,6 +535,7 @@ export class Box3D {
   /* ---------- Drawing ---------- */
 
   private animate(duration: number, delay: number, step: (u: number) => void) {
+    if (this.disposed) return;
     this.anims.push({ start: performance.now(), duration, delay, step });
     this.loop();
   }
@@ -544,10 +557,24 @@ export class Box3D {
   };
 
   render() {
-    if (!this.frame) this.renderer.render(this.scene, this.camera);
+    if (!this.frame && !this.disposed) this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Draws once before it's shown (while the setup is up): the shaders get compiled and the wood goes
+   * to the graphics card then, not in the moment the game starts.
+   */
+  warmUp() {
+    const draw = () => this.resize(320, 236);
+    this.renderer
+      .compileAsync(this.scene, this.camera)
+      .then(draw, draw)
+      .catch(() => {});
   }
 
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
     cancelAnimationFrame(this.frame);
     this.canvas.removeEventListener('pointerdown', this.pointer);
     this.scene.traverse((o) => {
@@ -556,6 +583,8 @@ export class Box3D {
     });
     for (const d of this.disposables) d.dispose();
     this.renderer.dispose();
+    // Phones allow only a few of these at a time: give it back now, not when it's collected.
+    this.renderer.forceContextLoss();
   }
 }
 
