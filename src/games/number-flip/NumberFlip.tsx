@@ -387,12 +387,6 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   // What's written on the felt: the clock, the hint or the choice of one die (on both boxes).
   const feltWriting = (withDice: boolean): ReactNode => (
     <>
-      {setup.mode === 'time' && (
-        <div className="nf-clock" aria-label={t('{n} seconds left', { n: Math.ceil(left) })}>
-          <span className="nf-clock-bar" style={{ transform: `scaleX(${left / TIME_LIMIT})` }} />
-          <span className="nf-clock-n">{Math.ceil(left)}</span>
-        </div>
-      )}
       {withDice && <FeltDice values={dice} rolls={box.rolls} />}
       <div className="nf-hint-row">
         {mayOne ? (
@@ -472,6 +466,13 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
           );
         })}
       </div>
+      {/* Time attack: the time left, under the names. */}
+      {setup.mode === 'time' && (
+        <div className="nf-clock" aria-label={t('{n} seconds left', { n: Math.ceil(left) })}>
+          <span className="nf-clock-bar" style={{ transform: `scaleX(${left / TIME_LIMIT})` }} />
+          <span className="nf-clock-n">{Math.ceil(left)}</span>
+        </div>
+      )}
 
       {three ? (
         <Suspense fallback={<div className={`nf-stage size-${setup.size}`}><div className="nf-canvas-host" /></div>}>

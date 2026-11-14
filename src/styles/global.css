@@ -17373,16 +17373,15 @@ html[data-look] .play-screen > .top-bar .round-btn {
   padding: 10px var(--gutter) 0;
 }
 
-.nf-stage-felt .nf-clock {
+.nf-play > .nf-clock {
   position: static;
-  width: 100%;
 }
 
-.nf-stage-felt .nf-clock-bar {
+.nf-play > .nf-clock .nf-clock-bar {
   background: var(--accent);
 }
 
-.nf-stage-felt .nf-clock-n {
+.nf-play > .nf-clock .nf-clock-n {
   color: var(--ink);
 }
 
