@@ -17315,21 +17315,21 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .nf-canvas {
   display: block;
   width: 100%;
-  aspect-ratio: 1.26;
+  aspect-ratio: 1.36;
   max-height: 50dvh;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
 .nf-stage.size-12 .nf-canvas {
-  aspect-ratio: 1.5;
+  aspect-ratio: 1.6;
 }
 
 .nf-stage-felt {
   position: absolute;
   left: 12%;
   right: 12%;
-  bottom: 25%;
+  bottom: 19%;
   display: flex;
   flex-direction: column;
   align-items: center;

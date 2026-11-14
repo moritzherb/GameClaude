@@ -352,7 +352,7 @@ export class Box3D {
     this.renderer.setSize(w, h, false);
     const cam = this.camera;
     cam.aspect = w / h;
-    const elev = (57 * Math.PI) / 180;
+    const elev = (49 * Math.PI) / 180;
     const target = new THREE.Vector3(0, 1.2, 0.6);
     const corners: THREE.Vector3[] = [];
     for (const x of [-this.width / 2, this.width / 2])
@@ -470,7 +470,7 @@ export class Box3D {
     };
     return values.map((v, i) => {
       const x = values.length === 1 ? 0 : i ? 1.55 : -1.55;
-      const z = this.feltZ - 1.4 + (rnd(i + 1) - 0.5) * 0.9;
+      const z = this.feltZ - 2 + (rnd(i + 1) - 0.5) * 0.8;
       const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (rnd(i + 5) - 0.5) * 0.7);
       return { pos: new THREE.Vector3(x + (rnd(i + 9) - 0.5) * 0.4, DIE / 2 + 0.08, z), quat: yaw.multiply(faceUp(v)), rnd };
     });
