@@ -2220,10 +2220,10 @@ li {
   gap: 16px;
 }
 
-/* Over a game: two buttons on the right (clean table, rules), so both sides are two wide and the
-   name stays in the middle, a little smaller on narrow phones. */
+/* Over a game: up to three buttons on the right (the crew, clean table, rules); the left as wide as
+   two of them, so with two the name stays in the middle, a little smaller on narrow phones. */
 .top-bar.game-bar {
-  grid-template-columns: 88px 1fr 88px;
+  grid-template-columns: minmax(88px, auto) minmax(0, 1fr) minmax(88px, auto);
 }
 
 .game-bar .top-bar-title {
@@ -2252,7 +2252,7 @@ li {
 
 .play-screen.clean > .top-bar {
   min-height: 34px;
-  grid-template-columns: 40px 1fr 40px;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr) minmax(72px, auto);
 }
 
 /* Who's on (the games' own line saying so is hidden): a small bubble between the corner buttons. */
@@ -17258,4 +17258,58 @@ html[data-look] .play-screen > .top-bar .round-btn {
   .mt-info {
     animation: none;
   }
+}
+
+/* ---------- The crew from inside a game ---------- */
+
+.crew-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crew-sheet .add-player {
+  margin: 0;
+}
+
+.crew-sheet-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.crew-sheet-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crew-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: var(--fill);
+  font-weight: 600;
+}
+
+.crew-sheet-name {
+  max-width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crew-sheet-code {
+  margin: 0;
+}
+
+.crew-sheet-row.offline {
+  opacity: 0.5;
 }

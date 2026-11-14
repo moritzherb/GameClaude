@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import BigButton from '../components/BigButton';
+import { RoomCrewSheet } from '../components/CrewSheet';
 import { CrewContext } from '../components/Finished';
 import GameBar, { isClean } from '../components/GameBar';
 import RulesList from '../components/RulesList';
@@ -20,6 +21,7 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
   const { settings } = useApp();
   const [showRules, setShowRules] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [showCrew, setShowCrew] = useState(false);
   // Who's on, named by the game: a bubble in the bar on a clean table.
   const [turn, setTurn] = useState<TurnPlayer | null>(null);
   // Whether the game is past its setup screen (a game that doesn't say: always).
@@ -59,7 +61,7 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
 
   return (
     <main className={`screen play-screen${isClean(game, settings.clean) ? ' clean' : ''}`}>
-      <GameBar game={game} turn={turn} playing={playing ?? true} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
+      <GameBar game={game} turn={turn} playing={playing ?? true} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} onCrew={() => setShowCrew(true)} />
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting…')}</p>}
 
@@ -74,6 +76,8 @@ export default function OnlinePlay({ game }: { game: GameDefinition }) {
       <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>
         <RulesList rules={game.rules} />
       </Sheet>
+
+      <RoomCrewSheet open={showCrew} onClose={() => setShowCrew(false)} />
 
       {/* Host: ends the game for everyone. Everyone else: leaves just this phone, after asking first too. */}
       <Sheet

@@ -9,17 +9,13 @@ import { findGame, onlineGames } from '../games/registry';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
 import { unfill } from '../lib/noAutofill';
-import { navigate, paths } from '../lib/router';
+import { joinLink, navigate, paths } from '../lib/router';
 import { useProfile } from '../net/profile';
 import { normalizeCode } from '../net/protocol';
 import { useRoom } from '../net/RoomProvider';
 import { useApp } from '../state/AppState';
 import { isNative, toNative } from '../lib/native';
 
-/** Link that opens the app straight on the join screen for this room. */
-function joinLink(code: string) {
-  return `${window.location.origin}${window.location.pathname}#${paths.join(code)}`;
-}
 
 export default function Room({ joinCode }: { joinCode: string | null }) {
   const room = useRoom();

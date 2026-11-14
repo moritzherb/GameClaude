@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { load, save } from '../../lib/storage';
 import type { GameProps } from '../types';
 import { allBoards, BOARDS, deleteBoard, deleteDraft, drafts as savedDrafts, saveBoard, saveDraft, type Board, type Draft } from './boards';
@@ -32,7 +32,20 @@ function pawnsFor(ids: string[]): Record<string, PawnDef> {
 export default function Party({ players, exit }: GameProps) {
   const [boards, setBoards] = useState(allBoards);
   const [boardId, setBoardId] = useState(() => load<string>('party-board', 'classic'));
-  const [pawns, setPawns] = useState(() => pawnsFor(players.map((p) => p.id)));
+  const [picked, setPawns] = useState(() => pawnsFor(players.map((p) => p.id)));
+  // Someone added to the crew mid-way gets the next free pawn (and plays from the next game).
+  const pawns = useMemo(() => {
+    const missing = players.filter((p) => !picked[p.id]);
+    if (!missing.length) return picked;
+    const used = new Set(Object.values(picked).map((d) => d.id));
+    const out = { ...picked };
+    for (const p of missing) {
+      const free = PAWNS.find((d) => !used.has(d.id)) ?? PAWNS[0];
+      out[p.id] = free;
+      used.add(free.id);
+    }
+    return out;
+  }, [players, picked]);
   const [editing, setEditing] = useState<{ board: Board; asNew: boolean; draft?: Draft } | null>(null);
   // Boards saved unfinished, to go on with.
   const [drafts, setDrafts] = useState(savedDrafts);

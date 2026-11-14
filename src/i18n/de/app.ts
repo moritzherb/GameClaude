@@ -344,6 +344,8 @@ const app: Record<string, string> = {
   'Sort your cards': 'Karten sortieren',
   'Terms of use': 'Nutzungsbedingungen',
   'Privacy, terms of use, imprint': 'Datenschutz, Nutzungsbedingungen, Impressum',
+  '{n} players at most': 'Höchstens {n} Spieler',
+  'New players join in where the game can take them: right away, or from the next round.': 'Neue Spieler steigen ein, wo das Spiel es zulässt: sofort oder ab der nächsten Runde.',
 };
 
 export default app;

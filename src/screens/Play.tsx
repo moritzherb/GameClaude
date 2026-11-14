@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import BigButton from '../components/BigButton';
+import CrewSheet from '../components/CrewSheet';
 import { CrewContext } from '../components/Finished';
 import GameBar, { isClean } from '../components/GameBar';
 import RulesList from '../components/RulesList';
@@ -17,6 +18,7 @@ export default function Play({ game }: { game: GameDefinition }) {
   const { players, settings } = useApp();
   const [showRules, setShowRules] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [showCrew, setShowCrew] = useState(false);
   // Who's on, named by the game: a bubble in the bar on a clean table.
   const [turn, setTurn] = useState<TurnPlayer | null>(null);
   // Whether the game is past its setup screen (a game that doesn't say: always).
@@ -38,7 +40,7 @@ export default function Play({ game }: { game: GameDefinition }) {
 
   return (
     <main className={`screen play-screen${isClean(game, settings.clean) ? ' clean' : ''}`}>
-      <GameBar game={game} turn={turn} playing={playing ?? true} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} />
+      <GameBar game={game} turn={turn} playing={playing ?? true} onExit={() => setConfirmExit(true)} onRules={() => setShowRules(true)} onCrew={() => setShowCrew(true)} />
 
       <CrewContext.Provider value={players}>
         <TurnContext.Provider value={setTurn}>
@@ -51,6 +53,8 @@ export default function Play({ game }: { game: GameDefinition }) {
       <Sheet open={showRules} onClose={() => setShowRules(false)} title={t('How to play')}>
         <RulesList rules={game.rules} />
       </Sheet>
+
+      <CrewSheet game={game} open={showCrew} onClose={() => setShowCrew(false)} />
 
       <Sheet open={confirmExit} onClose={() => setConfirmExit(false)} title={t('Leave the game?')} closeLabel={t('Keep playing')}>
         <BigButton variant="danger" onClick={exit}>

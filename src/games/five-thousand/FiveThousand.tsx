@@ -37,6 +37,8 @@ export default function FiveThousand({ players, exit }: GameProps) {
   const known = useApp().knows('five-thousand');
   const [starterId, setStarterId] = useState(() => pick(players).id);
   const [g, setG] = useState<Game | null>(null);
+  // Who plays this game: the crew as it started (someone added mid-way joins the next one).
+  const [roster, setRoster] = useState(players);
   const [picked, setPicked] = useState<number[]>([]);
   usePlaying(!!g);
 
@@ -66,7 +68,13 @@ export default function FiveThousand({ players, exit }: GameProps) {
           {t('Random pick')}
         </button>
         <div className="sticky-action">
-          <BigButton size="xl" onClick={() => setG(newGame(players.length, Math.max(0, players.findIndex((p) => p.id === starterId))))}>
+          <BigButton
+            size="xl"
+            onClick={() => {
+              setRoster(players);
+              setG(newGame(players.length, Math.max(0, players.findIndex((p) => p.id === starterId))));
+            }}
+          >
             {t('Let’s go')}
           </BigButton>
         </div>
@@ -80,7 +88,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
       setG={setG}
       picked={picked}
       setPicked={setPicked}
-      players={players}
+      players={roster}
       known={known}
       onAgain={() => setG(null)}
       exit={exit}
