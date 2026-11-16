@@ -101,6 +101,9 @@ const ROLL_MS = THROW_MS + 60;
 /** A flap falling into the box, and the next one after it (ms). */
 const FALL_MS = 640;
 const STAGGER = 90;
+/** No move left: the standing flaps' shiver (kept in step with box3d.ts), then the turn ends. */
+const SHIVER_MS = 900;
+const SHIVER_STAGGER = 40;
 
 export default function NumberFlip({ players }: GameProps) {
   const known = useApp().knows('number-flip');
@@ -268,11 +271,16 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   }, [timed]);
   const left = box.started != null ? Math.max(0, TIME_LIMIT - (now - box.started) / 1000) : TIME_LIMIT;
   useEffect(() => {
-    if (timed && left <= 0 && !box.rolling) {
-      buzz([60, 40, 60]);
-      update(endTurn);
-    }
+    if (timed && left <= 0 && !box.rolling) stuckEnd(box.open.length);
   });
+
+  /** No move left (or no time): the box shows it a moment (the flaps shiver), then the turn ends. */
+  const stuckEnd = (open: number) => {
+    sfx.boo();
+    buzz([40, 60, 40]);
+    update((x) => ({ ...x, box: { ...x.box, rolling: false, over: true } }));
+    window.setTimeout(() => update((x) => (x.phase === 'turn' ? endTurn(x) : x)), SHIVER_MS + SHIVER_STAGGER * Math.max(0, open - 1) + 350);
+  };
 
   const roll = () => {
     if (m.phase !== 'turn' || box.rolling || box.over || box.dice) return;
@@ -282,14 +290,12 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
     sfx.tick();
     buzz(15);
     setBox({ dice, rolling: true, picked: [], rolls: box.rolls + 1, started: box.started ?? Date.now() });
+    const stuck = !canMove(box.open, dice, setup.level);
     window.setTimeout(() => {
+      if (stuck) return stuckEnd(box.open.length);
       sfx.pop();
       buzz(20);
-      update((x) => {
-        const b = { ...x.box, rolling: false };
-        const next = { ...x, box: b };
-        return canMove(b.open, dice, setup.level) ? next : endTurn(next);
-      });
+      setBox({ rolling: false });
     }, ROLL_MS);
   };
 
@@ -398,7 +404,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
             ))}
           </div>
         ) : (
-          <p className="nf-hint" aria-live="polite">
+          <p className={`nf-hint${stuck ? ' stuck' : ''}`} aria-live="polite">
             {hint}
           </p>
         )}
@@ -408,9 +414,10 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
       </span>
     </>
   );
-  const flapState = { open: box.open, picked: box.picked, falling, interactive: !!dice && !box.rolling && !box.over && !falling.length && m.phase === 'turn' };
+  const stuck = box.over && box.open.length > 0;
+  const flapState = { open: box.open, picked: box.picked, falling, interactive: !!dice && !box.rolling && !box.over && !falling.length && m.phase === 'turn', stuck };
   const flatBox = () => (
-        <div className={`nf-box size-${setup.size}`} style={woodVars() as CSSProperties}>
+        <div className={`nf-box size-${setup.size}${stuck ? ' stuck' : ''}`} style={woodVars() as CSSProperties}>
           {(setup.size === 12 ? [flaps(12).slice(0, 6), flaps(12).slice(6)] : [flaps(9)]).map((row) => (
             <div key={row[0]} className="nf-flaps">
               {row.map((n) => {

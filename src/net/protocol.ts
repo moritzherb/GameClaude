@@ -22,6 +22,8 @@ export interface Member extends Omit<Profile, 'clientId'> {
 export type ToHost =
   | { t: 'hello'; profile: Profile }
   | { t: 'cheers' }
+  /** Leaving for good (Leave room): off the member list, not just offline. */
+  | { t: 'leave' }
   /** Anything a game wants to tell the host (a move, an answer). */
   | { t: 'game'; data: unknown };
 

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { buzz } from './fx';
 
 // Hash routing: works on any static host.
@@ -84,7 +85,9 @@ export function useRoute(): Route {
       // Still the old screen on display: remember how far down it was.
       scrolls.set(screenKey(shown), window.scrollY);
       shown = window.location.hash;
-      setHash(shown);
+      // Inside a slide (see slide()): the new screen has to be on the page before this returns.
+      if (sliding) flushSync(() => setHash(shown));
+      else setHash(shown);
     };
     window.addEventListener('hashchange', onChange);
     onChange();
@@ -158,9 +161,74 @@ const cameBack = (on: boolean) => document.documentElement.classList.toggle('nav
 
 function go(hash: string, how: 'push' | 'replace', state: string | null) {
   cameBack(false);
+  const from = window.location.hash;
   if (how === 'push') history.pushState(state, '', hash);
   else history.replaceState(state, '', hash);
-  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  const show = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
+  if (!slide(from, hash, show)) show();
+}
+
+/*
+ * Going from screen to screen with the app's own buttons (into the crew, the settings, back with
+ * the arrow): a short slide, in from the right going in, from the left coming back. Games have
+ * their own way in (lib/launch.ts) and out; a swipe back is animated by the phone itself.
+ */
+type ViewTransition = { finished: Promise<void> };
+type WithTransitions = Document & { startViewTransition?: (update: () => void) => ViewTransition };
+
+/** The screen change is being drawn inside a slide right now. */
+let sliding = false;
+/** A slide still running (steps that need the new screen drawn wait for it). */
+let slideDone: Promise<void> | null = null;
+/** The screens on the way in, to tell going back from going on. */
+const trail: string[] = [];
+
+const pathOf = (hash: string) => screenKey(hash).split('?')[0];
+const depthOf = (hash: string) => {
+  const parts = pathOf(hash).split('/').filter((p) => p && p !== '#');
+  return parts[0] === 'games' && parts[1] ? 2 : parts.length ? 1 : 0;
+};
+
+function slide(from: string, to: string, show: () => void): boolean {
+  const doc = document as WithTransitions;
+  const key = screenKey(to);
+  const back = trail.length > 1 && trail[trail.length - 2] === key ? true : depthOf(to) < depthOf(from);
+  if (back) trail.splice(Math.max(0, trail.lastIndexOf(key)));
+  trail.push(key);
+  if (trail.length > 12) trail.shift();
+  if (
+    !doc.startViewTransition ||
+    held ||
+    isGame(from) ||
+    isGame(to) ||
+    pathOf(from) === pathOf(to) ||
+    matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+    return false;
+  const root = document.documentElement;
+  root.dataset.slide = back ? 'back' : 'in';
+  let vt: ViewTransition;
+  try {
+    vt = doc.startViewTransition(() => {
+      sliding = true;
+      try {
+        show();
+      } finally {
+        sliding = false;
+      }
+    });
+  } catch {
+    delete root.dataset.slide;
+    return false;
+  }
+  const done = vt.finished.catch(() => {}).then(() => {
+    if (slideDone === done) {
+      slideDone = null;
+      delete root.dataset.slide;
+    }
+  });
+  slideDone = done;
+  return true;
 }
 
 /**
@@ -185,6 +253,12 @@ function afterPaint(fn: () => void) {
     done = true;
     fn();
   };
+  // A slide running: the new screen is drawn once it's over.
+  if (slideDone) {
+    void slideDone.then(() => requestAnimationFrame(() => requestAnimationFrame(once)));
+    window.setTimeout(once, 900);
+    return;
+  }
   requestAnimationFrame(() => requestAnimationFrame(once));
   window.setTimeout(once, 250);
 }

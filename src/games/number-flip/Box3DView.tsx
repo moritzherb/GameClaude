@@ -101,7 +101,7 @@ export default function Box3DView({
   }, [size]);
 
   // The flaps as the game has them now (cheap when nothing changed: only what moves animates).
-  const key = `${flaps.open.join(',')}|${flaps.picked.join(',')}|${flaps.falling.join(',')}|${flaps.interactive}`;
+  const key = `${flaps.open.join(',')}|${flaps.picked.join(',')}|${flaps.falling.join(',')}|${flaps.interactive}|${!!flaps.stuck}`;
   const latest = useRef(flaps);
   latest.current = flaps;
   useEffect(() => {

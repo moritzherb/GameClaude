@@ -2697,6 +2697,11 @@ li {
   box-shadow: none;
 }
 
+/* In the room but not connected right now (phone locked): still plays, a little faded. */
+.pick-chip.offline .pick-chip-avatar {
+  opacity: 0.5;
+}
+
 /* The chance picked this one: it pops. */
 .pick-chip.landed {
   animation: pick-landed 0.5s var(--spring);
@@ -5847,8 +5852,12 @@ li {
 }
 
 .kl-back-logo {
-  font-size: min(calc(14 * var(--qw)), calc(10 * var(--qh)));
-  line-height: 1;
+  --die-size: min(calc(15 * var(--qw)), calc(11 * var(--qh)));
+  --die-1: #ffe27a;
+  --die-2: #ffd23f;
+  --die-lip: #b8901a;
+  display: block;
+  margin-bottom: calc(1.5 * var(--qw));
 }
 
 .kl-back-word {
@@ -10587,6 +10596,55 @@ li {
   display: none;
 }
 
+/* Whose turn it is: one small line, so the table gets the room. */
+.pl-player.tableless .pl-status:not(.pl-setup-status) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.pl-player.tableless .pl-status:not(.pl-setup-status) .pl-status-text {
+  flex: none;
+  max-width: 60%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.pl-player.tableless .pl-status.mine .pl-status-text {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.pl-player.tableless .pl-status:not(.pl-setup-status) .pl-status-sub {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--muted);
+  opacity: 1;
+}
+
+.pl-player.tableless .pl-status:not(.pl-setup-status) .pl-status-sub:empty {
+  display: none;
+}
+
 .pl-opps {
   display: flex;
   gap: 6px;
@@ -10651,14 +10709,14 @@ li {
 }
 
 .pl-felt.mini {
-  flex: 0.9 1 0;
-  min-height: 104px;
+  flex: 1.5 1 0;
+  min-height: 120px;
   padding: 8px 10px;
   gap: 4px;
 }
 
 .pl-felt.mini .pl-felt-row {
-  --fw: max(44px, min(calc(24 * var(--qw)), calc((calc(100 * var(--qh)) - 30px) / 1.4), 104px));
+  --fw: max(44px, min(calc(26 * var(--qw)), calc((calc(100 * var(--qh)) - 30px) / 1.4), 128px));
   align-items: center;
   gap: max(16px, calc(5 * var(--qw)));
 }
@@ -14111,6 +14169,108 @@ button.profile-avatar:not(:disabled):active {
   box-shadow: inset 0 0 0 1.5px var(--line);
 }
 
+/* A wrong slap: the cards paid go off the top of the slapper's pile, one after another… */
+.rs-stack i.rs-give {
+  animation: rs-give 0.5s cubic-bezier(0.4, 0, 0.7, 0.4) calc(var(--d) * 0.14s) both;
+}
+
+@keyframes rs-give {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(var(--side) * 8%), -10%) rotate(calc(var(--side) * 4deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--side) * 75%), -30%) rotate(calc(var(--side) * 18deg));
+    opacity: 0;
+  }
+}
+
+/* Your own pile has room above it: they fly up, towards the others. */
+.rs-stack.big i.rs-give {
+  animation-name: rs-give-up;
+}
+
+@keyframes rs-give-up {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(var(--side) * 4%), -12%) rotate(calc(var(--side) * 3deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--side) * 30%), -110%) rotate(calc(var(--side) * 12deg));
+    opacity: 0;
+  }
+}
+
+/* …and one slides in under each of the others' piles, which lift for it. */
+.rs-stack i.rs-get {
+  animation: rs-get 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) calc(0.15s + var(--d) * 0.14s) both;
+}
+
+@keyframes rs-get {
+  0% {
+    transform: translate(-80%, 12%) rotate(-14deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.rs-stack.big i.rs-get {
+  animation-name: rs-get-down;
+}
+
+@keyframes rs-get-down {
+  0% {
+    transform: translate(10%, -90%) rotate(-8deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.rs-stack.got i:not(.rs-get) {
+  animation: rs-lift 0.4s cubic-bezier(0.3, 0.7, 0.4, 1) calc(0.4s + var(--d) * 0.14s) both;
+}
+
+@keyframes rs-lift {
+  40% {
+    transform: translateY(-6%);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-stack i.rs-give,
+  .rs-stack i.rs-get,
+  .rs-stack.got i:not(.rs-get) {
+    animation: none;
+  }
+
+  .rs-stack i.rs-give {
+    opacity: 0;
+  }
+}
+
 .rs-status {
   margin: 0;
   text-align: center;
@@ -14251,7 +14411,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 /* Your turn: the top card of your pile ringed in the accent. */
-.rs-mine.go .rs-stack i:last-child {
+.rs-mine.go .rs-stack i.top {
   box-shadow: inset 0 0 0 calc(var(--w) * 0.07) #f7f4ee, inset 0 0 0 calc(var(--w) * 0.08) rgba(0, 0, 0, 0.12), 0 0 0 3px var(--accent);
 }
 
@@ -14332,19 +14492,30 @@ button.profile-avatar:not(:disabled):active {
 
 .cc-card {
   --w: 58px;
+  --face: #252a39;
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: calc(var(--w) * 0.1);
   width: var(--w);
   height: calc(var(--w) * 1.33);
-  border-radius: calc(var(--w) * 0.18);
+  overflow: hidden;
+  border-radius: calc(var(--w) * 0.11);
+  /* As printed: a dark edge, a white line inside it, the colour within. */
+  background: #141a27;
   color: #fff;
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 800;
   line-height: 1;
+}
+
+.cc-card::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--w) * 0.032);
+  border: max(1px, calc(var(--w) * 0.02)) solid #fff;
+  border-radius: calc(var(--w) * 0.08);
+  background: var(--face);
 }
 
 .cc-card.big {
@@ -14353,63 +14524,121 @@ button.profile-avatar:not(:disabled):active {
 
 .cc-card.crimson,
 .cc-color.crimson {
-  background: var(--crimson, #c8524e);
+  --face: var(--crimson, #c8524e);
 }
 
 .cc-card.azure,
 .cc-color.azure {
-  background: var(--azure, #4a86cb);
+  --face: var(--azure, #4a86cb);
 }
 
 .cc-card.amber,
 .cc-color.amber {
-  background: var(--amber, #dfae4c);
+  --face: var(--amber, #dfae4c);
 }
 
 .cc-card.jade,
 .cc-color.jade {
-  background: var(--jade, #57a57e);
+  --face: var(--jade, #57a57e);
 }
 
-.cc-card.universal {
-  background: #24242a;
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.18);
+.cc-color {
+  background: var(--face);
+}
+
+/* The pale oval across the middle, leaning as on the printed cards. */
+.cc-oval {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--w) * 0.72);
+  height: calc(var(--w) * 1.02);
+  margin: calc(var(--w) * -0.51) 0 0 calc(var(--w) * -0.36);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  transform: rotate(-24deg);
+}
+
+/* The middle: the number (or sign) big, lifted off the colour by a thin dark line. */
+.cc-mid {
+  position: relative;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 calc(var(--w) * 0.012) 0 rgba(16, 22, 37, 0.45));
+}
+
+.cc-mid > * {
+  grid-area: 1 / 1;
+}
+
+.cc-num {
+  font-size: calc(var(--w) * 0.42);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.cc-num.plus {
+  font-size: calc(var(--w) * 0.34);
+}
+
+.cc-icon {
+  width: calc(var(--w) * 0.5);
+  height: calc(var(--w) * 0.5);
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4.4;
+  stroke-linecap: round;
+}
+
+.cc-icon .fill {
+  fill: #fff;
+  stroke: none;
 }
 
 .cc-card .cc-shape {
-  width: calc(var(--w) * 0.32);
-  height: calc(var(--w) * 0.32);
   fill: #fff;
 }
 
 /* A 6 and a 9 underlined, so upside down neither passes for the other. */
-.cc-card.turnable .cc-num,
-.cc-card.turnable .cc-corner-n {
+.cc-card.turnable .cc-num {
   text-decoration: underline;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.1em;
 }
 
-/* The corners: number (or action) over the shape, readable where the fan covers the rest. */
+/* The corners: what it is over its shape, readable where the fan covers the rest. */
 .cc-corner {
   position: absolute;
-  top: calc(var(--w) * 0.07);
-  left: calc(var(--w) * 0.08);
+  top: calc(var(--w) * 0.1);
+  left: calc(var(--w) * 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(var(--w) * 0.03);
-  font-size: calc(var(--w) * 0.2);
-  font-weight: 700;
-  line-height: 1;
+  gap: calc(var(--w) * 0.035);
 }
 
 .cc-corner.bottom {
   top: auto;
   left: auto;
-  right: calc(var(--w) * 0.08);
-  bottom: calc(var(--w) * 0.07);
+  right: calc(var(--w) * 0.1);
+  bottom: calc(var(--w) * 0.1);
   transform: rotate(180deg);
+}
+
+.cc-corner-n {
+  display: flex;
+}
+
+.cc-corner .cc-num,
+.cc-corner .cc-num.plus {
+  font-size: calc(var(--w) * 0.2);
+  letter-spacing: 0;
+}
+
+.cc-corner .cc-icon {
+  width: calc(var(--w) * 0.2);
+  height: calc(var(--w) * 0.2);
+  stroke-width: 5;
 }
 
 .cc-card .cc-corner .cc-shape {
@@ -14417,54 +14646,52 @@ button.profile-avatar:not(:disabled):active {
   height: calc(var(--w) * 0.13);
 }
 
-.cc-corner-wheel {
-  width: calc(var(--w) * 0.16);
-  height: calc(var(--w) * 0.16);
-  border-radius: 50%;
-  background: conic-gradient(var(--crimson, #c8524e) 0 25%, var(--azure, #4a86cb) 0 50%, var(--amber, #dfae4c) 0 75%, var(--jade, #57a57e) 0);
-  box-shadow: 0 0 0 1px #fff;
+.cc-corner .cc-wheel {
+  width: calc(var(--w) * 0.15);
+  height: calc(var(--w) * 0.15);
 }
 
-.cc-num {
-  font-size: calc(var(--w) * 0.36);
-  font-variant-numeric: tabular-nums;
+/* The universal cards' wheel: the four colours round a white ring; a sign laid over it. */
+.cc-wheel {
+  width: calc(var(--w) * 0.6);
+  height: calc(var(--w) * 0.6);
+  overflow: visible;
 }
 
-/* A universal card: the four shapes in their colours, in a square. */
-.cc-quad {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: calc(var(--w) * 0.04);
+.cc-wheel path {
+  stroke: #fff;
+  stroke-width: 1.4;
+  transition: opacity 0.3s var(--ease-out);
 }
 
-.cc-quad .cc-shape {
-  width: calc(var(--w) * 0.2);
-  height: calc(var(--w) * 0.2);
-}
-
-.cc-quad .cc-shape:nth-child(1) {
+.cc-wheel .crimson {
   fill: var(--crimson, #c8524e);
 }
 
-.cc-quad .cc-shape:nth-child(2) {
+.cc-wheel .azure {
   fill: var(--azure, #4a86cb);
 }
 
-.cc-quad .cc-shape:nth-child(3) {
+.cc-wheel .amber {
   fill: var(--amber, #dfae4c);
 }
 
-.cc-quad .cc-shape:nth-child(4) {
+.cc-wheel .jade {
   fill: var(--jade, #57a57e);
 }
 
-/* Choose colour: a wheel of all four. */
-.cc-wheel {
-  width: calc(var(--w) * 0.56);
-  height: calc(var(--w) * 0.56);
-  border-radius: 50%;
-  background: conic-gradient(var(--crimson, #c8524e) 0 25%, var(--azure, #4a86cb) 0 50%, var(--amber, #dfae4c) 0 75%, var(--jade, #57a57e) 0);
-  box-shadow: 0 0 0 calc(var(--w) * 0.035) #fff;
+/* On the pile: the colour chosen lit, the others dimmed. */
+.cc-wheel.chosen path:not(.on) {
+  opacity: 0.22;
+}
+
+.cc-wheel-mark .cc-icon {
+  width: calc(var(--w) * 0.34);
+  height: calc(var(--w) * 0.34);
+}
+
+.cc-wheel-mark .cc-num.plus {
+  font-size: calc(var(--w) * 0.3);
 }
 
 /* The table: the others round it on an arc, the deck and the pile in the middle on a felt whose
@@ -14473,7 +14700,9 @@ button.profile-avatar:not(:disabled):active {
   /* Deck and pile as big as the screen's width and height allow. */
   --dw: clamp(50px, min(16vw, 8.5dvh), 70px);
   --pw: clamp(76px, min(25vw, 13dvh), 108px);
-  --cy: 50%;
+  /* The felt a little below the middle of the room it has: nearer the middle of the screen. */
+  --drop: clamp(0px, 2.4dvh, 22px);
+  --cy: calc(50% + var(--drop));
   position: relative;
   flex: 1 1 0;
   min-height: calc(var(--pw) * 1.33 + 44px);
@@ -14484,9 +14713,9 @@ button.profile-avatar:not(:disabled):active {
   position: absolute;
   left: 2%;
   right: 2%;
-  top: 50%;
+  top: var(--cy);
   /* Round the middle, not filling a tall table to the brim. */
-  height: min(100%, calc(var(--pw) * 1.33 + 140px));
+  height: min(calc(100% - 2 * var(--drop)), calc(var(--pw) * 1.33 + 140px));
   transform: translateY(-50%);
   border-radius: 50%;
   background: var(--surface);
@@ -14510,14 +14739,32 @@ button.profile-avatar:not(:disabled):active {
   --active: var(--jade);
 }
 
-.cc-dir {
+/* Which way play goes: arrows along the rim, on both sides. Turned round, they fade in turned. */
+.cc-turn {
   position: absolute;
-  left: 50%;
-  top: 6px;
-  transform: translateX(-50%);
-  color: var(--muted);
-  font-size: 1.1rem;
-  line-height: 1;
+  inset: 0;
+  overflow: visible;
+  animation: cc-turn 0.5s var(--ease-out);
+}
+
+.cc-turn-arc {
+  fill: none;
+  stroke: color-mix(in srgb, var(--active) 75%, var(--ink));
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+.cc-turn-head {
+  fill: color-mix(in srgb, var(--active) 75%, var(--ink));
+  opacity: 0.8;
+}
+
+@keyframes cc-turn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }
 
 /* The others across the table: a row (two with many), room over it for the arrow on whose turn it is. */
@@ -14552,8 +14799,8 @@ button.profile-avatar:not(:disabled):active {
   width: 30px;
   height: 40px;
   margin-left: -15px;
-  border-radius: 5px;
-  box-shadow: inset 0 0 0 2.5px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
+  border-radius: 3.5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   transform-origin: 50% 110%;
   transform: translateX(calc(var(--k) * 3px)) rotate(calc(var(--k) * 6deg));
   transition: transform 0.25s var(--ease-out);
@@ -14735,13 +14982,13 @@ button.profile-avatar:not(:disabled):active {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* A card's back, as printed: navy inside a white line, a diamond round the four-colour wheel. */
 .cc-back {
   display: block;
   width: 72px;
   height: 96px;
-  border-radius: 13px;
-  background: conic-gradient(var(--crimson) 0 25%, var(--azure) 0 50%, var(--amber) 0 75%, var(--jade) 0);
-  box-shadow: inset 0 0 0 5px #24242a;
+  border-radius: 11%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 630 840' preserveAspectRatio='none'%3E%3Crect width='630' height='840' fill='%23171d2b'/%3E%3Crect x='26' y='26' width='578' height='788' rx='42' fill='%23253a61' stroke='%23fff' stroke-width='14'/%3E%3Cg transform='translate%28315 420%29'%3E%3Crect x='-150' y='-150' width='300' height='300' rx='38' fill='none' stroke='%23fff' stroke-width='14' transform='rotate%2845%29'/%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0.15' y1='0' x2='0.85' y2='1'%3E%3Cstop offset='0' stop-color='%238db6f5'/%3E%3Cstop offset='1' stop-color='%235b8fe0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='rotate%28-12%29'%3E%3Crect x='-95' y='-89' width='190' height='190' rx='40' fill='%23000' opacity='0.35'/%3E%3Crect x='-95' y='-84' width='190' height='190' rx='40' fill='%232f5aa0'/%3E%3Crect x='-95' y='-95' width='190' height='190' rx='40' fill='url%28%23f%29'/%3E%3Cg fill='%2315160f'%3E%3Ccircle cx='-52' cy='-52' r='20'/%3E%3Ccircle cx='52' cy='-52' r='20'/%3E%3Ccircle r='20'/%3E%3Ccircle cx='-52' cy='52' r='20'/%3E%3Ccircle cx='52' cy='52' r='20'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
 
 /* The deck: three backs a little apart, a stack with some height to it. */
@@ -14757,8 +15004,8 @@ button.profile-avatar:not(:disabled):active {
   inset: 0;
   width: auto;
   height: auto;
-  border-radius: calc(var(--dw) * 0.18);
-  box-shadow: inset 0 0 0 4px #24242a, 0 1px 2px rgba(0, 0, 0, 0.3);
+  border-radius: calc(var(--dw) * 0.11);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .cc-deck-stack .cc-back:nth-child(1) {
@@ -14783,7 +15030,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .cc-deck.must .cc-deck-stack .cc-back:last-child {
-  box-shadow: inset 0 0 0 4px #24242a, 0 0 0 3px var(--accent), 0 6px 16px -4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px var(--accent), 0 6px 16px -4px rgba(0, 0, 0, 0.4);
 }
 
 .cc-deck.must .cc-deck-label {
@@ -14812,7 +15059,6 @@ button.profile-avatar:not(:disabled):active {
   position: relative;
   width: var(--pw);
   height: calc(var(--pw) * 1.33);
-  margin-bottom: calc(0.85rem + 8px);
 }
 
 .cc-pile-card {
@@ -14873,40 +15119,6 @@ button.profile-avatar:not(:disabled):active {
   }
 }
 
-.cc-active {
-  position: absolute;
-  left: calc(50% + (var(--dw) + clamp(24px, 9vw, 40px)) / 2);
-  top: calc(var(--cy) + var(--pw) * 0.665 - (0.85rem + 8px) / 2 + 10px);
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-.cc-active .cc-shape {
-  width: 14px;
-  height: 14px;
-}
-
-.cc-active.crimson .cc-shape {
-  fill: var(--crimson);
-}
-
-.cc-active.azure .cc-shape {
-  fill: var(--azure);
-}
-
-.cc-active.amber .cc-shape {
-  fill: var(--amber);
-}
-
-.cc-active.jade .cc-shape {
-  fill: var(--jade);
-}
-
 /* A word over the table for a moment: last card, forgot it, takes 8, sits out. */
 .cc-toast {
   position: absolute;
@@ -14954,7 +15166,7 @@ button.profile-avatar:not(:disabled):active {
 .cc-status {
   align-self: center;
   max-width: 100%;
-  margin: 0;
+  margin: clamp(4px, 1.6dvh, 14px) 0 0;
   padding: 6px 16px;
   border-radius: 18px;
   font-weight: 700;
@@ -14970,7 +15182,6 @@ button.profile-avatar:not(:disabled):active {
 
 .cc-hint {
   margin: 4px 0 0;
-  min-height: 1.3em;
   color: var(--muted);
   font-size: 0.85rem;
   text-align: center;
@@ -14981,6 +15192,7 @@ button.profile-avatar:not(:disabled):active {
   justify-content: center;
   gap: 10px;
   min-height: 44px;
+  margin-top: 2px;
 }
 
 .cc-call,
@@ -15120,8 +15332,8 @@ button.profile-avatar:not(:disabled):active {
   z-index: 1000;
   margin: 0;
   pointer-events: none;
-  border-radius: 13%;
-  box-shadow: inset 0 0 0 3px #24242a, 0 4px 10px -2px rgba(0, 0, 0, 0.4);
+  border-radius: 11%;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.4);
   --crimson: #c8524e;
   --azure: #4a86cb;
   --amber: #dfae4c;
@@ -15272,35 +15484,51 @@ button.profile-avatar:not(:disabled):active {
   color: var(--muted);
 }
 
-/* The tricks taken: face down beside the player (on the side towards the middle), one per trick. */
+/* The tricks taken: face down beside the player (on the side towards the middle), one per trick,
+   a little fanned so the stack shows how many. */
 .fz-tricks {
   position: relative;
   display: inline-block;
-  width: 22px;
-  height: 30px;
+  width: 26px;
+  height: 39px;
 }
 
 .fz-seat .fz-tricks {
   position: absolute;
-  top: 0;
-  left: calc(100% + 4px);
+  top: -2px;
+  left: calc(100% + 8px);
 }
 
+/* On the right of the table they lie to the left, fanned that way too. */
 .fz-seat.right .fz-tricks {
   left: auto;
-  right: calc(100% + 4px);
+  right: calc(100% + 8px);
 }
 
-.fz-tricks i {
+.fz-seat.right .fz-trick-back {
+  left: auto;
+  right: calc(var(--k) * 4px);
+}
+
+.fz-trick-back {
   position: absolute;
-  left: calc(var(--k) * 3px);
+  left: calc(var(--k) * 4px);
   top: 0;
-  width: 20px;
-  height: 30px;
-  border-radius: 3px;
-  background: #202124;
-  box-shadow: inset 0 0 0 1px #b99a5f, 0 1px 2px rgba(0, 0, 0, 0.35);
-  transform: rotate(calc(var(--k) * 2deg - 3deg));
+  transform: rotate(calc(var(--k) * 3deg - 4deg));
+  animation: fz-trick-in 0.3s var(--ease-out);
+}
+
+.fz-trick-back .fz-card {
+  --w: 26px;
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes fz-trick-in {
+  from {
+    opacity: 0;
+    transform: scale(1.3) rotate(calc(var(--k) * 3deg - 4deg));
+  }
 }
 
 /* A card: all in its faction's colour (an SVG, 100 × 150), the number in two corners, the signs. */
@@ -15415,10 +15643,12 @@ button.profile-avatar:not(:disabled):active {
   transform: translate(1.5px, 1.5px);
 }
 
+/* The trump card turned up lies on the deck, a touch askew. */
 .fz-trump-card {
-  position: relative;
-  margin-left: -8px;
-  transform: rotate(9deg);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transform: translate(2px, -2px) rotate(4deg);
   perspective: 600px;
 }
 
@@ -15429,7 +15659,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 .fz-flip > .fz-card {
-  --w: 54px;
+  --w: 44px;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
@@ -15523,7 +15753,7 @@ button.profile-avatar:not(:disabled):active {
 .fz-pile {
   position: absolute;
   left: 50%;
-  top: var(--cy, 56%);
+  top: var(--py, 60%);
   width: 0;
   height: 0;
 }
@@ -16917,10 +17147,73 @@ html[data-look] .play-screen > .top-bar .round-btn {
   gap: 6px;
 }
 
+/* No move left: what's still standing shivers, one after the other, and the line under the box
+   says so with a shake. */
+.nf-box.stuck .nf-flap:not(.down) .nf-block {
+  animation: nf-shiver 0.9s var(--ease-out);
+}
+
+.nf-box.stuck .nf-flap:not(.down):nth-child(2n) .nf-block {
+  animation-delay: 40ms;
+}
+
+.nf-box.stuck .nf-flap:not(.down):nth-child(3n) .nf-block {
+  animation-delay: 80ms;
+}
+
+@keyframes nf-shiver {
+  0%,
+  100% {
+    rotate: x 0deg;
+  }
+  15% {
+    rotate: x -9deg;
+  }
+  35% {
+    rotate: x 6deg;
+  }
+  55% {
+    rotate: x -4deg;
+  }
+  75% {
+    rotate: x 2deg;
+  }
+}
+
+.nf-hint.stuck {
+  color: var(--bad);
+  animation: nf-stuck 0.5s var(--ease-out);
+}
+
+.nf-felt .nf-hint.stuck {
+  color: #ffb3ad;
+}
+
+@keyframes nf-stuck {
+  0%,
+  100% {
+    translate: 0;
+  }
+  20% {
+    translate: -6px;
+  }
+  40% {
+    translate: 5px;
+  }
+  60% {
+    translate: -3px;
+  }
+  80% {
+    translate: 2px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nf-flap.nope,
   .nf-flap.down .nf-block,
-  .nf-flap.down .nf-side::after {
+  .nf-flap.down .nf-side::after,
+  .nf-box.stuck .nf-flap .nf-block,
+  .nf-hint.stuck {
     animation: none;
   }
   .nf-block {
@@ -17395,6 +17688,10 @@ html[data-look] .play-screen > .top-bar .round-btn {
   line-height: 1.35;
 }
 
+.nf-stage-felt .nf-hint.stuck {
+  color: var(--bad);
+}
+
 .nf-stage-felt .nf-one-btn {
   background: var(--fill);
   color: var(--ink);
@@ -17415,4 +17712,156 @@ html[data-look] .play-screen > .top-bar .round-btn {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* From screen to screen with the app's own buttons (lib/router.ts): a short slide, in from the
+   right going in, from the left coming back. The old screen moves a little the other way and fades. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.26s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+/* The old one goes quicker: never two screens half on top of each other for long. */
+::view-transition-old(root) {
+  animation-duration: 0.16s;
+}
+
+:root[data-slide='in']::view-transition-new(root) {
+  animation-name: slide-in-right;
+}
+
+:root[data-slide='in']::view-transition-old(root) {
+  animation-name: slide-out-left;
+}
+
+:root[data-slide='back']::view-transition-new(root) {
+  animation-name: slide-in-left;
+}
+
+:root[data-slide='back']::view-transition-old(root) {
+  animation-name: slide-out-right;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+
+@keyframes slide-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
+
+@keyframes slide-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+/* ---------- The prost die on the back of every card (Spellbound's keep their own) ----------
+   The app icon's lime die, thrown a little crooked, in the middle of the back. On a back of another
+   colour it takes that colour (lighter, with a darker edge): red on Egyptian Rat Screw's backs. */
+.pcard-back,
+.kc-slot,
+.ftd-card.back,
+.tr-stock,
+.sp-pile,
+.ar-pile-card,
+.rs-stack i.top,
+.rs-stack i.rs-give,
+.rs-stack i.rs-get {
+  --die-1: color-mix(in oklab, var(--accent) 55%, #fff);
+  --die-2: color-mix(in oklab, var(--accent) 85%, #fff);
+  --die-lip: color-mix(in oklab, var(--accent) 62%, #000);
+  container-type: inline-size;
+}
+
+html[data-look='pop'] .pcard-back,
+html[data-look='pop'] .kc-slot {
+  --die-1: #d2fa4c;
+  --die-2: #b9e62b;
+  --die-lip: #87ae18;
+}
+
+.rs-stack i.top,
+.rs-stack i.rs-give,
+.rs-stack i.rs-get {
+  --die-1: #f0736a;
+  --die-2: #d9493f;
+  --die-lip: #8f2620;
+}
+
+.sp-pile.empty::after {
+  display: none;
+}
+
+.prost-die,
+.pcard-back::after,
+.kc-slot::after,
+.ftd-card.back::after,
+.tr-stock::after,
+.sp-pile::after,
+.ar-pile-card::after,
+.rs-stack i.top::after,
+.rs-stack i.rs-give::after,
+.rs-stack i.rs-get::after {
+  --s: var(--die-size, 36cqw);
+  width: var(--s);
+  aspect-ratio: 1;
+  border-radius: 21%;
+  rotate: -12deg;
+  pointer-events: none;
+  background:
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 15.8% 15.8% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 84.2% 15.8% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 50% 50% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 15.8% 84.2% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 84.2% 84.2% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.32), transparent 60%),
+    linear-gradient(160deg, var(--die-1, #d2fa4c), var(--die-2, #b9e62b));
+  box-shadow:
+    0 calc(var(--s) * 0.06) 0 var(--die-lip, #87ae18),
+    0 calc(var(--s) * 0.12) calc(var(--s) * 0.16) calc(var(--s) * -0.04) rgba(0, 0, 0, 0.5);
+}
+
+.pcard-back::after,
+.kc-slot::after,
+.ftd-card.back::after,
+.tr-stock::after,
+.sp-pile::after,
+.ar-pile-card::after,
+.rs-stack i.top::after,
+.rs-stack i.rs-give::after,
+.rs-stack i.rs-get::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -56%;
+}
+
+/* Small backs: a little bigger, so the five still read. */
+.kc-slot,
+.ar-pile-card,
+.rs-stack i {
+  --die-size: 42cqw;
+}
+
+/* Trash's face-down slots carry their number in the middle: that stays readable. */
+.tr-slot .pcard-back::after {
+  display: none;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { useYourTurn } from '../../lib/turn';
+import { useCrewButton, useYourTurn } from '../../lib/turn';
 import { RowIcon } from '../../components/Icons';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -176,6 +176,8 @@ export default function Palace() {
   const known = useApp().knows('palace');
   const [tableless, setTableless] = useState(false);
   useFeedback(view);
+  // Setting up: new players join the room (its code is in the crew sheet).
+  useCrewButton(!view && isHost ? 'room' : null);
 
   if (!view) {
     if (!isHost) {
@@ -192,8 +194,9 @@ export default function Palace() {
     }
     // With a table phone the host's phone lies in the middle and everyone else plays.
     // Without one the host plays too, and every phone shows the stock and the pile.
-    const online = room.members.filter((m) => m.online && (tableless || !m.host));
-    const ready = online.slice(0, MAX_PLAYERS);
+    // Everyone in the room: a phone that's locked for a moment still plays.
+    const people = room.members.filter((m) => tableless || !m.host);
+    const ready = people.slice(0, MAX_PLAYERS);
     return (
       <div className="pl">
         <div className="bd-head">
@@ -231,7 +234,7 @@ export default function Palace() {
             </span>
           </Tap>
         </div>
-        {online.length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
+        {people.length > MAX_PLAYERS && <p className="notice">{t('Max {max} players. The first {max} play.', { max: MAX_PLAYERS })}</p>}
         {!known && <p className="fine-print">{t('Turn order is the order above. A random player deals first.')}</p>}
         <div className="sticky-action">
           <BigButton

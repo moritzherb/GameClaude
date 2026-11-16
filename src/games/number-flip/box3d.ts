@@ -19,6 +19,8 @@ export interface FlapState {
   falling: number[];
   /** Flaps can be tapped. */
   interactive: boolean;
+  /** No move left: the flaps still standing shiver once. */
+  stuck?: boolean;
 }
 
 /** A flap falling into the box, and the next one after it (ms). Kept in step with the game. */
@@ -26,6 +28,9 @@ export const FALL_MS = 640;
 export const STAGGER = 90;
 /** A throw of the dice, from the hand to lying still (ms). */
 export const THROW_MS = 1050;
+/** No move left: one flap's shiver, and the next one after it (ms). */
+export const SHIVER_MS = 900;
+export const SHIVER_STAGGER = 40;
 
 const FW = 3; // flap width
 const FG = 0.16; // gap between flaps
@@ -40,6 +45,7 @@ const FELT_D = 15;
 const ROD_Y = 0.45;
 const DIE = 2.3;
 const ACCENT = new THREE.Color('#b8f01e');
+const STUCK_RED = new THREE.Color('#ff453a');
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 const easeIn = (t: number) => t * t;
@@ -226,6 +232,7 @@ export class Box3D {
   private raycaster = new THREE.Raycaster();
   private lastRoll = -1;
   private disposed = false;
+  private stuck = false;
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -453,6 +460,8 @@ export class Box3D {
 
   setFlaps(state: FlapState) {
     this.interactive = state.interactive;
+    const shiver = !!state.stuck && !this.stuck;
+    this.stuck = !!state.stuck;
     for (const f of this.flaps) {
       const open = state.open.includes(f.n);
       const picked = state.picked.includes(f.n);
@@ -490,7 +499,23 @@ export class Box3D {
         });
       }
     }
+    if (shiver) this.shiver();
     this.render();
+  }
+
+  /**
+   * No move left: the flaps still standing shiver on their rod, one after the other from the left,
+   * flushing red as they do, and settle back.
+   */
+  private shiver() {
+    this.flaps
+      .filter((f) => !f.down)
+      .forEach((f, i) => {
+        this.animate(SHIVER_MS, i * SHIVER_STAGGER, (u) => {
+          this.setFlap(f, -0.13 * Math.sin(u * Math.PI * 5) * (1 - u) ** 1.4, 0, 1);
+          f.mat.emissive.copy(STUCK_RED).multiplyScalar(0.3 * Math.sin(Math.PI * u));
+        });
+      });
   }
 
   private setFlap(f: Flap, angle: number, lift: number, shade: number) {

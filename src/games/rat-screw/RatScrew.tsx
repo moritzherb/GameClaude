@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { useYourTurn } from '../../lib/turn';
+import { useCrewButton, useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import { CardFace } from '../../components/PlayingCard';
@@ -39,7 +39,10 @@ const FAN = 5;
 export default function RatScrew() {
   const { state, set, room, isHost, myId } = useShared<Shared>('ers', { g: null, seats: [] });
   const known = useApp().knows('rat-screw');
-  const online = room.members.filter((m) => m.online);
+  // Everyone in the room: a phone that's locked for a moment still plays.
+  const people = room.members;
+  // Setting up: new players join the room (its code is in the crew sheet).
+  useCrewButton((!state.g || state.seats.length < MIN_PLAYERS) && isHost ? 'room' : null);
   const [picked, setPicked] = useState<string[] | null>(null);
   const [jokers, setJokers] = useState(false);
 
@@ -56,9 +59,9 @@ export default function RatScrew() {
         </div>
       );
     }
-    const chosen = (picked ?? online.slice(0, MAX_PLAYERS).map((m) => m.id)).filter((id) => online.some((m) => m.id === id));
+    const chosen = (picked ?? people.slice(0, MAX_PLAYERS).map((m) => m.id)).filter((id) => people.some((m) => m.id === id));
     const toggle = (id: string) => setPicked(chosen.includes(id) ? chosen.filter((x) => x !== id) : [...chosen, id].slice(-MAX_PLAYERS));
-    const seats: Seat[] = online.filter((m) => chosen.includes(m.id)).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
+    const seats: Seat[] = people.filter((m) => chosen.includes(m.id)).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
     return (
       <div className="bd">
         <div className="bd-head">
@@ -68,8 +71,8 @@ export default function RatScrew() {
         </div>
         <h3 className="section-title">{t('Who plays?')}</h3>
         <div className="pick-grid">
-          {online.map((m) => (
-            <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
+          {people.map((m) => (
+            <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
               <span className="pick-chip-avatar">
                 <Avatar avatar={m.avatar} photo={m.photo} />
               </span>
@@ -137,6 +140,15 @@ function Table({
   const out = me >= 0 && g.out[me];
   const others = seats.map((s, i) => ({ s, i })).filter(({ i }) => i !== me);
   const fan = g.middle.slice(-FAN);
+  // A wrong slap just now: a card goes off the slapper's pile and under each of the others'.
+  const wrong = wrongSlap(g);
+  const fxFor = (i: number): StackFx | undefined => {
+    if (!wrong) return undefined;
+    const key = flashKey(g);
+    if (i === wrong.from) return { key, give: wrong.to.length };
+    const at = wrong.to.indexOf(i);
+    return at >= 0 ? { key, get: at } : undefined;
+  };
 
   if (g.winner != null) {
     return (
@@ -180,7 +192,7 @@ function Table({
               </span>
               <span className="rs-seat-name">{s.name}</span>
             </span>
-            <Stack n={g.piles[i].length} label={t('{name}: {n} cards', { name: s.name, n: g.piles[i].length })} />
+            <Stack n={g.piles[i].length} fx={fxFor(i)} label={t('{name}: {n} cards', { name: s.name, n: g.piles[i].length })} />
           </div>
         ))}
       </div>
@@ -245,7 +257,7 @@ function Table({
             act((x) => play(x, me));
           }}
         >
-          <Stack n={mine.length} big label="" />
+          <Stack n={mine.length} big fx={me >= 0 ? fxFor(me) : undefined} label="" />
           <span className="rs-mine-label">{myTurn ? t('Tap to play') : me >= 0 ? t('{n} cards', { n: mine.length }) : t('Watching')}</span>
         </button>
         {me >= 0 && (
@@ -299,13 +311,50 @@ function HandIcon() {
   );
 }
 
+/** Who gave a card for the wrong slap just now, and who got one (in the order the rules hand them out). */
+function wrongSlap(g: Game): { from: number; to: number[] } | null {
+  const e = g.last;
+  if (e?.k !== 'wrong') return null;
+  const n = g.piles.length;
+  const to: number[] = [];
+  for (let k = 1; k < n && to.length < e.gave; k++) {
+    const seat = (e.by + k) % n;
+    if (!g.out[seat]) to.push(seat);
+  }
+  return { from: e.by, to };
+}
+
+/** A wrong slap on this pile: cards going off it (give), or one going under it (get: its turn in the round). */
+interface StackFx {
+  key: string;
+  give?: number;
+  get?: number;
+}
+
 /** A face-down pile, as thick as the cards in it (a hair per card), never a number. */
-function Stack({ n, big, label }: { n: number; big?: boolean; label: string }) {
+function Stack({ n, big, fx, label }: { n: number; big?: boolean; fx?: StackFx; label: string }) {
   const layers = Math.min(n, 60);
+  const give = fx?.give ?? 0;
   return (
-    <span className={`rs-stack${big ? ' big' : ''}${n ? '' : ' empty'}`} role={label ? 'img' : undefined} aria-label={label || undefined} style={{ '--n': layers } as CSSProperties}>
+    <span
+      key={fx?.get != null ? `got-${fx.key}` : undefined}
+      className={`rs-stack${big ? ' big' : ''}${n ? '' : ' empty'}${fx?.get != null ? ' got' : ''}`}
+      role={label ? 'img' : undefined}
+      aria-label={label || undefined}
+      style={{ '--n': layers, '--d': fx?.get ?? 0 } as CSSProperties}
+    >
+      {/* The card given to this pile: drawn first, so it slides in under the others. */}
+      {fx?.get != null && <i key={`get-${fx.key}`} className="rs-get" style={{ '--k': 0 } as CSSProperties} />}
       {Array.from({ length: layers }, (_, k) => (
-        <i key={k} style={{ '--k': k } as CSSProperties} />
+        <i key={k} className={k === layers - 1 ? 'top' : undefined} style={{ '--k': k } as CSSProperties} />
+      ))}
+      {/* The cards given away: on top of the pile for a moment, then off it one after another. */}
+      {Array.from({ length: give }, (_, j) => (
+        <i
+          key={`give-${fx?.key}-${j}`}
+          className="rs-give"
+          style={{ '--k': layers + give - 1 - j, '--d': j, '--side': j % 2 ? -1 : 1 } as CSSProperties}
+        />
       ))}
     </span>
   );
