@@ -17709,3 +17709,61 @@ html[data-look] .play-screen > .top-bar .round-btn {
   white-space: nowrap;
   border: 0;
 }
+
+/* From screen to screen with the app's own buttons (lib/router.ts): a short slide, in from the
+   right going in, from the left coming back. The old screen moves a little the other way and fades. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.26s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+/* The old one goes quicker: never two screens half on top of each other for long. */
+::view-transition-old(root) {
+  animation-duration: 0.16s;
+}
+
+:root[data-slide='in']::view-transition-new(root) {
+  animation-name: slide-in-right;
+}
+
+:root[data-slide='in']::view-transition-old(root) {
+  animation-name: slide-out-left;
+}
+
+:root[data-slide='back']::view-transition-new(root) {
+  animation-name: slide-in-left;
+}
+
+:root[data-slide='back']::view-transition-old(root) {
+  animation-name: slide-out-right;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+
+@keyframes slide-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
+
+@keyframes slide-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
