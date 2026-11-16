@@ -849,7 +849,6 @@ html[data-os='android'] .app-icon.sm {
 }
 
 .lib-box {
-  --k: #6d6a5f;
   width: 100%;
   aspect-ratio: 1;
   padding: 12px;
@@ -858,7 +857,8 @@ html[data-os='android'] .app-icon.sm {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 10px;
-  background: color-mix(in oklab, var(--k) 20%, var(--pop-sunk));
+  /* All folders alike, as on the iPhone: the icons bring the colour. */
+  background: var(--pop-sunk);
   box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.55), inset 0 -0.5px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -935,14 +935,13 @@ html[data-os='android'] .lib-box .app-icon {
 }
 
 .sb-folder {
-  --k: #6d6a5f;
   max-height: 72vh;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
   padding: 22px 14px 18px;
   border-radius: 38px;
-  background: color-mix(in oklab, var(--k) 14%, color-mix(in oklab, var(--surface) 72%, transparent));
+  background: color-mix(in oklab, var(--surface) 72%, transparent);
   box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.18), 0 24px 48px -16px rgba(0, 0, 0, 0.55);
   /* It grows out of the corner that was tapped (Springboard sets where), not out of the middle. */
   transform-origin: var(--from-x, 50%) var(--from-y, 50%);

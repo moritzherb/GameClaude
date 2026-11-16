@@ -367,7 +367,7 @@ export function LibraryGroup({ category, onOpen }: { category: Category; onOpen:
   const rest = many ? list.slice(3, 7) : [];
   return (
     <div className="lib-group">
-      <div className="lib-box" style={{ '--k': category.color } as CSSProperties}>
+      <div className="lib-box">
         {big.map((g) => (
           <GameApp key={g.id} game={g} />
         ))}
@@ -420,7 +420,7 @@ function LibraryFolder({ category, from, onClose }: { category: Category; from: 
       <h2 className="sb-folder-title" onClick={close}>
         {t(category.label)}
       </h2>
-      <div ref={panel} className="sb-folder" role="dialog" aria-modal="true" aria-label={t(category.label)} style={{ '--k': category.color } as CSSProperties}>
+      <div ref={panel} className="sb-folder" role="dialog" aria-modal="true" aria-label={t(category.label)}>
         <div className="os-grid sb-folder-grid">
           {inCategory(category).map((g) => (
             <GameApp key={g.id} game={g} />
