@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { useYourTurn } from '../../lib/turn';
+import { useCrewButton, useYourTurn } from '../../lib/turn';
 import Avatar from '../../components/Avatar';
 import BigButton from '../../components/BigButton';
 import HandFan, { SortButton } from '../../components/HandFan';
@@ -57,7 +57,10 @@ const KIND_NAME: Record<Card['kind'], string> = {
 export default function ColorClash() {
   const { state, set, room, isHost, myId } = useShared<Shared>('clash', { g: null, seats: [] });
   const known = useApp().knows('color-clash');
-  const online = room.members.filter((m) => m.online);
+  // Everyone in the room: a phone that's locked for a moment still plays.
+  const people = room.members;
+  // Setting up: new players join the room (its code is in the crew sheet).
+  useCrewButton((!state.g || state.seats.length < MIN_PLAYERS) && isHost ? 'room' : null);
   const [picked, setPicked] = useState<string[] | null>(null);
 
   if (!state.g || state.seats.length < MIN_PLAYERS) {
@@ -72,9 +75,9 @@ export default function ColorClash() {
         </div>
       );
     }
-    const chosen = (picked ?? online.slice(0, MAX_PLAYERS).map((m) => m.id)).filter((id) => online.some((m) => m.id === id));
+    const chosen = (picked ?? people.slice(0, MAX_PLAYERS).map((m) => m.id)).filter((id) => people.some((m) => m.id === id));
     const toggle = (id: string) => setPicked(chosen.includes(id) ? chosen.filter((x) => x !== id) : [...chosen, id].slice(-MAX_PLAYERS));
-    const seats: Seat[] = online.filter((m) => chosen.includes(m.id)).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
+    const seats: Seat[] = people.filter((m) => chosen.includes(m.id)).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
     return (
       <div className="bd">
         <div className="bd-head">
@@ -89,8 +92,8 @@ export default function ColorClash() {
         </div>
         <h3 className="section-title">{t('Who plays?')}</h3>
         <div className="pick-grid">
-          {online.map((m) => (
-            <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
+          {people.map((m) => (
+            <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
               <span className="pick-chip-avatar">
                 <Avatar avatar={m.avatar} photo={m.photo} />
               </span>

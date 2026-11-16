@@ -230,6 +230,11 @@ export function RoomProvider({ children }: { children: ReactNode }) {
             guests.current.forEach((c) => c.open && c.send({ t: 'cheers', from } satisfies ToGuest));
           } else if (msg.t === 'game' && memberId) {
             emitGame(msg.data, memberId);
+          } else if (msg.t === 'leave' && memberId) {
+            const gone = memberId;
+            guests.current.delete(gone);
+            setAllMembers(membersRef.current.filter((m) => m.id !== gone));
+            broadcastLobby();
           }
         });
         conn.on('close', () => {
@@ -440,9 +445,23 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       join,
       leave: () => {
         saveRoom(null);
-        if (role === 'host') guests.current.forEach((c) => c.open && c.send({ t: 'bye', reason: 'closed' } satisfies ToGuest));
-        // Give the goodbye a moment to go out before the connections close.
-        window.setTimeout(teardown, role === 'host' ? 300 : 0);
+        if (role === 'host') {
+          guests.current.forEach((c) => c.open && c.send({ t: 'bye', reason: 'closed' } satisfies ToGuest));
+          // Give the goodbye a moment to go out before the connections close.
+          window.setTimeout(teardown, 300);
+        } else {
+          // Tell the host we're gone for good (not just a locked phone), then close a moment later.
+          const conn = toHost.current;
+          const p = peer.current;
+          if (conn?.open) conn.send({ t: 'leave' } satisfies ToHost);
+          toHost.current = null;
+          peer.current = null;
+          teardown();
+          window.setTimeout(() => {
+            conn?.close();
+            p?.destroy();
+          }, 300);
+        }
         setStatus('idle');
         setRole(null);
         setCode(null);

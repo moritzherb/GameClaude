@@ -28,8 +28,6 @@ const fuckTheDealer: Record<string, string> = {
     'Dieses Handy liegt als Tisch in der Mitte. Das zweite Handy ist das Kartendeck: Es geht immer an den Dealer, der sich darauf die Karte anschaut.',
   'Deck phone: {name}': 'Deck-Handy: {name}',
   'Connect a second phone to this room. It becomes the deck.': 'Verbinde ein zweites Handy mit diesem Raum. Es wird zum Kartendeck.',
-  'Add at least 2 players on this phone first.': 'Füg auf diesem Handy zuerst mindestens 2 Spieler hinzu.',
-  'Add players': 'Spieler hinzufügen',
   'Waiting for the deck phone…': 'Warte auf das Deck-Handy…',
   'You’re the deck': 'Du bist das Kartendeck',
   'Waiting for {name} to start the game…': 'Warte, bis {name} das Spiel startet…',

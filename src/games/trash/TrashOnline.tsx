@@ -20,7 +20,8 @@ interface Shared {
 export default function TrashOnline() {
   const { state, set, room, isHost, myId } = useShared<Shared>('tr', { g: null, seats: [] });
   const known = useApp().knows('trash');
-  const online = room.members.filter((m) => m.online);
+  // Everyone in the room: a phone that's locked for a moment still plays.
+  const people = room.members;
   const [picked, setPicked] = useState<string[]>([]);
   const [dealer, setDealer] = useState<Who>(() => pick([0, 1] as Who[]));
   useCrewButton((!state.g || state.seats.length < 2) && isHost ? 'room' : null);
@@ -40,9 +41,9 @@ export default function TrashOnline() {
       );
     }
     // Two play; whoever else is in the room watches. Default: the first two phones.
-    const chosen = (picked.length ? picked : online.slice(0, 2).map((m) => m.id)).filter((id) => online.some((m) => m.id === id));
+    const chosen = (picked.length ? picked : people.slice(0, 2).map((m) => m.id)).filter((id) => people.some((m) => m.id === id));
     const toggle = (id: string) => setPicked(chosen.includes(id) ? chosen.filter((x) => x !== id) : [...chosen, id].slice(-2));
-    const seats = chosen.map((id) => online.find((m) => m.id === id)!).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
+    const seats = chosen.map((id) => people.find((m) => m.id === id)!).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
     return (
       <div className="bd">
         <div className="bd-head">
@@ -50,14 +51,14 @@ export default function TrashOnline() {
           <h2 className="bd-title big">{t('Trash')}</h2>
           {!known && <p className="lead">{t('Each player on their own phone. Turn your cards over first.')}</p>}
         </div>
-        {online.length > 2 && (
+        {people.length > 2 && (
           <>
             <h3 className="section-title">{t('Who plays?')}</h3>
             <div className="pick-grid">
-              {online.map((m) => (
+              {people.map((m) => (
                 <Tap
                   key={m.id}
-                  className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}`}
+                  className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`}
                   style={{ '--chip': m.color } as CSSProperties}
                   onClick={() => toggle(m.id)}
                 >
@@ -84,7 +85,7 @@ export default function TrashOnline() {
         )}
         <div className="sticky-action">
           <BigButton size="xl" disabled={seats.length < 2} onClick={() => set({ g: newGame(dealer), seats })}>
-            {online.length < 2 ? t('Waiting for players…') : seats.length < 2 ? t('Pick two players') : t('Deal the cards')}
+            {people.length < 2 ? t('Waiting for players…') : seats.length < 2 ? t('Pick two players') : t('Deal the cards')}
           </BigButton>
         </div>
       </div>

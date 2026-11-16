@@ -9,7 +9,6 @@ import { t } from '../../i18n';
 import { cardColor, cardName, rankLabel, SUITS, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { navigate, paths } from '../../lib/router';
 import { load, save } from '../../lib/storage';
 import { useRoom } from '../../net/RoomProvider';
 import { useChanged, useQueuedSend, useResync } from '../../net/sync';
@@ -132,13 +131,14 @@ export default function FuckTheDealer() {
 /* ---------------- Host: pick the first dealer ---------------- */
 
 function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (s: Session) => void }) {
-  const { players } = useApp();
   const known = useApp().knows('fuck-the-dealer');
-  const [dealerId, setDealerId] = useState(() => (players.length ? pick(players).id : ''));
+  // The players are everyone in the room (a phone that's locked for a moment still plays).
+  const players = room.members;
+  const [chosen, setDealerId] = useState<string | null>(null);
+  const dealerId = chosen && players.some((p) => p.id === chosen) ? chosen : (players[0]?.id ?? '');
   const decks = room.members.filter((m) => !m.host && m.online);
-  // The players are this phone's crew (the other phone is just the deck).
-  useCrewButton('crew');
-  const enough = players.length >= 2;
+  // New players join the room (its code and QR code are in the crew sheet).
+  useCrewButton('room');
   return (
     <div className="bd">
       <div className="bd-head">
@@ -154,40 +154,29 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
         <span>{decks.length ? t('Deck phone: {name}', { name: decks[0].name }) : t('Connect a second phone to this room. It becomes the deck.')}</span>
       </div>
 
-      {enough ? (
-        <>
-          <div className="pick-grid">
-            {players.map((p) => (
-              <Tap
-                key={p.id}
-                className={`pick-chip${p.id === dealerId ? ' selected' : ''}`}
-                style={{ '--chip': p.color } as CSSProperties}
-                onClick={() => setDealerId(p.id)}
-              >
-                <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
-                <span className="pick-chip-name">{p.name}</span>
-                {/* The same word in German for this game. */}
-                {p.id === dealerId && <span className="pick-chip-badge">Dealer</span>}
-              </Tap>
-            ))}
-          </div>
-          <button type="button" className="text-btn" onClick={() => setDealerId(pick(players).id)}>
-            {t('Random dealer')}
-          </button>
-        </>
-      ) : (
-        <div className="notice-block">
-          <p className="notice">{t('Add at least 2 players on this phone first.')}</p>
-          <BigButton variant="light" onClick={() => navigate(paths.players(paths.online('fuck-the-dealer')))}>
-            {t('Add players')}
-          </BigButton>
-        </div>
-      )}
+      <div className="pick-grid">
+        {players.map((p) => (
+          <Tap
+            key={p.id}
+            className={`pick-chip${p.id === dealerId ? ' selected' : ''}${p.online ? '' : ' offline'}`}
+            style={{ '--chip': p.color } as CSSProperties}
+            onClick={() => setDealerId(p.id)}
+          >
+            <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+            <span className="pick-chip-name">{p.name}</span>
+            {/* The same word in German for this game. */}
+            {p.id === dealerId && <span className="pick-chip-badge">Dealer</span>}
+          </Tap>
+        ))}
+      </div>
+      <button type="button" className="text-btn" onClick={() => setDealerId(pick(players).id)}>
+        {t('Random dealer')}
+      </button>
 
       <div className="sticky-action">
         <BigButton
           size="xl"
-          disabled={!enough || !decks.length}
+          disabled={players.length < 2 || !decks.length}
           onClick={() =>
             onStart({
               seats: players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color })),

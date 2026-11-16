@@ -2697,6 +2697,11 @@ li {
   box-shadow: none;
 }
 
+/* In the room but not connected right now (phone locked): still plays, a little faded. */
+.pick-chip.offline .pick-chip-avatar {
+  opacity: 0.5;
+}
+
 /* The chance picked this one: it pops. */
 .pick-chip.landed {
   animation: pick-landed 0.5s var(--spring);

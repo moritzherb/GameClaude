@@ -4,6 +4,7 @@ import { SortButton } from '../../components/HandFan';
 import { CardFace } from '../../components/PlayingCard';
 import Tap from '../../components/Tap';
 import { t } from '../../i18n';
+import { useCrewButton } from '../../lib/turn';
 import { SUITS, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { load, save } from '../../lib/storage';
@@ -186,7 +187,10 @@ function useSpeed() {
 export default function Speed() {
   const { room, isHost, myId, match, act, setHostMatch } = useSpeed();
   const known = useApp().knows('speed');
-  const online = room.members.filter((m) => m.online);
+  // Everyone in the room: a phone that's locked for a moment still plays.
+  const people = room.members;
+  // Setting up: new players join the room (its code is in the crew sheet).
+  useCrewButton(!match && isHost ? 'room' : null);
   const [picked, setPicked] = useState<string[]>([]);
   const [shake, setShake] = useState<string | null>(null);
   // Tapping away at cards that don't fit (hoping one will the moment it can): three misses in
@@ -235,9 +239,9 @@ export default function Speed() {
       );
     }
     // Two play; whoever else is in the room watches the table. Default: the first two phones.
-    const chosen = (picked.length ? picked : online.slice(0, 2).map((m) => m.id)).filter((id) => online.some((m) => m.id === id));
+    const chosen = (picked.length ? picked : people.slice(0, 2).map((m) => m.id)).filter((id) => people.some((m) => m.id === id));
     const toggle = (id: string) => setPicked(chosen.includes(id) ? chosen.filter((x) => x !== id) : [...chosen, id].slice(-2));
-    const seats = chosen.map((id) => online.find((m) => m.id === id)!).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
+    const seats = chosen.map((id) => people.find((m) => m.id === id)!).map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
     return (
       <div className="bd">
         <div className="bd-head">
@@ -247,10 +251,10 @@ export default function Speed() {
         </div>
         <h3 className="section-title">{t('Who plays?')}</h3>
         <div className="pick-grid">
-          {online.map((m) => (
+          {people.map((m) => (
             <Tap
               key={m.id}
-              className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}`}
+              className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`}
               style={{ '--chip': m.color } as CSSProperties}
               onClick={() => toggle(m.id)}
             >
@@ -259,14 +263,14 @@ export default function Speed() {
             </Tap>
           ))}
         </div>
-        {!known && online.length > 2 && <p className="fine-print">{t('Everyone else watches the table.')}</p>}
+        {!known && people.length > 2 && <p className="fine-print">{t('Everyone else watches the table.')}</p>}
         <div className="sticky-action">
           <BigButton
             size="xl"
             disabled={seats.length < 2}
             onClick={() => setHostMatch({ game: newGame(), seats: [seats[0], seats[1]], count: 0 })}
           >
-            {online.length < 2 ? t('Waiting for players…') : seats.length < 2 ? t('Pick two players') : t('Deal the cards')}
+            {people.length < 2 ? t('Waiting for players…') : seats.length < 2 ? t('Pick two players') : t('Deal the cards')}
           </BigButton>
         </div>
       </div>

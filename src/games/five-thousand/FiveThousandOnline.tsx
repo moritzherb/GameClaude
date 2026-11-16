@@ -23,7 +23,8 @@ export default function FiveThousandOnline() {
   const photoOf = usePhotoOf();
   const { state, set, room, isHost, myId } = useShared<Shared>('fk', { g: null, picked: [], seats: [] });
   const known = useApp().knows('five-thousand');
-  const online = room.members.filter((m) => m.online);
+  // Everyone in the room: a phone that's locked for a moment still plays.
+  const people = room.members;
   const [starterId, setStarterId] = useState<string | null>(null);
   useCrewButton((!state.g || state.seats.length < 2) && isHost ? 'room' : null);
 
@@ -41,7 +42,7 @@ export default function FiveThousandOnline() {
         </div>
       );
     }
-    const seats = online.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
+    const seats = people.map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, color: m.color }));
     const starter = seats.find((p) => p.id === starterId) ?? seats[0];
     return (
       <div className="bd">
