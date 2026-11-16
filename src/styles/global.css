@@ -10587,6 +10587,55 @@ li {
   display: none;
 }
 
+/* Whose turn it is: one small line, so the table gets the room. */
+.pl-player.tableless .pl-status:not(.pl-setup-status) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.pl-player.tableless .pl-status:not(.pl-setup-status) .pl-status-text {
+  flex: none;
+  max-width: 60%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.pl-player.tableless .pl-status.mine .pl-status-text {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.pl-player.tableless .pl-status:not(.pl-setup-status) .pl-status-sub {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--muted);
+  opacity: 1;
+}
+
+.pl-player.tableless .pl-status:not(.pl-setup-status) .pl-status-sub:empty {
+  display: none;
+}
+
 .pl-opps {
   display: flex;
   gap: 6px;
@@ -10651,14 +10700,14 @@ li {
 }
 
 .pl-felt.mini {
-  flex: 0.9 1 0;
-  min-height: 104px;
+  flex: 1.5 1 0;
+  min-height: 120px;
   padding: 8px 10px;
   gap: 4px;
 }
 
 .pl-felt.mini .pl-felt-row {
-  --fw: max(44px, min(calc(24 * var(--qw)), calc((calc(100 * var(--qh)) - 30px) / 1.4), 104px));
+  --fw: max(44px, min(calc(26 * var(--qw)), calc((calc(100 * var(--qh)) - 30px) / 1.4), 128px));
   align-items: center;
   gap: max(16px, calc(5 * var(--qw)));
 }
