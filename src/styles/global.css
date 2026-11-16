@@ -5852,8 +5852,12 @@ li {
 }
 
 .kl-back-logo {
-  font-size: min(calc(14 * var(--qw)), calc(10 * var(--qh)));
-  line-height: 1;
+  --die-size: min(calc(15 * var(--qw)), calc(11 * var(--qh)));
+  --die-1: #ffe27a;
+  --die-2: #ffd23f;
+  --die-lip: #b8901a;
+  display: block;
+  margin-bottom: calc(1.5 * var(--qw));
 }
 
 .kl-back-word {
@@ -14984,7 +14988,7 @@ button.profile-avatar:not(:disabled):active {
   width: 72px;
   height: 96px;
   border-radius: 11%;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 630 840' preserveAspectRatio='none'%3E%3Crect width='630' height='840' fill='%23171d2b'/%3E%3Crect x='26' y='26' width='578' height='788' rx='42' fill='%23253a61' stroke='%23fff' stroke-width='14'/%3E%3Cg transform='translate(315 420)'%3E%3Crect x='-150' y='-150' width='300' height='300' rx='38' fill='none' stroke='%23fff' stroke-width='14' transform='rotate(45)'/%3E%3Cpath d='M0-120A120 120 0 0 1 120 0H0Z' fill='%23c8524e'/%3E%3Cpath d='M120 0A120 120 0 0 1 0 120V0Z' fill='%23dfae4c'/%3E%3Cpath d='M0 120A120 120 0 0 1-120 0H0Z' fill='%2357a57e'/%3E%3Cpath d='M-120 0A120 120 0 0 1 0-120V0Z' fill='%234a86cb'/%3E%3Ccircle r='24' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 630 840' preserveAspectRatio='none'%3E%3Crect width='630' height='840' fill='%23171d2b'/%3E%3Crect x='26' y='26' width='578' height='788' rx='42' fill='%23253a61' stroke='%23fff' stroke-width='14'/%3E%3Cg transform='translate%28315 420%29'%3E%3Crect x='-150' y='-150' width='300' height='300' rx='38' fill='none' stroke='%23fff' stroke-width='14' transform='rotate%2845%29'/%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0.15' y1='0' x2='0.85' y2='1'%3E%3Cstop offset='0' stop-color='%238db6f5'/%3E%3Cstop offset='1' stop-color='%235b8fe0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='rotate%28-12%29'%3E%3Crect x='-95' y='-89' width='190' height='190' rx='40' fill='%23000' opacity='0.35'/%3E%3Crect x='-95' y='-84' width='190' height='190' rx='40' fill='%232f5aa0'/%3E%3Crect x='-95' y='-95' width='190' height='190' rx='40' fill='url%28%23f%29'/%3E%3Cg fill='%2315160f'%3E%3Ccircle cx='-52' cy='-52' r='20'/%3E%3Ccircle cx='52' cy='-52' r='20'/%3E%3Ccircle r='20'/%3E%3Ccircle cx='-52' cy='52' r='20'/%3E%3Ccircle cx='52' cy='52' r='20'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
 
 /* The deck: three backs a little apart, a stack with some height to it. */
@@ -17766,4 +17770,98 @@ html[data-look] .play-screen > .top-bar .round-btn {
     opacity: 0;
     transform: translateX(16px);
   }
+}
+
+/* ---------- The prost die on the back of every card (Spellbound's keep their own) ----------
+   The app icon's lime die, thrown a little crooked, in the middle of the back. On a back of another
+   colour it takes that colour (lighter, with a darker edge): red on Egyptian Rat Screw's backs. */
+.pcard-back,
+.kc-slot,
+.ftd-card.back,
+.tr-stock,
+.sp-pile,
+.ar-pile-card,
+.rs-stack i.top,
+.rs-stack i.rs-give,
+.rs-stack i.rs-get {
+  --die-1: color-mix(in oklab, var(--accent) 55%, #fff);
+  --die-2: color-mix(in oklab, var(--accent) 85%, #fff);
+  --die-lip: color-mix(in oklab, var(--accent) 62%, #000);
+  container-type: inline-size;
+}
+
+html[data-look='pop'] .pcard-back,
+html[data-look='pop'] .kc-slot {
+  --die-1: #d2fa4c;
+  --die-2: #b9e62b;
+  --die-lip: #87ae18;
+}
+
+.rs-stack i.top,
+.rs-stack i.rs-give,
+.rs-stack i.rs-get {
+  --die-1: #f0736a;
+  --die-2: #d9493f;
+  --die-lip: #8f2620;
+}
+
+.sp-pile.empty::after {
+  display: none;
+}
+
+.prost-die,
+.pcard-back::after,
+.kc-slot::after,
+.ftd-card.back::after,
+.tr-stock::after,
+.sp-pile::after,
+.ar-pile-card::after,
+.rs-stack i.top::after,
+.rs-stack i.rs-give::after,
+.rs-stack i.rs-get::after {
+  --s: var(--die-size, 36cqw);
+  width: var(--s);
+  aspect-ratio: 1;
+  border-radius: 21%;
+  rotate: -12deg;
+  pointer-events: none;
+  background:
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 15.8% 15.8% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 84.2% 15.8% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 50% 50% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 15.8% 84.2% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle closest-side, var(--die-pip, #15160f) 88%, transparent 100%) 84.2% 84.2% / 20.7% 20.7% no-repeat,
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.32), transparent 60%),
+    linear-gradient(160deg, var(--die-1, #d2fa4c), var(--die-2, #b9e62b));
+  box-shadow:
+    0 calc(var(--s) * 0.06) 0 var(--die-lip, #87ae18),
+    0 calc(var(--s) * 0.12) calc(var(--s) * 0.16) calc(var(--s) * -0.04) rgba(0, 0, 0, 0.5);
+}
+
+.pcard-back::after,
+.kc-slot::after,
+.ftd-card.back::after,
+.tr-stock::after,
+.sp-pile::after,
+.ar-pile-card::after,
+.rs-stack i.top::after,
+.rs-stack i.rs-give::after,
+.rs-stack i.rs-get::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -56%;
+}
+
+/* Small backs: a little bigger, so the five still read. */
+.kc-slot,
+.ar-pile-card,
+.rs-stack i {
+  --die-size: 42cqw;
+}
+
+/* Trash's face-down slots carry their number in the middle: that stays readable. */
+.tr-slot .pcard-back::after {
+  display: none;
 }

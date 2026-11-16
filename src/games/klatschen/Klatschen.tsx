@@ -208,7 +208,7 @@ function Table({
           {left > 1 && <span className="kl-stack-card under1" />}
           {left > 0 && (
             <span className="kl-stack-card top">
-              <span className="kl-back-logo">👏</span>
+              <span className="kl-back-logo prost-die" aria-hidden />
               <span className="kl-back-word">{t('Klatschen')}</span>
             </span>
           )}
