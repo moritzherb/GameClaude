@@ -14165,6 +14165,108 @@ button.profile-avatar:not(:disabled):active {
   box-shadow: inset 0 0 0 1.5px var(--line);
 }
 
+/* A wrong slap: the cards paid go off the top of the slapper's pile, one after another… */
+.rs-stack i.rs-give {
+  animation: rs-give 0.5s cubic-bezier(0.4, 0, 0.7, 0.4) calc(var(--d) * 0.14s) both;
+}
+
+@keyframes rs-give {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(var(--side) * 8%), -10%) rotate(calc(var(--side) * 4deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--side) * 75%), -30%) rotate(calc(var(--side) * 18deg));
+    opacity: 0;
+  }
+}
+
+/* Your own pile has room above it: they fly up, towards the others. */
+.rs-stack.big i.rs-give {
+  animation-name: rs-give-up;
+}
+
+@keyframes rs-give-up {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(var(--side) * 4%), -12%) rotate(calc(var(--side) * 3deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--side) * 30%), -110%) rotate(calc(var(--side) * 12deg));
+    opacity: 0;
+  }
+}
+
+/* …and one slides in under each of the others' piles, which lift for it. */
+.rs-stack i.rs-get {
+  animation: rs-get 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) calc(0.15s + var(--d) * 0.14s) both;
+}
+
+@keyframes rs-get {
+  0% {
+    transform: translate(-80%, 12%) rotate(-14deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.rs-stack.big i.rs-get {
+  animation-name: rs-get-down;
+}
+
+@keyframes rs-get-down {
+  0% {
+    transform: translate(10%, -90%) rotate(-8deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.rs-stack.got i:not(.rs-get) {
+  animation: rs-lift 0.4s cubic-bezier(0.3, 0.7, 0.4, 1) calc(0.4s + var(--d) * 0.14s) both;
+}
+
+@keyframes rs-lift {
+  40% {
+    transform: translateY(-6%);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-stack i.rs-give,
+  .rs-stack i.rs-get,
+  .rs-stack.got i:not(.rs-get) {
+    animation: none;
+  }
+
+  .rs-stack i.rs-give {
+    opacity: 0;
+  }
+}
+
 .rs-status {
   margin: 0;
   text-align: center;
@@ -14305,7 +14407,7 @@ button.profile-avatar:not(:disabled):active {
 }
 
 /* Your turn: the top card of your pile ringed in the accent. */
-.rs-mine.go .rs-stack i:last-child {
+.rs-mine.go .rs-stack i.top {
   box-shadow: inset 0 0 0 calc(var(--w) * 0.07) #f7f4ee, inset 0 0 0 calc(var(--w) * 0.08) rgba(0, 0, 0, 0.12), 0 0 0 3px var(--accent);
 }
 
