@@ -128,7 +128,7 @@ const busDriver: Record<string, string> = {
   'Nobody has a {rank}.': '{rank} hat keiner.',
   'Flip the first card. Bottom row, left to right.': 'Deck die erste Karte auf. Unterste Reihe, von links nach rechts.',
   Hands: 'Karten auf der Hand',
-  'All gone 🎉': 'Alle weg 🎉',
+  'All gone': 'Alle weg',
   'A fresh deck was added to build the pyramid.': 'Für die Pyramide kam ein frisches Deck dazu.',
   'Who drives the bus?': 'Wer fährt Bus?',
   'Flip card {n} of {total}': 'Karte {n} von {total} aufdecken',

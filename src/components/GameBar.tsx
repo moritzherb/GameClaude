@@ -59,7 +59,7 @@ export default function GameBar({
           turn && (
             <span key={turn.name} className="turn-bubble" style={{ '--chip': turn.color } as CSSProperties} aria-live="polite">
               <span className="turn-bubble-avatar">
-                <Avatar avatar={turn.avatar} photo={turn.photo} />
+                <Avatar name={turn.name} color={turn.color} photo={turn.photo} />
               </span>
               <span className="turn-bubble-name">{turn.name}</span>
             </span>

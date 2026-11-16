@@ -11,6 +11,7 @@ import type { GameProps } from '../types';
 import { byId, DECK, GLASS_ID, STANDING_RULES, type TaskCard } from './cards';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 interface State {
   /** Card ids, a face-down stack: the next one drawn is cards[drawn]. */
@@ -56,7 +57,9 @@ export default function Klatschen({ players, exit }: GameProps) {
         <div className="kl-rules">
           {STANDING_RULES.map((r) => (
             <div key={r.text} className="kl-rule">
-              <span className="kl-rule-emoji">{r.emoji}</span>
+              <span className="kl-rule-emoji">
+                <Glyph name={r.icon} />
+              </span>
               <span>{t(r.text)}</span>
             </div>
           ))}
@@ -168,7 +171,7 @@ function Table({
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: player.color }}>
-            <Avatar avatar={player.avatar} photo={player.photo} />
+            <Avatar name={player.name} color={player.color} photo={player.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{player.name}</span>
@@ -184,18 +187,24 @@ function Table({
       {/* The standing rules and who holds a role, in one row of small pills. */}
       <div className="kl-pills">
         <button type="button" className="kc-chip" onClick={() => setRulesOpen(true)}>
-          <span aria-hidden="true">📏</span>
+          <span aria-hidden="true">
+            <Glyph name="ruler" />
+          </span>
           <span className="kc-chip-text">{t('3 rules')}</span>
         </button>
         {qm && (
           <button type="button" className="kc-chip" aria-label={t('{name} is Question Master', { name: qm.name })} onClick={() => setRulesOpen(true)}>
-            <span aria-hidden="true">❓</span>
+            <span aria-hidden="true">
+              <Glyph name="question" />
+            </span>
             <span className="kc-chip-text">{qm.name}</span>
           </button>
         )}
         {thumb && (
           <button type="button" className="kc-chip" aria-label={t('{name} is Thumb Master', { name: thumb.name })} onClick={() => setRulesOpen(true)}>
-            <span aria-hidden="true">👍</span>
+            <span aria-hidden="true">
+              <Glyph name="thumb" />
+            </span>
             <span className="kc-chip-text">{thumb.name}</span>
           </button>
         )}
@@ -217,7 +226,7 @@ function Table({
         {!s.current && !slapping && <span className="kl-slap-hint">{known ? t('Slap it!') : t('Slap the stack!')}</span>}
         {slapping && (
           <span className="kl-hand" aria-hidden>
-            ✋
+            <Glyph name="hand" />
           </span>
         )}
         {/* The glass in the middle of the table. A clap glass card's splash goes in once the card is put away. */}
@@ -238,19 +247,25 @@ function Table({
         <div className="kl-rules">
           {STANDING_RULES.map((r) => (
             <div key={r.text} className="kl-rule">
-              <span className="kl-rule-emoji">{r.emoji}</span>
+              <span className="kl-rule-emoji">
+                <Glyph name={r.icon} />
+              </span>
               <span>{t(r.text)}</span>
             </div>
           ))}
           {qm && (
             <div className="kl-rule">
-              <span className="kl-rule-emoji">❓</span>
+              <span className="kl-rule-emoji">
+                <Glyph name="question" />
+              </span>
               <span>{t('{name} is Question Master', { name: qm.name })}</span>
             </div>
           )}
           {thumb && (
             <div className="kl-rule">
-              <span className="kl-rule-emoji">👍</span>
+              <span className="kl-rule-emoji">
+                <Glyph name="thumb" />
+              </span>
               <span>{t('{name} is Thumb Master', { name: thumb.name })}</span>
             </div>
           )}
@@ -266,7 +281,9 @@ function Reveal({ card, finale, glass }: { card: TaskCard; finale: boolean; glas
   return (
     <div className="kl-reveal" role="status" aria-label={`${t(card.title)}: ${t(card.text)}`}>
       <span className={`kl-card${finale ? ' finale' : ''}`} style={{ '--card': card.color } as CSSProperties}>
-        <span className="kl-card-emoji">{card.emoji}</span>
+        <span className="kl-card-emoji">
+          <Glyph name={card.icon} />
+        </span>
         <span className="kl-card-title">{finale ? t('The 4th clap glass!') : t(card.title)}</span>
         <span className="kl-card-text">
           {finale ? t('You clap the whole glass in the middle. Down in one!') : isGlass ? `${t(card.text)} (${glass}/4)` : t(card.text)}

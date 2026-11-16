@@ -54,8 +54,8 @@ export default function Treatment(props: GameProps) {
       game="princess-treatment"
       cards={TREATMENTS}
       modes={[
-        { id: 'princess', emoji: '👸', label: t('Princess') },
-        { id: 'king', emoji: '🤴', label: t('King') },
+        { id: 'princess', icon: 'crown', label: t('Princess') },
+        { id: 'king', icon: 'king', label: t('King') },
         { id: 'mixed', label: t('Mixed'), mixed: true },
       ]}
       modeTitle={t('Whose treatment?')}

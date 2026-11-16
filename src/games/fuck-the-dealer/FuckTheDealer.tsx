@@ -19,6 +19,8 @@ import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
 import { usePhotoOf } from '../../net/photos';
 import { useCrewButton } from '../../lib/turn';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 /*
  * Played with two phones in a room: the host's phone lies in the middle as the table and
@@ -150,7 +152,9 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
       </div>
 
       <div className={`ftd-deck-status${decks.length ? ' on' : ''}`}>
-        <span className="ftd-deck-status-icon">{decks.length ? '🃏' : '📱'}</span>
+        <span className="ftd-deck-status-icon">
+          <Glyph name={decks.length ? 'cards' : 'phone'} />
+        </span>
         <span>{decks.length ? t('Deck phone: {name}', { name: decks[0].name }) : t('Connect a second phone to this room. It becomes the deck.')}</span>
       </div>
 
@@ -162,7 +166,7 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
             style={{ '--chip': p.color } as CSSProperties}
             onClick={() => setDealerId(p.id)}
           >
-            <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+            <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
             <span className="pick-chip-name">{p.name}</span>
             {/* The same word in German for this game. */}
             {p.id === dealerId && <span className="pick-chip-badge">Dealer</span>}
@@ -215,7 +219,7 @@ function Handover({ session, children }: { session: Session; children?: React.Re
       <div className="bd-head center">
         <span className="kicker">{g.over ? t('Deck’s empty!') : t('Dealer change')}</span>
         <span className="bd-avatar xl" style={{ background: from.color }}>
-          <Avatar avatar={from.avatar} photo={photoOf(from.id)} />
+          <Avatar name={from.name} color={from.color} photo={photoOf(from.id)} />
         </span>
         <h2 className="bd-title big">{sips ? t('{name} drinks up', { name: from.name }) : t('{name} gets away', { name: from.name })}</h2>
         <div className={`ftd-sips${sips ? '' : ' none'}`}>
@@ -281,7 +285,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
             <span className="kicker">{t('New dealer')}</span>
             <span className="bd-player">
               <span className="bd-avatar sm" style={{ background: dealer.color }}>
-                <Avatar avatar={dealer.avatar} photo={photoOf(dealer.id)} />
+                <Avatar name={dealer.name} color={dealer.color} photo={photoOf(dealer.id)} />
               </span>
               <span className="bd-player-name">{dealer.name}</span>
             </span>
@@ -302,7 +306,7 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: dealer.color }}>
-            <Avatar avatar={dealer.avatar} photo={photoOf(dealer.id)} />
+            <Avatar name={dealer.name} color={dealer.color} photo={photoOf(dealer.id)} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{dealer.name}</span>
@@ -325,12 +329,12 @@ function TableView({ session, onAgain }: { session: Session; onAgain: () => void
           <div className="ftd-ask">
             <span className="ftd-guesser">
               <span className="bd-avatar xs" style={{ background: guesser.color }}>
-                <Avatar avatar={guesser.avatar} photo={photoOf(guesser.id)} />
+                <Avatar name={guesser.name} color={guesser.color} photo={photoOf(guesser.id)} />
               </span>
               <span className="ftd-guesser-name">{guesser.name}</span>
             </span>
             <h2 className={`ftd-question${dir ? ' hint' : ''}`}>
-              {dir === 'higher' ? t('It’s higher ⬆') : dir === 'lower' ? t('It’s lower ⬇') : t('Which card?')}
+              {dir === 'higher' ? t('It’s higher') : dir === 'lower' ? t('It’s lower') : t('Which card?')}
             </h2>
             <p className="ftd-ask-sub">
               {g.firstGuess != null
@@ -359,7 +363,7 @@ function Tally({ session }: { session: Session }) {
           .map(({ p, n }) => (
             <div key={p.id} className="ftd-tally-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={photoOf(p.id)} />
+                <Avatar name={p.name} color={p.color} photo={photoOf(p.id)} />
               </span>
               <span className="ftd-tally-name">{p.name}</span>
               <span className="ftd-tally-num">{n === 1 ? t('1 sip') : t('{n} sips', { n })}</span>
@@ -419,7 +423,7 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
         <span className="kicker">{t('Deck · {name} deals', { name: dealer.name })}</span>
         <span className="ftd-deckphone-ask">
           {r ? null : dir ? (
-            <span className="ftd-question hint">{dir === 'higher' ? t('It’s higher ⬆') : t('It’s lower ⬇')}</span>
+            <span className="ftd-question hint">{dir === 'higher' ? t('It’s higher') : t('It’s lower')}</span>
           ) : (
             <NextName text={t('Ask {name}: Which card?')} name={guesser.name} />
           )}
@@ -494,15 +498,17 @@ function DeckView({ session, act }: { session: Session; act: (a: Act) => void })
 
 function Verdict({ result, dealer, lastOfThree }: { result: NonNullable<Game['result']>; dealer: string; lastOfThree: boolean }) {
   const card = cardName(result.card);
-  const [tone, emoji, title, sub] =
+  const [tone, icon, title, sub]: [string, GlyphName, string, string] =
     result.outcome === 'first'
-      ? ['correct', '🎯', t('Bullseye!'), t('{name} gets 6 sips.', { name: dealer })]
+      ? ['correct', 'target', t('Bullseye!'), t('{name} gets 6 sips.', { name: dealer })]
       : result.outcome === 'second'
-        ? ['same', '👌', t('Got it!'), t('{name} gets 3 sips.', { name: dealer })]
-        : ['wrong', '🙅', t('Missed!'), lastOfThree ? t('Third miss in a row: the deck moves on.') : t('Nobody drinks.')];
+        ? ['same', 'check', t('Got it!'), t('{name} gets 3 sips.', { name: dealer })]
+        : ['wrong', 'wrong', t('Missed!'), lastOfThree ? t('Third miss in a row: the deck moves on.') : t('Nobody drinks.')];
   return (
     <div className={`bd-result ${tone}`}>
-      <span className="bd-result-emoji">{emoji}</span>
+      <span className="bd-result-emoji">
+        <Glyph name={icon} />
+      </span>
       <span className="bd-result-text">
         <span className="bd-result-title">{title}</span>
         <span className="bd-result-sub">{sub}</span>

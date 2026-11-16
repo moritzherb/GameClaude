@@ -4,7 +4,7 @@ import PhotoCrop from '../components/PhotoCrop';
 import { CloseIcon } from '../components/Icons';
 import TopBar from '../components/TopBar';
 import { findGame } from '../games/registry';
-import { RANK_EMOJI, RANK_NAME } from '../games/president/President';
+import { RANK_ICON, RANK_NAME } from '../games/president/President';
 import type { Rank } from '../games/president/logic';
 import { t } from '../i18n';
 import { buzz, sfx } from '../lib/fx';
@@ -14,12 +14,13 @@ import { unfill } from '../lib/noAutofill';
 import { loadStats, resetStats } from '../lib/stats';
 import { useProfile } from '../net/profile';
 import { COLOR_NAMES, PLAYER_COLORS } from '../state/AppState';
+import Glyph from '../components/Glyph';
 
 const RANKS: Rank[] = ['president', 'vice', 'citizen', 'vice-arschloch', 'arschloch'];
 
 /** This phone's own profile: name, photo or emoji, colour (what the others see in a room), and its numbers. */
 export default function Profile() {
-  const { profile, setName, nextEmoji, setColor, setPhoto } = useProfile();
+  const { profile, setName, setColor, setPhoto } = useProfile();
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -72,22 +73,18 @@ export default function Profile() {
           disabled={busy}
           aria-label={profile.photo ? t('New photo') : t('Add a photo')}
         >
-          <Avatar avatar={profile.avatar} photo={sharp(profile.photo)} />
+          <Avatar name={profile.name} color={profile.color} photo={sharp(profile.photo)} />
         </button>
         <div className="profile-buttons">
           <button type="button" className="chip" onClick={() => file.current?.click()} disabled={busy}>
             {profile.photo ? t('New photo') : t('Add a photo')}
           </button>
-          {profile.photo ? (
+          {profile.photo && (
             <button type="button" className="chip chip-remove" onClick={() => setPhoto(undefined)}>
               <span className="chip-x">
                 <CloseIcon />
               </span>
               {t('Remove photo')}
-            </button>
-          ) : (
-            <button type="button" className="chip" onClick={nextEmoji} aria-label={t('Other emoji')}>
-              {t('Other emoji')}
             </button>
           )}
         </div>
@@ -113,7 +110,7 @@ export default function Profile() {
           />
         </label>
 
-        {/* The colour is the circle behind the emoji: a photo fills it, so there's nothing to pick. */}
+        {/* The colour is the circle behind the letter: a photo covers it, so there's nothing to pick. */}
         {!profile.photo && (
           <div className="profile-colors" role="radiogroup" aria-label={t('Colour')}>
             {PLAYER_COLORS.map((c) => (
@@ -174,7 +171,9 @@ export default function Profile() {
           <ul className="profile-games">
             {RANKS.filter((r) => stats.ranks[r]).map((r) => (
               <li key={r}>
-                <span className="profile-game-emoji">{RANK_EMOJI[r]}</span>
+                <span className="profile-game-emoji">
+                  <Glyph name={RANK_ICON[r]} />
+                </span>
                 <span className="profile-game-name">{t(RANK_NAME[r])}</span>
                 <span className="profile-game-n">{t('{n}×', { n: stats.ranks[r] })}</span>
               </li>

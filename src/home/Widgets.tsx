@@ -18,7 +18,7 @@ function Faces({ players }: { players: Player[] }) {
       {shown.length ? (
         shown.map((p) => (
           <span key={p.id} className="w-face" style={{ '--f': p.color } as CSSProperties}>
-            <Avatar avatar={p.avatar} photo={p.photo} />
+            <Avatar name={p.name} color={p.color} photo={p.photo} />
           </span>
         ))
       ) : (

@@ -8,15 +8,17 @@ import { pick, shuffle } from '../../lib/random';
 import { useTurnBubble, useCrewButton } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 /**
  * A choice on the setup screen: who the cards are about. `mixed` picks one of the others per card
- * (and shows their emoji together, so it has none of its own).
+ * (and shows their pictures together, so it has none of its own).
  */
 export interface Mode {
   id: string;
-  emoji?: string;
-  /** Already translated: the button's name (it shows just the emoji). */
+  icon?: GlyphName;
+  /** Already translated: the button's name, under its picture. */
   label: string;
   mixed?: boolean;
 }
@@ -153,7 +155,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
       <div className="bd vt">
         <section className="section">
           <h3 className="section-title">{props.modeTitle}</h3>
-          {/* Small cards, one per choice, their face the emoji the cards will be about. */}
+          {/* Small cards, one per choice, their face a picture of who the cards will be about. */}
           <div className="vt-picks" style={{ '--n': modes!.length } as CSSProperties}>
             {modes!.map((m) => (
               <button
@@ -164,11 +166,14 @@ export default function CardGame<C>(props: CardGameProps<C>) {
                 aria-label={m.label}
                 onClick={() => setMode(m.id)}
               >
-                {(m.mixed ? modes!.filter((o) => !o.mixed) : [m]).map((o) => (
-                  <span key={o.id} className="vt-pick-emoji" aria-hidden="true">
-                    {o.emoji}
-                  </span>
-                ))}
+                <span className="vt-pick-icons" aria-hidden="true">
+                  {(m.mixed ? modes!.filter((o) => !o.mixed) : [m]).map((o) => (
+                    <span key={o.id} className="vt-pick-emoji">
+                      {o.icon && <Glyph name={o.icon} />}
+                    </span>
+                  ))}
+                </span>
+                <span className="vt-pick-label">{m.label}</span>
               </button>
             ))}
           </div>
@@ -216,7 +221,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
         {reader && (
           <div className="bd-player">
             <span className="bd-avatar" style={{ background: reader.color }}>
-              <Avatar avatar={reader.avatar} photo={reader.photo} />
+              <Avatar name={reader.name} color={reader.color} photo={reader.photo} />
             </span>
             <span className="bd-player-text">
               <span className="bd-player-name">{reader.name}</span>

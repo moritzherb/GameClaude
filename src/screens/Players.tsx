@@ -12,7 +12,7 @@ import { findGame } from '../games/registry';
 import { loadPeople } from '../lib/people';
 import { crewKey, loadCrewStats, loadStats, summary } from '../lib/stats';
 import { useProfile } from '../net/profile';
-import { AVATARS, MAX_PLAYERS, useApp, type CrewProfile, type Player } from '../state/AppState';
+import { COLOR_NAMES, MAX_PLAYERS, PLAYER_COLORS, useApp, type CrewProfile, type Player } from '../state/AppState';
 
 export default function Players({ next }: { next: string | null }) {
   const { players, addPlayer, addProfile, removePlayer, updatePlayer, clearPlayers } = useApp();
@@ -111,7 +111,7 @@ export default function Players({ next }: { next: string | null }) {
                 }}
               >
                 <span className="person-chip-avatar">
-                  <Avatar avatar={pr.avatar} photo={pr.photo} />
+                  <Avatar name={pr.name} color={pr.color} photo={pr.photo} />
                 </span>
                 {pr.personId === profile.clientId ? t('{name} (you)', { name: pr.name }) : pr.name}
                 <span className="person-chip-plus" aria-hidden>
@@ -125,7 +125,6 @@ export default function Players({ next }: { next: string | null }) {
 
       {players.length === 0 ? (
         <div className="empty">
-          <div className="empty-emoji">🦗</div>
           <p className="lead">{t('It’s quiet in here. Add the squad.')}</p>
         </div>
       ) : (
@@ -135,14 +134,14 @@ export default function Players({ next }: { next: string | null }) {
               <button
                 type="button"
                 className="player-avatar"
-                aria-label={t('Change avatar of {name}', { name: p.name })}
+                aria-label={t('Change colour of {name}', { name: p.name })}
                 onClick={() => {
                   sfx.pop();
                   buzz();
                   setPicking(p);
                 }}
               >
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </button>
               <PlayerName
                 stats={statsOf(p)}
@@ -186,30 +185,32 @@ export default function Players({ next }: { next: string | null }) {
       <Sheet
         open={!!picking}
         onClose={() => setPicking(null)}
-        title={picking ? t('Pick an avatar for {name}', { name: picking.name }) : ''}
+        title={picking ? t('Pick a colour for {name}', { name: picking.name }) : ''}
         closeLabel={t('Cancel')}
       >
-        <div className="avatar-grid">
-          {AVATARS.map((a) => {
-            const mine = a === picking?.avatar;
+        <div className="avatar-grid" role="radiogroup" aria-label={t('Colour')}>
+          {PLAYER_COLORS.map((c) => {
+            const mine = c === picking?.color;
             // Someone else has it already (still free to pick: it's just a hint).
-            const used = !mine && players.some((o) => o.avatar === a);
+            const used = !mine && players.some((o) => o.color === c);
             return (
               <button
-                key={a}
+                key={c}
                 type="button"
+                role="radio"
+                aria-checked={mine}
+                aria-label={t(COLOR_NAMES[c] ?? c)}
                 className={`avatar-choice${mine ? ' on' : ''}${used ? ' used' : ''}`}
-                style={picking ? ({ '--chip': picking.color } as CSSProperties) : undefined}
-                aria-pressed={mine}
+                style={{ '--chip': c } as CSSProperties}
                 onClick={() => {
                   if (!picking) return;
                   sfx.pop();
                   buzz();
-                  updatePlayer(picking.id, { avatar: a });
+                  updatePlayer(picking.id, { color: c });
                   setPicking(null);
                 }}
               >
-                {a}
+                {picking && <Avatar name={picking.name} color={c} />}
               </button>
             );
           })}

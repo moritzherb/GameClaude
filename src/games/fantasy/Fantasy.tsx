@@ -69,7 +69,7 @@ export default function Fantasy() {
           {people.map((m) => (
             <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
               <span className="pick-chip-avatar">
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="pick-chip-name">{m.name}</span>
             </Tap>
@@ -264,7 +264,7 @@ function Table({
           {order.map(({ s, i }) => (
             <div key={s.id} className="fz-row">
               <span className="bd-avatar xs" style={{ background: s.color }}>
-                <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+                <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />
               </span>
               <span className="fz-name">{s.name}</span>
               <span className="fz-bid">{t('{won} of {bid}', { won: g.won[i], bid: g.bids[i] ?? 0 })}</span>
@@ -340,7 +340,7 @@ function Table({
             <div key={s.id} data-seat={i} className={`fz-seat${g.turn === i && !dealing ? ' on' : ''}${spot && spot.x > cx + 4 ? ' right' : ''}`} style={spot ? { left: spot.x, top: spot.y } : undefined}>
               <span className="fz-seat-who">
                 <span className="bd-avatar xs" style={{ background: s.color }}>
-                  <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+                  <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />
                 </span>
                 <span className="fz-seat-name">{s.name}</span>
               </span>

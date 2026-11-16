@@ -12,17 +12,19 @@ import type { Thrown } from './solid3d';
 import { jumps, type Board } from './boards';
 import FieldCard, { type Outcome } from './FieldCard';
 import { ACE } from './ace';
-import { FIELDS, param, type Field } from './fields';
+import { FIELDS, param, type Field, type FieldPic } from './fields';
 import { AceCard, FieldIcon } from './FieldIcon';
 import { current, finish, newGame, nextTurn, setPawn, walk, walkBack, type Game } from './logic';
 import type { PawnDef } from './pawns';
 import { Scene } from './scene';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 type Phase =
   | { kind: 'turn' }
   | { kind: 'busy' }
   | { kind: 'field'; pos: number; field: Field; chosen?: Field }
-  | { kind: 'note'; emoji: string; title: string; text?: string; then: 'next' | 'again' }
+  | { kind: 'note'; icon: GlyphName; title: string; text?: string; then: 'next' | 'again' }
   | { kind: 'over' };
 
 interface Props {
@@ -163,8 +165,8 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
     if (p.jailed) {
       if (v === 6) {
         commit(setPawn(gRef.current, id, { jailed: false }));
-        setPhase({ kind: 'note', emoji: '🔓', title: t('A 6! Out of prison'), text: t('Roll again to move on.'), then: 'again' });
-      } else setPhase({ kind: 'note', emoji: '⛓️', title: t('No 6: still locked up'), then: 'next' });
+        setPhase({ kind: 'note', icon: 'unlock', title: t('A 6! Out of prison'), text: t('Roll again to move on.'), then: 'again' });
+      } else setPhase({ kind: 'note', icon: 'chain', title: t('No 6: still locked up'), then: 'next' });
       return;
     }
     if (p.gate) {
@@ -172,8 +174,8 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
       if (need.includes(v)) {
         commit(setPawn(gRef.current, id, { gate: false, crossed: true }));
         await scene.current?.cross(id);
-        setPhase({ kind: 'note', emoji: '🌉', title: t('Over you go!'), text: t('Roll again to move on.'), then: 'again' });
-      } else setPhase({ kind: 'note', emoji: '🍻', title: t('Not this time: drink 1 and wait.'), then: 'next' });
+        setPhase({ kind: 'note', icon: 'bridge', title: t('Over you go!'), text: t('Roll again to move on.'), then: 'again' });
+      } else setPhase({ kind: 'note', icon: 'beer', title: t('Not this time: drink 1 and wait.'), then: 'next' });
       return;
     }
     await move(id, walk(x.fields, p.pos, v));
@@ -221,11 +223,11 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
     next();
   };
 
-  const effects: { key: string; icon: string; text: string }[] = [
-    ...g.rules.map((r, i) => ({ key: `r${i}`, icon: '📜', text: r })),
-    ...g.mates.map(([a, b], i) => ({ key: `m${i}`, icon: '🤝', text: `${byId(a).name} & ${byId(b).name}` })),
-    ...(g.silence ? [{ key: 's', icon: '🤫', text: t('Silence until {name} is on', { name: byId(g.silence).name }) }] : []),
-    ...g.order.filter((id) => g.pawns[id].aces > 0).map((id) => ({ key: `a${id}`, icon: ACE, text: g.pawns[id].aces > 1 ? `${byId(id).name} ×${g.pawns[id].aces}` : byId(id).name })),
+  const effects: { key: string; icon: FieldPic; text: string }[] = [
+    ...g.rules.map((r, i) => ({ key: `r${i}`, icon: 'rule' as const, text: r })),
+    ...g.mates.map(([a, b], i) => ({ key: `m${i}`, icon: 'mate' as const, text: `${byId(a).name} & ${byId(b).name}` })),
+    ...(g.silence ? [{ key: 's', icon: 'silence' as const, text: t('Silence until {name} is on', { name: byId(g.silence).name }) }] : []),
+    ...g.order.filter((id) => g.pawns[id].aces > 0).map((id) => ({ key: `a${id}`, icon: ACE as FieldPic, text: g.pawns[id].aces > 1 ? `${byId(id).name} ×${g.pawns[id].aces}` : byId(id).name })),
   ];
 
   if (phase.kind === 'over' && g.winner) {
@@ -247,10 +249,10 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
               <div key={p.id} className="ftd-tally-row">
                 <span className="pt-rank">{i + 1}.</span>
                 <span className="bd-avatar xs" style={{ background: p.color }}>
-                  <Avatar avatar={p.avatar} photo={p.photo} />
+                  <Avatar name={p.name} color={p.color} photo={p.photo} />
                 </span>
                 <span className="ftd-tally-name">{p.name}</span>
-                <span className="ftd-tally-num">{p.id === g.winner ? '🏆' : t('Field {n}', { n: g.pawns[p.id].pos })}</span>
+                <span className="ftd-tally-num">{p.id === g.winner ? <Glyph name="trophy" /> : t('Field {n}', { n: g.pawns[p.id].pos })}</span>
               </div>
             ))}
           </div>
@@ -273,8 +275,7 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
       : t('Field {n} of {total} · {field}', {
           n: pawn.pos,
           total: last,
-          // (The Ace's card is a picture of its own, not a character: just its name in the line.)
-          field: FIELDS[here.kind].emoji === ACE ? FIELDS[here.kind].title(param(here)) : `${FIELDS[here.kind].emoji} ${FIELDS[here.kind].title(param(here))}`,
+          field: FIELDS[here.kind].title(param(here)),
         });
   if (pawn.jailed) status = t('In prison: only a 6 gets you out');
   else if (pawn.gate) status = param(g.fields[pawn.pos]) ? t('At the bridge: a 1 or 2 gets you over') : t('At the bridge: a 5 or 6 gets you over');
@@ -314,7 +315,7 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
               scene.current?.showAll();
             }}
           >
-            🗺️
+            <Glyph name="map" />
           </button>
         )}
       </div>
@@ -341,7 +342,9 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
           ) : phase.kind === 'note' ? (
             <div className="pt-card slide-up" style={{ '--field': FIELDS[pawn.jailed ? 'prison' : 'bridge'].color } as CSSProperties}>
               <div className="pt-card-head">
-                <span className="pt-card-emoji">{phase.emoji}</span>
+                <span className="pt-card-emoji">
+                  <Glyph name={phase.icon} />
+                </span>
                 <span className="pt-card-heading">
                   <span className="pt-card-kicker">{me.name}</span>
                   <span className="pt-card-title">{phase.title}</span>
@@ -383,7 +386,7 @@ export default function Play({ board, players: crew, pawns, exit, onAgain }: Pro
           {effects.map((e) => (
             <div key={e.key} className="kc-effect">
               <span className="kc-effect-icon">
-                <FieldIcon emoji={e.icon} />
+                <FieldIcon icon={e.icon} />
               </span>
               <span>{e.key.startsWith('a') ? t('{name} has an Ace up their sleeve', { name: e.text }) : e.text}</span>
             </div>

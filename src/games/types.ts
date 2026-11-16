@@ -8,7 +8,6 @@ export interface Category {
   id: CategoryId;
   /** English; render with t(label). */
   label: string;
-  emoji: string;
   color: string;
 }
 
@@ -19,12 +18,12 @@ export function playerRange(game: Pick<GameDefinition, 'minPlayers' | 'maxPlayer
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'pregame', label: tx('Pregame'), emoji: '🔥', color: 'var(--c-orange)' },
-  { id: 'party', label: tx('Party'), emoji: '🪩', color: 'var(--c-pink)' },
-  { id: 'quick', label: tx('Quick'), emoji: '⚡', color: 'var(--c-yellow)' },
-  { id: 'cards', label: tx('Cards'), emoji: '🃏', color: 'var(--c-blue)' },
-  { id: 'dice', label: tx('Dice'), emoji: '🎲', color: 'var(--c-mint)' },
-  { id: 'teams', label: tx('Teams'), emoji: '🤝', color: 'var(--c-lilac)' },
+  { id: 'pregame', label: tx('Pregame'), color: 'var(--c-orange)' },
+  { id: 'party', label: tx('Party'), color: 'var(--c-pink)' },
+  { id: 'quick', label: tx('Quick'), color: 'var(--c-yellow)' },
+  { id: 'cards', label: tx('Cards'), color: 'var(--c-blue)' },
+  { id: 'dice', label: tx('Dice'), color: 'var(--c-mint)' },
+  { id: 'teams', label: tx('Teams'), color: 'var(--c-lilac)' },
 ];
 
 /** Props every game screen receives from the game shell. */

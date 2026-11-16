@@ -8,6 +8,7 @@ import { spinFate } from './fates';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
 import FitText from '../../components/FitText';
+import Glyph from '../../components/Glyph';
 
 export default function WhoDrinks({ players }: GameProps) {
   const [highlight, setHighlight] = useState<number | null>(null);
@@ -57,13 +58,15 @@ export default function WhoDrinks({ players }: GameProps) {
       {Object.keys(drunk).length > 0 && <Finished game="who-drinks" />}
       {winner && result ? (
         <div className="result-card pop-in" style={{ '--chip': winner.color } as CSSProperties}>
-          <div className="result-avatar wobble"><Avatar avatar={winner.avatar} photo={winner.photo} /></div>
+          <div className="result-avatar wobble"><Avatar name={winner.name} color={winner.color} photo={winner.photo} /></div>
           <div className="result-name">{winner.name}</div>
           <div className="result-fate">{result.fate}</div>
         </div>
       ) : (
         <div className="who-drinks-hint">
-          <span className="who-drinks-hint-emoji">{spinning ? '🥁' : '👀'}</span>
+          <span className="who-drinks-hint-emoji">
+            <Glyph name={spinning ? 'shuffle' : 'eye'} />
+          </span>
           {spinning ? t('Rolling…') : t('Who’s gonna drink?')}
         </div>
       )}
@@ -87,7 +90,7 @@ export default function WhoDrinks({ players }: GameProps) {
                 setBumped({ id: p.id, n: n + 1 });
               }}
             >
-              <span className="spin-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+              <span className="spin-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
               <FitText className="spin-chip-name">{p.name}</FitText>
               {/* The drink counter, bottom right. */}
               <span key={bumped?.id === p.id ? bumped.n : 'n'} className={`spin-chip-count${n ? '' : ' zero'}${bumped?.id === p.id ? ' bump' : ''}`}>

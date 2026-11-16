@@ -31,6 +31,7 @@ import {
   type Seat,
 } from './logic';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -205,12 +206,14 @@ export default function HoseRunter() {
           {ready.map((m) => (
             <li key={m.id} className="member-row">
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="member-text">
                 <span className="member-name">{m.name}</span>
               </span>
-              <span className="hr-lives">{'♥'.repeat(START_LIVES)}</span>
+              <span className="hr-lives">
+                <Hearts n={START_LIVES} />
+              </span>
             </li>
           ))}
         </ul>
@@ -284,7 +287,11 @@ function HostTable({ view }: { view: PlayerView }) {
       <div className="hr-status">
         <div className="hr-status-top">
           <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
-          {stopper && <span className="hr-stop-banner">✋ {t('{name} said STOP', { name: stopper.name })}</span>}
+          {stopper && (
+            <span className="hr-stop-banner">
+              <Glyph name="hand" /> {t('{name} said STOP', { name: stopper.name })}
+            </span>
+          )}
         </div>
         <span className="hr-status-text">
           {dealerPhase ? t('{name} deals and checks their cards…', { name: dealer?.name ?? '' }) : t('{name}’s turn', { name: turnSeat?.name ?? '' })}
@@ -352,7 +359,8 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
         <div className="hr-status-top">
           <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
           {stopper && (
-            <span className="hr-stop-banner">✋ {stopper.id === myId ? t('You said STOP') : t('{name} said STOP', { name: stopper.name })}</span>
+            <span className="hr-stop-banner">
+            <Glyph name="hand" /> {stopper.id === myId ? t('You said STOP') : t('{name} said STOP', { name: stopper.name })}</span>
           )}
         </div>
         <span className="hr-status-text">{headline}</span>
@@ -543,7 +551,7 @@ function CardButton({ card, selected, disabled, onClick }: { card: Card; selecte
 }
 
 function ScoreBadge({ score }: { score: Score }) {
-  const label = { feuer: `🔥 ${t('Fire')}`, hose: `${storeSafe ? '🎯' : '👖'} ${t('Pants Down')}`, triple: '30½', suit: '' }[score.kind];
+  const label = { feuer: t('Fire'), hose: t('Pants Down'), triple: '30½', suit: '' }[score.kind];
   return label ? <span className={`hr-badge ${score.kind}`}>{label}</span> : null;
 }
 
@@ -559,9 +567,13 @@ function Seats({ view, myId }: { view: PlayerView; myId: string }) {
           style={{ '--chip': s.color } as CSSProperties}
         >
           <span className="hr-seat-avatar">
-            {s.out ? '💀' : s.avatar}
+            {s.out ? <Glyph name="skull" /> : <Avatar name={s.name} color={s.color} />}
             {s.id === view.dealerId && !s.out && <span className="hr-dealer">{t('D')}</span>}
-            {s.id === view.stopperId && <span className="hr-stopper">✋</span>}
+            {s.id === view.stopperId && (
+              <span className="hr-stopper">
+                <Glyph name="hand" />
+              </span>
+            )}
           </span>
           <span className="hr-seat-name">{s.id === myId ? t('You') : s.name}</span>
           <Lives seat={s} />
@@ -571,11 +583,22 @@ function Seats({ view, myId }: { view: PlayerView; myId: string }) {
   );
 }
 
+/** Lives as hearts. */
+function Hearts({ n }: { n: number }) {
+  return (
+    <>
+      {Array.from({ length: Math.max(0, n) }, (_, i) => (
+        <Glyph key={i} name="heart" fill="currentColor" />
+      ))}
+    </>
+  );
+}
+
 function Lives({ seat }: { seat: Seat }) {
   if (seat.out) return <span className="hr-lives out">{t('out')}</span>;
   return (
     <span className="hr-lives" aria-label={t('{n} lives', { n: seat.lives })}>
-      {'♥'.repeat(Math.max(0, seat.lives))}
+      <Hearts n={seat.lives} />
     </span>
   );
 }
@@ -633,12 +656,12 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
       : t('Nobody survived!')
     : r.endedBy === 'feuer'
       ? byMe
-        ? t('🔥 Fire from You!')
-        : t('🔥 Fire from {name}!', { name: byName })
+        ? t('Fire from you!')
+        : t('Fire from {name}!', { name: byName })
       : r.endedBy === 'hose'
         ? byMe
-          ? t('👖 Pants down from You!')
-          : t('👖 Pants down from {name}!', { name: byName })
+          ? t('Pants down from you!')
+          : t('Pants down from {name}!', { name: byName })
         : t('Cards on the table!');
 
   const losers = r.losers.map(name).join(' & ');
@@ -676,7 +699,19 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
                   <PlayingCard key={i} card={c} size="sm" />
                 ))}
                 <span className="hr-result-note">
-                  {r.out.includes(id) ? t('Out 💀') : r.extraLife.includes(id) ? t('Extra life! ♥') : lost ? '−1 ♥' : ''}
+                  {r.out.includes(id) ? (
+                    t('Out')
+                  ) : r.extraLife.includes(id) ? (
+                    <>
+                      {t('Extra life!')} <Hearts n={1} />
+                    </>
+                  ) : lost ? (
+                    <>
+                      −1 <Hearts n={1} />
+                    </>
+                  ) : (
+                    ''
+                  )}
                 </span>
               </div>
             </li>

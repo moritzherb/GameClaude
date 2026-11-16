@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import AppDie from '../components/AppDie';
 import Avatar from '../components/Avatar';
 import GameCard from '../components/GameCard';
-import { ChevronIcon, PlusIcon, SettingsIcon } from '../components/Icons';
+import { ChevronIcon, DiceIcon, PhoneIcon, PlusIcon, SettingsIcon } from '../components/Icons';
 import Logo from '../components/Logo';
 import Tap from '../components/Tap';
 import { RoundButton } from '../components/TopBar';
@@ -130,7 +130,7 @@ function ClassicHome() {
           <Logo />
           <span className="home-date">{date}</span>
           <Tap className="home-me" style={{ '--chip': profile.color } as CSSProperties} onClick={() => navigate(paths.profile)} ariaLabel={t('Your profile')}>
-            <Avatar avatar={profile.avatar} photo={profile.photo} />
+            <Avatar name={profile.name} color={profile.color} photo={profile.photo} />
           </Tap>
           <RoundButton label={t('Settings')} onClick={() => navigate(paths.settings)}>
             <SettingsIcon />
@@ -151,7 +151,7 @@ function ClassicHome() {
             <span className="avatar-stack">
               {players.slice(0, 4).map((p) => (
                 <span key={p.id} style={{ background: p.color }}>
-                  <Avatar avatar={p.avatar} photo={p.photo} />
+                  <Avatar name={p.name} color={p.color} photo={p.photo} />
                 </span>
               ))}
               {players.length > 4 && <span className="more">+{players.length - 4}</span>}
@@ -165,14 +165,14 @@ function ClassicHome() {
         <div className="quick-row fade-up">
           <Tap className="quick quick-shuffle" onClick={randomGame}>
             <span className="quick-icon" aria-hidden>
-              🎲
+              <DiceIcon />
             </span>
             <span className="quick-title">{t('Shuffle')}</span>
             <span className="quick-sub">{t('We pick, you play')}</span>
           </Tap>
           <Tap className={`quick quick-room${inRoom ? ' live' : ''}`} onClick={() => navigate(paths.room)}>
             <span className="quick-icon" aria-hidden>
-              📱
+              <PhoneIcon />
             </span>
             <span className="quick-title">{inRoom ? room.code : t('Together')}</span>
             <span className="quick-sub">

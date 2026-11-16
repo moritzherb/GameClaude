@@ -1,5 +1,10 @@
 import { t, tx } from '../../i18n';
+import type { GlyphName } from '../../lib/glyphs';
 import { storeSafe } from '../../lib/native';
+import { ACE } from './ace';
+
+/** A field's picture: a line picture (lib/glyphs.ts), or the Ace card (ace.ts). */
+export type FieldPic = GlyphName | typeof ACE;
 
 /** Every kind of field on a Party board. */
 export type FieldKind =
@@ -87,7 +92,8 @@ export interface FieldParam {
 export type FieldGroup = 'drink' | 'give' | 'game' | 'everyone' | 'move';
 
 export interface FieldInfo {
-  emoji: string;
+  /** Its picture (lib/glyphs.ts), or the Ace card. */
+  icon: FieldPic;
   /** The field's colour on the board. */
   color: string;
   group: FieldGroup;
@@ -126,8 +132,8 @@ const C = {
 };
 
 /** "Everyone who … drinks 2": a field for the group, any of them can be "Choose one"'s pick. */
-const all = (emoji: string, color: string, label: () => string, title: () => string, text: () => string): FieldInfo => ({
-  emoji,
+const all = (icon: GlyphName, color: string, label: () => string, title: () => string, text: () => string): FieldInfo => ({
+  icon,
   color,
   group: 'everyone',
   label,
@@ -145,7 +151,7 @@ const evenOdd: FieldParam = { values: [0, 1], def: 0, label: (n) => (n ? t('Odd'
 
 export const FIELDS: Record<FieldKind, FieldInfo> = {
   start: {
-    emoji: '🏁',
+    icon: 'flag',
     color: C.lime,
     group: 'move',
     label: () => t('Start'),
@@ -153,7 +159,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Everyone starts here.'),
   },
   goal: {
-    emoji: '🏆',
+    icon: 'trophy',
     color: C.gold,
     group: 'move',
     label: () => t('Finish'),
@@ -162,7 +168,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
   },
   shots: {
     // In the store app these are sips (i18n/store.ts), and look like it.
-    emoji: storeSafe ? '🍺' : '🥃',
+    icon: storeSafe ? 'beer' : 'shot',
     color: C.yellow,
     group: 'drink',
     label: (n) => (n === 1 ? t('Shot') : t('{n} shots', { n })),
@@ -173,7 +179,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [1, 2, 3, 4, 5], def: 1, label: (n) => (n === 1 ? t('1 shot') : t('{n} shots', { n })) },
   },
   ex: {
-    emoji: '🍺',
+    icon: 'beer',
     color: C.red,
     group: 'drink',
     label: () => t('Ex'),
@@ -183,7 +189,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   rule: {
-    emoji: '📜',
+    icon: 'rule',
     color: C.lilac,
     group: 'give',
     label: () => t('Rule'),
@@ -191,7 +197,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Set a rule for the rest of the game. Whoever breaks it drinks.'),
   },
   give: {
-    emoji: '🎁',
+    icon: 'gift',
     color: C.mint,
     group: 'give',
     label: (n) => t('{n} sips to …', { n }),
@@ -200,7 +206,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [2, 3, 5, 10], def: 2, label: (n) => t('{n} sips', { n }) },
   },
   ace: {
-    emoji: '🂡',
+    icon: ACE,
     color: C.cream,
     group: 'give',
     label: () => t('Ace up the sleeve'),
@@ -208,7 +214,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Keep it for later: on a field you don’t want to do, play the Ace and skip it. Once.'),
   },
   rps: {
-    emoji: '✂️',
+    icon: 'scissors',
     color: C.blue,
     group: 'game',
     label: () => t('Rock paper scissors'),
@@ -218,7 +224,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   clock: {
-    emoji: '🕒',
+    icon: 'clock',
     color: C.orange,
     group: 'drink',
     label: (n) => (n ? t('Odd time') : t('Even time')),
@@ -229,7 +235,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: evenOdd,
   },
   waterfall: {
-    emoji: '🌊',
+    icon: 'waterfall',
     color: C.teal,
     group: 'everyone',
     label: () => t('Waterfall'),
@@ -238,7 +244,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   age: {
-    emoji: '🎂',
+    icon: 'cake',
     color: C.pink,
     group: 'drink',
     label: (n) => (n ? t('Odd age') : t('Even age')),
@@ -250,7 +256,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
   },
   // In the store app no tobacco (App Store rule 1.4.3): a plain box, see i18n/store.ts.
   tschick: {
-    emoji: storeSafe ? '📦' : '🚬',
+    icon: storeSafe ? 'pack' : 'smoke',
     color: C.red,
     group: 'game',
     label: () => t('Tschick flip'),
@@ -260,7 +266,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   bridge: {
-    emoji: '🌉',
+    icon: 'bridge',
     color: C.wood,
     group: 'move',
     label: (n) => (n ? t('Bridge 1–2') : t('Bridge 5–6')),
@@ -273,7 +279,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Roll 1 or 2') : t('Roll 5 or 6')) },
   },
   mystery: {
-    emoji: storeSafe ? '🎭' : '🧪',
+    icon: storeSafe ? 'drama' : 'flask',
     color: C.indigo,
     group: 'drink',
     label: () => t('Mystery shot'),
@@ -283,7 +289,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   seats: {
-    emoji: '💺',
+    icon: 'seat',
     color: C.blue,
     group: 'everyone',
     label: () => t('Swap seats'),
@@ -295,7 +301,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   twins: {
-    emoji: '👯',
+    icon: 'twins',
     color: C.pink,
     group: 'game',
     label: () => t('Twins'),
@@ -304,7 +310,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   leader: {
-    emoji: '🥇',
+    icon: 'medal',
     color: C.yellow,
     group: 'everyone',
     label: () => t('1st drinks'),
@@ -313,7 +319,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   snus: {
-    emoji: '⭐',
+    icon: 'star',
     color: C.cream,
     group: 'game',
     label: () => t('Snus flip'),
@@ -323,7 +329,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   chance: {
-    emoji: '🎯',
+    icon: 'target',
     color: C.orange,
     group: 'game',
     label: () => t('Probability'),
@@ -332,7 +338,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   reverse: {
-    emoji: '🔁',
+    icon: 'again',
     color: C.lime,
     group: 'everyone',
     label: () => t('Reverse'),
@@ -341,7 +347,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   double: {
-    emoji: '✖️',
+    icon: 'times',
     color: C.red,
     group: 'game',
     label: () => t('Take or double'),
@@ -350,7 +356,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   'back-bridge': {
-    emoji: '🌉',
+    icon: 'bridge',
     color: C.wood,
     group: 'move',
     label: () => t('Bridge back'),
@@ -359,7 +365,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     ace: true,
   },
   'fwd-bridge': {
-    emoji: '🌉',
+    icon: 'bridge',
     color: C.mint,
     group: 'move',
     label: () => t('Bridge forward'),
@@ -367,7 +373,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: (n) => (n >= 0 ? t('Over the bridge you go, on to field {n}.', { n }) : t('Over the bridge you go, on to the field across the water.')),
   },
   choose: {
-    emoji: '🍀',
+    icon: 'clover',
     color: C.mint,
     group: 'game',
     label: () => t('Choose one'),
@@ -375,7 +381,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Pick a field from the board and do what it says. You stay where you are.'),
   },
   'three-six-nine': {
-    emoji: '👏',
+    icon: 'count',
     color: C.yellow,
     group: 'game',
     label: () => t('3-6-9'),
@@ -384,7 +390,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   cheek: {
-    emoji: storeSafe ? '🙌' : '🍑',
+    icon: 'heartHand',
     color: C.pink,
     group: 'game',
     label: () => t('Cheek'),
@@ -397,7 +403,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   toilet: {
-    emoji: '🚽',
+    icon: 'toilet',
     color: C.cream,
     group: 'everyone',
     label: () => t('Toilet'),
@@ -406,7 +412,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   snail: {
-    emoji: '🐌',
+    icon: 'snail',
     color: C.orange,
     group: 'everyone',
     label: () => t('Snail'),
@@ -415,7 +421,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   duel: {
-    emoji: '⚔️',
+    icon: 'swords',
     color: C.lilac,
     group: 'game',
     label: () => t('Dice duel'),
@@ -424,7 +430,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   silence: {
-    emoji: '🤫',
+    icon: 'silence',
     color: C.grey,
     group: 'everyone',
     label: () => t('Silence'),
@@ -433,7 +439,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   shop: {
-    emoji: '🛒',
+    icon: 'cart',
     color: C.teal,
     group: 'give',
     label: () => t('Shopping'),
@@ -442,7 +448,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   prison: {
-    emoji: '⛓️',
+    icon: 'chain',
     color: C.grey,
     group: 'move',
     label: () => t('Prison'),
@@ -451,7 +457,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     ace: true,
   },
   'roll-back': {
-    emoji: '⏪',
+    icon: 'back',
     color: C.indigo,
     group: 'move',
     label: () => t('Roll back'),
@@ -460,7 +466,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     ace: true,
   },
   'roll-again': {
-    emoji: '🎲',
+    icon: 'dice',
     color: C.lime,
     group: 'move',
     label: () => t('Roll again'),
@@ -468,7 +474,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Lucky you: roll again.'),
   },
   safe: {
-    emoji: '🛡️',
+    icon: 'shield',
     color: C.mint,
     group: 'move',
     label: () => t('Safe'),
@@ -476,7 +482,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Nothing happens here. Relax.'),
   },
   girls: {
-    emoji: '👩',
+    icon: 'girls',
     color: C.pink,
     group: 'everyone',
     label: () => t('Girls'),
@@ -485,7 +491,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   boys: {
-    emoji: '👨',
+    icon: 'guys',
     color: C.blue,
     group: 'everyone',
     label: () => t('Boys'),
@@ -494,7 +500,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   'swap-drink': {
-    emoji: '🔀',
+    icon: 'shuffle',
     color: C.lilac,
     group: 'drink',
     label: () => t('Drink swap'),
@@ -504,7 +510,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   mole: {
-    emoji: '🕳️',
+    icon: 'hole',
     color: C.brown,
     group: 'move',
     label: () => t('Mole'),
@@ -513,7 +519,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     ace: true,
   },
   mate: {
-    emoji: '🤝',
+    icon: 'mate',
     color: C.mint,
     group: 'game',
     label: () => t('Mate'),
@@ -522,7 +528,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   hands: {
-    emoji: '✋',
+    icon: 'hand',
     color: C.teal,
     group: 'everyone',
     label: () => t('Palm or back'),
@@ -530,9 +536,9 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Everyone hides a hand behind their back. On 3, 2, 1 it comes out, palm up or back of the hand up. The fewer drink 2.'),
     choose: true,
   },
-  black: all('🖤', C.grey, () => t('Black'), () => t('Wearing black'), () => t('Everyone wearing something black drinks 2.')),
+  black: all('heart', C.grey, () => t('Black'), () => t('Wearing black'), () => t('Everyone wearing something black drinks 2.')),
   never: {
-    emoji: '🙊',
+    icon: 'eyeOff',
     color: C.lilac,
     group: 'game',
     label: () => t('Never have I ever'),
@@ -541,7 +547,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   lie: {
-    emoji: '🤥',
+    icon: 'nose',
     color: C.orange,
     group: 'game',
     label: () => t('2 truths, 1 lie'),
@@ -549,9 +555,9 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Tell two truths and one lie about yourself. Whoever guesses wrong drinks 1. Nobody finds the lie: give out 3.'),
     choose: true,
   },
-  battery: all('🪫', C.lime, () => t('Battery'), () => t('Lowest battery drinks'), () => t('Everyone checks their phone: the lowest battery drinks 2.')),
+  battery: all('battery', C.lime, () => t('Battery'), () => t('Lowest battery drinks'), () => t('Everyone checks their phone: the lowest battery drinks 2.')),
   height: {
-    emoji: '📏',
+    icon: 'ruler',
     color: C.yellow,
     group: 'everyone',
     label: (n) => (n ? t('Tallest') : t('Shortest')),
@@ -561,10 +567,10 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Tallest') : t('Shortest')) },
   },
   // In the store app no tobacco (App Store rule 1.4.3): coffee instead, see i18n/store.ts.
-  smokers: all(storeSafe ? '☕' : '🚬', C.brown, () => t('Smokers'), () => t('Smokers drink'), () => t('Everyone who smokes drinks 2.')),
-  tattoo: all('🖋️', C.indigo, () => t('Tattoo'), () => t('Tattoos drink'), () => t('Everyone with a tattoo drinks 2.')),
+  smokers: all(storeSafe ? 'coffee' : 'smoke', C.brown, () => t('Smokers'), () => t('Smokers drink'), () => t('Everyone who smokes drinks 2.')),
+  tattoo: all('pen', C.indigo, () => t('Tattoo'), () => t('Tattoos drink'), () => t('Everyone with a tattoo drinks 2.')),
   stare: {
-    emoji: '👀',
+    icon: 'eye',
     color: C.blue,
     group: 'game',
     label: () => t('Staring contest'),
@@ -574,7 +580,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   dare: {
-    emoji: '😈',
+    icon: 'zap',
     color: C.red,
     group: 'drink',
     label: () => t('Dare or drink'),
@@ -584,7 +590,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   cheers: {
-    emoji: '🥂',
+    icon: 'cheers',
     color: C.gold,
     group: 'everyone',
     label: () => t('Cheers'),
@@ -594,7 +600,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [1, 2, 3], def: 2, label: (n) => t('{n} sips', { n }) },
   },
   nohands: {
-    emoji: '👐',
+    icon: 'ban',
     color: C.pink,
     group: 'drink',
     label: () => t('No hands'),
@@ -604,7 +610,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   couples: {
-    emoji: '💘',
+    icon: 'love',
     color: C.red,
     group: 'everyone',
     label: (n) => (n ? t('Couples') : t('Singles')),
@@ -614,7 +620,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Couples') : t('Singles')) },
   },
   home: {
-    emoji: '🏠',
+    icon: 'house',
     color: C.indigo,
     group: 'move',
     label: () => t('Back to start'),
@@ -623,7 +629,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     ace: true,
   },
   hair: {
-    emoji: '💇',
+    icon: 'haircut',
     color: C.wood,
     group: 'everyone',
     label: (n) => pick(HAIR, n),
@@ -633,7 +639,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1, 2, 3], def: 0, label: (n) => pick(HAIR, n) },
   },
   eyes: {
-    emoji: '👁️',
+    icon: 'eye',
     color: C.teal,
     group: 'everyone',
     label: (n) => (n ? t('Blue eyes') : t('Green eyes')),
@@ -643,7 +649,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Blue eyes') : t('Green eyes')) },
   },
   chug: {
-    emoji: '⏱️',
+    icon: 'timer',
     color: C.red,
     group: 'drink',
     label: (n) => t('{n}-second chug', { n }),
@@ -654,7 +660,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [5, 10], def: 5, label: (n) => t('{n} seconds', { n }) },
   },
   reflex: {
-    emoji: '🙋',
+    icon: 'me',
     color: C.orange,
     group: 'everyone',
     label: (n) => (n ? t('Floor') : t('Hands up')),
@@ -665,7 +671,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     param: { values: [0, 1], def: 0, label: (n) => (n ? t('Floor') : t('Hands up')) },
   },
   category: {
-    emoji: '🗂️',
+    icon: 'category',
     color: C.lilac,
     group: 'game',
     label: () => t('Category'),
@@ -674,7 +680,7 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     choose: true,
   },
   rhyme: {
-    emoji: '🎤',
+    icon: 'rhyme',
     color: C.mint,
     group: 'game',
     label: () => t('Rhyme'),
@@ -682,9 +688,9 @@ export const FIELDS: Record<FieldKind, FieldInfo> = {
     text: () => t('Say a word. In turn, everyone says one that rhymes with it. Whoever repeats one or can’t find one drinks 2.'),
     choose: true,
   },
-  glasses: all('👓', C.blue, () => t('Glasses'), () => t('Glasses drink'), () => t('Everyone wearing glasses drinks 2.')),
-  neighbors: all('👥', C.teal, () => t('Neighbours'), () => t('Neighbours drink'), () => t('The players on your left and right drink 2.')),
-  hydrate: all('💧', C.blue, () => t('Water break'), () => t('Water break'), () => t('Everyone has a glass of water before the game goes on.')),
+  glasses: all('glasses', C.blue, () => t('Glasses'), () => t('Glasses drink'), () => t('Everyone wearing glasses drinks 2.')),
+  neighbors: all('people', C.teal, () => t('Neighbours'), () => t('Neighbours drink'), () => t('The players on your left and right drink 2.')),
+  hydrate: all('water', C.blue, () => t('Water break'), () => t('Water break'), () => t('Everyone has a glass of water before the game goes on.')),
 };
 
 /** The field kinds in the order the board editor lists them. */

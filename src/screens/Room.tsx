@@ -28,7 +28,7 @@ export default function Room({ joinCode }: { joinCode: string | null }) {
 
 function Start({ joinCode }: { joinCode: string | null }) {
   const room = useRoom();
-  const { profile, setName, rerollAvatar } = useProfile();
+  const { profile, setName, rerollColor } = useProfile();
   const [code, setCode] = useState(joinCode ? normalizeCode(joinCode) : '');
   const [nameMissing, setNameMissing] = useState(false);
   const fromLink = !!joinCode;
@@ -64,14 +64,14 @@ function Start({ joinCode }: { joinCode: string | null }) {
       {room.message && <p className={`notice ${room.status === 'error' ? 'bad' : ''}`}>{room.message}</p>}
 
       <section className="me-card">
-        {/* With a photo, the avatar opens the profile; without one, a tap rolls a new emoji. */}
+        {/* With a photo, the avatar opens the profile; without one, a tap rolls a new colour. */}
         <Tap
           className="player-avatar me-avatar"
           style={{ '--chip': profile.color } as CSSProperties}
-          onClick={profile.photo ? () => navigate(paths.profile) : rerollAvatar}
-          ariaLabel={profile.photo ? t('Your profile') : t('New avatar')}
+          onClick={profile.photo ? () => navigate(paths.profile) : rerollColor}
+          ariaLabel={profile.photo ? t('Your profile') : t('New colour')}
         >
-          <Avatar avatar={profile.avatar} photo={profile.photo} />
+          <Avatar name={profile.name} color={profile.color} photo={profile.photo} />
         </Tap>
         <label className="me-field" htmlFor="room-nick">
           <span className="me-label">{unfill(t('Your name'))}</span>
@@ -240,7 +240,7 @@ function Lobby() {
           {room.members.map((m) => (
             <li key={m.id} className={`member-row${listed.has(m.id) ? '' : ' pop-in'}${m.online ? '' : ' offline'}`}>
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="member-text">
                 <span className="member-name">{m.name}</span>

@@ -62,7 +62,7 @@ export default function TrashOnline() {
                   style={{ '--chip': m.color } as CSSProperties}
                   onClick={() => toggle(m.id)}
                 >
-                  <span className="pick-chip-avatar"><Avatar avatar={m.avatar} photo={m.photo} /></span>
+                  <span className="pick-chip-avatar"><Avatar name={m.name} color={m.color} photo={m.photo} /></span>
                   <span className="pick-chip-name">{m.name}</span>
                 </Tap>
               ))}

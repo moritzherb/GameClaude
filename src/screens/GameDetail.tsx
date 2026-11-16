@@ -128,7 +128,7 @@ function OnlineStart({ game, second }: { game: GameDefinition; /** Next to the o
   if (!inRoom) {
     return second ? (
       <BigButton variant="glass" onClick={() => navigate(paths.room)}>
-        {t('📱 Each on their own phone')}
+        {t('Each on their own phone')}
       </BigButton>
     ) : (
       <BigButton size="xl" onClick={() => navigate(paths.room)}>

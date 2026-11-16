@@ -923,7 +923,7 @@ li {
   display: flex;
 }
 
-.avatar-stack span {
+.avatar-stack > span {
   width: 34px;
   height: 34px;
   margin-left: -10px;
@@ -934,7 +934,7 @@ li {
   font-size: 1rem;
 }
 
-.avatar-stack span:first-child {
+.avatar-stack > span:first-child {
   margin-left: 0;
 }
 
@@ -10910,6 +10910,54 @@ li {
   overflow: hidden;
 }
 
+/* No photo: the first letter of the name on the player's colour, round, as big as the photo would
+   be. The letter takes its size from the circle's (a container of its own), so it fits any of them. */
+.avatar-initial {
+  container-type: size;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: 50%;
+  background: var(--pc, var(--chip));
+  color: #161612;
+  vertical-align: middle;
+}
+
+.avatar-letter {
+  display: grid;
+  place-items: center;
+  font-size: 50cqw;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.avatar-letter svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* In a circle of its own (the player's colour, or grey), the letter's circle fills it. */
+.bd-avatar .avatar-initial,
+.player-avatar .avatar-initial,
+.home-me .avatar-initial,
+.profile-avatar .avatar-initial,
+.as-seat-avatar .avatar-initial,
+.turn-bubble-avatar .avatar-initial,
+.avatar-stack > span .avatar-initial,
+.person-chip-avatar .avatar-initial,
+.pl-seat-avatar .avatar-initial,
+.hr-seat-avatar .avatar-initial,
+.ar-over-avatar .avatar-initial,
+.hs-backer .avatar-initial,
+.boarding-driver .avatar-initial,
+.mx-handoff-avatar .avatar-initial {
+  width: 100%;
+  height: 100%;
+}
+
 /* Home: your own avatar next to the settings, opens the profile. */
 .home-me {
   flex: none;
@@ -14002,11 +14050,6 @@ li {
   clip-path: inset(0 round 5px);
 }
 
-/* An avatar's emoji sits in a span of its own (hidden from screen readers): not one of the stack's
-   circles. */
-.avatar-stack span.avatar-glyph {
-  all: unset;
-}
 
 /* Party editor: the field search stays at the top of its sheet while the fields scroll under it. */
 .pt-kinds {
@@ -17714,64 +17757,6 @@ html[data-look] .play-screen > .top-bar .round-btn {
   border: 0;
 }
 
-/* From screen to screen with the app's own buttons (lib/router.ts): a short slide, in from the
-   right going in, from the left coming back. The old screen moves a little the other way and fades. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.26s;
-  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-  animation-fill-mode: both;
-}
-
-/* The old one goes quicker: never two screens half on top of each other for long. */
-::view-transition-old(root) {
-  animation-duration: 0.16s;
-}
-
-:root[data-slide='in']::view-transition-new(root) {
-  animation-name: slide-in-right;
-}
-
-:root[data-slide='in']::view-transition-old(root) {
-  animation-name: slide-out-left;
-}
-
-:root[data-slide='back']::view-transition-new(root) {
-  animation-name: slide-in-left;
-}
-
-:root[data-slide='back']::view-transition-old(root) {
-  animation-name: slide-out-right;
-}
-
-@keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(32px);
-  }
-}
-
-@keyframes slide-out-left {
-  to {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-}
-
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-32px);
-  }
-}
-
-@keyframes slide-out-right {
-  to {
-    opacity: 0;
-    transform: translateX(16px);
-  }
-}
-
 /* ---------- The prost die on the back of every card (Spellbound's keep their own) ----------
    The app icon's lime die, thrown a little crooked, in the middle of the back. On a back of another
    colour it takes that colour (lighter, with a darker edge): red on Egyptian Rat Screw's backs. */
@@ -17864,4 +17849,60 @@ html[data-look='pop'] .kc-slot {
 /* Trash's face-down slots carry their number in the middle: that stays readable. */
 .tr-slot .pcard-back::after {
   display: none;
+}
+
+/* ---------- Pictures inside the games (components/Glyph.tsx) ----------
+   One line, the colour of the text round it, as big as the emoji they replaced (1em). Drawn big
+   (a card's face, a stamp), the line is a little finer, so it stays a drawing and not a sticker. */
+.glyph {
+  flex: none;
+  display: inline-block;
+  vertical-align: -0.14em;
+}
+
+.vt-pick .glyph,
+.vt-card-emoji .glyph,
+.kc-rule-face-emoji .glyph,
+.kl-card-emoji .glyph,
+.gate-emoji .glyph,
+.bd-pop-emoji .glyph,
+.bd-result-emoji .glyph,
+.pt-verdict-emoji .glyph,
+.pt-card-emoji .glyph,
+.fk-stamp-emoji .glyph,
+.driver-bus .glyph,
+.nf-mode-icon .glyph,
+.pt-board-emoji .glyph {
+  stroke-width: 1.6;
+}
+
+/* Lives: small filled hearts in a row. */
+.hr-lives .glyph,
+.nf-hearts .glyph {
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 1px;
+  stroke-width: 2.4;
+}
+
+/* Who the cards are about: the picture, its name under it. */
+.vt-pick {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vt-pick-icons {
+  display: flex;
+  align-items: center;
+}
+
+.vt-pick-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.2s var(--ease-out);
+}
+
+.vt-pick.on .vt-pick-label {
+  color: var(--ink);
 }

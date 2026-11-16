@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { sharp } from '../lib/photo';
-import { DiceIcon, PeopleIcon, SlidersIcon } from '../components/Icons';
+import { initialOf } from '../components/Avatar';
+import { DiceIcon, PeopleIcon, PersonIcon, SlidersIcon } from '../components/Icons';
 import { findGame, GAMES, playableGames } from '../games/registry';
 import type { GameDefinition } from '../games/types';
 import { getLang, t } from '../i18n';
@@ -151,7 +152,7 @@ export default function PopHome() {
       <AppButton
         label={t('Your profile')}
         color={me.color}
-        glyph={me.photo ? <img className="app-photo" src={sharp(me.photo)} alt="" draggable={false} /> : me.avatar}
+        glyph={me.photo ? <img className="app-photo" src={sharp(me.photo)} alt="" draggable={false} /> : <span className="app-initial">{initialOf(me.name) || <PersonIcon />}</span>}
         onOpen={() => navigate(paths.profile)}
       />
       <AppButton label={t('Settings')} tone="dark" glyph={<SlidersIcon />} onOpen={() => navigate(paths.settings)} />

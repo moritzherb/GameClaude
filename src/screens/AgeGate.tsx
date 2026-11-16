@@ -3,6 +3,7 @@ import BigButton from '../components/BigButton';
 import Logo from '../components/Logo';
 import { t } from '../i18n';
 import { openLegal } from '../lib/legal';
+import Glyph from '../components/Glyph';
 
 export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   const [tooYoung, setTooYoung] = useState(false);
@@ -14,7 +15,9 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
       </div>
       {tooYoung ? (
         <div className="gate-body fade-up">
-          <div className="gate-emoji">🧃</div>
+          <div className="gate-emoji">
+            <Glyph name="juice" />
+          </div>
           <h1 className="headline">{t('No worries.')}</h1>
           <p className="lead">{t('Come back when you’re old enough. Juice is great too.')}</p>
           <BigButton variant="glass" onClick={() => setTooYoung(false)}>

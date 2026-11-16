@@ -28,8 +28,8 @@ describe('store app', () => {
 
   it('shows no tobacco on Party fields in the app', async () => {
     const { FIELDS } = await load(true);
-    const all = Object.values(FIELDS).flatMap((f) => [f.emoji, f.label(0), f.label(1), f.title(0), f.text(0, 'Lena')]).join(' ');
-    expect(all).not.toMatch(/🚬|snus|tschick|cigar|tobacco/i);
+    const all = Object.values(FIELDS).flatMap((f) => [f.icon, f.label(0), f.label(1), f.title(0), f.text(0, 'Lena')]).join(' ');
+    expect(all).not.toMatch(/\bsmoke\b|snus|tschick|cigar|tobacco/i);
     expect(FIELDS.tschick.label(0)).toBe('Box flip');
     expect(FIELDS.snus.label(0)).toBe('Tin flip');
   });
@@ -37,15 +37,15 @@ describe('store app', () => {
   it('shows no swearing, pants or shots in the icons', async () => {
     const { FIELDS } = await load(true);
     const { GAMES } = await import('../games/registry');
-    const icons = [...GAMES.map((g) => g.emoji), ...Object.values(FIELDS).map((f) => f.emoji)].join(' ');
-    expect(icons).not.toMatch(/🚬|🥃|🍑|👖|🤬|💩/u);
+    const icons = [...GAMES.map((g) => g.emoji), ...Object.values(FIELDS).map((f) => f.icon)].join(' ');
+    expect(icons).not.toMatch(/🚬|🥃|🍑|👖|🤬|💩|\bsmoke\b|\bshot\b/u);
     // Loads every game: give it time on a busy machine.
   }, 30_000);
 
   it('keeps the website as it is', async () => {
     const { native, FIELDS } = await load(false);
     expect(native.isNative).toBe(false);
-    expect(FIELDS.tschick.emoji).toBe('🚬');
+    expect(FIELDS.tschick.icon).toBe('smoke');
     expect(FIELDS.snus.label(0)).toBe('Snus flip');
   });
 });

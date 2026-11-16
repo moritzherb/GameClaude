@@ -73,7 +73,7 @@ export default function Arschloch() {
           {people.map((m) => (
             <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
               <span className="pick-chip-avatar">
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="pick-chip-name">{m.name}</span>
             </Tap>
@@ -289,7 +289,7 @@ function Table({
         {seats.map((s, i) => (
           <span key={s.id} className={`as-seat${g.turn === i && !hiding ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
             <span className="as-seat-avatar">
-              <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+              <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />
             </span>
             <span className="as-seat-name">{i === me ? t('You') : s.name}</span>
             <span className="as-seat-sub">🂠 {countOf(i)}</span>
@@ -528,8 +528,7 @@ function Over({
       <div className="bd-head center">
         <span className="kicker">{t('Game over')}</span>
         <span className="ar-over-avatar" style={{ '--chip': loser?.color } as CSSProperties}>
-          <Avatar avatar={loser?.avatar ?? '💩'} photo={loser ? photoOf(loser.id) : undefined} />
-          <span className="ar-over-poo">💩</span>
+          <Avatar name={loser?.name ?? ''} color={loser?.color} photo={loser ? photoOf(loser.id) : undefined} />
         </span>
         <h2 className="bd-title big">{g.loser === me ? t('You’re the Asshole!') : t('{name} is the Asshole!', { name: loser?.name ?? '' })}</h2>
         <p className="lead">{t('All four Jacks. Empty your glass!')}</p>

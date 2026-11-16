@@ -7,14 +7,16 @@ import { pick } from '../../lib/random';
 import { cellKey, isJump, jumps, jumpTarget, MAX_COLS, MAX_ROWS, MIN_FIELDS, type Board, type Cell, type Draft } from './boards';
 import { field, FIELDS, GROUPS, KINDS, param, type Field, type FieldKind } from './fields';
 import { FieldIcon } from './FieldIcon';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 type Tool = 'path' | 'water' | 'tunnel' | 'erase';
 
-const TOOLS: { id: Tool; emoji: string; label: string; hint: string }[] = [
-  { id: 'path', emoji: '👣', label: tx('Path'), hint: tx('Draw the path with your finger, from the start on; draw back to take fields away. Tap a field to choose what it is.') },
-  { id: 'water', emoji: '💧', label: tx('Water'), hint: tx('Swipe over cells to put water there (or take it away). A field on water is a bridge over it.') },
-  { id: 'tunnel', emoji: '🕳️', label: tx('Tunnel'), hint: tx('Swipe beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.') },
-  { id: 'erase', emoji: '🧽', label: tx('Erase'), hint: tx('Swipe to take water and tunnels away, or along the path from its end to take fields away.') },
+const TOOLS: { id: Tool; icon: GlyphName; label: string; hint: string }[] = [
+  { id: 'path', icon: 'footprints', label: tx('Path'), hint: tx('Draw the path with your finger, from the start on; draw back to take fields away. Tap a field to choose what it is.') },
+  { id: 'water', icon: 'water', label: tx('Water'), hint: tx('Swipe over cells to put water there (or take it away). A field on water is a bridge over it.') },
+  { id: 'tunnel', icon: 'hole', label: tx('Tunnel'), hint: tx('Swipe beside the path to dig the mole’s tunnel. It runs from the Mole field to the field furthest back it reaches.') },
+  { id: 'erase', icon: 'eraser', label: tx('Erase'), hint: tx('Swipe to take water and tunnels away, or along the path from its end to take fields away.') },
 ];
 
 /** Filling empty fields at random: any kind but those that have to lead somewhere. */
@@ -399,22 +401,30 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
                 setTool(x.id);
               }}
             >
-              <span className="pt-tool-emoji">{x.emoji}</span>
+              <span className="pt-tool-emoji">
+                <Glyph name={x.icon} />
+              </span>
               <span className="pt-tool-label">{t(x.label)}</span>
             </button>
           ))}
           <button type="button" className="pt-tool extra" onClick={undo} disabled={!history.length}>
-            <span className="pt-tool-emoji">↩️</span>
+            <span className="pt-tool-emoji">
+              <Glyph name="undo" />
+            </span>
             <span className="pt-tool-label">{t('Undo')}</span>
           </button>
           {empty > 0 && spots.length > 2 && (
             <button type="button" className="pt-tool extra" onClick={fillAtRandom} aria-label={t('Fill the empty fields at random')}>
-              <span className="pt-tool-emoji">🎲</span>
+              <span className="pt-tool-emoji">
+                <Glyph name="dice" />
+              </span>
               <span className="pt-tool-label">{t('Random')}</span>
             </button>
           )}
           <button type="button" className="pt-tool extra" onClick={() => setMore(true)}>
-            <span className="pt-tool-emoji">⋯</span>
+            <span className="pt-tool-emoji">
+              <Glyph name="more" />
+            </span>
             <span className="pt-tool-label">{t('More')}</span>
           </button>
         </div>
@@ -472,9 +482,9 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
                       <span className={`pt-cell-field${here.kind === 'start' || here.kind === 'goal' ? ' end' : ''}${jump && targets[i!] == null ? ' broken' : ''}`} style={{ '--field': FIELDS[here.kind].color } as CSSProperties}>
                         {here.kind !== 'start' && here.kind !== 'goal' && <span className="pt-cell-n">{i}</span>}
                         <span className="pt-cell-emoji">
-                          <FieldIcon emoji={FIELDS[here.kind].emoji} />
+                          <FieldIcon icon={FIELDS[here.kind].icon} />
                         </span>
-                        {jump && <span className="pt-cell-to">{targets[i!] != null ? `→ ${targets[i!]}` : '⚠️'}</span>}
+                        {jump && <span className="pt-cell-to">{targets[i!] != null ? `→ ${targets[i!]}` : <Glyph name="alert" />}</span>}
                       </span>
                     )}
                     {next && <span className="pt-cell-plus">+</span>}
@@ -583,7 +593,9 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
                   setEditing(null);
                 }}
               >
-                <span className="pt-kind-emoji">{FIELDS.goal.emoji}</span>
+                <span className="pt-kind-emoji">
+                  <FieldIcon icon={FIELDS.goal.icon} />
+                </span>
                 <span className="pt-kind-text">
                   <span className="pt-kind-title">{t('Finish')}</span>
                   <span className="pt-kind-sub">{t('The path ends here: the finish.')}</span>
@@ -593,7 +605,7 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
             {f && f.kind !== 'goal' && FIELDS[f.kind].param && (
               <div className="pt-param">
                 <span className="pt-param-title">
-                  <FieldIcon emoji={FIELDS[f.kind].emoji} /> {FIELDS[f.kind].title(param(f))}
+                  <FieldIcon icon={FIELDS[f.kind].icon} /> {FIELDS[f.kind].title(param(f))}
                 </span>
                 <div className="pt-param-values">
                   {FIELDS[f.kind].param!.values.map((v) => (
@@ -634,7 +646,7 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
                         onClick={() => setKind(editing, field(k as FieldKind, f?.kind === k ? f.n : undefined))}
                       >
                         <span className="pt-kind-emoji">
-                          <FieldIcon emoji={FIELDS[k].emoji} />
+                          <FieldIcon icon={FIELDS[k].icon} />
                         </span>
                         <span className="pt-kind-text">
                           <span className="pt-kind-title">{FIELDS[k].title(FIELDS[k].param?.def ?? 0)}</span>

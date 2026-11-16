@@ -3,6 +3,8 @@ import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { SUIT_SYMBOL, SUITS, type Suit } from '../../lib/cards';
 import type { Guess, Outcome, QuestionId } from './logic';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 const SUIT_LABEL: Record<Suit, string> = { hearts: tx('Hearts'), diamonds: tx('Diamonds'), spades: tx('Spades'), clubs: tx('Clubs') };
 
@@ -26,8 +28,8 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
     case 'higher-lower':
       return (
         <div className="answer-grid">
-          {btn('higher', '⬆', t('Higher'), 'tone-mint', { q: 'higher-lower', dir: 'higher' })}
-          {btn('lower', '⬇', t('Lower'), 'tone-ocean', { q: 'higher-lower', dir: 'lower' })}
+          {btn('higher', <Glyph name="up" />, t('Higher'), 'tone-mint', { q: 'higher-lower', dir: 'higher' })}
+          {btn('lower', <Glyph name="down" />, t('Lower'), 'tone-ocean', { q: 'higher-lower', dir: 'lower' })}
         </div>
       );
     case 'inside-outside':
@@ -40,8 +42,8 @@ export default function Answers({ questionId, onAnswer }: { questionId: Question
     case 'have-it':
       return (
         <div className="answer-grid">
-          {btn('yes', '👍', t('Yes, got it'), 'tone-mint', { q: 'have-it', has: true })}
-          {btn('no', '👎', t('Nope'), 'tone-black', { q: 'have-it', has: false })}
+          {btn('yes', <Glyph name="check" />, t('Yes, got it'), 'tone-mint', { q: 'have-it', has: true })}
+          {btn('no', <Glyph name="wrong" />, t('Nope'), 'tone-black', { q: 'have-it', has: false })}
         </div>
       );
     default:
@@ -71,10 +73,12 @@ export const ONWARD_MS = 1500;
  * Right or wrong: a big stamp pops up over the table once the card has turned, with the sips to
  * drink or give out (or what happens now), and goes again.
  */
-export function Verdict({ tone, emoji, title, sub }: { tone: Outcome; emoji: string; title: string; sub?: string }) {
+export function Verdict({ tone, icon, title, sub }: { tone: Outcome; icon: GlyphName; title: string; sub?: string }) {
   return (
     <div className={`bd-pop ${tone}`} role="status">
-      <span className="bd-pop-emoji">{emoji}</span>
+      <span className="bd-pop-emoji">
+        <Glyph name={icon} />
+      </span>
       <span className="bd-pop-title">{title}</span>
       {sub && <span className="bd-pop-sub">{sub}</span>}
     </div>

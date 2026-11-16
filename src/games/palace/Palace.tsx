@@ -17,6 +17,7 @@ import { apply, deal, fits, MAX_PLAYERS, MIN_PLAYERS, same, TABLE, viewFor, type
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
 import { usePhotoOf } from '../../net/photos';
+import Glyph from '../../components/Glyph';
 
 /* ---------------- Messages between phones ---------------- */
 
@@ -208,7 +209,7 @@ export default function Palace() {
           {ready.map((m) => (
             <li key={m.id} className="member-row">
               <span className="player-avatar" style={{ '--chip': m.color } as CSSProperties}>
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="member-text">
                 <span className="member-name">{m.name}</span>
@@ -318,7 +319,7 @@ function TableView({ view }: { view: PhoneView }) {
               style={{ '--chip': s.color } as CSSProperties}
             >
               <div className="pl-seat-head">
-                <span className="pl-seat-avatar"><Avatar avatar={s.avatar} photo={photoOf(s.id)} /></span>
+                <span className="pl-seat-avatar"><Avatar name={s.name} color={s.color} photo={photoOf(s.id)} /></span>
                 <span className="pl-seat-name">{s.name}</span>
                 {i === view.dealer && <span className="pl-dealer">{t('D')}</span>}
               </div>
@@ -346,7 +347,7 @@ function TableView({ view }: { view: PhoneView }) {
         {view.burned > 0 && <span className="pl-burned">{t('Cleared away: {n}', { n: view.burned })}</span>}
         {ghost?.kind === 'burn' && (
           <span key={ghost.id} className="pl-flash">
-            🔥 {t('Cleared!')}
+            <Glyph name="fire" /> {t('Cleared!')}
           </span>
         )}
       </section>
@@ -660,7 +661,7 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
             {/* Risking is always allowed while the stock lasts: keep your good cards. */}
             {zone === 'hand' && view.stock > 0 && (
               <BigButton variant="light" className="pl-risk" disabled={leaving.length > 0} onClick={() => send({ t: 'risk' })}>
-                {t('Risk it 🎲')}
+                {t('Risk it')}
               </BigButton>
             )}
           </div>
@@ -738,7 +739,7 @@ function Opponents({ view }: { view: PhoneView }) {
         return (
           <div key={s.id} className={`pl-opp${i === view.turn && view.phase === 'play' ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
             <div className="pl-seat-head">
-              <span className="pl-seat-avatar"><Avatar avatar={s.avatar} photo={photoOf(s.id)} /></span>
+              <span className="pl-seat-avatar"><Avatar name={s.name} color={s.color} photo={photoOf(s.id)} /></span>
               <span className="pl-seat-name">{s.name}</span>
               <span className="pl-opp-hand" aria-label={t('{n} in hand', { n: side.hand })}>
                 🂠 {side.hand}
@@ -770,7 +771,7 @@ function MiniTable({ view }: { view: PhoneView }) {
       </div>
       {ghost?.kind === 'burn' && (
         <span key={ghost.id} className="pl-flash">
-          🔥 {t('Cleared!')}
+          <Glyph name="fire" /> {t('Cleared!')}
         </span>
       )}
     </section>
@@ -898,7 +899,7 @@ function Over({ view, isHost, onNewGame }: { view: PhoneView; isHost: boolean; o
           {order.map(({ s, i, left }) => (
             <li key={s.id}>
               <span>
-                <Avatar avatar={s.avatar} photo={photoOf(s.id)} /> {i === view.me ? t('You') : s.name}
+                <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} /> {i === view.me ? t('You') : s.name}
               </span>
               <strong>{t('{n} cards left', { n: left })}</strong>
             </li>

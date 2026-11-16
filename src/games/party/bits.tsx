@@ -339,7 +339,7 @@ export function PickPlayer({ players, onPick, picked }: { players: Player[]; onP
           }}
         >
           <span className="pick-chip-avatar">
-            <Avatar avatar={p.avatar} photo={p.photo} />
+            <Avatar name={p.name} color={p.color} photo={p.photo} />
           </span>
           <span className="pick-chip-name">{p.name}</span>
         </button>

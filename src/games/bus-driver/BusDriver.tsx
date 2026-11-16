@@ -190,7 +190,7 @@ export default function BusDriver({ players, exit }: GameProps) {
               disabled={!!lit}
               onClick={() => setS({ ...s, dealerId: p.id })}
             >
-              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+              <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === (lit?.id ?? s.dealerId) && <span className="pick-chip-badge">{t('Dealer')}</span>}
             </Tap>
@@ -249,7 +249,7 @@ export default function BusDriver({ players, exit }: GameProps) {
             <div key={x.player.id} className="bd-summary-row">
               <div className="bd-summary-who">
                 <span className="bd-avatar sm" style={{ background: x.player.color }}>
-                  <Avatar avatar={x.player.avatar} photo={x.player.photo} />
+                  <Avatar name={x.player.name} color={x.player.color} photo={x.player.photo} />
                 </span>
                 <span className="bd-summary-name">{x.player.name}</span>
                 <span className="bd-summary-stats">
@@ -327,7 +327,7 @@ export default function BusDriver({ players, exit }: GameProps) {
         </div>
         <div className="bd-first">
           <span className="bd-avatar sm" style={{ background: first.color }}>
-            <Avatar avatar={first.avatar} photo={first.photo} />
+            <Avatar name={first.name} color={first.color} photo={first.photo} />
           </span>
           <span>
             <strong>{first.name}</strong> {t('starts')}
@@ -370,7 +370,7 @@ export default function BusDriver({ players, exit }: GameProps) {
 
       <div className="bd-player">
         <span className="bd-avatar" style={{ background: seat.player.color }}>
-          <Avatar avatar={seat.player.avatar} photo={seat.player.photo} />
+          <Avatar name={seat.player.name} color={seat.player.color} photo={seat.player.photo} />
         </span>
         <span className="bd-player-text">
           <span className="bd-player-name">{seat.player.name}</span>
@@ -411,9 +411,9 @@ function ResultBanner({ result }: { result: Result }) {
   const n = result.sips;
   const one = n === 1;
   const copy = {
-    correct: { emoji: '🎉', title: t('Correct!'), sub: one ? t('Give out {n} sip', { n }) : t('Give out {n} sips', { n }) },
-    wrong: { emoji: '🍺', title: t('Wrong!'), sub: one ? t('Drink {n} sip', { n }) : t('Drink {n} sips', { n }) },
-    same: { emoji: '😱', title: t('Same value!'), sub: t('Double trouble: drink {n} sips', { n }) },
+    correct: { icon: 'party' as const, title: t('Correct!'), sub: one ? t('Give out {n} sip', { n }) : t('Give out {n} sips', { n }) },
+    wrong: { icon: 'beer' as const, title: t('Wrong!'), sub: one ? t('Drink {n} sip', { n }) : t('Drink {n} sips', { n }) },
+    same: { icon: 'zap' as const, title: t('Same value!'), sub: t('Double trouble: drink {n} sips', { n }) },
   }[result.outcome];
   return <Verdict tone={result.outcome} {...copy} />;
 }

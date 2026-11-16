@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { useRoom } from '../net/RoomProvider';
+import Glyph from '../components/Glyph';
 
 /** Big pop-up when anyone in the room taps "Cheers!". Shows on every screen. */
 export default function CheersToast() {
@@ -19,7 +20,9 @@ export default function CheersToast() {
   const [before, after] = t('{name} says cheers!').split('{name}');
   return (
     <div key={visible.key} className="toast" role="status">
-      <span className="toast-emoji">🍻</span>
+      <span className="toast-emoji">
+        <Glyph name="cheers" />
+      </span>
       <span>
         {before}
         <strong>{visible.name}</strong>

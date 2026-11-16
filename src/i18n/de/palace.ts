@@ -64,7 +64,7 @@ const palace: Record<string, string> = {
   'Pick cards': 'Karten wählen',
   'Pick one or more cards of one value': 'Wähl eine oder mehrere Karten mit gleichem Wert',
   'Take the pile ({n})': 'Ablage aufnehmen ({n})',
-  'Risk it 🎲': 'Riskieren 🎲',
+  'Risk it': 'Riskieren',
   'Risk it: the top card of the stock goes on the pile. If it doesn’t fit, you take the pile and that card.':
     'Riskieren: Die oberste Karte vom Stapel kommt auf den Ablagestapel. Passt sie nicht, nimmst du den Ablagestapel samt dieser Karte auf.',
   'You may risk it any time while the stock lasts, even if you could play: that way you keep your good cards.':
