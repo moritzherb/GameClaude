@@ -55,14 +55,24 @@ function paint() {
  * edge) turns fixed or back: the phone looks again, the strip takes the new colour that frame.
  */
 let speck: HTMLElement | null = null;
+/** A turn of the speck is coming (at the end of the script running now). */
+let nudging = false;
 function nudge() {
-  if (!speck?.isConnected) {
-    speck = document.createElement('i');
-    speck.setAttribute('aria-hidden', 'true');
-    speck.style.cssText = 'position:absolute;top:50%;left:50%;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none';
-    document.body?.append(speck);
-  }
-  speck.style.position = speck.style.position === 'fixed' ? 'absolute' : 'fixed';
+  // Once however often the colour changes in one go (a screen going and the next one coming, each
+  // laying or taking away a colour): turned twice, the speck would be as it was, and the phone
+  // wouldn't look again.
+  if (nudging) return;
+  nudging = true;
+  queueMicrotask(() => {
+    nudging = false;
+    if (!speck?.isConnected) {
+      speck = document.createElement('i');
+      speck.setAttribute('aria-hidden', 'true');
+      speck.style.cssText = 'position:absolute;top:50%;left:50%;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none';
+      document.body?.append(speck);
+    }
+    speck.style.position = speck.style.position === 'fixed' ? 'absolute' : 'fixed';
+  });
 }
 
 // The phone switching between light and dark (with Auto): the bar along.
@@ -201,8 +211,8 @@ export function topColor(): string {
   return layers[layers.length - 1]?.color ?? ground();
 }
 
-/** The page's ground colour. */
-function ground(): string {
+/** The page's ground colour (what shows where nothing is drawn). */
+export function ground(): string {
   const bg = typeof document === 'undefined' ? '' : getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   return bg || pair[1];
 }

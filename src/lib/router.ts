@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { buzz } from './fx';
+import { ground, mix, topColor, topLayer } from './themeColor';
 
 // Hash routing: works on any static host.
 //
@@ -170,16 +171,32 @@ function go(hash: string, how: 'push' | 'replace', state: string | null) {
 
 /*
  * Going from screen to screen with the app's own buttons (into the crew, the settings, back with
- * the arrow): a short slide, in from the right going in, from the left coming back. Games have
- * their own way in (lib/launch.ts) and out; a swipe back is animated by the phone itself.
+ * the arrow): the page fades out quickly, and the next screen fades in sliding a little, in from the
+ * right going in, from the left coming back. Games have their own way in (lib/launch.ts) and out; a
+ * swipe back is animated by the phone itself.
+ *
+ * The page itself is moved, frame by frame, as the splash of a game is (lib/launch.ts), not a
+ * picture of it (a view transition): iPhones skipped the first frames of those, so the slide was
+ * over almost before it showed, and never changed the strip under the clock while one ran, so the
+ * strip changed only after the screen had. Here the strip takes, each frame, what the top of the
+ * page shows then: the screen's own colour, faded over the ground as much as the screen is.
  */
-type ViewTransition = { finished: Promise<void> };
-type WithTransitions = Document & { startViewTransition?: (update: () => void) => ViewTransition };
+
+/** How long the page takes to fade out, and the next screen to come in (ms). */
+const SLIDE_OUT = 100;
+const SLIDE_IN = 260;
+/** How far the next screen slides (px). */
+const SLIDE_BY = 20;
+/** How long an iPhone takes to blend its strip to each new colour (ms), as in lib/launch.ts. */
+const STRIP_BLEND = 100;
 
 /** The screen change is being drawn inside a slide right now. */
 let sliding = false;
 /** A slide still running (steps that need the new screen drawn wait for it). */
 let slideDone: Promise<void> | null = null;
+/** The slide running now: stops it where it is (showing the screen it's going to, if asked), and
+ *  says how much of the page showed then. */
+let stopSlide: ((show: boolean) => number) | null = null;
 /** The screens on the way in, to tell going back from going on. */
 const trail: string[] = [];
 
@@ -188,16 +205,19 @@ const depthOf = (hash: string) => {
   const parts = pathOf(hash).split('/').filter((p) => p && p !== '#');
   return parts[0] === 'games' && parts[1] ? 2 : parts.length ? 1 : 0;
 };
+const easeOut = (k: number) => 1 - (1 - k) ** 3;
 
 function slide(from: string, to: string, show: () => void): boolean {
-  const doc = document as WithTransitions;
   const key = screenKey(to);
   const back = trail.length > 1 && trail[trail.length - 2] === key ? true : depthOf(to) < depthOf(from);
   if (back) trail.splice(Math.max(0, trail.lastIndexOf(key)));
   trail.push(key);
   if (trail.length > 12) trail.shift();
+  // One still running stops where it is: this step shows the screen it was going to (or another).
+  const start = stopSlide ? stopSlide(false) : 1;
+  const page = document.getElementById('root');
   if (
-    !doc.startViewTransition ||
+    !page ||
     held ||
     isGame(from) ||
     isGame(to) ||
@@ -205,29 +225,93 @@ function slide(from: string, to: string, show: () => void): boolean {
     matchMedia('(prefers-reduced-motion: reduce)').matches
   )
     return false;
-  const root = document.documentElement;
-  root.dataset.slide = back ? 'back' : 'in';
-  let vt: ViewTransition;
-  try {
-    vt = doc.startViewTransition(() => {
-      sliding = true;
-      try {
-        show();
-      } finally {
-        sliding = false;
-      }
-    });
-  } catch {
-    delete root.dataset.slide;
-    return false;
-  }
-  const done = vt.finished.catch(() => {}).then(() => {
-    if (slideDone === done) {
-      slideDone = null;
-      delete root.dataset.slide;
-    }
-  });
+  const dir = back ? -1 : 1;
+  let strip = topLayer(topColor());
+  let phase: 'out' | 'drawn' | 'in' = 'out';
+  let shown = false;
+  /** How long this part has shown (ms): a frame never counts for more than two, so a moment the
+   *  phone spends drawing holds the slide a little instead of making it skip ahead. */
+  let t = 0;
+  let prev = 0;
+  let step = 1000 / 60;
+  let seen = start;
+  let frame = 0;
+  let resolve = () => {};
+  const done = new Promise<void>((r) => (resolve = r));
   slideDone = done;
+  /** How much of the page shows `at` ms into this part. */
+  const opacity = (at: number) =>
+    phase === 'out' ? Math.max(0, start * (1 - at / SLIDE_OUT)) : phase === 'in' ? easeOut(Math.min(1, at / SLIDE_IN)) : 0;
+  const draw = () => {
+    const o = opacity(t);
+    seen = o;
+    page.style.opacity = String(o);
+    if (phase === 'in') page.style.transform = o < 1 ? `translateX(${(SLIDE_BY * dir * (1 - o)).toFixed(2)}px)` : '';
+    // The phone blends its strip from the colour it was given a frame ago, so on the screen it's
+    // about a frame behind: it's set that much ahead (less what it blends meanwhile).
+    const ahead = opacity(t + step - (step * step) / (2 * STRIP_BLEND));
+    strip.set(mix(ground(), strip.under(), ahead));
+  };
+  const showNext = () => {
+    if (shown) return;
+    shown = true;
+    sliding = true;
+    try {
+      show();
+    } finally {
+      sliding = false;
+    }
+    // The next screen lays its own colour at the top (home its wallpaper's): the strip goes back
+    // over it, and comes to it as the screen comes in.
+    strip.release();
+    strip = topLayer(topColor());
+  };
+  const stop = (andShow: boolean) => {
+    cancelAnimationFrame(frame);
+    window.clearTimeout(guard);
+    if (andShow) showNext();
+    page.style.opacity = '';
+    page.style.transform = '';
+    page.style.willChange = '';
+    page.style.pointerEvents = '';
+    strip.release();
+    if (stopSlide === stop) stopSlide = null;
+    if (slideDone === done) slideDone = null;
+    resolve();
+    return seen;
+  };
+  const tick = (now: number) => {
+    frame = 0;
+    if (prev && now > prev) {
+      t += Math.min(now - prev, 2 * step);
+      step += (Math.min(50, now - prev) - step) * 0.3;
+    }
+    prev = now;
+    if (phase === 'out' && t >= SLIDE_OUT) {
+      // Gone: the next screen goes on the page (unseen yet), and is drawn once…
+      phase = 'drawn';
+      showNext();
+      page.style.willChange = 'opacity, transform';
+      page.style.pointerEvents = '';
+    } else if (phase === 'drawn') {
+      // …then it comes in, a frame's worth on the first frame already.
+      phase = 'in';
+      t = step;
+    } else if (phase === 'in' && t >= SLIDE_IN) {
+      stop(false);
+      return;
+    }
+    draw();
+    frame = requestAnimationFrame(tick);
+  };
+  stopSlide = stop;
+  page.style.willChange = 'opacity';
+  // No second tap on the screen going away.
+  page.style.pointerEvents = 'none';
+  draw();
+  frame = requestAnimationFrame(tick);
+  // In case the frames stop (the app in the background): there in any case.
+  const guard = window.setTimeout(() => stop(true), 1500);
   return true;
 }
 
@@ -415,6 +499,8 @@ if (typeof window !== 'undefined') {
   }
   let lastHash = window.location.hash;
   window.addEventListener('popstate', () => {
+    // A slide still running ends at once: the history moved on (a swipe back, or the app's own step).
+    stopSlide?.(true);
     // The app's own step down onto the bottom home entry: the same screen, nothing to do.
     if (settling) {
       settling = false;
