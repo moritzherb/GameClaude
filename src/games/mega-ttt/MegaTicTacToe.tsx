@@ -51,7 +51,7 @@ function PickTwo({ players, onPick }: { players: Player[]; onPick: (p: [Player, 
           return (
             <button key={p.id} type="button" className={`mt-pick-row${at >= 0 ? ' on' : ''}`} aria-pressed={at >= 0} onClick={() => toggle(p)}>
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="mt-pick-name">{p.name}</span>
               <span className={`mt-pick-mark${at === 0 ? ' x' : at === 1 ? ' o' : ''}`} aria-hidden>
@@ -133,7 +133,7 @@ function Match({ pair, onSwap }: { pair: [Player, Player]; onSwap: () => void })
             <div key={m} className={`mt-player ${m === 'X' ? 'x' : 'o'}${on ? ' on' : ''}${won ? ' won' : ''}`} aria-current={on ? 'true' : undefined}>
               <span className="mt-player-face">
                 <span className="bd-avatar sm" style={{ background: p.color }}>
-                  <Avatar avatar={p.avatar} photo={p.photo} />
+                  <Avatar name={p.name} color={p.color} photo={p.photo} />
                 </span>
                 <span className="mt-player-mark">
                   <MarkIcon mark={m} />

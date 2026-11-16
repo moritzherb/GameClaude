@@ -72,7 +72,7 @@ interface AppState {
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
   /** Change a player's name and/or avatar. A name that's empty or taken by someone else is ignored. */
-  updatePlayer: (id: string, patch: { name?: string; avatar?: string }) => void;
+  updatePlayer: (id: string, patch: { name?: string; color?: string }) => void;
   clearPlayers: () => void;
   /** Add someone with a profile. Already in the crew: nothing happens. A player with the same name and
    *  no profile yet becomes them (their photo and numbers). */
@@ -199,8 +199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (p.id !== id) return p;
             const name = patch.name?.trim().slice(0, 18);
             const nameOk = !!name && !list.some((o) => o.id !== id && o.name.toLowerCase() === name.toLowerCase());
-            // Picking an emoji shows the emoji: the photo goes.
-            return { ...p, ...(nameOk ? { name } : {}), ...(patch.avatar ? { avatar: patch.avatar, photo: undefined } : {}) };
+            return { ...p, ...(nameOk ? { name } : {}), ...(patch.color ? { color: patch.color } : {}) };
           }),
         ),
       clearPlayers: () => setPlayers([]),

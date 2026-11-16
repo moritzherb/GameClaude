@@ -6,8 +6,8 @@
 
 import { appFont } from '../../lib/fonts';
 
-/** The Ace field's picture (FIELDS.ace.emoji): wherever it would show, the card is drawn instead. */
-export const ACE = '🂡';
+/** The Ace field's picture (FIELDS.ace.icon): wherever it would show, the card is drawn instead. */
+export const ACE = 'ace';
 
 const RED = '#d7261e';
 const HEART = '♥︎';

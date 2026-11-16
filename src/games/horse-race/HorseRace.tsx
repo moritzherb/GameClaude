@@ -5,6 +5,7 @@ import BigButton from '../../components/BigButton';
 import DeckCount from '../../components/DeckCount';
 import PlayingCard, { CardFace } from '../../components/PlayingCard';
 import SuitIcon from '../../components/Suit';
+import Glyph from '../../components/Glyph';
 import { t, tx } from '../../i18n';
 import { SUITS, type Suit } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
@@ -80,7 +81,7 @@ export default function HorseRace({ players, exit }: GameProps) {
           {players.map((p) => (
             <div key={p.id} className="hs-bet-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="hs-bet-name">{p.name}</span>
               <span className="hs-stake" role="group" aria-label={t('Stake of {name}', { name: p.name })}>
@@ -173,7 +174,7 @@ export default function HorseRace({ players, exit }: GameProps) {
             .map(({ p, n }) => (
               <div key={p.id} className="ftd-tally-row">
                 <span className="bd-avatar xs" style={{ background: p.color }}>
-                  <Avatar avatar={p.avatar} photo={p.photo} />
+                  <Avatar name={p.name} color={p.color} photo={p.photo} />
                 </span>
                 <span className="ftd-tally-name">{p.name}</span>
                 <span className={`hs-tally-suit${RED(bets[p.id]) ? ' red' : ''}`}>
@@ -275,7 +276,8 @@ export default function HorseRace({ players, exit }: GameProps) {
           {race.queue.length ? t('Turn the side card') : t('Next card')}
         </BigButton>
         <button type="button" role="switch" aria-checked={auto} className={`hs-auto${auto ? ' on' : ''}`} onClick={() => setAuto(!auto)}>
-          {auto ? t('Auto ⏸') : t('Auto ▶')}
+          <Glyph name={auto ? 'pause' : 'play'} />
+          {t('Auto')}
         </button>
       </div>
     </div>
@@ -325,7 +327,7 @@ function Track({ race, backers }: { race: Race; backers: (s: Suit) => Player[] }
           <span key={s} className="hs-backer-lane">
             {backers(s).map((p) => (
               <span key={p.id} className="hs-backer" style={{ background: p.color }} title={p.name}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
             ))}
           </span>

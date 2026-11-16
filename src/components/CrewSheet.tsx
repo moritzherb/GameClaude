@@ -72,7 +72,7 @@ export default function CrewSheet({ game, open, onClose }: { game: GameDefinitio
           {players.map((p) => (
             <li key={p.id} className="crew-sheet-row" style={{ '--chip': p.color } as CSSProperties}>
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="crew-sheet-name">{p.name}</span>
             </li>
@@ -108,7 +108,7 @@ export function RoomCrewSheet({ open, onClose }: { open: boolean; onClose: () =>
           {room.members.map((m) => (
             <li key={m.id} className={`crew-sheet-row${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties}>
               <span className="bd-avatar xs" style={{ background: m.color }}>
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="crew-sheet-name">{m.name}</span>
             </li>

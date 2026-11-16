@@ -16,6 +16,7 @@ import { layRing, SLOT_WIDTH, type Slot } from './ring';
 import { CARD_RULES, isKing, LAST_KING_RULE, type CardRule } from './rules';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 interface State {
   /** All 52 cards, face down in a messy circle: cards[i] lies at slots[i]. */
@@ -174,7 +175,7 @@ export default function KingsCup({ players, exit }: GameProps) {
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: player.color }}>
-            <Avatar avatar={player.avatar} photo={player.photo} />
+            <Avatar name={player.name} color={player.color} photo={player.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{player.name}</span>
@@ -189,13 +190,17 @@ export default function KingsCup({ players, exit }: GameProps) {
         <div className="kc-chips">
           {questionMaster && (
             <button type="button" className={`kc-chip${s.current?.value === 12 ? ' settle' : ''}`} aria-label={t('{name} is Question Master', { name: questionMaster.name })} onClick={() => setSheet('effects')}>
-              <span aria-hidden="true">❓</span>
+              <span aria-hidden="true">
+                <Glyph name="question" />
+              </span>
               <span className="kc-chip-text">{questionMaster.name}</span>
             </button>
           )}
           {asking === 'mate' && !mates ? (
             <button type="button" className="kc-chip ask" onClick={() => setSheet('mate')}>
-              <span aria-hidden="true">🤝</span>
+              <span aria-hidden="true">
+                <Glyph name="mate" />
+              </span>
               <span className="kc-chip-text">{t('Pick your mate')}</span>
             </button>
           ) : (
@@ -206,7 +211,9 @@ export default function KingsCup({ players, exit }: GameProps) {
                 aria-label={t('{a} is mates with {b}', { a: mates[0].name, b: mates[1].name })}
                 onClick={() => setSheet(asking === 'mate' ? 'mate' : 'effects')}
               >
-                <span aria-hidden="true">🤝</span>
+                <span aria-hidden="true">
+                <Glyph name="mate" />
+              </span>
                 <span className="kc-chip-text">
                   {mates[0].name} &amp; {mates[1].name}
                 </span>
@@ -215,7 +222,9 @@ export default function KingsCup({ players, exit }: GameProps) {
           )}
           {asking === 'rule' && !s.rule ? (
             <button type="button" className="kc-chip ask" onClick={() => setSheet('rule')}>
-              <span aria-hidden="true">📜</span>
+              <span aria-hidden="true">
+                <Glyph name="rule" />
+              </span>
               <span className="kc-chip-text">{t('Set a rule')}</span>
             </button>
           ) : (
@@ -224,7 +233,9 @@ export default function KingsCup({ players, exit }: GameProps) {
                   if (asking === 'rule') setRuleDraft(s.rule ?? '');
                   setSheet(asking === 'rule' ? 'rule' : 'effects');
                 }}>
-                <span aria-hidden="true">📜</span>
+                <span aria-hidden="true">
+                <Glyph name="rule" />
+              </span>
                 <span className="kc-chip-text">{s.rule}</span>
               </button>
             )
@@ -273,7 +284,7 @@ export default function KingsCup({ players, exit }: GameProps) {
                     pickMate(p);
                   }}
                 >
-                  <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+                  <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
                   <span className="pick-chip-name">{p.name}</span>
                 </button>
               ))}
@@ -392,7 +403,9 @@ function Reveal({ card, rule, finale, from }: { card: Card; rule: CardRule; fina
           <CardFace card={card} />
           {landed ? (
             <span className={`pcard-face kc-rule-face${finale ? ' finale' : ''}`}>
-              <span className="kc-rule-face-emoji">{rule.emoji}</span>
+              <span className="kc-rule-face-emoji">
+                <Glyph name={rule.icon} />
+              </span>
               <span className="kc-rule-face-title">{title}</span>
               <span className="kc-rule-face-text">{text}</span>
             </span>
@@ -449,19 +462,25 @@ function EffectLines({
     <>
       {questionMaster && (
         <div className="kc-effect">
-          <span className="kc-effect-icon">❓</span>
+          <span className="kc-effect-icon">
+            <Glyph name="question" />
+          </span>
           <span>{rich(t('{name} is Question Master'), { name: <strong>{questionMaster.name}</strong> })}</span>
         </div>
       )}
       {mates && (
         <div className="kc-effect">
-          <span className="kc-effect-icon">🤝</span>
+          <span className="kc-effect-icon">
+            <Glyph name="mate" />
+          </span>
           <span>{rich(t('{a} is mates with {b}'), { a: <strong>{mates[0].name}</strong>, b: <strong>{mates[1].name}</strong> })}</span>
         </div>
       )}
       {rule && (
         <div className="kc-effect">
-          <span className="kc-effect-icon">📜</span>
+          <span className="kc-effect-icon">
+            <Glyph name="rule" />
+          </span>
           <span>{rule}</span>
         </div>
       )}

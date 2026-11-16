@@ -13,6 +13,7 @@ import Pig from './Pigs';
 import { bank, BONUSES, loserSips, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 const POSE_NAME: Record<Pose, string> = {
   side: tx('Side'),
@@ -69,7 +70,7 @@ export default function Schweinerei({ players, exit }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+              <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starterId && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>
@@ -494,7 +495,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
       <div className="mx-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
-            <Avatar avatar={who.avatar} photo={who.photo} />
+            <Avatar name={who.name} color={who.color} photo={who.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{who.name}</span>
@@ -512,7 +513,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         <div className="sw-board-players" ref={board} aria-label={t('Scores')}>
           {players.map((p, i) => (
             <span key={p.id} className={`sw-score${i === g.turn ? ' on' : ''}`} style={{ '--who': p.color } as CSSProperties}>
-              <span className="sw-score-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+              <span className="sw-score-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
               <span className="sw-score-num">{g.scores[i]}</span>
             </span>
           ))}
@@ -525,7 +526,9 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
           aria-label={t('Bonus throw: {what} for +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}
           onClick={() => setBonusInfo(true)}
         >
-          <span aria-hidden>🎯</span>
+          <span aria-hidden>
+            <Glyph name="target" />
+          </span>
           <span className="sw-bonus-what" ref={bonusWhat}>
             {bonusLabel(g.bonus.target)}
           </span>
@@ -620,7 +623,7 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
         {!g.ended && g.turnPts > 0 && mode === 'rest' && (
           <Tap className="fk-bank sw-bank" onClick={doBank} ariaLabel={t('Into the pen: +{n}', { n: g.turnPts })}>
             <span className="fk-bank-icon" aria-hidden>
-              🏠
+              <Glyph name="house" />
             </span>
             <span className="fk-bank-text">{t('Pen')}</span>
             <span className="fk-bank-amount">+{g.turnPts}</span>
@@ -675,7 +678,7 @@ function Finish({ g, players, onAgain, exit }: { g: Game; players: GameProps['pl
               return (
                 <div key={p.id} className="ftd-tally-row">
                   <span className="bd-avatar xs" style={{ background: p.color }}>
-                    <Avatar avatar={p.avatar} photo={p.photo} />
+                    <Avatar name={p.name} color={p.color} photo={p.photo} />
                   </span>
                   <span className="ftd-tally-name">{p.name}</span>
                   <span className="sw-final">{s}</span>

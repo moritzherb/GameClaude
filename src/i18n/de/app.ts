@@ -32,8 +32,8 @@ const app: Record<string, string> = {
   'The line-up': 'Das Line-up',
   'Last played': 'Zuletzt gespielt',
   'All games': 'Alle Spiele',
-  'Change avatar of {name}': 'Avatar von {name} ändern',
-  'Pick an avatar for {name}': 'Avatar für {name}',
+  'Change colour of {name}': 'Farbe von {name} ändern',
+  'Pick a colour for {name}': 'Farbe für {name}',
   'Rename {name}': '{name} umbenennen',
   'Picking your game…': 'Euer Spiel wird ausgewählt…',
 
@@ -100,7 +100,7 @@ const app: Record<string, string> = {
   // Room: start
   'Everyone joins the same room with their own phone. One phone hosts, the others scan the QR code or type the room code.':
     'Alle treten mit dem eigenen Handy demselben Raum bei. Ein Handy ist der Host, die anderen scannen den QR-Code oder tippen den Raumcode ein.',
-  'New avatar': 'Neuer Avatar',
+  'New colour': 'Neue Farbe',
   'Your name': 'Dein Name',
   'Type your name': 'Gib deinen Namen ein',
   'Join room {code}': 'Raum {code} beitreten',
@@ -257,7 +257,7 @@ const app: Record<string, string> = {
   'Try again': 'Nochmal versuchen',
   'Back to the start': 'Zurück zum Start',
   'Waiting for the host to start a new game…': 'Warte, bis der Host ein neues Spiel startet…',
-  '📱 Each on their own phone': '📱 Jeder auf seinem Handy',
+  'Each on their own phone': 'Jeder auf seinem Handy',
   'Couldn’t reach the host’s phone. Make sure the app is open on it, then try again.':
     'Keine Verbindung zum Handy des Hosts. Schau, dass die App dort offen ist, und versuch es nochmal.',
   // Profile
@@ -267,7 +267,6 @@ const app: Record<string, string> = {
   'New photo': 'Neues Foto',
   'Add a photo': 'Foto hinzufügen',
   'Remove photo': 'Foto entfernen',
-  'Other emoji': 'Anderes Emoji',
   'That picture didn’t work. Try another one.': 'Das Bild hat nicht geklappt. Probier ein anderes.',
   Colour: 'Farbe',
   'Your stats': 'Deine Statistik',

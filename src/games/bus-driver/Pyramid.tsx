@@ -191,7 +191,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
             <div key={seats[i].player.id} className={`bd-summary-row${losers.includes(i) ? ' loser' : ''}`}>
               <div className="bd-summary-who">
                 <span className="bd-avatar sm" style={{ background: seats[i].player.color }}>
-                  <Avatar avatar={seats[i].player.avatar} photo={seats[i].player.photo} />
+                  <Avatar name={seats[i].player.name} color={seats[i].player.color} photo={seats[i].player.photo} />
                 </span>
                 <span className="bd-summary-name">{seats[i].player.name}</span>
                 <span className="bd-summary-stats">
@@ -261,7 +261,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
           {seats.map((x, i) => (
             <div key={x.player.id} className={`hand-row${!pending && lastLaid?.[i]?.length ? ' just-laid' : ''}`}>
               <span className="bd-avatar xs" style={{ background: x.player.color }}>
-                <Avatar avatar={x.player.avatar} photo={x.player.photo} />
+                <Avatar name={x.player.name} color={x.player.color} photo={x.player.photo} />
               </span>
               <span className="hand-name">{x.player.name}</span>
             {!!lastLaid?.[i]?.length && (
@@ -270,7 +270,7 @@ export default function Pyramid({ seats, deck, onDone }: Props) {
               </span>
             )}
               <span className="hand-cards">
-                {hands[i].length ? hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone 🎉')}</span>}
+                {hands[i].length ? hands[i].map((c, j) => <PlayingCard key={j} card={c} size="sm" />) : <span className="hand-empty">{t('All gone')}</span>}
               </span>
             </div>
           ))}

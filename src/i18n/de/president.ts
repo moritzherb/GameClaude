@@ -51,7 +51,7 @@ const president: Record<string, string> = {
   'Out of cards! Watch the others fight it out.': 'Keine Karten mehr! Schau zu, wie die anderen es ausmachen.',
   'Give {cards}': '{cards} abgeben',
   'Pick {n} cards': 'Wähl {n} Karten',
-  'Pass 🍺': 'Passen 🍺',
+  'Pass, drink 1': 'Passen, 1 trinken',
   'drinks {n}': 'trinkt {n}',
   'hands out {n}': 'verteilt {n}',
   'New players': 'Neue Spieler',

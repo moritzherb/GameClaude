@@ -10,8 +10,10 @@ import { PawnIcon } from './bits';
 import { FetchBoardSheet, ShareBoardSheet } from './BoardCode';
 import type { Board, Draft } from './boards';
 import { PAWNS, type PawnDef } from './pawns';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
-const THEME_EMOJI: Record<string, string> = { classic: '🎲' };
+const THEME_ICON: Record<string, GlyphName> = { classic: 'dice' };
 
 interface Props {
   players: Player[];
@@ -65,7 +67,7 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
               }}
             >
               <span className="pt-board-emoji" aria-hidden>
-                {b.emoji ?? THEME_EMOJI[b.theme]}
+                <Glyph name={b.icon ?? THEME_ICON[b.theme] ?? 'dice'} />
               </span>
               <span className="pt-board-name">{b.custom ? b.name : t(b.name)}</span>
               <span className="pt-board-sub">{b.custom ? t('Your own · {n} fields', { n: b.fields.length - 1 }) : t('{n} fields', { n: b.fields.length - 1 })}</span>
@@ -82,7 +84,7 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
               }}
             >
               <span className="pt-board-emoji" aria-hidden>
-                ✏️
+                <Glyph name="pencil" />
               </span>
               <span className="pt-board-name">{d.name}</span>
               <span className="pt-board-sub">{t('Draft · {n} fields', { n: Math.max(0, d.spots.length - 1) })}</span>
@@ -151,7 +153,7 @@ export default function Setup({ players, boards, boardId, onBoard, pawns, onPawn
           {players.map((p) => (
             <button key={p.id} type="button" className="pt-pawn-row" aria-label={`${p.name}: ${t(pawns[p.id].name)}`} onClick={() => setPicking(p)}>
               <span className="bd-avatar sm" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="pt-pawn-row-name">{p.name}</span>
               {/* Their pawn alone, all in one column on the right (its colour's name only in the picker). */}

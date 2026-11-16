@@ -1,4 +1,6 @@
 import { tx } from '../../i18n';
+import type { GlyphName } from '../../lib/glyphs';
+import { paintToken } from './token';
 
 /** A pawn to play with: a classic one in a colour, a special one, or a figure. */
 export interface PawnDef {
@@ -7,8 +9,8 @@ export interface PawnDef {
   name: string;
   look: 'classic' | 'gold' | 'disco' | 'figure';
   color: string;
-  /** A figure's emoji (it stands on a little base in `color`). */
-  emoji?: string;
+  /** A figure's picture (it stands on a little base in `color`, as a round standee). */
+  icon?: GlyphName;
 }
 
 export const PAWNS: PawnDef[] = [
@@ -24,21 +26,20 @@ export const PAWNS: PawnDef[] = [
   { id: 'purple', name: tx('Purple'), look: 'classic', color: '#8a5cf6' },
   { id: 'gold', name: tx('Golden King'), look: 'gold', color: '#e9b824' },
   { id: 'disco', name: tx('Disco'), look: 'disco', color: '#c9d2dc' },
-  { id: 'beer', name: tx('Beer'), look: 'figure', color: '#f2b233', emoji: '🍺' },
-  { id: 'unicorn', name: tx('Unicorn'), look: 'figure', color: '#ff9fd6', emoji: '🦄' },
-  { id: 'flamingo', name: tx('Flamingo'), look: 'figure', color: '#ff7eb6', emoji: '🦩' },
-  { id: 'frog', name: tx('Frog'), look: 'figure', color: '#4cc36a', emoji: '🐸' },
-  { id: 'ghost', name: tx('Ghost'), look: 'figure', color: '#d9dde6', emoji: '👻' },
-  { id: 'dino', name: tx('Dino'), look: 'figure', color: '#56b870', emoji: '🦖' },
-  { id: 'cowboy', name: tx('Cowboy'), look: 'figure', color: '#c8935a', emoji: '🤠' },
-  { id: 'pineapple', name: tx('Pineapple'), look: 'figure', color: '#ffd23f', emoji: '🍍' },
-  { id: 'pizza', name: tx('Pizza'), look: 'figure', color: '#ff8a3d', emoji: '🍕' },
-  { id: 'alien', name: tx('Alien'), look: 'figure', color: '#9be15d', emoji: '👽' },
+  { id: 'beer', name: tx('Beer'), look: 'figure', color: '#f2b233', icon: 'beer' },
+  { id: 'unicorn', name: tx('Unicorn'), look: 'figure', color: '#ff9fd6', icon: 'unicorn' },
+  { id: 'flamingo', name: tx('Flamingo'), look: 'figure', color: '#ff7eb6', icon: 'bird' },
+  { id: 'frog', name: tx('Frog'), look: 'figure', color: '#4cc36a', icon: 'frog' },
+  { id: 'ghost', name: tx('Ghost'), look: 'figure', color: '#d9dde6', icon: 'ghost' },
+  { id: 'dino', name: tx('Dino'), look: 'figure', color: '#56b870', icon: 'dino' },
+  { id: 'cowboy', name: tx('Cowboy'), look: 'figure', color: '#c8935a', icon: 'cowboy' },
+  { id: 'pineapple', name: tx('Pineapple'), look: 'figure', color: '#ffd23f', icon: 'pineapple' },
+  { id: 'pizza', name: tx('Pizza'), look: 'figure', color: '#ff8a3d', icon: 'pizza' },
+  { id: 'alien', name: tx('Alien'), look: 'figure', color: '#9be15d', icon: 'alien' },
 ];
 
 export const pawnById = (id: string | undefined) => PAWNS.find((p) => p.id === id) ?? PAWNS[0];
 
-export const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
 
 function rgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
@@ -89,10 +90,7 @@ export function drawPawnAt(ctx: CanvasRenderingContext2D, def: PawnDef, h: numbe
     ctx.ellipse(0, -0.1 * h, 0.3 * h, 0.09 * h, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    ctx.font = `${Math.round(h * 0.8)}px ${EMOJI_FONT}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(def.emoji ?? '?', 0, -0.17 * h);
+    if (def.icon) paintToken(ctx, def.icon, 0, -0.12 * h, 0.82 * h, shade(def.color, -0.55));
     return;
   }
   const color = def.color;

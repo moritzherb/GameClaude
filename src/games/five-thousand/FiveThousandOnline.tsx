@@ -58,7 +58,7 @@ export default function FiveThousandOnline() {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={photoOf(p.id)} /></span>
+              <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={photoOf(p.id)} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starter?.id && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>

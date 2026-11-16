@@ -67,12 +67,12 @@ export const STORE: Record<string, { en: string; de: string }> = {
 
   /* ---------- Pants Down: Thirty-One ---------- */
   'Pants Down': { en: 'Thirty-One', de: 'Einunddreißig' },
-  '31 in one suit = Pants down 👖 and three aces = Fire 🔥: the round ends at once.': {
-    en: '31 in one suit = Thirty-One 🎯 and three aces = Fire 🔥: the round ends at once.',
-    de: '31 in einer Farbe = Einunddreißig 🎯 und drei Asse = Feuer 🔥: Die Runde ist sofort vorbei.',
+  '31 in one suit = Pants down and three aces = Fire: the round ends at once.': {
+    en: '31 in one suit = Thirty-One and three aces = Fire: the round ends at once.',
+    de: '31 in einer Farbe = Einunddreißig und drei Asse = Feuer: Die Runde ist sofort vorbei.',
   },
-  '👖 Pants down from You!': { en: '🎯 Thirty-One from you!', de: '🎯 Einunddreißig von dir!' },
-  '👖 Pants down from {name}!': { en: '🎯 Thirty-One from {name}!', de: '🎯 Einunddreißig von {name}!' },
+  'Pants down from you!': { en: 'Thirty-One from you!', de: 'Einunddreißig von dir!' },
+  'Pants down from {name}!': { en: 'Thirty-One from {name}!', de: 'Einunddreißig von {name}!' },
 
   /* ---------- Kings Cup: no cup to mix and down, the Kings are toasts ---------- */
   'An empty cup in the middle': { en: 'Something to drink (water works too)', de: 'Was zu trinken (Wasser geht auch)' },

@@ -46,7 +46,6 @@ const speed: Record<string, string> = {
   'New cards in': 'Neue Karten in',
 
   // Game over
-  'You win! 🏆': 'Du gewinnst! 🏆',
   Rematch: 'Revanche',
   'Pick other players': 'Andere Spieler wählen',
   Sort: 'Sortieren',

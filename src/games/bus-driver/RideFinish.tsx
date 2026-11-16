@@ -3,6 +3,7 @@ import { t } from '../../i18n';
 import type { Player } from '../../state/AppState';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 export interface RideStats {
   attempt: number;
@@ -16,9 +17,11 @@ export default function RideFinish({ driver, stats, onPlayAgain, onExit }: { dri
   return (
     <div className="bd driver">
       <div className="driver-hero pop-in">
-        <span className="driver-bus">🏁</span>
+        <span className="driver-bus">
+          <Glyph name="finish" />
+        </span>
         <span className="bd-avatar xl" style={{ background: driver.color }}>
-          <Avatar avatar={driver.avatar} photo={driver.photo} />
+          <Avatar name={driver.name} color={driver.color} photo={driver.photo} />
         </span>
       </div>
       <div className="bd-head center">

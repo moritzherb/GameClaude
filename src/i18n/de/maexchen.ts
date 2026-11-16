@@ -46,7 +46,7 @@ const maexchen: Record<string, string> = {
   'Mäxchen! Nothing beats it: lift the cup.': 'Mäxchen! Höher geht nicht: aufdecken.',
   Shake: 'Schütteln',
   'Announce…': 'Ansagen …',
-  'Shaken blind 🙈': 'Blind geschüttelt 🙈',
+  'Shaken blind': 'Blind geschüttelt',
   'Shake once more, blind': 'Nochmal blind schütteln',
   'Lift the cup!': 'Aufdecken!',
   'Believe it and shake': 'Glauben und schütteln',

@@ -258,7 +258,7 @@ export default function Speed() {
               style={{ '--chip': m.color } as CSSProperties}
               onClick={() => toggle(m.id)}
             >
-              <span className="pick-chip-avatar"><Avatar avatar={m.avatar} photo={m.photo} /></span>
+              <span className="pick-chip-avatar"><Avatar name={m.name} color={m.color} photo={m.photo} /></span>
               <span className="pick-chip-name">{m.name}</span>
             </Tap>
           ))}
@@ -354,7 +354,7 @@ export default function Speed() {
         <div className="sp-over">
           <Finished game="speed" />
           <p className="sp-result">
-            {g.winner === me ? t('You win! 🏆') : t('{name} wins!', { name: match.seats[g.winner ?? 0].name })}
+            {g.winner === me ? t('You win!') : t('{name} wins!', { name: match.seats[g.winner ?? 0].name })}
           </p>
           {isHost ? (
             <>
@@ -380,7 +380,7 @@ function Opponent({ g, who, seat }: { g: Game; who: Who; seat: Seat }) {
   return (
     <div className="sp-opp" style={{ '--chip': seat.color } as CSSProperties}>
       <span className="bd-avatar xs" style={{ background: seat.color }}>
-        <Avatar avatar={seat.avatar} photo={photoOf(seat.id)} />
+        <Avatar name={seat.name} color={seat.color} photo={photoOf(seat.id)} />
       </span>
       <span className="sp-opp-text">
         <span className="sp-name">{seat.name}</span>

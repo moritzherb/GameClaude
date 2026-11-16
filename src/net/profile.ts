@@ -18,9 +18,8 @@ export function useProfile() {
   return {
     profile,
     setName: (name: string) => setProfile((p) => ({ ...p, name: name.slice(0, 18) })),
-    rerollAvatar: () => setProfile((p) => ({ ...p, avatar: pick(AVATARS.filter((a) => a !== p.avatar)), color: pick(PLAYER_COLORS) })),
-    /** A new emoji only (the colour stays). */
-    nextEmoji: () => setProfile((p) => ({ ...p, avatar: pick(AVATARS.filter((a) => a !== p.avatar)) })),
+    /** Another colour behind the letter. */
+    rerollColor: () => setProfile((p) => ({ ...p, color: pick(PLAYER_COLORS.filter((c) => c !== p.color)) })),
     setColor: (color: string) => setProfile((p) => ({ ...p, color })),
     setPhoto: (photo: string | undefined) => setProfile((p) => ({ ...p, photo })),
   };

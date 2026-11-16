@@ -13,6 +13,8 @@ import { useApp } from '../../state/AppState';
 import { HandSpread } from '../palace/Palace';
 import { canPlay, giveBack, MAX_PLAYERS, MIN_PLAYERS, newGame, nextRound, pass, play, ranksFrom, ROUND_SIPS, same, toBeat, type Entry, type Game, type Rank } from './logic';
 import Finished from '../../components/Finished';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 export interface Seat {
   id: string;
@@ -35,12 +37,12 @@ export const RANK_NAME: Record<Rank, string> = {
   'vice-arschloch': tx('Vice Asshole'),
   arschloch: tx('Asshole'),
 };
-export const RANK_EMOJI: Record<Rank, string> = {
-  president: '👔',
-  vice: '🎩',
-  citizen: '🙂',
-  'vice-arschloch': '🥴',
-  arschloch: '💩',
+export const RANK_ICON: Record<Rank, GlyphName> = {
+  president: 'crown',
+  vice: 'medal',
+  citizen: 'person',
+  'vice-arschloch': 'down',
+  arschloch: 'floor',
 };
 
 const group = (cards: Card[]) => (cards.length > 1 ? `${cards.length}× ${rankLabel(cards[0].value)}` : cardName(cards[0]));
@@ -86,7 +88,7 @@ export default function President() {
           {people.map((m) => (
             <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
               <span className="pick-chip-avatar">
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="pick-chip-name">{m.name}</span>
             </Tap>
@@ -271,11 +273,15 @@ function Table({
               style={{ '--chip': s.color } as CSSProperties}
             >
               <span className="as-seat-avatar">
-                <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
-                {r && <span className="as-seat-rank">{RANK_EMOJI[r]}</span>}
+                <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />
+                {r && (
+                  <span className="as-seat-rank">
+                    <Glyph name={RANK_ICON[r]} />
+                  </span>
+                )}
               </span>
               <span className="as-seat-name">{i === me ? t('You') : s.name}</span>
-              <span className="as-seat-sub">{place >= 0 && g.phase !== 'done' ? `#${place + 1}` : passed.has(i) ? t('passed') : `🂠 ${g.hands[i].length}`}</span>
+              <span className="as-seat-sub">{place >= 0 && g.phase !== 'done' ? `#${place + 1}` : passed.has(i) ? t('passed') : t('{n} cards', { n: g.hands[i].length })}</span>
             </span>
           );
         })}
@@ -334,7 +340,7 @@ function Table({
                 </BigButton>
                 {top && (
                   <BigButton variant="danger" className="as-pass" onClick={() => act((x) => pass(x, me))}>
-                    {t('Pass 🍺')}
+                    {t('Pass, drink 1')}
                   </BigButton>
                 )}
               </div>
@@ -366,7 +372,9 @@ function RoundOver({ g, seats, me, isHost, onNext, onNewGame }: { g: Game; seats
           const s = ROUND_SIPS[r];
           return (
             <li key={seat} className={`as-rank as-rank-${r}${seat === me ? ' me' : ''}`}>
-              <span className="as-rank-emoji">{RANK_EMOJI[r]}</span>
+              <span className="as-rank-emoji">
+                <Glyph name={RANK_ICON[r]} />
+              </span>
               <span className="as-rank-text">
                 <strong>{seats[seat]?.name}</strong>
                 <small>{t(RANK_NAME[r])}</small>

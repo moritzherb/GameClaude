@@ -25,6 +25,7 @@ import {
   type Game,
 } from './logic';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 /** Letters on the dice; German poker dice say B (Bube) and D (Dame). */
 const FACE_LABEL: Record<Face, string> = { 9: '9', 10: '10', 11: tx('J'), 12: tx('Q'), 13: tx('K'), 14: tx('A') };
@@ -59,7 +60,7 @@ export default function FiveThousand({ players, exit }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+              <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starterId && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>
@@ -161,7 +162,7 @@ export function FiveThousandTable({
         <div className="bd-head center">
           <span className="kicker">{t('Exactly 5000!')}</span>
           <span className="bd-avatar xl" style={{ background: me.color }}>
-            <Avatar avatar={me.avatar} photo={me.photo} />
+            <Avatar name={me.name} color={me.color} photo={me.photo} />
           </span>
           <h2 className="bd-title big">{t('{name} wins!', { name: me.name })}</h2>
         </div>
@@ -240,7 +241,7 @@ export function FiveThousandTable({
       <div className="kc-status">
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: me.color }}>
-            <Avatar avatar={me.avatar} photo={me.photo} />
+            <Avatar name={me.name} color={me.color} photo={me.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{me.name}</span>
@@ -330,7 +331,7 @@ export function FiveThousandTable({
       {g.phase === 'roll' && mine && (
         <div className="sticky-action">
           <BigButton size="xl" onClick={() => shake(roll)} disabled={shaking}>
-            {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again 🔥') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
+            {turn.cup === 5 && turn.rolls > 0 ? t('All 5 again') : turn.cup === 1 ? t('Roll 1 die') : t('Roll {n} dice', { n: turn.cup })}
           </BigButton>
         </div>
       )}
@@ -338,7 +339,7 @@ export function FiveThousandTable({
       {g.phase === 'choose' && mine && (
         <div className="sticky-action">
           <BigButton size="xl" disabled={gain == null || over || shaking} onClick={() => shake((x) => setAside(x, picked, 'roll'))}>
-            {exact ? t('Exactly 5000! 🏆') : gain != null && left === 0 ? t('All 5 back in the cup 🔥') : left === 1 ? t('Roll 1 die again') : t('Roll {n} again', { n: Math.max(left, 1) })}
+            {exact ? t('Exactly 5000!') : gain != null && left === 0 ? t('All 5 back in the cup') : left === 1 ? t('Roll 1 die again') : t('Roll {n} again', { n: Math.max(left, 1) })}
           </BigButton>
         </div>
       )}
@@ -391,7 +392,9 @@ function TurnStamp({ g, name }: { g: Game; name: string }) {
   const lost = end.kind === 'nothing' || end.kind === 'too-much' ? end.lost : 0;
   return (
     <span className="fk-stamp wrong">
-      <span className="fk-stamp-emoji">{end.kind === 'too-much' ? '🫠' : '💥'}</span>
+      <span className="fk-stamp-emoji">
+        <Glyph name={end.kind === 'too-much' ? 'blank' : 'bomb'} />
+      </span>
       <span className="fk-stamp-title">{end.kind === 'too-much' ? t('Over 5000!') : t('Nothing!')}</span>
       <span className="fk-stamp-sub">
         {end.kind === 'too-much'
@@ -425,7 +428,7 @@ function Scoreboard({ g, players }: { g: Game; players: GameProps['players'] }) 
         <div key={p.id} ref={i === g.current ? current : undefined} className={`fk-chip${i === g.current ? ' on' : ''}${g.opened[i] ? '' : ' out'}`}>
           <span className="fk-chip-top">
             <span className="bd-avatar xs" style={{ background: p.color }}>
-              <Avatar avatar={p.avatar} photo={p.photo} />
+              <Avatar name={p.name} color={p.color} photo={p.photo} />
             </span>
             <span className="fk-chip-score">{fmt(g.scores[i])}</span>
           </span>
@@ -450,7 +453,7 @@ function Standings({ g, players }: { g: Game; players: GameProps['players'] }) {
           .map(({ p, n }) => (
             <div key={p.id} className="ftd-tally-row">
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="ftd-tally-name">{p.name}</span>
               <span className="ftd-tally-num">{fmt(n)}</span>
@@ -610,7 +613,7 @@ function Table({
               to the circle, the text in it sized to the circle too; still too long, it gets smaller. */}
           <span className="fk-bank-in">
             <span className="fk-bank-icon" aria-hidden>
-              💰
+              <Glyph name="coins" />
             </span>
             <FitText className="fk-bank-text" min={0.5}>
               {bank.text}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SearchIcon } from '../components/Icons';
+import { PhoneIcon, SearchIcon } from '../components/Icons';
 import Tap from '../components/Tap';
 import { GAMES } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
@@ -76,7 +76,7 @@ export default function Launcher({
           <Tap className="widget w-last w-together" onClick={() => navigate(paths.room)} ariaLabel={t('Together')}>
             <span className="w-kicker">{t('Together')}</span>
             <span className="w-pop" aria-hidden>
-              📱
+              <PhoneIcon />
             </span>
             <span className="w-title">{t('Every phone joins')}</span>
           </Tap>

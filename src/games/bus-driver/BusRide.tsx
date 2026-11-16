@@ -9,6 +9,7 @@ import { BOARD_ROWS, type BoardMode } from './board';
 import ClassicRide from './ClassicRide';
 import RideFinish, { type RideStats } from './RideFinish';
 import Avatar from '../../components/Avatar';
+import Glyph from '../../components/Glyph';
 
 type RideMode = 'classic' | BoardMode;
 
@@ -79,9 +80,11 @@ export default function BusRide({ driver, onPlayAgain, onExit }: Props) {
     <>
       <div className="bd">
         <div className="driver-hero pop-in">
-          <span className="driver-bus">🚌</span>
+          <span className="driver-bus">
+            <Glyph name="bus" />
+          </span>
           <span className="bd-avatar xl" style={{ background: driver.color }}>
-            <Avatar avatar={driver.avatar} photo={driver.photo} />
+            <Avatar name={driver.name} color={driver.color} photo={driver.photo} />
           </span>
         </div>
         <div className="bd-head center">

@@ -1,8 +1,10 @@
 import { appFont, fontsReady } from '../../lib/fonts';
 import { cellKey, jumps, THEMES, type Board, type Cell, type Theme } from './boards';
-import { FIELDS } from './fields';
+import { FIELDS, type FieldPic } from './fields';
 import { ACE, paintAce } from './ace';
-import { EMOJI_FONT, pawnSprite, shade, SPRITE_H, type PawnDef } from './pawns';
+import { pawnSprite, shade, SPRITE_H, type PawnDef } from './pawns';
+import { paintToken } from './token';
+import { drawGlyph } from '../../lib/glyphs';
 
 /** A pawn as the scene shows it. */
 export interface PawnView {
@@ -171,7 +173,6 @@ export class Scene {
   private theme: Theme = THEMES.classic;
   private labels: string[] = [];
   private textures: HTMLCanvasElement[] = [];
-  private decor: { x: number; y: number; emoji: string; size: number }[] = [];
   /** Cells with water, and with the mole's tunnels; bridges back (field to field, over water). */
   private water = new Set<string>();
   private tunnels = new Set<string>();
@@ -199,7 +200,7 @@ export class Scene {
   private raf = 0;
   private last = 0;
   private table = '#10110e';
-  private emojis = new Map<string, HTMLCanvasElement>();
+  private icons = new Map<FieldPic, HTMLCanvasElement>();
   private shadowPic: HTMLCanvasElement | null = null;
   private fingers = new Map<number, Point>();
   private gesture: { x: number; y: number; d: number; n: number; moved: number } | null = null;
@@ -273,7 +274,6 @@ export class Scene {
       this.tunnelEnds.add(cellKey(board.spots[+from]));
       this.tunnelEnds.add(cellKey(board.spots[j]));
     }
-    this.placeDecor();
     this.buildTextures();
     this.invalidate();
     // The names are in the app's own type: drawn again once it has loaded, if it hadn't yet.
@@ -559,20 +559,6 @@ export class Scene {
     this.onAway?.(on);
   }
 
-  private placeDecor() {
-    const b = this.board!;
-    const taken = new Set([...this.spots.map(cellKey), ...this.water, ...this.tunnels]);
-    this.decor = [];
-    let seed = b.id.split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
-    const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) % 10000) / 10000;
-    for (let y = 0; y < b.rows; y++) {
-      for (let x = 0; x < b.cols; x++) {
-        if (taken.has(cellKey({ x, y })) || rnd() < 0.72) continue;
-        this.decor.push({ x: x + (rnd() - 0.5) * 0.4, y: y + (rnd() - 0.5) * 0.3, emoji: this.theme.decor[Math.floor(rnd() * this.theme.decor.length)], size: 0.3 + rnd() * 0.12 });
-      }
-    }
-  }
-
   /* ---------- Fingers ---------- */
 
   private down = (e: PointerEvent) => {
@@ -808,8 +794,7 @@ export class Scene {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = INK;
     if (f.kind === 'start' || f.kind === 'goal') {
-      ctx.font = `64px ${EMOJI_FONT}`;
-      ctx.fillText(info.emoji, TEX / 2, TEX / 2 - 18);
+      if (info.icon !== ACE) drawGlyph(ctx, info.icon, TEX / 2 - 34, TEX / 2 - 52, 68, INK, 2.2);
       const { lines } = fit(ctx, label.toUpperCase(), size - 30, 44, 24, (p) => `900 ${p}px ${appFont('display')}`);
       ctx.fillText(lines[0], TEX / 2, TEX / 2 + 50);
       return;
@@ -827,8 +812,9 @@ export class Scene {
     lines.forEach((l, k) => ctx.fillText(l, TEX / 2, y0 + k * lh));
   }
 
-  private emojiSprite(emoji: string): HTMLCanvasElement {
-    let c = this.emojis.get(emoji);
+  /** A field's picture standing at the back of it: the Ace's card, or a round standee (token.ts). */
+  private iconSprite(icon: FieldPic): HTMLCanvasElement {
+    let c = this.icons.get(icon);
     if (c) return c;
     c = document.createElement('canvas');
     const px = 96;
@@ -836,16 +822,12 @@ export class Scene {
     c.width = c.height = Math.round(px * 1.25 * r);
     const ctx = c.getContext('2d')!;
     ctx.scale(r, r);
-    if (emoji === ACE) paintAce(ctx, (px * 1.25) / 2, px * 1.25 - px * 0.16, px * 0.9);
-    else {
-      ctx.font = `${px}px ${EMOJI_FONT}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(emoji, (px * 1.25) / 2, px * 1.25 - px * 0.2);
-    }
-    this.emojis.set(emoji, c);
+    if (icon === ACE) paintAce(ctx, (px * 1.25) / 2, px * 1.25 - px * 0.16, px * 0.9);
+    else paintToken(ctx, icon, (px * 1.25) / 2, px * 1.25 - px * 0.18, px * 0.92);
+    this.icons.set(icon, c);
     return c;
   }
+
 
   /* ---------- Drawing ---------- */
 
@@ -1056,7 +1038,7 @@ export class Scene {
     // Standing things, the far ones first: what's around, each field's picture, the pawns.
     type Item = { z: number; draw: () => void };
     const items: Item[] = [];
-    const standing = (x: number, y: number, up: number, emoji: string, size: number, shadow: number) => {
+    const standing = (x: number, y: number, up: number, icon: FieldPic, size: number, shadow: number) => {
       const p = project(x, y, up);
       if (!p || p.sy < -60 || p.sy > h + 120) return;
       items.push({
@@ -1064,11 +1046,10 @@ export class Scene {
         draw: () => {
           const px = size * p.s;
           this.shadow(p.sx, p.sy, px * 0.34, squash(p), shadow);
-          ctx.drawImage(this.emojiSprite(emoji), p.sx - px * 0.625, p.sy - px * 1.05, px * 1.25, px * 1.25);
+          ctx.drawImage(this.iconSprite(icon), p.sx - px * 0.625, p.sy - px * 1.05, px * 1.25, px * 1.25);
         },
       });
     };
-    for (const d of this.decor) standing(d.x, d.y, 0, d.emoji, d.size, 0.18);
     this.spots.forEach((s, i) => {
       const kind = board.fields[i].kind;
       if (kind === 'start' || kind === 'goal' || kind === 'mole' || s.y + 0.5 < nearY) return;
@@ -1079,7 +1060,7 @@ export class Scene {
         if (p) items.push({ z: p.z, draw: () => this.sign(p, board.fields[i].n ? '1–2' : '5–6') });
         return;
       }
-      standing(s.x + ICON_AT.x, s.y + ICON_AT.y, SLAB, FIELDS[kind].emoji, ICON_H, 0.25);
+      standing(s.x + ICON_AT.x, s.y + ICON_AT.y, SLAB, FIELDS[kind].icon, ICON_H, 0.25);
     });
     let tag: (() => void) | null = null;
     // Looking round the board, everyone's name shows: one sign per field for those standing together.

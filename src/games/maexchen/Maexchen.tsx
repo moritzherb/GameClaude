@@ -38,7 +38,7 @@ export default function Maexchen({ players }: GameProps) {
               style={{ '--chip': p.color } as CSSProperties}
               onClick={() => setStarterId(p.id)}
             >
-              <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+              <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
               <span className="pick-chip-name">{p.name}</span>
               {p.id === starterId && <span className="pick-chip-badge">{t('Starts')}</span>}
             </Tap>
@@ -174,7 +174,7 @@ function MaexchenTable({
       <div className={`mx-status${r.phase === 'reveal' && r.verdict ? ' verdict' : ''}`}>
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
-            <Avatar avatar={who.avatar} photo={who.photo} />
+            <Avatar name={who.name} color={who.color} photo={who.photo} />
           </span>
           <span className="bd-player-text">
             <span className="bd-player-name">{who.name}</span>
@@ -202,7 +202,7 @@ function MaexchenTable({
         {r.phase === 'pass' && (
           <span className="mx-handoff" key={next} style={{ '--who': who.color } as CSSProperties}>
             <span className="mx-handoff-avatar" style={{ background: who.color }}>
-              <Avatar avatar={who.avatar} photo={who.photo} />
+              <Avatar name={who.name} color={who.color} photo={who.photo} />
             </span>
             <span className="mx-handoff-text">{t('Hand the phone to {name}', { name: who.name })}</span>
             <span className="mx-handoff-sub">{mustLift ? t('Mäxchen: you have to lift the cup') : t('believe it or lift the cup?')}</span>
@@ -265,7 +265,7 @@ function MaexchenTable({
               {t('Announce…')}
             </BigButton>
             <BigButton variant="light" onClick={() => doShake()} disabled={!r.peeked || r.blind || shaking}>
-              {r.blind ? t('Shaken blind 🙈') : t('Shake once more, blind')}
+              {r.blind ? t('Shaken blind') : t('Shake once more, blind')}
             </BigButton>
           </>
         )}

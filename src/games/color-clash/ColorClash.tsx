@@ -95,7 +95,7 @@ export default function ColorClash() {
           {people.map((m) => (
             <Tap key={m.id} className={`pick-chip${chosen.includes(m.id) ? ' selected' : ''}${m.online ? '' : ' offline'}`} style={{ '--chip': m.color } as CSSProperties} onClick={() => toggle(m.id)}>
               <span className="pick-chip-avatar">
-                <Avatar avatar={m.avatar} photo={m.photo} />
+                <Avatar name={m.name} color={m.color} photo={m.photo} />
               </span>
               <span className="pick-chip-name">{m.name}</span>
             </Tap>
@@ -218,7 +218,7 @@ function Table({
           {seats.map((s, i) => (
             <span key={s.id} className="cc-result">
               <span className="bd-avatar xs" style={{ background: s.color }}>
-                <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+                <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />
               </span>
               <span>{s.name}</span>
               <span className="cc-result-n">{t('{n} cards', { n: g.hands[i].length })}</span>
@@ -319,7 +319,7 @@ function Table({
                 <span className="cc-seat-n">{n}</span>
               </span>
               <span className="cc-seat-avatar bd-avatar" style={{ background: s.color }}>
-                <Avatar avatar={s.avatar} photo={photoOf(s.id)} />
+                <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />
               </span>
               <span className="cc-seat-name">{s.name}</span>
             </div>

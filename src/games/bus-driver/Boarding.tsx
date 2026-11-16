@@ -92,7 +92,7 @@ export default function Boarding({ driver, road, onRide, onDone }: { driver: Pla
         </span>
         {/* The driver, waiting at the stop, hopping on */}
         <span className="boarding-driver" style={{ '--chip': driver.color } as CSSProperties}>
-          <Avatar avatar={driver.avatar} photo={driver.photo} />
+          <Avatar name={driver.name} color={driver.color} photo={driver.photo} />
         </span>
       </span>
     </button>

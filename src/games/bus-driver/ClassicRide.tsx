@@ -77,18 +77,18 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
   let nextLabel = '';
   if (reveal) {
     if (ride.done) {
-      verdict = <Verdict tone="correct" emoji="🏁" title={t('All correct!')} sub={t('The bus has arrived.')} />;
+      verdict = <Verdict tone="correct" icon="finish" title={t('All correct!')} sub={t('The bus has arrived.')} />;
       nextLabel = t('Finish the ride');
     } else if (!failed) {
       verdict = (
-        <Verdict tone="correct" emoji="✅" title={t('Correct!')} sub={t('Next: {question}', { question: t(questions[q + 1].title) })} />
+        <Verdict tone="correct" icon="check" title={t('Correct!')} sub={t('Next: {question}', { question: t(questions[q + 1].title) })} />
       );
     } else {
       const { sips, outcome } = reveal.result;
       verdict = (
         <Verdict
           tone={outcome}
-          emoji={outcome === 'same' ? '😱' : '🍺'}
+          icon={outcome === 'same' ? 'zap' : 'beer'}
           title={outcome === 'same' ? t('Same value! Drink {n}', { n: sips }) : t('Wrong! Drink {n}', { n: sips })}
           sub={t('Back to question 1.')}
         />
@@ -107,7 +107,7 @@ export default function ClassicRide({ driver, onFinish }: { driver: Player; onFi
 
       <div className="bd-player">
         <span className="bd-avatar" style={{ background: driver.color }}>
-          <Avatar avatar={driver.avatar} photo={driver.photo} />
+          <Avatar name={driver.name} color={driver.color} photo={driver.photo} />
         </span>
         <span className="bd-player-text">
           <span className="bd-player-name">{driver.name}</span>

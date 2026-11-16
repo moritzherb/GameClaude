@@ -1,6 +1,7 @@
 import { tx } from '../../i18n';
 import { load, save } from '../../lib/storage';
 import { field, FIELDS, type Field, type FieldKind } from './fields';
+import type { GlyphName } from '../../lib/glyphs';
 
 /** A cell of the board's map: x across, y away from the start (in field widths). */
 export interface Cell {
@@ -47,13 +48,11 @@ export interface Theme {
   /** The board's colour near the start and far away at the finish. */
   near: string;
   far: string;
-  /** Things standing around on the board. */
-  decor: string[];
   water: string;
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
-  classic: { near: '#f1ebdf', far: '#d9cdf2', decor: ['🎲', '🍾', '🥂', '🎉', '🍻', '🪩'], water: '#5aa7e6' },
+  classic: { near: '#f1ebdf', far: '#d9cdf2', water: '#5aa7e6' },
 };
 
 /**
@@ -77,7 +76,7 @@ export interface Board {
   /** Made in the editor. */
   custom?: boolean;
   /** Its picture in the list of boards (else its theme's). */
-  emoji?: string;
+  icon?: GlyphName;
 }
 
 /** What a jump needs to know about a board. */
@@ -185,7 +184,7 @@ function houseParty(): Board {
     F('cheers', 3), F('ex'), F('goal'),
   ];
   const spots = layout(fields.length, 5).map((s) => ({ x: s.x + 1, y: s.y }));
-  return { id: 'house-party', name: tx('House party'), emoji: '🪩', theme: 'classic', cols: 7, rows: spots[spots.length - 1].y + 2, fields, spots, water: [], tunnels: [] };
+  return { id: 'house-party', name: tx('House party'), icon: 'music', theme: 'classic', cols: 7, rows: spots[spots.length - 1].y + 2, fields, spots, water: [], tunnels: [] };
 }
 
 export const BOARDS: Board[] = [classic(), houseParty()];

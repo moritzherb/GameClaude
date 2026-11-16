@@ -39,8 +39,6 @@ const horseRace: Record<string, string> = {
   'On your marks…': 'Auf die Plätze…',
   'Turn the side card': 'Seitenkarte aufdecken',
   'Next card': 'Nächste Karte',
-  'Auto ⏸': 'Auto ⏸',
-  'Auto ▶': 'Auto ▶',
   '{suit}: row {n}': '{suit}: Reihe {n}',
 
   // Finish

@@ -51,6 +51,8 @@ function canDraw3D() {
 }
 import { woodVars } from './wood';
 import { useCrewButton } from '../../lib/turn';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 interface Setup {
   mode: Mode;
@@ -59,12 +61,12 @@ interface Setup {
   rounds: 5 | 10;
 }
 
-const MODE_INFO: Record<Mode, { name: string; text: string; icon: string }> = {
-  classic: { name: tx('Classic'), text: tx('Everyone plays one box a round. Lowest score wins the round, highest drinks 2.'), icon: '🎲' },
-  tournament: { name: tx('Tournament'), text: tx('Scores add up over the rounds. Lowest total wins; highest total drinks 3 at the end.'), icon: '🏆' },
-  survival: { name: tx('Survival'), text: tx('3 lives each. The highest score of a round loses one and drinks 1. Last one standing wins.'), icon: '❤️' },
-  daily: { name: tx('Daily challenge'), text: tx('Today’s dice, the same for everyone who plays today. One box each: beat the others, and your best.'), icon: '📅' },
-  time: { name: tx('Time attack'), text: tx('45 seconds for your whole box. Whatever is still open when time runs out counts.'), icon: '⏱️' },
+const MODE_INFO: Record<Mode, { name: string; text: string; icon: GlyphName }> = {
+  classic: { name: tx('Classic'), text: tx('Everyone plays one box a round. Lowest score wins the round, highest drinks 2.'), icon: 'dice' },
+  tournament: { name: tx('Tournament'), text: tx('Scores add up over the rounds. Lowest total wins; highest total drinks 3 at the end.'), icon: 'trophy' },
+  survival: { name: tx('Survival'), text: tx('3 lives each. The highest score of a round loses one and drinks 1. Last one standing wins.'), icon: 'heart' },
+  daily: { name: tx('Daily challenge'), text: tx('Today’s dice, the same for everyone who plays today. One box each: beat the others, and your best.'), icon: 'calendar' },
+  time: { name: tx('Time attack'), text: tx('45 seconds for your whole box. Whatever is still open when time runs out counts.'), icon: 'timer' },
 };
 
 /** One player's box this round. */
@@ -166,7 +168,7 @@ function SetupScreen({ setup, onChange, solo, onStart }: { setup: Setup; onChang
               onClick={() => set({ mode: id })}
             >
               <span className="nf-mode-icon" aria-hidden>
-                {MODE_INFO[id].icon}
+                <Glyph name={MODE_INFO[id].icon} />
               </span>
               <span className="nf-mode-name">{t(MODE_INFO[id].name)}</span>
             </button>
@@ -361,7 +363,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
   }
 
   const stat = (p: Player) => {
-    if (setup.mode === 'survival') return '❤️'.repeat(m.lives[p.id] ?? 0) || '—';
+    if (setup.mode === 'survival') return m.lives[p.id] ? <Lives n={m.lives[p.id]} /> : '—';
     if (setup.mode === 'tournament') return t('{n} pts', { n: totals[p.id] ?? 0 });
     return scores[p.id] == null ? '' : scores[p.id] === 0 ? t('Shut!') : t('{n} left', { n: scores[p.id] });
   };
@@ -465,7 +467,7 @@ function Play({ m, setM, players, byId, known, onSetup }: PlayProps) {
           return (
             <div key={id} className={`nf-chip${i === m.turn ? ' on' : ''}${scores[id] != null ? ' done' : ''}`} style={{ '--p': p.color } as CSSProperties}>
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="nf-chip-name">{p.name}</span>
               <span className="nf-chip-stat">{stat(p)}</span>
@@ -649,10 +651,10 @@ function RoundEnd({
           return (
             <div key={id} className={`nf-row${best.includes(id) ? ' best' : ''}`}>
               <span className="bd-avatar xs" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="nf-row-name">{p.name}</span>
-              {setup.mode === 'survival' && <span className="nf-row-lives">{'❤️'.repeat(lives[id]) || t('Out')}</span>}
+              {setup.mode === 'survival' && <span className="nf-row-lives">{lives[id] ? <Lives n={lives[id]} /> : t('Out')}</span>}
               <span className="nf-row-score">{scores[id] === 0 ? t('Shut!') : scores[id]}</span>
               {setup.mode === 'tournament' && <span className="nf-row-total">{t('{n} pts', { n: totals[id] })}</span>}
             </div>
@@ -687,5 +689,16 @@ function RoundEnd({
         )}
       </div>
     </div>
+  );
+}
+
+/** Lives left, as hearts. */
+function Lives({ n }: { n: number }) {
+  return (
+    <span className="nf-hearts" aria-label={String(n)}>
+      {Array.from({ length: n }, (_, i) => (
+        <Glyph key={i} name="heart" fill="currentColor" />
+      ))}
+    </span>
   );
 }

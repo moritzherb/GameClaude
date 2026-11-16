@@ -9,6 +9,8 @@ import { field, FIELDS, param, type Field } from './fields';
 import { isJump } from './boards';
 import { AceCard, FieldIcon } from './FieldIcon';
 import { duel, inTurnOrder, keepsUp, leaders, leftOf, oddMinutes, reverse, rightOf, setPawn, swapSeats, tossPack, trailers, type Game, type Toss } from './logic';
+import Glyph from '../../components/Glyph';
+import type { GlyphName } from '../../lib/glyphs';
 
 /** What happens once a field is done. */
 export interface Outcome {
@@ -80,7 +82,7 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
       break;
     case 'neighbors': {
       const who = [...new Set([leftOf(g, lander.id), rightOf(g, lander.id)])].filter((id) => id !== lander.id).map(byId);
-      if (who.length) body = <Verdict emoji="🍻" title={t('{names}: drink 2', { names: names(who) })} />;
+      if (who.length) body = <Verdict icon="beer" title={t('{names}: drink 2', { names: names(who) })} />;
       break;
     }
     case 'chug':
@@ -99,7 +101,7 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
     case 'leader':
     case 'snail': {
       const who = (f.kind === 'leader' ? leaders(g) : trailers(g)).map(byId);
-      body = <Verdict emoji="🍻" title={t('{names}: drink 2', { names: names(who) })} />;
+      body = <Verdict icon="beer" title={t('{names}: drink 2', { names: names(who) })} />;
       break;
     }
     case 'clock': {
@@ -109,7 +111,7 @@ export default function FieldCard({ field: f, pos, g, target, players, lander, c
       body = (
         <div className="pt-clock">
           <span className="pt-clock-time">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          <Verdict emoji={drinks ? '🍻' : '🍀'} title={drinks ? t('{name} drinks 2', { name: lander.name }) : t('Lucky: no drink this time')} />
+          <Verdict icon={drinks ? 'beer' : 'clover'} title={drinks ? t('{name} drinks 2', { name: lander.name }) : t('Lucky: no drink this time')} />
         </div>
       );
       break;
@@ -170,7 +172,7 @@ function Card({ f, pos, lander, chosen, text, children }: { f: Field; pos: numbe
     <div className={`pt-card slide-up${known ? ' known' : ''}`} style={{ '--field': info.color } as CSSProperties}>
       <div className="pt-card-head">
         <span className="pt-card-emoji">
-          <FieldIcon emoji={info.emoji} />
+          <FieldIcon icon={info.icon} />
         </span>
         <span className="pt-card-heading">
           <span className="pt-card-kicker">{chosen ? t('{name} chose', { name: lander.name }) : t('{name} · field {n}', { name: lander.name, n: pos })}</span>
@@ -183,10 +185,12 @@ function Card({ f, pos, lander, chosen, text, children }: { f: Field; pos: numbe
   );
 }
 
-function Verdict({ emoji, title }: { emoji: string; title: string }) {
+function Verdict({ icon, title }: { icon: GlyphName; title: string }) {
   return (
     <div className="pt-verdict pop-in">
-      <span className="pt-verdict-emoji">{emoji}</span>
+      <span className="pt-verdict-emoji">
+        <Glyph name={icon} />
+      </span>
       <span className="pt-verdict-title">{title}</span>
     </div>
   );
@@ -269,7 +273,7 @@ function BridgeCard({ f, pos, lander, canAce, onDone }: Sub & { canAce: boolean 
   const need = param(f) ? [1, 2] : [5, 6];
   return (
     <Card f={f} pos={pos} lander={lander} text={textOf(f)}>
-      {made != null && <Verdict emoji={made ? '🌉' : '🍻'} title={made ? t('Over you go!') : t('Not this time: drink 1 and wait.')} />}
+      {made != null && <Verdict icon={made ? 'bridge' : 'beer'} title={made ? t('Over you go!') : t('Not this time: drink 1 and wait.')} />}
       <div className="pt-card-actions">
         {made == null ? (
           <>
@@ -384,17 +388,17 @@ function DiceGame({ f, pos, lander, others, chosen, onDone }: Sub & { others: Pl
       over = true;
       verdict =
         rolled[0] === rolled[1] ? (
-          <Verdict emoji="👯" title={t('Twins! {a} and {b} give out 10 sips', { a: lander.name, b: rival.name })} />
+          <Verdict icon="twins" title={t('Twins! {a} and {b} give out 10 sips', { a: lander.name, b: rival.name })} />
         ) : (
-          <Verdict emoji="🍻" title={t('{a} and {b}: drink 1 each', { a: lander.name, b: rival.name })} />
+          <Verdict icon="beer" title={t('{a} and {b}: drink 1 each', { a: lander.name, b: rival.name })} />
         );
     } else {
       const d = duel(rolled[0], rolled[1]);
       over = !!d;
       verdict = d ? (
-        <Verdict emoji="⚔️" title={t('{name} drinks {n}', { name: (d.loser ? rival : lander).name, n: d.sips })} />
+        <Verdict icon="swords" title={t('{name} drinks {n}', { name: (d.loser ? rival : lander).name, n: d.sips })} />
       ) : (
-        <Verdict emoji="🔁" title={t('The same! Roll again.')} />
+        <Verdict icon="again" title={t('The same! Roll again.')} />
       );
     }
   }
@@ -446,8 +450,8 @@ function ChanceCard({ f, pos, lander, others, chosen, onDone }: Sub & { others: 
         />
       )}
       {stage === 'count' && <Countdown onDone={() => setStage('ask')} />}
-      {stage === 'same' && rival && <Verdict emoji="🎯" title={t('The same! {a} and {b} give out 2 each', { a: lander.name, b: rival.name })} />}
-      {stage === 'not' && rival && <Verdict emoji="🍻" title={t('{a} and {b}: drink 2 each', { a: lander.name, b: rival.name })} />}
+      {stage === 'same' && rival && <Verdict icon="target" title={t('The same! {a} and {b} give out 2 each', { a: lander.name, b: rival.name })} />}
+      {stage === 'not' && rival && <Verdict icon="beer" title={t('{a} and {b}: drink 2 each', { a: lander.name, b: rival.name })} />}
       <div className="pt-card-actions">
         {stage === 'ask' && (
           <div className="pt-two">
@@ -480,7 +484,7 @@ function HandsCard({ f, pos, lander, chosen, onDone }: Sub) {
   return (
     <Card f={f} pos={pos} lander={lander} chosen={chosen} text={textOf(f)}>
       {stage === 'count' && <Countdown onDone={() => setStage('now')} />}
-      {stage === 'now' && <Verdict emoji="✋" title={t('Hands out! The fewer drink 2.')} />}
+      {stage === 'now' && <Verdict icon="hand" title={t('Hands out! The fewer drink 2.')} />}
       <div className="pt-card-actions">
         {stage === 'ready' && (
           <BigButton size="xl" onClick={() => setStage('count')}>
@@ -519,7 +523,7 @@ function SnusCard({ f, pos, lander, chosen, canAce, onDone }: Sub & { canAce: bo
     <Card f={f} pos={pos} lander={lander} chosen={chosen} text={textOf(f)}>
       {landed && (
         <Verdict
-          emoji={right ? '🎉' : '🍻'}
+          icon={right ? 'party' : 'beer'}
           title={
             right
               ? t('{side} up: right! {name} gives out 2', { side: lid ? t('Lid') : t('Bottom'), name: lander.name })
@@ -586,7 +590,7 @@ function TschickCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: P
           <span className="pt-pot">{t('Pot: {n} sips', { n: flying ? pot - last.toss : pot })}</span>
         </div>
       )}
-      {lost && !flying && <Verdict emoji="🍻" title={t('{name} can’t keep up and drinks {n}', { name: last.p.name, n: pot })} />}
+      {lost && !flying && <Verdict icon="beer" title={t('{name} can’t keep up and drinks {n}', { name: last.p.name, n: pot })} />}
       <div className="pt-card-actions">
         {!lost && (
           <BigButton size="xl" disabled={flying} onClick={go}>
@@ -617,7 +621,7 @@ function DoubleCard({ f, pos, lander, chosen, order, onDone }: Sub & { order: Pl
         <span className="pt-double-n">{n}</span>
         <span className="pt-double-who">{t('{name}: drink {n}, or roll a 5 or 6 to pass on {m}', { name: who.name, n, m: storeSafe ? Math.min(4, n * 2) : n * 2 })}</span>
       </div>
-      {end && <Verdict emoji="🍻" title={t('{name} drinks {n}', { name: end.who.name, n: end.n })} />}
+      {end && <Verdict icon="beer" title={t('{name} drinks {n}', { name: end.who.name, n: end.n })} />}
       <div className="pt-card-actions">
         {!end ? (
           <div className="pt-two">
@@ -671,7 +675,7 @@ function ChooseCard({ f, pos, lander, fields, onChoose }: Omit<Sub, 'onDone'> & 
             }}
           >
             <span className="pt-choose-emoji">
-              <FieldIcon emoji={FIELDS[o.kind].emoji} />
+              <FieldIcon icon={FIELDS[o.kind].icon} />
             </span>
             <span className="pt-choose-label">{FIELDS[o.kind].title(param(o))}</span>
           </button>

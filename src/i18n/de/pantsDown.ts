@@ -16,8 +16,7 @@ const pantsDown: Record<string, string> = {
     'Optional für große Runden: Schieben statt Tauschen, wird vor dem Austeilen eingeschaltet.',
   'After a Stop everyone else gets one more turn (swap, or stay with your cards), then all cards are shown.':
     'Nach einem Stopp sind alle anderen noch einmal dran (tauschen oder mit den eigenen Karten bleiben), dann kommen alle Karten auf den Tisch.',
-  '31 in one suit = Pants down 👖 and three aces = Fire 🔥: the round ends at once.':
-    '31 in einer Farbe = Hose runter 👖 und drei Asse = Feuer 🔥: Die Runde ist sofort vorbei.',
+  '31 in one suit = Pants down and three aces = Fire: the round ends at once.': '31 in einer Farbe = Hose runter und drei Asse = Feuer: Die Runde ist sofort vorbei.',
   'Any other three of a kind = 30½.': 'Drei Gleiche (außer Asse) = 30½.',
   'Lowest points loses a life (ties all lose). 5 lives each.':
     'Wer die wenigsten Punkte hat, verliert ein Leben (bei Gleichstand alle). Jeder hat 5 Leben.',
@@ -102,10 +101,10 @@ const pantsDown: Record<string, string> = {
   'You win!': 'Du gewinnst!',
   '{name} wins!': '{name} gewinnt!',
   'Nobody survived!': 'Keiner hat überlebt!',
-  '🔥 Fire from You!': '🔥 Feuer von dir!',
-  '🔥 Fire from {name}!': '🔥 Feuer von {name}!',
-  '👖 Pants down from You!': '👖 Hose runter von dir!',
-  '👖 Pants down from {name}!': '👖 Hose runter von {name}!',
+  'Fire from you!': 'Feuer von dir!',
+  'Fire from {name}!': 'Feuer von {name}!',
+  'Pants down from you!': 'Hose runter von dir!',
+  'Pants down from {name}!': 'Hose runter von {name}!',
   'Cards on the table!': 'Karten auf den Tisch!',
   'Tie at the end! {names} stay in on one life and play a decider round.':
     'Gleichstand am Ende! {names} bleiben mit einem Leben drin und spielen eine Entscheidungsrunde.',
@@ -114,8 +113,7 @@ const pantsDown: Record<string, string> = {
   '{name} loses a life.': '{name} verliert ein Leben.',
   'Game over': 'Spiel vorbei',
   'Round {round}': 'Runde {round}',
-  'Out 💀': 'Raus 💀',
-  'Extra life! ♥': 'Extraleben! ♥',
+  'Extra life!': 'Extraleben!',
   'New game': 'Neues Spiel',
   'Next round →': 'Nächste Runde →',
   'Waiting for the host…': 'Warte auf den Host…',

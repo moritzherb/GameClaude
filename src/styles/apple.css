@@ -634,6 +634,22 @@ html[data-os='android'] .app-icon .app-photo {
   border-radius: 50%;
 }
 
+/* No photo: your first letter on your colour, set like the dock's other glyphs. */
+.app-icon .app-initial {
+  display: grid;
+  place-items: center;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1;
+  color: #161612;
+  text-shadow: none;
+}
+
+.app-icon .app-initial svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+
 /* Cheers in the room: a calm card like the others (the lime is for starting a game). */
 html[data-look='pop'] .cheers-btn {
   background: var(--surface);

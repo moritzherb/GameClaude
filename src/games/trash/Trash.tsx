@@ -58,7 +58,7 @@ export default function Trash({ players, exit }: GameProps) {
                 style={{ '--chip': p.color } as CSSProperties}
                 onClick={() => toggle(p.id)}
               >
-                <span className="pick-chip-avatar"><Avatar avatar={p.avatar} photo={p.photo} /></span>
+                <span className="pick-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
                 <span className="pick-chip-name">{p.name}</span>
               </Tap>
             ))}
@@ -314,7 +314,7 @@ export function TrashTable({
         </span>
         <span className="tr-status">
           <span className="tr-status-name" style={{ color: player.color }}>
-            <Avatar avatar={player.avatar} photo={player.photo} />
+            <Avatar name={player.name} color={player.color} photo={player.photo} />
           </span>
           <span className="tr-status-text">{status}</span>
           {msg ? (
@@ -420,7 +420,7 @@ function Board({
     <section className={`tr-board${flipped ? ' flipped' : ''}${active ? ' active' : ''}`}>
       <div className="tr-board-head">
         <span className="bd-avatar xs" style={{ background: player.color }}>
-          <Avatar avatar={player.avatar} photo={player.photo} />
+          <Avatar name={player.name} color={player.color} photo={player.photo} />
         </span>
         <span className="tr-board-name">{player.name}</span>
         <span className="tr-board-count">

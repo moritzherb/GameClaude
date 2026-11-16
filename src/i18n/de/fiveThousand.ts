@@ -37,7 +37,7 @@ const fiveThousand: Record<string, string> = {
   'Tap the cup to roll': 'Tipp auf den Becher',
   'Roll the dice': 'Würfeln',
   'Set aside': 'Zur Seite gelegt',
-  'All 5 again 🔥': 'Alle 5 nochmal 🔥',
+  'All 5 again': 'Alle 5 nochmal',
   'Roll 1 die': '1 Würfel würfeln',
   'Roll {n} dice': '{n} Würfel würfeln',
   'Pick your dice': 'Würfel wählen',
@@ -45,8 +45,7 @@ const fiveThousand: Record<string, string> = {
   'That’s over 5000. Pick less.': 'Das wäre über 5000. Nimm weniger.',
   '+{n} points': '+{n} Punkte',
   'Take all': 'Alle nehmen',
-  'Exactly 5000! 🏆': 'Genau 5000! 🏆',
-  'All 5 back in the cup 🔥': 'Alle 5 nochmal 🔥',
+  'All 5 back in the cup': 'Alle 5 nochmal',
   'Roll 1 die again': 'Mit 1 Würfel weiter',
   'Roll {n} again': 'Mit {n} Würfeln weiter',
 

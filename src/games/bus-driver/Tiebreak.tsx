@@ -104,7 +104,7 @@ export default function Tiebreak({ tied, onDone }: Props) {
           return (
             <div key={p.id} className={`tb-player${safe ? ' safe' : ''}${justSafe.includes(p.id) ? ' just' : ''}`} style={{ '--chip': p.color } as CSSProperties}>
               <span className="bd-avatar sm" style={{ background: p.color }}>
-                <Avatar avatar={p.avatar} photo={p.photo} />
+                <Avatar name={p.name} color={p.color} photo={p.photo} />
               </span>
               <span className="tb-who">
                 <span className="tb-name">{p.name}</span>
@@ -137,9 +137,9 @@ export default function Tiebreak({ tied, onDone }: Props) {
         <span className="fine-print">{t('{n} flipped', { n: tb.flipped.length })}</span>
       </div>
 
-      {ended.kind === 'driver' && <Verdict tone="same" emoji="🚌" title={t('{name} drives the bus!', { name: byId(ended.id).name })} />}
+      {ended.kind === 'driver' && <Verdict tone="same" icon="bus" title={t('{name} drives the bus!', { name: byId(ended.id).name })} />}
       {ended.kind === 'redo' && (
-        <Verdict tone="correct" emoji="🔁" title={t('Still tied!')} sub={t('{names} go again with new cards.', { names: ended.ids.map((id) => byId(id).name).join(' & ') })} />
+        <Verdict tone="correct" icon="again" title={t('Still tied!')} sub={t('{names} go again with new cards.', { names: ended.ids.map((id) => byId(id).name).join(' & ') })} />
       )}
 
       <div className="sticky-action">
