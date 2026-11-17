@@ -9,15 +9,13 @@
  */
 
 import { holdScreen } from './router';
-import { coverTop, mix, topColor, topLayer, tone } from './themeColor';
+import { coverTop, mix, STRIP_LAG, topColor, topLayer, tone } from './themeColor';
 
 /** Filling the screen, staying as the splash, fading out (ms). */
 const GROW = 420;
 const HOLD = 480;
 const FADE = 320;
-/** How long an iPhone takes to blend its strip under the clock to each new colour (ms). WebKit's
- *  WKColorExtensionView: a 0.1 s fade from the colour it was last given. */
-const STRIP_BLEND = 100;
+
 /** How long a splash shows before it fades (the start-up screen keeps to it too). */
 export const SPLASH_MS = GROW + HOLD;
 
@@ -138,11 +136,9 @@ export function launch(icon: Element | null, game: { id: string; color: string; 
       emoji.style.opacity = String(k);
       veil.style.pointerEvents = 'none';
     }
-    // The phone blends its strip from the colour it was given a frame ago to this one, so on the
-    // screen the strip is about a frame behind: it is set that much ahead (a frame, less what it
-    // blends meanwhile), and both show the same at the same moment. Fading out, the page underneath
-    // is the game's now.
-    const ahead = t + step - (step * step) / (2 * STRIP_BLEND);
+    // The phone shows the strip a little late (themeColor.ts STRIP_LAG): it is set that much ahead,
+    // and both show the same at the same moment. Fading out, the page underneath is the game's now.
+    const ahead = t + STRIP_LAG;
     layer.set(mix(ahead >= fadeAt ? layer.under() : from, color, amount(ahead)));
     requestAnimationFrame(frame);
   };
@@ -168,8 +164,6 @@ export function fadeBoot(boot: HTMLElement) {
   boot.style.transition = 'none';
   boot.style.opacity = '1';
   const start = performance.now();
-  let step = 1000 / 60;
-  let prev = 0;
   let gone = false;
   const done = () => {
     if (gone) return;
@@ -181,10 +175,8 @@ export function fadeBoot(boot: HTMLElement) {
     if (gone) return;
     const t = now - start;
     if (t >= BOOT_FADE) return done();
-    if (prev && now > prev) step += (Math.min(50, now - prev) - step) * 0.3;
-    prev = now;
     boot.style.opacity = String(1 - inOut(t / BOOT_FADE));
-    const ahead = inOut((t + step - (step * step) / (2 * STRIP_BLEND)) / BOOT_FADE);
+    const ahead = inOut((t + STRIP_LAG) / BOOT_FADE);
     coverTop(ahead >= 1 ? null : mix(BOOT_GROUND, topColor(), ahead));
     requestAnimationFrame(frame);
   };
