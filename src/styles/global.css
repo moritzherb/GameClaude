@@ -17906,3 +17906,17 @@ html[data-look='pop'] .kc-slot {
 .vt-pick.on .vt-pick-label {
   color: var(--ink);
 }
+
+/* Going from screen to screen (lib/router.ts): a veil in the ground's colour over everything (only
+   the strip under the clock above it), shown while the screens change under it. */
+.slide-veil {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+  contain: strict;
+}

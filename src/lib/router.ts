@@ -171,22 +171,27 @@ function go(hash: string, how: 'push' | 'replace', state: string | null) {
 
 /*
  * Going from screen to screen with the app's own buttons (into the crew, the settings, back with
- * the arrow): the page fades out quickly, and the next screen fades in sliding a little, in from the
- * right going in, from the left coming back. Games have their own way in (lib/launch.ts) and out; a
- * swipe back is animated by the phone itself.
+ * the arrow): a veil in the ground's colour fades over the screen quickly, the next screen goes in
+ * under it, and the veil fades away while the screen slides in a little, from the right going in,
+ * from the left coming back. Games have their own way in (lib/launch.ts) and out; a swipe back is
+ * animated by the phone itself.
  *
- * The page itself is moved, frame by frame, as the splash of a game is (lib/launch.ts), not a
- * picture of it (a view transition): iPhones skipped the first frames of those, so the slide was
- * over almost before it showed, and never changed the strip under the clock while one ran, so the
- * strip changed only after the screen had. Here the strip takes, each frame, what the top of the
- * page shows then: the screen's own colour, faded over the ground as much as the screen is.
+ * Not a view transition: iPhones skipped its first frames, so the slide was over almost before it
+ * showed, and never changed the strip under the clock while one ran. Not the page's own opacity
+ * either: a whole screen fading made the phone put it together anew every frame, and it lagged.
+ * A plain veil fades as the game's splash does, the slide is only a move: the phone runs both on
+ * its own (animations, not a script's frames). The strip takes, each frame, what the top shows
+ * then: the screen's colour under the veil, as much as the veil lets through.
  */
 
-/** How long the page takes to fade out, and the next screen to come in (ms). */
-const SLIDE_OUT = 100;
-const SLIDE_IN = 260;
+/** How long the veil takes to cover the screen, and to go off the next one (ms). */
+const SLIDE_OUT = 110;
+const SLIDE_IN = 280;
 /** How far the next screen slides (px). */
-const SLIDE_BY = 20;
+const SLIDE_BY = 18;
+/** The veil going off, as the screen slides in: quick at first, settling (an ease-out cubic). */
+const EASE_IN = 'cubic-bezier(0.33, 1, 0.68, 1)';
+const easeOut = (k: number) => 1 - (1 - k) ** 3;
 /** How long an iPhone takes to blend its strip to each new colour (ms), as in lib/launch.ts. */
 const STRIP_BLEND = 100;
 
@@ -195,7 +200,7 @@ let sliding = false;
 /** A slide still running (steps that need the new screen drawn wait for it). */
 let slideDone: Promise<void> | null = null;
 /** The slide running now: stops it where it is (showing the screen it's going to, if asked), and
- *  says how much of the page showed then. */
+ *  says how much the veil covered then. */
 let stopSlide: ((show: boolean) => number) | null = null;
 /** The screens on the way in, to tell going back from going on. */
 const trail: string[] = [];
@@ -205,7 +210,24 @@ const depthOf = (hash: string) => {
   const parts = pathOf(hash).split('/').filter((p) => p && p !== '#');
   return parts[0] === 'games' && parts[1] ? 2 : parts.length ? 1 : 0;
 };
-const easeOut = (k: number) => 1 - (1 - k) ** 3;
+
+/** The veil (one for the app, made the first time). */
+let veilEl: HTMLDivElement | null = null;
+function veil(): HTMLDivElement {
+  if (!veilEl?.isConnected) {
+    veilEl = document.createElement('div');
+    veilEl.className = 'slide-veil';
+    veilEl.setAttribute('aria-hidden', 'true');
+    document.body.append(veilEl);
+  }
+  return veilEl;
+}
+
+/** How far an animation is (ms), or `fallback` while it hasn't started. */
+const timeOf = (a: Animation | null, fallback = 0) => {
+  const c = a?.currentTime;
+  return typeof c === 'number' ? c : fallback;
+};
 
 function slide(from: string, to: string, show: () => void): boolean {
   const key = screenKey(to);
@@ -214,10 +236,11 @@ function slide(from: string, to: string, show: () => void): boolean {
   trail.push(key);
   if (trail.length > 12) trail.shift();
   // One still running stops where it is: this step shows the screen it was going to (or another).
-  const start = stopSlide ? stopSlide(false) : 1;
+  const covered = stopSlide ? stopSlide(false) : 0;
   const page = document.getElementById('root');
   if (
     !page ||
+    typeof page.animate !== 'function' ||
     held ||
     isGame(from) ||
     isGame(to) ||
@@ -225,32 +248,34 @@ function slide(from: string, to: string, show: () => void): boolean {
     matchMedia('(prefers-reduced-motion: reduce)').matches
   )
     return false;
+  const v = veil();
   const dir = back ? -1 : 1;
+  const bare = ground();
   let strip = topLayer(topColor());
+  /** What the top of the screen under the veil shows (its own colour, or the ground). */
+  let under = strip.under();
   let phase: 'out' | 'drawn' | 'in' = 'out';
   let shown = false;
-  /** How long this part has shown (ms): a frame never counts for more than two, so a moment the
-   *  phone spends drawing holds the slide a little instead of making it skip ahead. */
-  let t = 0;
-  let prev = 0;
-  let step = 1000 / 60;
-  let seen = start;
   let frame = 0;
+  let step = 1000 / 60;
+  let prev = 0;
   let resolve = () => {};
   const done = new Promise<void>((r) => (resolve = r));
   slideDone = done;
-  /** How much of the page shows `at` ms into this part. */
-  const opacity = (at: number) =>
-    phase === 'out' ? Math.max(0, start * (1 - at / SLIDE_OUT)) : phase === 'in' ? easeOut(Math.min(1, at / SLIDE_IN)) : 0;
-  const draw = () => {
-    const o = opacity(t);
-    seen = o;
-    page.style.opacity = String(o);
-    if (phase === 'in') page.style.transform = o < 1 ? `translateX(${(SLIDE_BY * dir * (1 - o)).toFixed(2)}px)` : '';
+  const outFor = Math.max(1, SLIDE_OUT * (1 - covered));
+  v.style.display = 'block';
+  v.style.pointerEvents = 'auto';
+  const out = v.animate([{ opacity: covered }, { opacity: 1 }], { duration: outFor, easing: 'linear', fill: 'forwards' });
+  let veilIn: Animation | null = null;
+  let pageIn: Animation | null = null;
+  /** How much the veil covers `at` ms into this part. */
+  const cover = (at: number) => (phase === 'out' ? Math.min(1, covered + ((1 - covered) * at) / outFor) : phase === 'in' ? 1 - easeOut(Math.min(1, at / SLIDE_IN)) : 1);
+  const now = () => (phase === 'out' ? timeOf(out) : phase === 'in' ? timeOf(veilIn) : 0);
+  const tint = () => {
     // The phone blends its strip from the colour it was given a frame ago, so on the screen it's
     // about a frame behind: it's set that much ahead (less what it blends meanwhile).
-    const ahead = opacity(t + step - (step * step) / (2 * STRIP_BLEND));
-    strip.set(mix(ground(), strip.under(), ahead));
+    const ahead = now() + step - (step * step) / (2 * STRIP_BLEND);
+    strip.set(mix(under, bare, cover(ahead)));
   };
   const showNext = () => {
     if (shown) return;
@@ -262,53 +287,56 @@ function slide(from: string, to: string, show: () => void): boolean {
       sliding = false;
     }
     // The next screen lays its own colour at the top (home its wallpaper's): the strip goes back
-    // over it, and comes to it as the screen comes in.
+    // over it, and comes to it as the veil goes.
     strip.release();
     strip = topLayer(topColor());
+    under = strip.under();
   };
   const stop = (andShow: boolean) => {
     cancelAnimationFrame(frame);
     window.clearTimeout(guard);
+    const left = phase === 'in' ? cover(timeOf(veilIn)) : phase === 'out' ? cover(timeOf(out)) : 1;
     if (andShow) showNext();
-    page.style.opacity = '';
+    out.cancel();
+    veilIn?.cancel();
+    pageIn?.cancel();
     page.style.transform = '';
     page.style.willChange = '';
-    page.style.pointerEvents = '';
+    v.style.display = '';
+    v.style.pointerEvents = '';
     strip.release();
     if (stopSlide === stop) stopSlide = null;
     if (slideDone === done) slideDone = null;
     resolve();
-    return seen;
+    return andShow ? 0 : left;
   };
-  const tick = (now: number) => {
+  const tick = (t: number) => {
     frame = 0;
-    if (prev && now > prev) {
-      t += Math.min(now - prev, 2 * step);
-      step += (Math.min(50, now - prev) - step) * 0.3;
-    }
-    prev = now;
-    if (phase === 'out' && t >= SLIDE_OUT) {
-      // Gone: the next screen goes on the page (unseen yet), and is drawn once…
+    if (prev && t > prev) step += (Math.min(50, t - prev) - step) * 0.3;
+    prev = t;
+    if (phase === 'out' && (out.playState === 'finished' || timeOf(out) >= outFor)) {
+      // Covered: the next screen goes on the page (unseen yet), a little to the side, and is drawn once…
       phase = 'drawn';
       showNext();
-      page.style.willChange = 'opacity, transform';
-      page.style.pointerEvents = '';
+      page.style.willChange = 'transform';
+      page.style.transform = `translateX(${SLIDE_BY * dir}px)`;
     } else if (phase === 'drawn') {
-      // …then it comes in, a frame's worth on the first frame already.
+      // …then the veil goes off it as it slides into place.
       phase = 'in';
-      t = step;
-    } else if (phase === 'in' && t >= SLIDE_IN) {
+      const timing = { duration: SLIDE_IN, easing: EASE_IN, fill: 'forwards' as const };
+      veilIn = v.animate([{ opacity: 1 }, { opacity: 0 }], timing);
+      pageIn = page.animate([{ transform: `translateX(${SLIDE_BY * dir}px)` }, { transform: 'translateX(0)' }], timing);
+      v.style.pointerEvents = 'none';
+      out.cancel();
+    } else if (phase === 'in' && (veilIn?.playState === 'finished' || timeOf(veilIn) >= SLIDE_IN)) {
       stop(false);
       return;
     }
-    draw();
+    tint();
     frame = requestAnimationFrame(tick);
   };
   stopSlide = stop;
-  page.style.willChange = 'opacity';
-  // No second tap on the screen going away.
-  page.style.pointerEvents = 'none';
-  draw();
+  tint();
   frame = requestAnimationFrame(tick);
   // In case the frames stop (the app in the background): there in any case.
   const guard = window.setTimeout(() => stop(true), 1500);
