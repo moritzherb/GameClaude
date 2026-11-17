@@ -166,20 +166,26 @@ export function followFade(el: Element, from: string | (() => string), to: strin
   // Either fixed, or asked afresh each frame (what lies under can change while it's on screen).
   const at = (c: string | (() => string)) => (typeof c === 'function' ? c() : c);
   let frame = 0;
+  let settle = 0;
   let prev = { t: 0, o: -1 };
   const moving = () => typeof el.getAnimations === 'function' && el.getAnimations().some((a) => a.playState === 'running' || a.pending);
   const opacity = () => Math.min(1, Math.max(0, parseFloat(getComputedStyle(el).opacity)));
   const tick = (now: number) => {
     frame = 0;
+    window.clearTimeout(settle);
     if (!el.isConnected) return;
     const o = opacity();
     const on = moving();
     const dt = now - prev.t;
-    // The phone shows the strip a little late: given what will show then, along the way it's going.
-    const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * STRIP_LAG : o;
+    // The phone shows the strip a little late: given what will show then, along the way it's going
+    // (an animation, or a finger moving it by hand: both go on in the same frame as the page).
+    const slope = prev.o >= 0 && dt > 0 && dt < 100 ? (o - prev.o) / dt : 0;
+    const ahead = o + slope * STRIP_LAG;
     prev = { t: now, o };
     set(mix(at(from), at(to), Math.min(1, Math.max(0, Number.isNaN(ahead) ? 1 : ahead))));
     if (on) frame = requestAnimationFrame(tick);
+    // A finger that stops: the strip was set ahead, so it comes to where the page really is.
+    else if (slope) settle = window.setTimeout(() => ((prev = { t: 0, o: -1 }), tick(performance.now())), 120);
   };
   const wake = () => {
     if (!frame) frame = requestAnimationFrame(tick);
@@ -192,6 +198,7 @@ export function followFade(el: Element, from: string | (() => string), to: strin
   el.addEventListener('animationstart', wake);
   return () => {
     cancelAnimationFrame(frame);
+    window.clearTimeout(settle);
     watch?.disconnect();
     el.removeEventListener('transitionrun', wake);
     el.removeEventListener('animationstart', wake);
