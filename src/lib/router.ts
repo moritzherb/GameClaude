@@ -192,8 +192,8 @@ const SLIDE_BY = 18;
 /** The veil going off, as the screen slides in: quick at first, settling (an ease-out cubic). */
 const EASE_IN = 'cubic-bezier(0.33, 1, 0.68, 1)';
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
-/** How late the strip under the clock shows what it's given (ms): measured from a screen recording of an iPhone, about two frames. */
-const STRIP_LAG = 33;
+/** How late the strip under the clock shows what it's given (ms): calibrated on a screen recording of an iPhone: 33 ms was too little, 100 ms too much. */
+const STRIP_LAG = 60;
 
 /** The screen change is being drawn inside a slide right now. */
 let sliding = false;
