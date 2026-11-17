@@ -192,8 +192,8 @@ const SLIDE_BY = 18;
 /** The veil going off, as the screen slides in: quick at first, settling (an ease-out cubic). */
 const EASE_IN = 'cubic-bezier(0.33, 1, 0.68, 1)';
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
-/** How long an iPhone takes to blend its strip to each new colour (ms), as in lib/launch.ts. */
-const STRIP_BLEND = 100;
+/** How late the strip under the clock shows what it's given (ms): measured from a screen recording of an iPhone, about two frames. */
+const STRIP_LAG = 33;
 
 /** The screen change is being drawn inside a slide right now. */
 let sliding = false;
@@ -270,9 +270,8 @@ function slide(from: string, to: string, show: () => void): boolean {
   const cover = (at: number) => (phase === 'out' ? Math.min(1, covered + ((1 - covered) * at) / outFor) : phase === 'in' ? 1 - easeOut(Math.min(1, at / SLIDE_IN)) : 1);
   const now = () => (phase === 'out' ? timeOf(out) : phase === 'in' ? timeOf(veilIn) : 0);
   const tint = () => {
-    // The phone's strip trails what it's given by about its blend (each new colour restarts the
-    // blend from where it is): it's given the colour the screen will show that much later.
-    strip.set(mix(under, bare, cover(now() + STRIP_BLEND)));
+    // The phone shows the strip a little late: it's given the colour the screen will show then.
+    strip.set(mix(under, bare, cover(now() + STRIP_LAG)));
   };
   const showNext = () => {
     if (shown) return;

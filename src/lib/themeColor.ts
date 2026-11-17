@@ -152,15 +152,15 @@ export function topLayer(color: string) {
   };
 }
 
-/** How long an iPhone takes to blend its strip to each new colour (ms), as in lib/launch.ts. */
-const STRIP_BLEND = 100;
+/** How late an iPhone shows the strip under the clock what it's given (ms): about two frames, measured from a screen recording. */
+const STRIP_LAG = 33;
 
 /**
  * While `el` is on screen, the strip under the clock goes along with how much of it shows: fading in
  * or out by an animation or transition of its own (a screen coming back, an overlay appearing or
  * going), or faded by hand (pulled down by a finger). Each frame it takes the colour the top of the
  * screen shows: what was there (`from`) and `to` mixed by the element's opacity, set ahead by the
- * phone's blend as the strip trails that much. Returns a stop function.
+ * little the phone's strip is late. Returns a stop function.
  */
 export function followFade(el: Element, from: string | (() => string), to: string | (() => string), set: (color: string) => void): () => void {
   // Either fixed, or asked afresh each frame (what lies under can change while it's on screen).
@@ -175,9 +175,8 @@ export function followFade(el: Element, from: string | (() => string), to: strin
     const o = opacity();
     const on = moving();
     const dt = now - prev.t;
-    // The phone's strip trails what it's given by about its blend: given what will show that much
-    // later, along the way it's going.
-    const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * STRIP_BLEND : o;
+    // The phone shows the strip a little late: given what will show then, along the way it's going.
+    const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * STRIP_LAG : o;
     prev = { t: now, o };
     set(mix(at(from), at(to), Math.min(1, Math.max(0, Number.isNaN(ahead) ? 1 : ahead))));
     if (on) frame = requestAnimationFrame(tick);
