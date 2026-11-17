@@ -660,8 +660,9 @@ function Finish({ g, players, onAgain, exit }: { g: Game; players: GameProps['pl
       <div className="bd-head center">
         <span className="kicker">{t('{n} points', { n: TARGET })}</span>
         <span className="sw-win-pigs" aria-hidden>
-          <Pig pose="standing" />
-          <Pig pose="jowl" />
+          {/* Two pigs on their feet, face to face (the poses of a throw lie about or tip over). */}
+          <Pig pose="side-dot" />
+          <Pig pose="side" />
         </span>
         <h2 className="bd-title big">{t('{name} wins!', { name: winner.name })}</h2>
         <p className="lead">{t('Everyone else drinks a sip for every 10 points they’re short.')}</p>

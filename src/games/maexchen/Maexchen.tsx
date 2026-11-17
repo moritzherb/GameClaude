@@ -193,7 +193,7 @@ function MaexchenTable({
         </div>
       </div>
 
-      <div className={`mx-table${open && r.verdict ? (r.verdict.truth ? ' truth' : ' lie') : ''}`}>
+      <div className={`mx-table${open && r.verdict ? (r.verdict.truth ? ' wrong' : ' right') : ''}`}>
         {hint && (
           <span key={hint} className={`mx-hint${r.blind && r.phase === 'look' ? ' warn' : ''}`}>
             {hint}
@@ -241,10 +241,21 @@ function MaexchenTable({
           </button>
         </div>
         {open && r.verdict && claim && (
-          <div className={`mx-verdict${r.verdict.truth ? ' truth' : ' lie'}`} role="status">
-            <span className="mx-stamp">{r.verdict.truth ? t('It’s true!') : t('Lie!')}</span>
+          // Told from the one who lifted the cup (it's their phone now): right if it was a lie.
+          <div className={`mx-verdict${r.verdict.truth ? ' wrong' : ' right'}`} role="status">
+            <span className="mx-stamp">{r.verdict.truth ? t('You were wrong') : t('You were right')}</span>
             <span className="mx-verdict-sub">
-              {t('{actual} under the cup, {claim} announced', { actual: label(valueOf(r.dice)), claim: label(claim.value) })}
+              {r.verdict.truth ? t('{name} told the truth', { name: players[claim.by].name }) : t('{name} lied', { name: players[claim.by].name })}
+            </span>
+            <span className="mx-compare">
+              <span className="mx-compare-cell">
+                <span className="mx-compare-label">{t('Announced')}</span>
+                <ValueText v={claim.value} />
+              </span>
+              <span className="mx-compare-cell actual">
+                <span className="mx-compare-label">{t('Under the cup')}</span>
+                <ValueText v={valueOf(r.dice)} />
+              </span>
             </span>
           </div>
         )}

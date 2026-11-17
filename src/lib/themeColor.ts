@@ -159,15 +159,14 @@ const STRIP_BLEND = 100;
  * While `el` is on screen, the strip under the clock goes along with how much of it shows: fading in
  * or out by an animation or transition of its own (a screen coming back, an overlay appearing or
  * going), or faded by hand (pulled down by a finger). Each frame it takes the colour the top of the
- * screen really shows then: what was there (`from`) and `to` mixed by the element's opacity, set a
- * frame ahead as the phone blends a frame behind. Returns a stop function.
+ * screen shows: what was there (`from`) and `to` mixed by the element's opacity, set ahead by the
+ * phone's blend as the strip trails that much. Returns a stop function.
  */
 export function followFade(el: Element, from: string | (() => string), to: string | (() => string), set: (color: string) => void): () => void {
   // Either fixed, or asked afresh each frame (what lies under can change while it's on screen).
   const at = (c: string | (() => string)) => (typeof c === 'function' ? c() : c);
   let frame = 0;
   let prev = { t: 0, o: -1 };
-  let step = 1000 / 60;
   const moving = () => typeof el.getAnimations === 'function' && el.getAnimations().some((a) => a.playState === 'running' || a.pending);
   const opacity = () => Math.min(1, Math.max(0, parseFloat(getComputedStyle(el).opacity)));
   const tick = (now: number) => {
@@ -176,9 +175,9 @@ export function followFade(el: Element, from: string | (() => string), to: strin
     const o = opacity();
     const on = moving();
     const dt = now - prev.t;
-    if (prev.o >= 0 && dt > 0) step += (Math.min(50, dt) - step) * 0.3;
-    // A frame ahead (less what the phone blends meanwhile), along the way it's going.
-    const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * (step - (step * step) / (2 * STRIP_BLEND)) : o;
+    // The phone's strip trails what it's given by about its blend: given what will show that much
+    // later, along the way it's going.
+    const ahead = on && prev.o >= 0 && dt > 0 && dt < 100 ? o + ((o - prev.o) / dt) * STRIP_BLEND : o;
     prev = { t: now, o };
     set(mix(at(from), at(to), Math.min(1, Math.max(0, Number.isNaN(ahead) ? 1 : ahead))));
     if (on) frame = requestAnimationFrame(tick);

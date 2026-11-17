@@ -4,7 +4,7 @@ import Sheet from '../../components/Sheet';
 import { t, tx } from '../../i18n';
 import { buzz, sfx } from '../../lib/fx';
 import { pick } from '../../lib/random';
-import { cellKey, isJump, jumps, jumpTarget, MAX_COLS, MAX_ROWS, MIN_FIELDS, type Board, type Cell, type Draft } from './boards';
+import { cellKey, isJump, jumps, jumpTarget, MAX_ROWS, MIN_FIELDS, type Board, type Cell, type Draft } from './boards';
 import { field, FIELDS, GROUPS, KINDS, param, type Field, type FieldKind } from './fields';
 import { FieldIcon } from './FieldIcon';
 import Glyph from '../../components/Glyph';
@@ -24,6 +24,9 @@ const FRESH = KINDS.filter((k) => !isJump(k) && k !== 'bridge');
 
 /** How many steps Undo keeps. */
 const UNDO_STEPS = 60;
+/** A board of your own: at most this many fields across and up. The map is that size from the start and stays put. */
+const EDIT_COLS = 6;
+const EDIT_ROWS = 16;
 
 const SIDES = [
   { x: 0, y: 1, name: 'n' },
@@ -52,8 +55,6 @@ interface Gesture {
   before: Ed;
   /** The field the finger came down on. */
   field: number | null;
-  /** Where (screen y) the finger last made the map a row taller: another row only a cell further up. */
-  pulled?: number;
 }
 
 interface Props {
@@ -110,25 +111,19 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
   /** What's typed into the search over the kinds of field (each time a field is opened, empty). */
   const [query, setQuery] = useState('');
   useEffect(() => setQuery(''), [editing]);
-  const cols = MAX_COLS;
+  // A board the game came with (or one saved before the limit) may be bigger: then the map is its size.
+  const [{ cols, rows }] = useState(() => {
+    const all = [...ed.spots, ...[...ed.water, ...ed.tunnels].map(toCell)];
+    return { cols: Math.max(EDIT_COLS, ...all.map((c) => c.x + 1)), rows: Math.max(EDIT_ROWS, ...all.map((c) => c.y + 1)) };
+  });
   const used = [...spots.map((c) => c.y), ...[...water, ...tunnels].map((k) => +k.split(',')[1])];
   const top = used.length ? Math.max(...used) : 0;
   /** What gets saved: the map to the top of what's on it and a little room (the game shows all of it). */
   const savedRows = Math.min(MAX_ROWS, Math.max(10, top + 3));
 
-  // The map fills the room beside the tools: as many rows as fit with the cells as wide as they
-  // can be, and as many as what's drawn on it reaches: no empty row above it. It grows (and its
-  // cells shrink) only when a finger drawing the path goes on up over its top edge.
+  // The map fills the room beside the tools, its cells as big as fit.
   const box = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState({ w: 0, h: 0 });
-  const screenRows = room.w && room.h ? Math.max(8, Math.floor(room.h / Math.floor(room.w / MAX_COLS))) : 10;
-  const fitRows = Math.min(MAX_ROWS, Math.max(screenRows, top + 1));
-  // While a finger draws, the map keeps its size (it grows only when the finger asks for it).
-  const [heldRows, setHeldRows] = useState<number | null>(null);
-  const rows = heldRows ?? fitRows;
-  // The rows as the gestures see them, the newest (a row added mid-gesture counts at once).
-  const rowsNow = useRef(rows);
-  rowsNow.current = rows;
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -171,7 +166,7 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
     const cur = live.current;
     const k = cellKey(c);
     const n = cur.spots.length;
-    if (cur.spots.some((s) => cellKey(s) === k) || (n && !nextTo(cur.spots[n - 1], c)) || c.y >= rowsNow.current) return false;
+    if (cur.spots.some((s) => cellKey(s) === k) || (n && !nextTo(cur.spots[n - 1], c)) || c.y >= rows) return false;
     const tunnelsNext = new Set(cur.tunnels);
     tunnelsNext.delete(k);
     commit({
@@ -258,7 +253,6 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
     const c = cellAt(e);
     if (!c || gesture.current) return;
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    setHeldRows(rows);
     const cur = live.current;
     const k = cellKey(c);
     const i = cur.spots.findIndex((s) => cellKey(s) === k);
@@ -289,24 +283,6 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
   const onMove = (e: ReactPointerEvent) => {
     const g = gesture.current;
     if (!g || e.pointerId !== g.id) return;
-    // Drawing the path on up over the map's top edge, from its end in the top row: the map gets a
-    // row more, and the path goes on into it.
-    if (g.mode === 'draw') {
-      const r = gridEl.current?.getBoundingClientRect();
-      const cur = live.current;
-      const endNow = cur.spots[cur.spots.length - 1];
-      const more = rowsNow.current;
-      const over = g.pulled == null ? r && e.clientY < r.top : e.clientY < g.pulled - cell;
-      if (r && over && endNow && endNow.y === more - 1 && more < MAX_ROWS && g.at.x === endNow.x && g.at.y === endNow.y) {
-        g.pulled = e.clientY;
-        rowsNow.current = more + 1;
-        setHeldRows(more + 1);
-        const up = { x: endNow.x, y: more };
-        g.changed = extend(up) || g.changed;
-        g.at = up;
-        return;
-      }
-    }
     const c = cellAt(e);
     if (!c || (c.x === g.at.x && c.y === g.at.y)) return;
     // A quick finger skips cells: go there one cell at a time, so the path stays whole.
@@ -323,7 +299,6 @@ export default function Editor({ board, asNew, draft, onSave, onDraft, onDelete,
     const g = gesture.current;
     if (!g || e.pointerId !== g.id) return;
     gesture.current = null;
-    setHeldRows(null);
     if (g.changed) remember(g.before);
     // A tap on a field (not the start): what goes on it.
     const tapped = !g.changed && g.at.x === g.from.x && g.at.y === g.from.y;
