@@ -4,6 +4,7 @@ import WhoDrinks from './WhoDrinks';
 
 const whoDrinks: GameDefinition = {
   id: 'who-drinks',
+  table: 'full',
   name: tx('Who Drinks?'),
   emoji: '🎰',
   tagline: tx('Spin it. Someone’s getting wrecked.'),
