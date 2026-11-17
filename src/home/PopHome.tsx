@@ -10,7 +10,8 @@ import { launch, lastLaunched } from '../lib/launch';
 import { lineup } from '../lib/lineup';
 import { pick } from '../lib/random';
 import { recentGames } from '../lib/recent';
-import { followFade, topColor, topLayer } from '../lib/themeColor';
+import { reducedMotion } from '../lib/cardFly';
+import { followFade, mix, STRIP_LAG, topColor, topLayer } from '../lib/themeColor';
 import { useTopTint } from '../lib/useTopTint';
 import { loadPhoto, wallpaperFor } from '../lib/wallpaper';
 import { navigate, paths } from '../lib/router';
@@ -35,12 +36,37 @@ export default function PopHome() {
   const [photo] = useState(loadPhoto);
   const wall = wallpaperFor(settings.wallpaper, photo);
   useLayoutEffect(() => {
-    if (!wall.top) return;
-    // Coming back from a game, home fades in (pop.css .os-home.back): the strip goes along.
+    const top = wall.top;
+    if (!top) return;
     const from = topColor();
     const layer = topLayer(from);
-    const home = document.querySelector('.os-home');
-    const stop = home ? followFade(home, from, wall.top, layer.set) : (layer.set(wall.top), () => {});
+    const home = document.querySelector<HTMLElement>('.os-home');
+    // Coming back from a game, home fades in (from 0.4 to 1, slowing down). The fade and the strip
+    // under the clock go from the same number in the same frame, as the splash's do; the strip is
+    // set ahead by what the phone shows it late.
+    if (home?.classList.contains('back') && !reducedMotion()) {
+      const FADE = 350;
+      const level = (t: number) => 0.4 + 0.6 * (1 - (1 - Math.min(1, t / FADE)) ** 3);
+      let at = 0;
+      let prev = performance.now();
+      let raf = 0;
+      home.style.opacity = '0.4';
+      layer.set(mix(from, top, level(STRIP_LAG)));
+      const frame = (now: number) => {
+        at += Math.min(Math.max(0, now - prev), 34);
+        prev = now;
+        home.style.opacity = at < FADE ? String(level(at)) : '';
+        layer.set(mix(from, top, level(at + STRIP_LAG)));
+        if (at < FADE) raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+      return () => {
+        cancelAnimationFrame(raf);
+        home.style.opacity = '';
+        layer.release();
+      };
+    }
+    const stop = home ? followFade(home, from, top, layer.set) : (layer.set(top), () => {});
     return () => {
       stop();
       layer.release();

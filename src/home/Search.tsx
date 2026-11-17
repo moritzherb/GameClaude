@@ -3,6 +3,7 @@ import { SearchIcon } from '../components/Icons';
 import { GAMES } from '../games/registry';
 import { CATEGORIES, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
+import { SETTLE, tween } from '../lib/tween';
 import { useTopTint } from '../lib/useTopTint';
 import { GameApp } from './AppIcon';
 import { searchGames } from './search';
@@ -24,20 +25,29 @@ export default function Search({ suggestions, pulledBy, onClose }: { suggestions
   const bar = useRef<HTMLDivElement>(null);
   const leaving = useRef(false);
 
+  /** Where the field and the games are now (`dy` up) and how much of the veil shows, and the glide
+   *  moving them (if one is). */
+  const at = useRef({ dy: 0, fade: 1 });
+  const glide = useRef<(() => void) | null>(null);
   /** The field and the games `dy` up, the veil behind them at `fade` (it fades in place: never
-   *  slides over home), moving there in `how` (or at once). */
-  const place = (dy: number, fade: number, how = '') => {
+   *  slides over home). At once, or gliding there for `ms` from a script (not a CSS transition: the
+   *  strip under the clock follows the veil's opacity in the same frame, as the splash's does). */
+  const place = (dy: number, fade: number, ms = 0, done?: () => void) => {
     const el = root.current;
     if (!el) return;
-    el.style.transition = how ? `opacity ${how}` : 'none';
-    el.style.opacity = fade < 1 ? String(fade) : '';
-    for (const part of [bar.current, body.current]) {
-      if (!part) continue;
-      part.style.transition = how ? `transform ${how}` : 'none';
-      part.style.transform = dy ? `translateY(${dy}px)` : '';
-    }
+    glide.current?.();
+    glide.current = null;
+    const put = (d: number, f: number) => {
+      at.current = { dy: d, fade: f };
+      el.style.opacity = f < 1 ? String(f) : '';
+      for (const part of [bar.current, body.current]) if (part) part.style.transform = d ? `translateY(${d}px)` : '';
+    };
+    if (!ms) return put(dy, fade);
+    const from = at.current;
+    glide.current = tween(ms, SETTLE, (e) => put(from.dy + (dy - from.dy) * e, from.fade + (fade - from.fade) * e), done);
   };
   useTopTint(root);
+  useEffect(() => () => glide.current?.(), []);
 
   /** Away upwards and fading (from wherever the finger left it), then gone. */
   const close = useCallback(() => {
@@ -46,9 +56,8 @@ export default function Search({ suggestions, pulledBy, onClose }: { suggestions
     leaving.current = true;
     if (!el) return onClose();
     input.current?.blur();
-    place(-70, 0, '0.22s cubic-bezier(0.2, 0.85, 0.25, 1)');
     el.style.pointerEvents = 'none';
-    window.setTimeout(onClose, 220);
+    place(-70, 0, 220, onClose);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose]);
 
@@ -95,7 +104,7 @@ export default function Search({ suggestions, pulledBy, onClose }: { suggestions
       if (!s?.on) return;
       const fast = -s.dy / Math.max(1, Date.now() - s.t) > 0.5;
       if (-s.dy > AWAY || fast) return close();
-      place(0, 1, '0.25s cubic-bezier(0.2, 0.85, 0.25, 1)');
+      place(0, 1, 250);
     };
     el.addEventListener('touchstart', onStart, { passive: true });
     el.addEventListener('touchmove', onMove, { passive: false });

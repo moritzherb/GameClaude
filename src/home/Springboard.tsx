@@ -15,6 +15,7 @@ import Tap from '../components/Tap';
 import { CATEGORIES, type Category, type GameDefinition } from '../games/types';
 import { t } from '../i18n';
 import type { Player } from '../state/AppState';
+import { EASE, SETTLE as GLIDE, tween } from '../lib/tween';
 import { useTopTint } from '../lib/useTopTint';
 import { GameApp, GameGlyph, IconArt } from './AppIcon';
 import { useHomeEdit, type Pager } from './useHomeEdit';
@@ -50,7 +51,6 @@ export interface HomeProps {
 const PULL = 70;
 const GIVE = 0.8;
 /** The pulled field gliding into its place as the search opens (Search.tsx does the same). */
-const SETTLE_FIELD = '0.2s cubic-bezier(0.2, 0.85, 0.25, 1)';
 /** A finger this far sideways (more than up or down) is turning the page. */
 const TURN = 10;
 /** Let go past this share of the width, or this fast (px/ms), and the next page comes. */
@@ -158,25 +158,37 @@ export default function Springboard({ players, recent, returning, dock, wall, on
   };
   /** Past its place the field gives only a little more. */
   const below = (dy: number) => (dy < PULL ? dy - PULL : (dy - PULL) * 0.25);
-  const showPull = (dy: number, how = '') => {
+  /** How far down the pull is now (what's shown), and the glide that is moving it (if one is). */
+  const pulled = useRef(0);
+  const glide = useRef<(() => void) | null>(null);
+  const showPull = (dy: number, ms = 0, ease = GLIDE) => {
     const el = peek.current;
     const veil = dim.current;
     if (!el || !veil) return;
-    const k = Math.min(1, dy / PULL);
-    for (const x of [el, veil]) x.style.transition = how ? `transform ${how}, opacity ${how}` : 'none';
-    el.style.transform = dy ? `translateY(${below(dy)}px)` : '';
-    el.style.opacity = dy ? String(k) : '';
-    veil.style.opacity = dy ? String(k) : '';
+    glide.current?.();
+    glide.current = null;
+    const put = (d: number) => {
+      pulled.current = d;
+      const k = Math.min(1, d / PULL);
+      el.style.transform = d ? `translateY(${below(d)}px)` : '';
+      el.style.opacity = d ? String(k) : '';
+      veil.style.opacity = d ? String(k) : '';
+    };
+    if (!ms) return put(dy);
+    // Gliding there from a script (not a CSS transition): the strip under the clock is set from the
+    // same number in the same frame (components' useTopTint follows the veil's opacity).
+    const from = pulled.current;
+    glide.current = tween(ms, ease, (e) => put(from + (dy - from) * e));
   };
   const endPull = (dy: number) => {
     if (dy < PULL) {
-      showPull(0, '0.25s ease');
+      showPull(0, 250, EASE);
       return pullEnds(300);
     }
     // The search opens with its field just where this one is (the same field) over the same veil,
     // and both glide up into place together; these stay until the search has faded in over them.
     onSearch(below(dy));
-    showPull(PULL, SETTLE_FIELD);
+    showPull(PULL, 200, GLIDE);
     window.setTimeout(() => showPull(0), 320);
     pullEnds(360);
   };

@@ -357,17 +357,6 @@ html[data-look='pop'] .os-home {
   }
 }
 
-/* Coming back from a game: home fades in under the icon settling. */
-html[data-look='pop'] .os-home.back {
-  animation: os-back 0.35s var(--ease);
-}
-
-@keyframes os-back {
-  from {
-    opacity: 0.4;
-  }
-}
-
 /* ---------- Apps ---------- */
 
 .os-grid {

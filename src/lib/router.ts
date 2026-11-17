@@ -189,8 +189,6 @@ const SLIDE_OUT = 110;
 const SLIDE_IN = 280;
 /** How far the next screen slides (px). */
 const SLIDE_BY = 18;
-/** The veil going off, as the screen slides in: quick at first, settling (an ease-out cubic). */
-const EASE_IN = 'cubic-bezier(0.33, 1, 0.68, 1)';
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
 
 
@@ -222,12 +220,6 @@ function veil(): HTMLDivElement {
   return veilEl;
 }
 
-/** How far an animation is (ms), or `fallback` while it hasn't started. */
-const timeOf = (a: Animation | null, fallback = 0) => {
-  const c = a?.currentTime;
-  return typeof c === 'number' ? c : fallback;
-};
-
 function slide(from: string, to: string, show: () => void): boolean {
   const key = screenKey(to);
   const back = trail.length > 1 && trail[trail.length - 2] === key ? true : depthOf(to) < depthOf(from);
@@ -239,7 +231,6 @@ function slide(from: string, to: string, show: () => void): boolean {
   const page = document.getElementById('root');
   if (
     !page ||
-    typeof page.animate !== 'function' ||
     held ||
     isGame(from) ||
     isGame(to) ||
@@ -262,15 +253,21 @@ function slide(from: string, to: string, show: () => void): boolean {
   const outFor = Math.max(1, SLIDE_OUT * (1 - covered));
   v.style.display = 'block';
   v.style.pointerEvents = 'auto';
-  const out = v.animate([{ opacity: covered }, { opacity: 1 }], { duration: outFor, easing: 'linear', fill: 'forwards' });
-  let veilIn: Animation | null = null;
-  let pageIn: Animation | null = null;
-  /** How much the veil covers `at` ms into this part. */
-  const cover = (at: number) => (phase === 'out' ? Math.min(1, covered + ((1 - covered) * at) / outFor) : phase === 'in' ? 1 - easeOut(Math.min(1, at / SLIDE_IN)) : 1);
-  const now = () => (phase === 'out' ? timeOf(out) : phase === 'in' ? timeOf(veilIn) : 0);
-  const tint = () => {
-    // The phone shows the strip a little late: it's given the colour the screen will show then.
-    strip.set(mix(under, bare, cover(now() + STRIP_LAG)));
+  v.style.opacity = String(covered);
+  /** How long this part has run (ms): a frame never counts for more than two, so the moment the
+   *  phone spends drawing the next screen holds the slide a little instead of making it skip. */
+  let at = 0;
+  let prev = performance.now();
+  /** How much the veil covers `t` ms into the current part. */
+  const coverAt = (t: number) => (phase === 'out' ? Math.min(1, covered + ((1 - covered) * t) / outFor) : phase === 'in' ? 1 - easeOut(Math.min(1, t / SLIDE_IN)) : 1);
+  /** The veil, the screen sliding and the strip under the clock all from the same number, set in
+   *  the same frame (as the splash does: a compositor animation starts a moment later on an
+   *  iPhone than the strip, and the two part). The strip is set ahead by what the phone shows it late. */
+  const draw = () => {
+    const k = coverAt(at);
+    v.style.opacity = String(k);
+    page.style.transform = phase === 'out' ? '' : `translateX(${SLIDE_BY * dir * (phase === 'in' ? k : 1)}px)`;
+    strip.set(mix(under, bare, coverAt(at + STRIP_LAG)));
   };
   const showNext = () => {
     if (shown) return;
@@ -290,13 +287,11 @@ function slide(from: string, to: string, show: () => void): boolean {
   const stop = (andShow: boolean) => {
     cancelAnimationFrame(frame);
     window.clearTimeout(guard);
-    const left = phase === 'in' ? cover(timeOf(veilIn)) : phase === 'out' ? cover(timeOf(out)) : 1;
+    const left = coverAt(at);
     if (andShow) showNext();
-    out.cancel();
-    veilIn?.cancel();
-    pageIn?.cancel();
     page.style.transform = '';
     page.style.willChange = '';
+    v.style.opacity = '';
     v.style.display = '';
     v.style.pointerEvents = '';
     strip.release();
@@ -305,31 +300,30 @@ function slide(from: string, to: string, show: () => void): boolean {
     resolve();
     return andShow ? 0 : left;
   };
-  const tick = () => {
+  const tick = (now: number) => {
     frame = 0;
-    if (phase === 'out' && (out.playState === 'finished' || timeOf(out) >= outFor)) {
+    at += Math.min(Math.max(0, now - prev), 34);
+    prev = now;
+    if (phase === 'out' && at >= outFor) {
       // Covered: the next screen goes on the page (unseen yet), a little to the side, and is drawn once…
       phase = 'drawn';
+      at = 0;
       showNext();
       page.style.willChange = 'transform';
-      page.style.transform = `translateX(${SLIDE_BY * dir}px)`;
     } else if (phase === 'drawn') {
       // …then the veil goes off it as it slides into place.
       phase = 'in';
-      const timing = { duration: SLIDE_IN, easing: EASE_IN, fill: 'forwards' as const };
-      veilIn = v.animate([{ opacity: 1 }, { opacity: 0 }], timing);
-      pageIn = page.animate([{ transform: `translateX(${SLIDE_BY * dir}px)` }, { transform: 'translateX(0)' }], timing);
+      at = 0;
       v.style.pointerEvents = 'none';
-      out.cancel();
-    } else if (phase === 'in' && (veilIn?.playState === 'finished' || timeOf(veilIn) >= SLIDE_IN)) {
+    } else if (phase === 'in' && at >= SLIDE_IN) {
       stop(false);
       return;
     }
-    tint();
+    draw();
     frame = requestAnimationFrame(tick);
   };
   stopSlide = stop;
-  tint();
+  draw();
   frame = requestAnimationFrame(tick);
   // In case the frames stop (the app in the background): there in any case.
   const guard = window.setTimeout(() => stop(true), 1500);
