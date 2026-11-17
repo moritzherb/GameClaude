@@ -5025,16 +5025,16 @@ li {
 
 /* After the cup is lifted: the verdict lands like a rubber stamp once the cup is off, the table
    glows red (a lie) or green (the truth). */
-.mx-table.lie,
-.mx-table.truth {
+.mx-table.wrong,
+.mx-table.right {
   animation: mx-glow 1.2s ease 0.45s both;
 }
 
-.mx-table.lie {
+.mx-table.wrong {
   --glow: #ff4f45;
 }
 
-.mx-table.truth {
+.mx-table.right {
   --glow: #7ad34a;
 }
 
@@ -5078,20 +5078,20 @@ li {
   background: rgba(242, 232, 210, 0.92);
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.2rem, calc(13 * var(--qw)), 3.6rem);
+  font-size: clamp(1.6rem, calc(8 * var(--qw)), 2.4rem);
   line-height: 1;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
   transform: rotate(-8deg);
   animation: mx-stamp 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) 0.45s both;
 }
 
-.mx-verdict.lie .mx-stamp {
+.mx-verdict.wrong .mx-stamp {
   color: #d3241b;
 }
 
-.mx-verdict.truth .mx-stamp {
+.mx-verdict.right .mx-stamp {
   color: #3f7a00;
   transform: rotate(6deg);
   animation-name: mx-stamp-r;
@@ -5106,6 +5106,49 @@ li {
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   animation: mx-fade-in 0.3s ease 0.95s both;
+}
+
+/* What was announced next to what lay under the cup. */
+.mx-compare {
+  display: flex;
+  gap: 8px;
+  animation: mx-fade-in 0.3s ease 1.1s both;
+}
+
+.mx-compare-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 112px;
+  padding: 10px 14px 12px;
+  border-radius: 12px;
+  background: rgba(242, 232, 210, 0.92);
+  color: #2a1a0e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mx-compare-cell.actual {
+  outline: 3px solid var(--mx-mark);
+  outline-offset: -3px;
+}
+
+.mx-verdict.right {
+  --mx-mark: #3f7a00;
+}
+
+.mx-verdict.wrong {
+  --mx-mark: #d3241b;
+}
+
+.mx-compare-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(42, 26, 14, 0.7);
+}
+
+.mx-compare .mx-claim-tag {
+  color: rgba(42, 26, 14, 0.7);
 }
 
 @keyframes mx-stamp {
@@ -12418,13 +12461,13 @@ li {
   transform: none;
 }
 
-/* Two emoji, a little smaller, overlapping like two cards side by side. */
-.vt-pick.mixed .vt-pick-emoji {
-  font-size: 0.8em;
+/* Both icons side by side, a little smaller, with air between them. */
+.vt-pick.mixed .vt-pick-icons {
+  gap: 0.14em;
 }
 
-.vt-pick.mixed .vt-pick-emoji + .vt-pick-emoji {
-  margin-left: -0.3em;
+.vt-pick.mixed .vt-pick-emoji {
+  font-size: 0.66em;
 }
 
 .vt-count {

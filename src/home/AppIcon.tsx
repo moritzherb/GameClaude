@@ -20,9 +20,14 @@ export const shortName = (game: GameDefinition) => t(SHORT[game.id] ?? game.name
 /** The emoji on a game's icon and splash. */
 export const glyphsOf = (game: GameDefinition) => (SECOND[game.id] ? [game.emoji, SECOND[game.id]] : [game.emoji]);
 
+/** Emoji whose picture sits off their middle (the slot machine's lever sticks out right): moved to look centred. */
+const NUDGE: Record<string, string> = { '🎰': '0.05em' };
+
 /** A game's emoji for its icon (two of them for Princess/King). */
 export function GameGlyph({ game }: { game: GameDefinition }) {
   const second = SECOND[game.id];
+  const nudge = NUDGE[game.emoji];
+  if (nudge) return <span style={{ display: 'inline-block', transform: `translateX(${nudge})` }}>{game.emoji}</span>;
   if (!second) return <>{game.emoji}</>;
   return (
     <span className="app-duo">

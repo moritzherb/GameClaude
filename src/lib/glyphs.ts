@@ -378,16 +378,25 @@ function pathOf(tag: string, a: Record<string, string | number | undefined>): Pa
   return p;
 }
 
-const paths = new Map<GlyphName, { path: Path2D; fill: boolean }[]>();
+const paths = new Map<GlyphName, { path: Path2D; fill: boolean; closed: boolean }[]>();
+
+/** A shape that closes on itself (a circle, a box, a path whose every line comes back round). */
+const closes = (tag: string, a: Record<string, string | number | undefined>) => {
+  if (tag === 'circle' || tag === 'ellipse' || tag === 'rect' || tag === 'polygon') return true;
+  const d = tag === 'path' ? String(a.d ?? '') : '';
+  const starts = d.match(/m/gi)?.length ?? 0;
+  return starts > 0 && starts === (d.match(/z/gi)?.length ?? 0);
+};
 
 /**
  * Draws a picture on a canvas: `size` px square, its top left corner at x, y, in `color`, the line
- * `weight` units thick (of 24, as on the page).
+ * `weight` units thick (of 24, as on the page). With `body`, what the lines close round is filled
+ * with it first (the picture as a solid thing).
  */
-export function drawGlyph(ctx: CanvasRenderingContext2D, name: GlyphName, x: number, y: number, size: number, color: string, weight = 2) {
+export function drawGlyph(ctx: CanvasRenderingContext2D, name: GlyphName, x: number, y: number, size: number, color: string, weight = 2, body?: string) {
   let parts = paths.get(name);
   if (!parts) {
-    parts = GLYPHS[name].map(([tag, a]) => ({ path: pathOf(tag, a), fill: a.fill === 'currentColor' }));
+    parts = GLYPHS[name].map(([tag, a]) => ({ path: pathOf(tag, a), fill: a.fill === 'currentColor', closed: closes(tag, a) }));
     paths.set(name, parts);
   }
   ctx.save();
@@ -396,6 +405,10 @@ export function drawGlyph(ctx: CanvasRenderingContext2D, name: GlyphName, x: num
   ctx.lineWidth = weight;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  if (body) {
+    ctx.fillStyle = body;
+    for (const { path, closed } of parts) if (closed) ctx.fill(path);
+  }
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
   for (const { path, fill } of parts) {

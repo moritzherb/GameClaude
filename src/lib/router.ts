@@ -257,8 +257,6 @@ function slide(from: string, to: string, show: () => void): boolean {
   let phase: 'out' | 'drawn' | 'in' = 'out';
   let shown = false;
   let frame = 0;
-  let step = 1000 / 60;
-  let prev = 0;
   let resolve = () => {};
   const done = new Promise<void>((r) => (resolve = r));
   slideDone = done;
@@ -272,10 +270,9 @@ function slide(from: string, to: string, show: () => void): boolean {
   const cover = (at: number) => (phase === 'out' ? Math.min(1, covered + ((1 - covered) * at) / outFor) : phase === 'in' ? 1 - easeOut(Math.min(1, at / SLIDE_IN)) : 1);
   const now = () => (phase === 'out' ? timeOf(out) : phase === 'in' ? timeOf(veilIn) : 0);
   const tint = () => {
-    // The phone blends its strip from the colour it was given a frame ago, so on the screen it's
-    // about a frame behind: it's set that much ahead (less what it blends meanwhile).
-    const ahead = now() + step - (step * step) / (2 * STRIP_BLEND);
-    strip.set(mix(under, bare, cover(ahead)));
+    // The phone's strip trails what it's given by about its blend (each new colour restarts the
+    // blend from where it is): it's given the colour the screen will show that much later.
+    strip.set(mix(under, bare, cover(now() + STRIP_BLEND)));
   };
   const showNext = () => {
     if (shown) return;
@@ -310,10 +307,8 @@ function slide(from: string, to: string, show: () => void): boolean {
     resolve();
     return andShow ? 0 : left;
   };
-  const tick = (t: number) => {
+  const tick = () => {
     frame = 0;
-    if (prev && t > prev) step += (Math.min(50, t - prev) - step) * 0.3;
-    prev = t;
     if (phase === 'out' && (out.playState === 'finished' || timeOf(out) >= outFor)) {
       // Covered: the next screen goes on the page (unseen yet), a little to the side, and is drawn once…
       phase = 'drawn';

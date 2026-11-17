@@ -3,7 +3,7 @@ import { cellKey, jumps, THEMES, type Board, type Cell, type Theme } from './boa
 import { FIELDS, type FieldPic } from './fields';
 import { ACE, paintAce } from './ace';
 import { pawnSprite, shade, SPRITE_H, type PawnDef } from './pawns';
-import { paintToken } from './token';
+import { paintIcon3d } from './token';
 import { drawGlyph } from '../../lib/glyphs';
 
 /** A pawn as the scene shows it. */
@@ -200,7 +200,7 @@ export class Scene {
   private raf = 0;
   private last = 0;
   private table = '#10110e';
-  private icons = new Map<FieldPic, HTMLCanvasElement>();
+  private icons = new Map<string, HTMLCanvasElement>();
   private shadowPic: HTMLCanvasElement | null = null;
   private fingers = new Map<number, Point>();
   private gesture: { x: number; y: number; d: number; n: number; moved: number } | null = null;
@@ -812,9 +812,10 @@ export class Scene {
     lines.forEach((l, k) => ctx.fillText(l, TEX / 2, y0 + k * lh));
   }
 
-  /** A field's picture standing at the back of it: the Ace's card, or a round standee (token.ts). */
-  private iconSprite(icon: FieldPic): HTMLCanvasElement {
-    let c = this.icons.get(icon);
+  /** A field's picture standing at the back of it: the Ace's card, or the picture as a solid thing in the field's colour (token.ts). */
+  private iconSprite(icon: FieldPic, color: string): HTMLCanvasElement {
+    const key = `${icon} ${color}`;
+    let c = this.icons.get(key);
     if (c) return c;
     c = document.createElement('canvas');
     const px = 96;
@@ -823,8 +824,8 @@ export class Scene {
     const ctx = c.getContext('2d')!;
     ctx.scale(r, r);
     if (icon === ACE) paintAce(ctx, (px * 1.25) / 2, px * 1.25 - px * 0.16, px * 0.9);
-    else paintToken(ctx, icon, (px * 1.25) / 2, px * 1.25 - px * 0.18, px * 0.92);
-    this.icons.set(icon, c);
+    else paintIcon3d(ctx, icon, (px * 1.25) / 2, px * 1.25 - px * 0.16, px * 0.84, color);
+    this.icons.set(key, c);
     return c;
   }
 
@@ -1038,7 +1039,7 @@ export class Scene {
     // Standing things, the far ones first: what's around, each field's picture, the pawns.
     type Item = { z: number; draw: () => void };
     const items: Item[] = [];
-    const standing = (x: number, y: number, up: number, icon: FieldPic, size: number, shadow: number) => {
+    const standing = (x: number, y: number, up: number, icon: FieldPic, color: string, size: number, shadow: number) => {
       const p = project(x, y, up);
       if (!p || p.sy < -60 || p.sy > h + 120) return;
       items.push({
@@ -1046,7 +1047,7 @@ export class Scene {
         draw: () => {
           const px = size * p.s;
           this.shadow(p.sx, p.sy, px * 0.34, squash(p), shadow);
-          ctx.drawImage(this.iconSprite(icon), p.sx - px * 0.625, p.sy - px * 1.05, px * 1.25, px * 1.25);
+          ctx.drawImage(this.iconSprite(icon, color), p.sx - px * 0.625, p.sy - px * 1.05, px * 1.25, px * 1.25);
         },
       });
     };
@@ -1060,7 +1061,7 @@ export class Scene {
         if (p) items.push({ z: p.z, draw: () => this.sign(p, board.fields[i].n ? '1–2' : '5–6') });
         return;
       }
-      standing(s.x + ICON_AT.x, s.y + ICON_AT.y, SLAB, FIELDS[kind].icon, ICON_H, 0.25);
+      standing(s.x + ICON_AT.x, s.y + ICON_AT.y, SLAB, FIELDS[kind].icon, FIELDS[kind].color, ICON_H, 0.25);
     });
     let tag: (() => void) | null = null;
     // Looking round the board, everyone's name shows: one sign per field for those standing together.
