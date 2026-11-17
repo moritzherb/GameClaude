@@ -153,7 +153,7 @@ export function topLayer(color: string) {
 }
 
 /** How late an iPhone shows the strip under the clock what it's given (ms): calibrated on a screen recording (33 ms was too little, 100 ms too much). */
-const STRIP_LAG = 60;
+export const STRIP_LAG = 60;
 
 /**
  * While `el` is on screen, the strip under the clock goes along with how much of it shows: fading in
