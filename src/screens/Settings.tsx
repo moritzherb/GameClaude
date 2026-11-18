@@ -1,34 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import Alert from '../components/Alert';
 import CloudBackup from '../components/CloudBackup';
-import Flag from '../components/Flag';
+import BigButton from '../components/BigButton';
+import Sheet from '../components/Sheet';
 import { ChevronIcon, PlusIcon, RowIcon, type RowGlyph } from '../components/Icons';
 import TopBar from '../components/TopBar';
-import { LANGS, t, tx } from '../i18n';
+import { getLang, LANGS, t, tx } from '../i18n';
 import { buzz, fxSettings, sfx } from '../lib/fx';
 import { openLegal } from '../lib/legal';
-import { isNative, onNative, privacyOptions, toNative } from '../lib/native';
-import { lookFor, type Look, type PhoneSetting } from '../lib/platform';
+import { appIcon, isNative, onNative, privacyOptions, toNative } from '../lib/native';
+import { type PhoneSetting } from '../lib/platform';
 import { navigate, paths } from '../lib/router';
 import { loadPhoto, readPhoto, savePhoto, WALLPAPERS } from '../lib/wallpaper';
 import { cloudOn } from '../net/cloud';
 import { resetHome } from '../home/order';
 import { useApp } from '../state/AppState';
 
-type Toggle = 'sound' | 'haptics' | 'bigMode' | 'clean' | 'knowAll';
+type Toggle = 'sound' | 'haptics' | 'clean' | 'knowAll';
 
 const OPTIONS: { key: Toggle; icon: RowGlyph; label: string; hint: string }[] = [
   { key: 'sound', icon: 'sound', label: tx('Sounds'), hint: tx('Boops, ticks and fanfares') },
   { key: 'haptics', icon: 'vibrate', label: tx('Vibration'), hint: tx('Phone buzzes when you tap') },
-  { key: 'bigMode', icon: 'bigger', label: tx('Giant Mode'), hint: tx('Everything bigger. For later tonight.') },
   { key: 'clean', icon: 'clean', label: tx('Clean table'), hint: tx('In games just the cards and the buttons you need') },
   { key: 'knowAll', icon: 'know', label: tx('We know the games'), hint: tx('No explanations in the games. The rules stay behind the ? button.') },
-];
-
-/** The app's look. Only the look: every game plays the same in both. */
-const LOOKS: { id: Look; label: string }[] = [
-  { id: 'pop', label: tx('New') },
-  { id: 'classic', label: tx('Classic') },
 ];
 
 /** In the new look: whose home screen. */
@@ -181,10 +175,64 @@ function useAdChoices() {
   return isNative && shown;
 }
 
+/** The app icons (mobile/assets/icons, the same die in other colours): `name` as the store app knows it. */
+const APP_ICONS: { name: string | null; label: string; face: string; pip: string; bg: string }[] = [
+  { name: null, label: tx('Lime'), face: '#c6f03c', pip: '#14150f', bg: '#24251f' },
+  { name: 'Pink', label: tx('Pink'), face: '#ff74b5', pip: '#14150f', bg: '#24251f' },
+  { name: 'Ocean', label: tx('Ocean'), face: '#5cbcfa', pip: '#14150f', bg: '#24251f' },
+  { name: 'Gold', label: tx('Gold'), face: '#fbd25a', pip: '#14150f', bg: '#24251f' },
+  { name: 'Night', label: tx('Night'), face: '#ececE6', pip: '#14150f', bg: '#121310' },
+  { name: 'Lime', label: tx('Lime on dark'), face: '#1c1d18', pip: '#c6f03c', bg: '#bfe835' },
+];
+
+/** A small picture of an app icon: the die showing five on its ground. */
+function DieIcon({ face, pip, bg }: { face: string; pip: string; bg: string }) {
+  return (
+    <svg className="icon-pick-art" viewBox="0 0 60 60" aria-hidden="true">
+      <rect width="60" height="60" rx="14" fill={bg} />
+      <g transform="rotate(-12 30 30)">
+        <rect x="14" y="14" width="32" height="32" rx="8" fill={face} />
+        {[
+          [21.5, 21.5],
+          [38.5, 21.5],
+          [30, 30],
+          [21.5, 38.5],
+          [38.5, 38.5],
+        ].map(([x, y]) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r="3.2" fill={pip} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+/** The store app's icon state (it tells the page when the page starts and after each change). */
+function useAppIcon() {
+  const [state, setState] = useState(appIcon);
+  useEffect(() => onNative((msg) => msg.type === 'icon' && setState({ supported: msg.supported, current: msg.current })), []);
+  return state;
+}
+
+/** Friends get a link to prost!: the share sheet, or the link copied where there's none. */
+async function invite() {
+  const url = `${window.location.origin}${window.location.pathname}`;
+  const text = t('Let’s play prost! together:');
+  try {
+    if (isNative) return toNative({ type: 'share', title: 'prost!', text, url });
+    if (navigator.share) return await navigator.share({ title: 'prost!', text, url });
+    await navigator.clipboard.writeText(url);
+  } catch {
+    /* cancelled */
+  }
+}
+
 export default function Settings() {
   const { settings, updateSettings } = useApp();
   const adChoices = useAdChoices();
   const [lookOpen, setLookOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [iconsOpen, setIconsOpen] = useState(false);
+  const icons = useAppIcon();
 
   return (
     <main className="screen settings-page">
@@ -195,31 +243,17 @@ export default function Settings() {
       </div>
 
       <div className="settings-list">
-        <div className="setting-row lang-row">
+        {/* The app speaks the phone's language; it's changed in the phone's settings. */}
+        <button type="button" className="setting-row" onClick={() => setLangOpen(true)}>
+          <span className="setting-emoji" aria-hidden="true"><RowIcon name="lang" /></span>
           <span className="setting-text">
             <span className="setting-label">{t('Language')}</span>
+            <span className="setting-hint">{LANGS.find((l) => l.id === getLang())?.label}</span>
           </span>
-          <span className="flags" role="radiogroup" aria-label={t('Language')}>
-            {LANGS.map((l) => (
-              <button
-                key={l.id}
-                type="button"
-                role="radio"
-                aria-checked={(settings.lang ?? 'en') === l.id}
-                aria-label={l.label}
-                className={`flag-btn${(settings.lang ?? 'en') === l.id ? ' active' : ''}`}
-                onClick={() => {
-                  sfx.pop();
-                  buzz();
-                  updateSettings({ lang: l.id });
-                }}
-              >
-                <Flag lang={l.id} />
-              </button>
-            ))}
+          <span className="look-chevron" aria-hidden="true">
+            <ChevronIcon />
           </span>
-        </div>
-
+        </button>
 
         {OPTIONS.map((o) => {
           const on = !!settings[o.key];
@@ -258,10 +292,8 @@ export default function Settings() {
           <button type="button" className={`setting-row look-toggle${lookOpen ? ' open' : ''}`} aria-expanded={lookOpen} onClick={() => setLookOpen(!lookOpen)}>
             <span className="setting-emoji" aria-hidden="true"><RowIcon name="look" /></span>
             <span className="setting-text">
-              <span className="setting-label">{t('Look and home screen')}</span>
-              <span className="setting-hint">
-                {t(LOOKS.find((x) => x.id === lookFor(settings.look))?.label ?? '')}
-              </span>
+              <span className="setting-label">{t('Home screen')}</span>
+              <span className="setting-hint">{t('Phone, wallpaper, order')}</span>
             </span>
             <span className="look-chevron" aria-hidden="true">
               <ChevronIcon />
@@ -270,27 +302,47 @@ export default function Settings() {
           {lookOpen && (
             <>
               <div className="setting-row look-row">
-                <span className="setting-emoji" aria-hidden="true"><RowIcon name="look" /></span>
-                <span className="setting-text">
-                  <span className="setting-label">{t('Look')}</span>
-                  <span className="setting-hint">{t('Only the look: every game plays the same')}</span>
-                </span>
-                <Choice label={t('Look')} value={lookFor(settings.look)} options={LOOKS} onPick={(look) => updateSettings({ look })} />
-              </div>
-
-              {lookFor(settings.look) === 'pop' && (
-                <div className="setting-row look-row">
                   <span className="setting-emoji" aria-hidden="true"><RowIcon name="phone" /></span>
                   <span className="setting-text">
                     <span className="setting-label">{t('Home screen')}</span>
                     <span className="setting-hint">{t('Like your phone’s own')}</span>
                   </span>
                   <Choice label={t('Home screen')} value={settings.phone ?? 'auto'} options={PHONES} onPick={(phone) => updateSettings({ phone })} />
-                </div>
-              )}
-              {lookFor(settings.look) === 'pop' && <WallpaperRow />}
-              {lookFor(settings.look) === 'pop' && <ResetHomeRow />}
+              </div>
+              <WallpaperRow />
+              <ResetHomeRow />
             </>
+          )}
+        </div>
+      </section>
+
+      {/* prost! itself: friends, a rating, its icon (the last two only in the store app). */}
+      <section className="section">
+        <div className="settings-list">
+          <button type="button" className="setting-row" onClick={invite}>
+            <span className="setting-emoji" aria-hidden="true"><RowIcon name="invite" /></span>
+            <span className="setting-text">
+              <span className="setting-label">{t('Invite friends')}</span>
+              <span className="setting-hint">{t('Send them prost!')}</span>
+            </span>
+          </button>
+          {isNative && (
+            <button type="button" className="setting-row" onClick={() => toNative({ type: 'review' })}>
+              <span className="setting-emoji" aria-hidden="true"><RowIcon name="star" /></span>
+              <span className="setting-text">
+                <span className="setting-label">{t('Rate prost!')}</span>
+                <span className="setting-hint">{t('A few stars help a lot')}</span>
+              </span>
+            </button>
+          )}
+          {icons.supported && (
+            <button type="button" className="setting-row" onClick={() => setIconsOpen(true)}>
+              <span className="setting-emoji" aria-hidden="true"><RowIcon name="appicon" /></span>
+              <span className="setting-text">
+                <span className="setting-label">{t('App icon')}</span>
+                <span className="setting-hint">{t(APP_ICONS.find((i) => i.name === icons.current)?.label ?? 'Lime')}</span>
+              </span>
+            </button>
           )}
         </div>
       </section>
@@ -318,6 +370,36 @@ export default function Settings() {
           )}
         </div>
       </section>
+
+      <Sheet open={langOpen} onClose={() => setLangOpen(false)} title={t('Language')} closeLabel={t('Done')}>
+        <p className="lead">{t('prost! speaks your phone’s language: {lang}.', { lang: LANGS.find((l) => l.id === getLang())?.label ?? '' })}</p>
+        <p className="fine-print">{t('To change it, set the language in your phone’s settings. German or English: anything else shows in English.')}</p>
+        {isNative && (
+          <BigButton onClick={() => toNative({ type: 'settings' })}>{t('Open settings')}</BigButton>
+        )}
+      </Sheet>
+
+      <Sheet open={iconsOpen} onClose={() => setIconsOpen(false)} title={t('App icon')} closeLabel={t('Done')}>
+        <div className="icon-picks" role="radiogroup" aria-label={t('App icon')}>
+          {APP_ICONS.map((i) => (
+            <button
+              key={i.label}
+              type="button"
+              role="radio"
+              aria-checked={icons.current === i.name}
+              className={`icon-pick${icons.current === i.name ? ' on' : ''}`}
+              onClick={() => {
+                sfx.pop();
+                buzz();
+                toNative({ type: 'icon', name: i.name });
+              }}
+            >
+              <DieIcon {...i} />
+              <span>{t(i.label)}</span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
 
       <section className="panel">
         <h2 className="section-title">{t('Play nice')}</h2>

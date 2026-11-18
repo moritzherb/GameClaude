@@ -108,10 +108,6 @@
   color-scheme: dark;
 }
 
-html.big-mode {
-  font-size: 19px;
-}
-
 *,
 *::before,
 *::after {
@@ -2159,43 +2155,6 @@ li {
 
 .settings-page .plain-list {
   font-size: 0.875rem;
-}
-
-/* Language: two flags, the chosen one stands out. */
-.flags {
-  display: flex;
-  gap: 10px;
-}
-
-.flag-btn {
-  display: block;
-  width: 36px;
-  height: 25px;
-  border-radius: 5px;
-  overflow: hidden;
-  opacity: 0.4;
-  filter: grayscale(0.6);
-  transition:
-    opacity 0.2s ease,
-    filter 0.2s ease,
-    transform 0.15s var(--spring);
-}
-
-.flag-btn svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.flag-btn.active {
-  opacity: 1;
-  filter: none;
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
-}
-
-.flag-btn:active {
-  transform: scale(0.97);
-  transition-duration: 0.08s;
 }
 
 @keyframes mesh {
@@ -14054,7 +14013,6 @@ li {
 .hs-stake-btn,
 .hs-suit,
 .look-seg button,
-.flag-btn,
 .player-avatar,
 .profile-color,
 .kc-chip,
@@ -14068,7 +14026,6 @@ li {
 .hs-stake-btn::after,
 .hs-suit::after,
 .look-seg button::after,
-.flag-btn::after,
 .player-avatar::after,
 .profile-color::after,
 .kc-chip::after,
@@ -14081,15 +14038,6 @@ li {
   bottom: min(0px, calc((100% - 44px) / 2));
   left: min(0px, calc((100% - 44px) / 2));
   right: min(0px, calc((100% - 44px) / 2));
-}
-
-/* The flag rounds its own corners, so the button's invisible margin isn't cut off with them. */
-.flag-btn {
-  overflow: visible;
-}
-
-.flag-btn svg {
-  clip-path: inset(0 round 5px);
 }
 
 
@@ -17961,4 +17909,37 @@ html[data-look='pop'] .kc-slot {
   pointer-events: none;
   will-change: opacity;
   contain: strict;
+}
+
+/* Settings → App icon: the icons to pick, a row of small pictures. */
+.icon-picks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.icon-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border-radius: 16px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.icon-pick-art {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.icon-pick.on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--accent);
 }

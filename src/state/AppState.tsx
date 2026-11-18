@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, type ReactNode } from 'react';
-import { setLang, tx, type Lang } from '../i18n';
+import { setLang, systemLang, tx, type Lang } from '../i18n';
 import { fxSettings } from '../lib/fx';
 import { pick } from '../lib/random';
-import { lookFor, platformFor, type Look, type PhoneSetting } from '../lib/platform';
+import { platformFor, type PhoneSetting } from '../lib/platform';
 import { loadPeople } from '../lib/people';
 import { load, usePersistentState } from '../lib/storage';
 import { GROUND, setThemeColor } from '../lib/themeColor';
@@ -40,8 +40,6 @@ export interface Settings {
   known?: string[];
   /** App language. English is the default (and missing in older saves). */
   lang?: Lang;
-  /** The app's look: the new one (missing: new) or the classic one. Only the look: games play the same. */
-  look?: Look;
   /** In the new look, whose home screen: the phone's own (missing: auto), or always iPhone / Android. */
   phone?: PhoneSetting;
   /** The home screen's wallpaper (new look): a made one's id, 'photo', or missing for the plain ground. */
@@ -153,24 +151,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Set before the children render, so every t() call below uses the chosen language.
-  setLang(settings.lang ?? 'en');
+  setLang(systemLang());
   // Also before the children render (and measure themselves): the look, and whose home screen.
   // Light or dark is the phone's own setting (the system's): the app has no switch of its own.
   if (typeof document !== 'undefined') {
-    document.documentElement.dataset.look = lookFor(settings.look);
+    document.documentElement.dataset.look = 'pop';
     document.documentElement.dataset.os = platformFor(settings.phone);
   }
 
   // The browser's bar (Android) and the strip under the clock take the look's ground colour
   // (index.html has the new look's).
-  const look = lookFor(settings.look);
-  useLayoutEffect(() => setThemeColor(GROUND[look][0], GROUND[look][1]), [look]);
+  useLayoutEffect(() => setThemeColor(GROUND[0], GROUND[1]), []);
 
   // Before the screen is drawn: with big text on, the first picture mustn't show it small.
   useLayoutEffect(() => {
     fxSettings.sound = settings.sound;
     fxSettings.haptics = settings.haptics;
-    document.documentElement.classList.toggle('big-mode', settings.bigMode);
   }, [settings]);
 
   const value = useMemo<AppState>(

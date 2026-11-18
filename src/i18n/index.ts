@@ -24,6 +24,11 @@ export const LANGS: { id: Lang; label: string }[] = [
 let current: Lang = 'en';
 
 /** Called by AppProvider on every render, so t() always follows the setting. */
+/** The phone's own language: the app speaks German if it's German, English otherwise. */
+export function systemLang(): Lang {
+  return typeof navigator !== 'undefined' && /^de\b/i.test(navigator.language ?? '') ? 'de' : 'en';
+}
+
 export function setLang(lang: Lang) {
   current = lang;
   if (typeof document !== 'undefined') document.documentElement.lang = lang;

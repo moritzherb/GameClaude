@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectPlatform, lookFor, platformFor } from './platform';
+import { detectPlatform, platformFor } from './platform';
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 const ANDROID = 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36';
@@ -24,9 +24,4 @@ describe('platform', () => {
     expect(platformFor(undefined, 'ios')).toBe('ios');
   });
 
-  it('wears the new look unless the classic one was picked (older saves have none)', () => {
-    expect(lookFor(undefined)).toBe('pop');
-    expect(lookFor('pop')).toBe('pop');
-    expect(lookFor('classic')).toBe('classic');
-  });
 });

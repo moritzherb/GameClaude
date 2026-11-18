@@ -81,6 +81,17 @@ const config: ExpoConfig = {
       },
     ],
     'expo-build-properties',
+    [
+      // The other app icons to pick in Settings: the same die in other colours (assets/icons).
+      'expo-alternate-app-icons',
+      [
+        { name: 'Pink', ios: './assets/icons/pink.png', android: { foregroundImage: './assets/icons/pink-foreground.png', backgroundColor: '#24251f' } },
+        { name: 'Ocean', ios: './assets/icons/ocean.png', android: { foregroundImage: './assets/icons/ocean-foreground.png', backgroundColor: '#24251f' } },
+        { name: 'Gold', ios: './assets/icons/gold.png', android: { foregroundImage: './assets/icons/gold-foreground.png', backgroundColor: '#24251f' } },
+        { name: 'Night', ios: './assets/icons/night.png', android: { foregroundImage: './assets/icons/night-foreground.png', backgroundColor: '#121310' } },
+        { name: 'Lime', ios: './assets/icons/lime.png', android: { foregroundImage: './assets/icons/lime-foreground.png', backgroundColor: '#bfe835' } },
+      ],
+    ],
   ],
   extra: {
     // From `npx eas-cli init` (docs/STORE.md): paste the project ID here.

@@ -6,7 +6,6 @@ import RulesList from '../components/RulesList';
 import TopBar from '../components/TopBar';
 import { playerRange, type GameDefinition } from '../games/types';
 import { GameGlyph } from '../home/AppIcon';
-import { useLook } from '../home/usePlatform';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
 import { useFitWords } from '../lib/useFitWords';
@@ -26,7 +25,6 @@ function cardName(name: string) {
 
 export default function GameDetail({ game }: { game: GameDefinition }) {
   const { players } = useApp();
-  const pop = useLook() === 'pop';
   // A game that plays without a player list starts right away.
   const missing = game.playersOptional ? 0 : Math.max(0, game.minPlayers - players.length);
   const tooMany = !game.playersOptional && !game.picksPlayers && game.maxPlayers != null && players.length > game.maxPlayers;
@@ -55,13 +53,13 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
   return (
     <main className={`screen game-detail${game.online && game.component ? ' two-buttons' : ''}`}>
       {/* New look: back to the home screen the game was opened from. */}
-      <TopBar onBack={() => navigate(pop ? paths.home : paths.games())} />
+      <TopBar onBack={() => navigate(paths.home)} />
 
       <div ref={middle} className={`detail-middle${scrolls ? ' scrolls' : ''}`}>
       <section className="detail-hero fade-up" style={{ '--card-bg': game.color } as CSSProperties}>
         <span className="detail-no">{t('No. {n}', { n: gameNumber(game) })}</span>
         <span className="detail-emoji" aria-hidden>
-          {pop ? <GameGlyph game={game} /> : game.emoji}
+          <GameGlyph game={game} />
         </span>
         <h1 ref={title} className="detail-name" style={{ '--longest': name.longest } as CSSProperties}>
           {name.text}

@@ -1,3 +1,4 @@
+import { systemLang } from './i18n';
 import { Fragment } from 'react';
 import { findGame } from './games/registry';
 import { CATEGORIES, type CategoryId } from './games/types';
@@ -52,10 +53,10 @@ function Screen() {
 }
 
 export default function App() {
-  const { ageConfirmed, confirmAge, settings } = useApp();
+  const { ageConfirmed, confirmAge } = useApp();
   // Switching the language re-mounts the screens so every text is rendered again.
   return (
-    <Fragment key={settings.lang ?? 'en'}>
+    <Fragment key={systemLang()}>
       <ErrorBoundary>{ageConfirmed ? <Screen /> : <AgeGate onConfirm={confirmAge} />}</ErrorBoundary>
       <CheersToast />
       <RoomGameRedirect />

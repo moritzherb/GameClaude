@@ -347,6 +347,19 @@ const app: Record<string, string> = {
   'New players join in where the game can take them: right away, or from the next round.': 'Neue Spieler steigen ein, wo das Spiel es zulässt: sofort oder ab der nächsten Runde.',
   Duration: 'Spieldauer',
   '{from}–{to} min': '{from}–{to} Min.',
+  Gold: 'Gold',
+  Night: 'Nacht',
+  'Lime on dark': 'Limette auf Dunkel',
+  'Let’s play prost! together:': 'Lass uns zusammen prost! spielen:',
+  'Phone, wallpaper, order': 'Handy, Hintergrund, Reihenfolge',
+  'Invite friends': 'Freunde einladen',
+  'Send them prost!': 'Schick ihnen prost!',
+  'Rate prost!': 'prost! bewerten',
+  'A few stars help a lot': 'Ein paar Sterne helfen viel',
+  'App icon': 'App-Symbol',
+  'prost! speaks your phone’s language: {lang}.': 'prost! spricht die Sprache deines Handys: {lang}.',
+  'To change it, set the language in your phone’s settings. German or English: anything else shows in English.': 'Ändern kannst du sie in den Einstellungen deines Handys. Deutsch oder Englisch: alles andere zeigt prost! auf Englisch.',
+  'Open settings': 'Einstellungen öffnen',
 };
 
 export default app;
