@@ -244,7 +244,7 @@ const app: Record<string, string> = {
   'That person does whatever the screen says.': 'Wen’s trifft, macht, was auf dem Bildschirm steht.',
   'No arguing with the machine.': 'Mit der Maschine wird nicht diskutiert.',
   'Rolling…': 'Es dreht sich…',
-  'Who’s gonna drink?': 'Wer muss trinken?',
+  'Who drinks?': 'Wer trinkt?',
   'Spin again': 'Nochmal drehen',
   Spin: 'Drehen',
   'Drink {n} sip': 'Trink {n} Schluck',

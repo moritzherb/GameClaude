@@ -64,7 +64,7 @@ export default function WhoDrinks({ players }: GameProps) {
           <span className="who-drinks-hint-emoji">
             <Glyph name={spinning ? 'shuffle' : 'eye'} />
           </span>
-          {spinning ? t('Rolling…') : t('Who’s gonna drink?')}
+          {spinning ? t('Rolling…') : t('Who drinks?')}
         </div>
       )}
 
