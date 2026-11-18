@@ -20,9 +20,16 @@ export type FromPage =
   | { type: 'reload' }
   | { type: 'ready' }
   | { type: 'store'; key: string; value: string | null }
-  | { type: 'store-all'; items: Record<string, string> };
+  | { type: 'store-all'; items: Record<string, string> }
+  | { type: 'settings' }
+  | { type: 'review' }
+  | { type: 'icon'; name: string | null };
 
-export type ToPage = { type: 'back' } | { type: 'ads'; privacyOptions: boolean };
+export type ToPage =
+  | { type: 'back' }
+  | { type: 'ads'; privacyOptions: boolean }
+  /** Which app icon shows (null: the first one), and whether this phone can change it. */
+  | { type: 'icon'; supported: boolean; current: string | null };
 
 /** A message from the page, checked: anything else is ignored. */
 export function parseMessage(data: string): FromPage | null {

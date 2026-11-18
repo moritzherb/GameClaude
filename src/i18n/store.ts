@@ -26,12 +26,11 @@ export const STORE: Record<string, { en: string; de: string }> = {
     en: 'Sips are counted in the games that know who drinks (President and Beggar, so far).',
     de: 'Schlucke zählen in den Spielen, die wissen, wer trinkt (bisher Präsident und Bettler).',
   },
-  'Whoever ends up with all four Jacks is the Asshole: empty your glass. The game is over.': {
-    en: 'Whoever ends up with all four Jacks is the Beggar and drinks 3. The game is over.',
-    de: 'Wer alle vier Buben auf der Hand hat, ist der Bettler und trinkt 3. Das Spiel ist aus.',
-  },
-  'Empty your glass!': { en: 'Drink 3!', de: 'Trink 3!' },
   'All four Jacks. Empty your glass!': { en: 'All four Jacks. Drink 3!', de: 'Alle vier Buben. Trink 3!' },
+  'Whoever ends up with all four Jacks is the Asshole. The game is over.': {
+    en: 'Whoever ends up with all four Jacks is the Beggar. The game is over.',
+    de: 'Wer alle vier Buben auf der Hand hat, ist der Bettler. Das Spiel ist aus.',
+  },
   'You’re the Asshole!': { en: 'You’re the Beggar!', de: 'Du bist der Bettler!' },
   '{name} is the Asshole!': { en: '{name} is the Beggar!', de: '{name} ist der Bettler!' },
   'Ended up the Asshole': { en: 'Ended up the Beggar', de: 'Bettler geworden' },
@@ -46,10 +45,6 @@ export const STORE: Record<string, { en: string; de: string }> = {
   'Ranks: President, Vice President, citizens, Vice Asshole, Asshole. With 3 players there are no vices.': {
     en: 'Ranks: President, Vice President, citizens, Vice Beggar, Beggar. With 3 players there are no vices.',
     de: 'Ränge: Präsident, Vizepräsident, Bürger, Vize-Bettler, Bettler. Zu dritt gibt es keine Vizes.',
-  },
-  'End of the round: the Asshole drinks 3, the Vice Asshole 2. The President hands out 3, the Vice President 2.': {
-    en: 'End of the round: the Beggar drinks 3, the Vice Beggar 2. The President hands out 3, the Vice President 2.',
-    de: 'Am Ende der Runde trinkt der Bettler 3, der Vize-Bettler 2. Der Präsident verteilt 3, der Vizepräsident 2.',
   },
   'Next round: the Asshole gives their 2 best cards to the President, the Vice Asshole their best one to the Vice President. They give any cards of their choice back.':
     {
@@ -184,14 +179,6 @@ export const STORE: Record<string, { en: string; de: string }> = {
   'Tipsy +2': { en: 'Bonus +2', de: 'Bonus +2' },
 
   /* ---------- Schweinerei, Who drinks?, Horse race ---------- */
-  'The pigs touch (about 1 throw in 100): every point you collected is gone, drink 2. One lands on top of the other: all your points are gone, drink up.': {
-    en: 'The pigs touch (about 1 throw in 100): every point you collected is gone, drink 2. One lands on top of the other: all your points are gone, drink 3.',
-    de: 'Berühren sich die Schweine (Sauhaufen, etwa jeder 100. Wurf): alle deine gesammelten Punkte sind weg, trink 2. Liegt eins auf dem anderen (Schweinerei): alle Punkte weg, trink 3.',
-  },
-  'One on top of the other: all your points are gone. Drink up!': {
-    en: 'One on top of the other: all your points are gone. Drink 3!',
-    de: 'Eins auf dem anderen: alle deine Punkte sind weg. Trink 3!',
-  },
   'Finish your drink!': { en: 'Drink 3!', de: 'Trink 3!' },
   'Waterfall – you start!': { en: 'Cheers round – you start, everyone drinks 1!', de: 'Prost-Runde – du fängst an, alle trinken 1!' },
   'Drink up': { en: 'Drink', de: 'Trinken' },

@@ -161,7 +161,7 @@ export default function CardGame<C>(props: CardGameProps<C>) {
               <button
                 key={m.id}
                 type="button"
-                className={`vt-pick${mode === m.id ? ' on' : ''}${m.mixed ? ' mixed' : ''}`}
+                className={`vt-pick ${m.id}${mode === m.id ? ' on' : ''}${m.mixed ? ' mixed' : ''}`}
                 aria-pressed={mode === m.id}
                 aria-label={m.label}
                 onClick={() => setMode(m.id)}

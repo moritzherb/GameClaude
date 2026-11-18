@@ -313,9 +313,9 @@ function Table({
   // With many, the arc comes down beside the middle too (but stays above the deck in the corner).
   const spots = seatArc(n, { cx, cy, rx: Math.max(0, cx - 46), ry: Math.max(0, cy - 30), from: n <= 2 ? 150 : n === 3 ? 166 : 186, maxY: size.h - (n >= 4 ? 124 : 30) });
   // The trick's cards as big as the table has room for.
-  const tw = Math.round(Math.max(52, Math.min(78, size.w * 0.19, size.h * 0.22)));
-  // The trick a little below the middle of the arc: between the others and you, not up by them.
-  const py = Math.min(cy + tw * 0.65, size.h - tw * 1.15);
+  const tw = Math.round(Math.max(60, Math.min(100, size.w * 0.24, size.h * 0.26)));
+  // The trick right in the middle of the table.
+  const py = Math.min(size.h * 0.5 + tw * 0.25, size.h - tw * 1.15);
   const spotOf = (seat: number) => {
     const k = order.indexOf(seat);
     return k >= 0 ? spots[k] : { x: cx, y: size.h + 60 };
@@ -323,13 +323,18 @@ function Table({
   const winnerId = g.taking != null ? g.trick.find((p) => p.seat === g.taking)?.card.id : undefined;
 
   return (
-    <div className="fz fill">
+    <div className="fz fill" style={g.trump ? ({ '--trump': `var(--${g.trump})` } as CSSProperties) : undefined}>
       <div className="fz-top">
         <span className="fz-round">{t('Round {n} of {m}', { n: g.round, m: g.rounds })}</span>
         <span className="fz-trump">
           {t('Trump')}: {trumpText}
         </span>
       </div>
+
+      {/* Whose move, up top; what you can do stays down by your hand. */}
+      <p className={`fz-status${myMove ? ' mine' : ''}`} aria-live="polite">
+        {status}
+      </p>
 
       <div className="fz-table-area" ref={table} style={{ '--cy': `${Math.round(cy)}px`, '--py': `${Math.round(py)}px`, '--tw': `${tw}px` } as CSSProperties}>
         {/* The others: who, their bid and tricks so far, their score; the tricks they took beside them. */}
@@ -399,14 +404,10 @@ function Table({
       {me >= 0 && (
         <div className="fz-mine">
           <Tricks n={g.won[me]} />
-          <span className="fz-mine-bid">{g.bids[me] == null ? t('No bid yet') : t('{won} of {bid} tricks', { won: g.won[me], bid: g.bids[me]! })}</span>
+          {g.bids[me] != null && <span className="fz-mine-bid">{t('{won} of {bid} tricks', { won: g.won[me], bid: g.bids[me]! })}</span>}
           <span className="fz-seat-score">{t('{n} pts', { n: g.scores[me] })}</span>
         </div>
       )}
-
-      <p className={`fz-status${myMove ? ' mine' : ''}`} aria-live="polite">
-        {status}
-      </p>
 
       {/* What you can do now, always the same height (so nothing below moves). */}
       <div className="fz-picks">
@@ -451,7 +452,8 @@ function Table({
           className={`fz-fan fz-hand${dealing ? ' dealing' : ''}${myMove ? ' hop' : ''}`}
           cards={shown}
           keyOf={(c) => c.id}
-          width={hand.length <= 8 ? 82 : hand.length <= 13 ? 70 : 60}
+          // Big, a little smaller as the rounds deal more cards (never by much).
+          width={Math.round(Math.max(84, 108 - Math.max(0, hand.length - 5) * 2))}
           ratio={1.5}
           sorted={sorted}
           onSort={toggleSort}

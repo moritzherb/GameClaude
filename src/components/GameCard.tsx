@@ -44,7 +44,7 @@ export default function GameCard({
         {tagline && <span className="ticket-tagline">{t(game.tagline)}</span>}
         <span className="ticket-meta">
           <span>{t('{n} players', { n: players })}</span>
-          <Intensity level={game.intensity} showLabel />
+          {game.intensity ? <Intensity level={game.intensity} showLabel /> : <span>{t('{from}–{to} min', { from: game.minutes?.[0] ?? 10, to: game.minutes?.[1] ?? 20 })}</span>}
           {/* Playable with several phones: the same small icon for every such game. */}
           {game.online && (
             <span className="ticket-phone" role="img" aria-label={t(game.phones ?? 'Every phone')} title={t(game.phones ?? 'Every phone')}>

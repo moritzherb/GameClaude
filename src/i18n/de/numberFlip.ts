@@ -11,17 +11,10 @@ const numberFlip: Record<string, string> = {
   'Once every flap above 6 is down, you may roll one die instead of two.': 'Sind alle Klappen über 6 unten, darfst du mit einem statt zwei Würfeln würfeln.',
   'No open flaps make the roll: your box is done. What’s still open adds up to your score. Lowest wins; all flaps down is perfect.':
     'Passen keine offenen Klappen zum Wurf, ist dein Kasten fertig. Was noch offen ist, ergibt deine Punkte. Die wenigsten gewinnen; alle Klappen unten ist perfekt.',
-  'Classic: highest score drinks 2. Shut the box, and everyone else drinks 2.': 'Klassisch: Die meisten Punkte trinken 2. Wer den Kasten ganz zumacht: Alle anderen trinken 2.',
-  'Tournament (5 or 10 rounds): scores add up, highest total drinks 3. Survival: 3 lives, the round’s highest loses one. Daily challenge: the same dice for everyone today. Time attack: 45 seconds per box.':
-    'Turnier (5 oder 10 Runden): Punkte zählen zusammen, die meisten trinken am Ende 3. Überleben: 3 Leben, die meisten Punkte einer Runde kosten eins. Tages-Challenge: heute für alle dieselben Würfel. Zeitrennen: 45 Sekunden pro Kasten.',
   Tournament: 'Turnier',
   Survival: 'Überleben',
   'Daily challenge': 'Tages-Challenge',
   'Time attack': 'Zeitrennen',
-  'Everyone plays one box a round. Lowest score wins the round, highest drinks 2.': 'Jeder spielt pro Runde einen Kasten. Die wenigsten Punkte gewinnen, die meisten trinken 2.',
-  'Scores add up over the rounds. Lowest total wins; highest total drinks 3 at the end.': 'Die Punkte zählen über alle Runden. Die wenigsten gewinnen, die meisten trinken am Ende 3.',
-  '3 lives each. The highest score of a round loses one and drinks 1. Last one standing wins.':
-    'Jeder hat 3 Leben. Die meisten Punkte einer Runde kosten ein Leben und 1 Schluck. Wer übrig bleibt, gewinnt.',
   'Today’s dice, the same for everyone who plays today. One box each: beat the others, and your best.':
     'Die Würfel von heute, für alle gleich, die heute spielen. Ein Kasten pro Person: Schlag die anderen und deinen Bestwert.',
   '45 seconds for your whole box. Whatever is still open when time runs out counts.': '45 Sekunden für deinen ganzen Kasten. Was offen ist, wenn die Zeit um ist, zählt.',
@@ -47,12 +40,7 @@ const numberFlip: Record<string, string> = {
   'Round {n} of {of}': 'Runde {n} von {of}',
   'Daily challenge · {date}': 'Tages-Challenge · {date}',
   '{name}’s box': '{name}s Kasten',
-  '{names}: lose a life and drink 1': '{names}: verliert ein Leben und trinkt 1',
   'All level: nobody loses a life': 'Alle gleich: Niemand verliert ein Leben',
-  '{names}: highest total, drink 3': '{names}: die meisten Punkte, trink 3',
-  '{names} shut the box: everyone else drinks 2': '{names} hat den Kasten zu: Alle anderen trinken 2',
-  '{names}: highest score, drink 2': '{names}: die meisten Punkte, trink 2',
-  'All level: nobody drinks': 'Alle gleich: Niemand trinkt',
   '{n} left open': '{n} offen geblieben',
   'A tie!': 'Unentschieden!',
   'Lowest this round: {names}': 'Am wenigsten diese Runde: {names}',
@@ -65,6 +53,16 @@ const numberFlip: Record<string, string> = {
   'Normal: any open flaps that add up.': 'Normal: alle offenen Klappen, die zusammen passen.',
   'Roll, then flip flaps that add up to the dice': 'Würfle, dann leg Klappen um, die zusammen die Augen ergeben',
   '{n} still open': 'Noch {n} offen',
+  'Classic: the round’s lowest score wins. Shut the box and you win it outright.': 'Klassisch: Die niedrigste Punktzahl gewinnt die Runde. Wer alle Klappen schließt, gewinnt sie sofort.',
+  'Tournament (5 or 10 rounds): scores add up, lowest total wins. Survival: 3 lives, the round’s highest loses one. Daily challenge: the same dice for everyone today. Time attack: 45 seconds per box.': 'Turnier (5 oder 10 Runden): Die Punkte zählen zusammen, die niedrigste Summe gewinnt. Überleben: 3 Leben, der Höchste der Runde verliert eins. Tageschallenge: heute für alle dieselben Würfel. Zeitangriff: 45 Sekunden pro Kasten.',
+  'Everyone plays one box a round. Lowest score wins the round.': 'Jeder spielt einen Kasten pro Runde. Die niedrigste Punktzahl gewinnt die Runde.',
+  'Scores add up over the rounds. Lowest total wins.': 'Die Punkte zählen über alle Runden. Die niedrigste Summe gewinnt.',
+  '3 lives each. The highest score of a round loses one. Last one standing wins.': 'Jeder hat 3 Leben. Die höchste Punktzahl einer Runde verliert eins. Wer übrig bleibt, gewinnt.',
+  '{names}: lose a life': '{names}: verliert ein Leben',
+  '{names}: highest total': '{names}: höchste Summe',
+  '{names} shut the box and win the round': '{names} schließt alle Klappen und gewinnt die Runde',
+  '{names}: highest score this round': '{names}: höchste Punktzahl dieser Runde',
+  'All level': 'Alle gleichauf',
 };
 
 export default numberFlip;

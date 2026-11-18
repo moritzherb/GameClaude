@@ -51,6 +51,10 @@ const ratScrew: Record<string, string> = {
   '{name}: {n} cards': '{name}: {n} Karten',
   '{n} cards in the middle': '{n} Karten in der Mitte',
   'Wrong slap': 'Falsch gehauen',
+  '{name} slapped': '{name} hat gehauen',
+  'Nothing to slap: a card to the other player': 'Nichts zum Hauen: eine Karte an den anderen',
+  'Nothing to slap: a card to each of the others': 'Nichts zum Hauen: eine Karte an jeden anderen',
+  'Slapped wrong without cards': 'Ohne Karten falsch gehauen',
   '{name} is out': '{name} ist raus',
   '{name} takes it': '{name} nimmt ihn',
 };

@@ -32,9 +32,18 @@ export type ToNative =
   | { type: 'exit' }
   /** Start the page again (after a backup was brought in). */
   | { type: 'reload' }
-  | { type: 'ready' };
+  | { type: 'ready' }
+  /** Open this app's page in the phone's settings (language, notifications). */
+  | { type: 'settings' }
+  /** Ask for a rating in the App Store or Google Play. */
+  | { type: 'review' }
+  /** Change the app's icon on the home screen (null: the first one). */
+  | { type: 'icon'; name: string | null };
 
-export type FromNative = { type: 'back' } | { type: 'ads'; privacyOptions: boolean };
+export type FromNative =
+  | { type: 'back' }
+  | { type: 'ads'; privacyOptions: boolean }
+  | { type: 'icon'; supported: boolean; current: string | null };
 
 declare global {
   interface Window {
@@ -92,9 +101,13 @@ export function goBack(home: boolean) {
   return 'history';
 }
 
+/** The app's icon on the home screen (store app): whether it can change, and which one shows. */
+export let appIcon: { supported: boolean; current: string | null } = { supported: false, current: null };
+
 if (isNative) {
   window.__prostNative = (msg) => {
     if (msg.type === 'ads') privacyOptions = msg.privacyOptions;
+    if (msg.type === 'icon') appIcon = { supported: msg.supported, current: msg.current };
     if (msg.type === 'back') {
       const hash = window.location.hash.replace(/^#/, '');
       goBack(hash === '' || hash === '/');

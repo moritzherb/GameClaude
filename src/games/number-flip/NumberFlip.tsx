@@ -62,9 +62,9 @@ interface Setup {
 }
 
 const MODE_INFO: Record<Mode, { name: string; text: string; icon: GlyphName }> = {
-  classic: { name: tx('Classic'), text: tx('Everyone plays one box a round. Lowest score wins the round, highest drinks 2.'), icon: 'dice' },
-  tournament: { name: tx('Tournament'), text: tx('Scores add up over the rounds. Lowest total wins; highest total drinks 3 at the end.'), icon: 'trophy' },
-  survival: { name: tx('Survival'), text: tx('3 lives each. The highest score of a round loses one and drinks 1. Last one standing wins.'), icon: 'heart' },
+  classic: { name: tx('Classic'), text: tx('Everyone plays one box a round. Lowest score wins the round.'), icon: 'dice' },
+  tournament: { name: tx('Tournament'), text: tx('Scores add up over the rounds. Lowest total wins.'), icon: 'trophy' },
+  survival: { name: tx('Survival'), text: tx('3 lives each. The highest score of a round loses one. Last one standing wins.'), icon: 'heart' },
   daily: { name: tx('Daily challenge'), text: tx('Today’s dice, the same for everyone who plays today. One box each: beat the others, and your best.'), icon: 'calendar' },
   time: { name: tx('Time attack'), text: tx('45 seconds for your whole box. Whatever is still open when time runs out counts.'), icon: 'timer' },
 };
@@ -597,9 +597,9 @@ function RoundEnd({
 
   const names = (ids: string[]) => ids.map((id) => byId(id).name).join(', ');
   let drinks = '';
-  if (setup.mode === 'survival') drinks = worst.length ? t('{names}: lose a life and drink 1', { names: names(worst) }) : t('All level: nobody loses a life');
-  else if (setup.mode === 'tournament') drinks = last && final?.worst.length ? t('{names}: highest total, drink 3', { names: names(final.worst) }) : '';
-  else if (!solo) drinks = shut.length ? t('{names} shut the box: everyone else drinks 2', { names: names(shut) }) : worst.length ? t('{names}: highest score, drink 2', { names: names(worst) }) : t('All level: nobody drinks');
+  if (setup.mode === 'survival') drinks = worst.length ? t('{names}: lose a life', { names: names(worst) }) : t('All level: nobody loses a life');
+  else if (setup.mode === 'tournament') drinks = last && final?.worst.length ? t('{names}: highest total', { names: names(final.worst) }) : '';
+  else if (!solo) drinks = shut.length ? t('{names} shut the box and win the round', { names: names(shut) }) : worst.length ? t('{names}: highest score this round', { names: names(worst) }) : t('All level');
 
   const next = () =>
     setM((x) =>

@@ -170,7 +170,7 @@ function MaexchenTable({
   return (
     <div className="mx fill">
       {decided && <Finished game="maexchen" />}
-      {/* Who drinks how much stays up even on a clean table (class verdict). */}
+      {/* Who lost the round stays up even on a clean table (class verdict). */}
       <div className={`mx-status${r.phase === 'reveal' && r.verdict ? ' verdict' : ''}`}>
         <div className="bd-player">
           <span className="bd-avatar" style={{ background: who.color }}>
@@ -179,11 +179,7 @@ function MaexchenTable({
           <span className="bd-player-text">
             <span className="bd-player-name">{who.name}</span>
             <span className="bd-player-sub">
-              {r.phase === 'reveal' && r.verdict
-                ? r.verdict.sips === 1
-                  ? t('drinks 1 sip')
-                  : t('drinks {n} sips', { n: r.verdict.sips })
-                : t('your turn')}
+              {r.phase === 'reveal' && r.verdict ? t('loses the round') : t('your turn')}
             </span>
           </span>
         </div>

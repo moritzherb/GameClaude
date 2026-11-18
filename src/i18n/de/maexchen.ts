@@ -13,10 +13,6 @@ const maexchen: Record<string, string> = {
     'Hast du reingeschaut, darfst du noch einmal schütteln, blind: Dann darfst du nicht mehr reinschauen und musst trotzdem etwas ansagen.',
   'The next player believes it and shakes again (and has to announce even higher), or lifts the cup.':
     'Der Nächste glaubt es und schüttelt neu (und muss noch höher ansagen), oder er hebt den Becher.',
-  'Lifted: if the dice show at least what was announced, the one who lifted drinks. If not, the liar drinks.':
-    'Aufgedeckt: Zeigen die Würfel mindestens das Angesagte, trinkt der, der aufgedeckt hat. Sonst trinkt der Lügner.',
-  'A Mäxchen can’t be beaten, so the next player has to lift the cup. Whoever is wrong drinks 2.':
-    'Ein Mäxchen kann man nicht schlagen, also muss der Nächste aufdecken. Wer falsch liegt, trinkt 2.',
   'Whoever drank starts the next round.': 'Wer getrunken hat, beginnt die nächste Runde.',
 
   // Setup
@@ -28,8 +24,6 @@ const maexchen: Record<string, string> = {
   'Announce, or shake once more blind': 'Ansagen, oder nochmal blind schütteln',
   'believe it or lift the cup?': 'glauben oder aufdecken?',
   'Mäxchen: you have to lift the cup': 'Mäxchen: du musst aufdecken',
-  'drinks 1 sip': 'trinkt 1 Schluck',
-  'drinks {n} sips': 'trinkt {n} Schlucke',
   'Tap the cup to shake': 'Becher antippen zum Schütteln',
   'Hold the cup to look under it': 'Becher gedrückt halten zum Reinschauen',
   'Hand the phone to {name}': 'Gib das Handy an {name}',
@@ -61,6 +55,9 @@ const maexchen: Record<string, string> = {
   'Low to high: 31 … 65, then the doubles, then the Mäxchen (21).': 'Von klein nach groß: 31 … 65, dann die Päsche, dann das Mäxchen (21).',
   'Pick a value': 'Wert wählen',
   'Announce {value}': '{value} ansagen',
+  'Lifted: if the dice show at least what was announced, the one who lifted loses the round. If not, the liar loses it.': 'Aufgedeckt: Zeigen die Würfel mindestens das Angesagte, verliert, wer aufgedeckt hat. Sonst verliert der Lügner.',
+  'A Mäxchen can’t be beaten, so the next player has to lift the cup.': 'Ein Mäxchen ist nicht zu schlagen, also muss der Nächste aufdecken.',
+  'loses the round': 'verliert die Runde',
 };
 
 export default maexchen;

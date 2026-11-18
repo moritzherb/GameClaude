@@ -8,34 +8,20 @@
  */
 
 /** The ground colour of each look (light, dark): the browser's bar and the strip under the clock take it. */
-export const GROUND = { pop: ['#f2f2f7', '#262624'], classic: ['#f1ede3', '#10110e'] } as const;
+export const GROUND = ['#f2f2f7', '#262624'] as const;
 
 /** Light or dark chosen in Settings (null: as the phone is). */
 let forced: 'light' | 'dark' | null = null;
-let pair: [string, string] = [GROUND.pop[0], GROUND.pop[1]];
+let pair: [string, string] = [GROUND[0], GROUND[1]];
 /** Colours laid over the top of the screen, oldest first. */
 const layers: { color: string }[] = [];
 /** The start-up screen's colour while it lies over everything (null once it's gone). */
 let cover: string | null = null;
 
-/**
- * The classic look lays a fine film grain over the whole page (global.css body::after): on average it
- * darkens a light page and lightens a dark one a touch. The strip takes the same average, so the two
- * meet without an edge. The grain tile's own numbers: 3.47 % of it covers, in a grey averaging 4.44.
- */
-const GRAIN_COVER = 0.03472;
-const GRAIN_GREY = 4.4438;
-function grained(css: string): string {
-  const c = parseColor(css);
-  if (!c) return css;
-  return hexOf([0, 1, 2].map((i) => GRAIN_GREY + c[i] * (1 - GRAIN_COVER)));
-}
-
 function paint() {
   if (typeof document === 'undefined') return;
   const laid = cover ?? layers[layers.length - 1]?.color;
-  // Under the grain (everything but the start-up screen, which lies over it).
-  const top = !cover && document.documentElement.dataset.look === 'classic' ? grained(laid ?? ground()) : laid;
+  const top = laid;
   const edge = document.querySelector<HTMLElement>('.top-edge');
   if (edge) {
     edge.style.backgroundColor = top ?? '';

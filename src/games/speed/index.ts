@@ -4,13 +4,14 @@ import Speed from './Speed';
 
 const speed: GameDefinition = {
   id: 'speed',
+  table: 'full',
   name: tx('Speed'),
   emoji: '⚡',
   tagline: tx('A duel for two. Fastest hands win.'),
   color: 'var(--c-indigo)',
   categories: ['cards', 'quick'],
   minPlayers: 2,
-  intensity: 1,
+  minutes: [3, 5],
   explains: true,
   needs: [tx('A phone for each player')],
   rules: [

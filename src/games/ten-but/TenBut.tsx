@@ -11,7 +11,7 @@ const lead = (who: string) => (who === 'she' ? t('She’s a 10, but …') : t('H
 /** The statement, big: nothing to vote, just to talk about. */
 function Card({ round }: { round: Round }) {
   return (
-    <div className="vt-card tn-card">
+    <div className={`vt-card tn-card ${round.who === 'she' ? 'she' : 'he'}`}>
       <span className="vt-card-emoji" aria-hidden="true">
         <Glyph name={ICON[round.who] ?? 'people'} />
       </span>

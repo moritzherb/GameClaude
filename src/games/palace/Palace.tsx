@@ -304,64 +304,29 @@ function turnText(view: PhoneView) {
 /* ---------------- The table (host's phone) ---------------- */
 
 function TableView({ view }: { view: PhoneView }) {
-  const photoOf = usePhotoOf();
-  const last = view.log.at(-1);
   const { fresh, ghost } = usePileFx(view);
+  // The table phone shows the stock and the pile, nothing else: the bar keeps just its X.
+  useEffect(() => {
+    document.documentElement.classList.add('table-phone');
+    return () => document.documentElement.classList.remove('table-phone');
+  }, []);
   return (
     <div className="pl pl-table fill">
-      <div className="pl-seats" style={{ '--cols': view.seats.length <= 3 ? view.seats.length : view.seats.length === 4 ? 2 : 3 } as CSSProperties}>
-        {view.seats.map((s, i) => {
-          const side = view.sides[i];
-          return (
-            <div
-              key={s.id}
-              className={`pl-seat${i === view.turn && view.phase === 'play' ? ' turn' : ''}${view.winner === i ? ' won' : ''}`}
-              style={{ '--chip': s.color } as CSSProperties}
-            >
-              <div className="pl-seat-head">
-                <span className="pl-seat-avatar"><Avatar name={s.name} color={s.color} photo={photoOf(s.id)} /></span>
-                <span className="pl-seat-name">{s.name}</span>
-                {i === view.dealer && <span className="pl-dealer">{t('D')}</span>}
-              </div>
-              <Palace3 up={side.up} down={side.down} />
-              <span className="pl-seat-hand">
-                {view.phase === 'setup' ? (side.ready ? t('Ready') : t('Choosing…')) : t('{n} in hand', { n: side.hand })}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
       <section className="pl-felt">
         <div className="pl-felt-row">
           <div className="pl-heap">
             <div className="pl-stack">{view.stock > 0 ? <span className="pcard-face pcard-back" /> : <span className="pl-empty" />}</div>
-            <span className="pl-heap-label">{t('Stock · {n}', { n: view.stock })}</span>
           </div>
           <div className="pl-heap main">
             <Pile cards={view.pile} fresh={fresh} ghost={ghost} />
-            <span className="pl-heap-label">{t('Pile · {n}', { n: view.pileCount })}</span>
           </div>
         </div>
-        <span className="pl-need">{view.phase === 'setup' ? t('Everyone picks their face-up cards') : needText(view.need)}</span>
-        {view.burned > 0 && <span className="pl-burned">{t('Cleared away: {n}', { n: view.burned })}</span>}
         {ghost?.kind === 'burn' && (
           <span key={ghost.id} className="pl-flash">
             <Glyph name="fire" /> {t('Cleared!')}
           </span>
         )}
       </section>
-
-      <div className="pl-status">
-        <span className="pl-status-text">{view.phase === 'setup' ? t('Choose your face-up cards on your phone') : turnText(view)}</span>
-        {last ? (
-          <span key={view.log.length + JSON.stringify(last)} className="pl-last pop-in">
-            {entryText(last, view)}
-          </span>
-        ) : (
-          <span className="pl-last" />
-        )}
-      </div>
     </div>
   );
 }
@@ -563,6 +528,8 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
 
   const tap = (c: Card) => {
     if (!myTurn) return;
+    // A chosen card tapped again: play what's chosen (as in Color Clash and Trash).
+    if (selFits && sel.some((y) => same(y, c))) return play();
     if (!ok(c)) {
       buzz([30, 30, 30]);
       return;
@@ -580,9 +547,8 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
     setSel([]);
     act(a);
   };
-  const play = () => {
-    if (!selFits || leaving.length) return;
-    const cards = sel;
+  const play = (cards = sel) => {
+    if (!cards.length || !fits(view.need, cards[0].value, cards.length) || leaving.length) return;
     setLeaving(cards);
     setSel([]);
     window.setTimeout(() => act({ t: 'play', cards }), 220);
@@ -602,11 +568,11 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
 
   return (
     <div className={`pl pl-player fill${view.tableless ? ' tableless' : ''}`}>
-      {view.tableless && <Opponents view={view} />}
+      <Opponents view={view} />
       {view.tableless && <MiniTable view={view} />}
       <div className={`pl-status${myTurn ? ' mine' : ''}`}>
         <div className="pl-status-top">
-          <span className="pl-mini" key={top ? `${top.value}${top.suit}` : 'empty'}>
+          <span className="pl-mini pl-drop" key={top ? `${top.value}${top.suit}` : 'empty'}>
             {top ? <CardFace card={top} /> : <span className="pl-empty" />}
           </span>
           <span className="pl-status-need">
@@ -637,6 +603,15 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
         isLeaving={isLeaving}
         isDim={myTurn && zone === 'hand' ? (c) => !ok(c) : undefined}
         onTap={zone === 'hand' ? tap : undefined}
+        onDrop={
+          zone === 'hand' && myTurn
+            ? (c) => {
+                // Dragged onto the pile: the chosen cards go, or just this one (and its like, if only four fit).
+                const cards = sel.some((y) => same(y, c)) ? sel : fits(view.need, c.value) ? [c] : from.filter((y) => y.value === c.value);
+                play(cards);
+              }
+            : undefined
+        }
         empty={zone === 'up' ? t('Hand empty: play your face-up cards') : zone === 'down' ? t('Hand empty: play your face-down cards, blind') : undefined}
       />
 
@@ -649,13 +624,9 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
           !known && <p className="pl-hint">{t('Tap one of your face-down cards. If it doesn’t fit, you take the pile.')}</p>
         ) : myTurn ? (
           <div className="pl-action-row">
-            {can ? (
-              <BigButton disabled={!selFits || leaving.length > 0} onClick={play}>
-                {selFits ? t('Play {cards}', { cards: group(sel) }) : t('Pick cards')}
-              </BigButton>
-            ) : (
+            {!can && (
               <BigButton variant="danger" onClick={() => send({ t: 'take' })}>
-                {t('Take the pile ({n})', { n: view.pileCount })}
+                {t('Take the pile')}
               </BigButton>
             )}
             {/* Risking is always allowed while the stock lasts: keep your good cards. */}
@@ -666,7 +637,9 @@ function PlayerView({ view, act, connected }: { view: PhoneView; act: (a: Act) =
             )}
           </div>
         ) : null}
-        {myTurn && can && zone !== 'down' && !selFits && !known && <p className="pl-hint">{t('Pick one or more cards of one value')}</p>}
+        {myTurn && can && zone !== 'down' && !known && (
+          <p className="pl-hint">{selFits ? t('Tap them again or drag them onto the pile') : t('Pick one or more cards of one value')}</p>
+        )}
         {myTurn && !can && zone === 'hand' && view.stock > 0 && !known && (
           <p className="pl-hint">{t('Risk it: the top card of the stock goes on the pile. If it doesn’t fit, you take the pile and that card.')}</p>
         )}
@@ -761,11 +734,9 @@ function MiniTable({ view }: { view: PhoneView }) {
       <div className="pl-felt-row">
         <div className="pl-heap">
           <div className="pl-stack">{view.stock > 0 ? <span className="pcard-face pcard-back" /> : <span className="pl-empty" />}</div>
-          <span className="pl-heap-label">{view.stock}</span>
         </div>
-        <div className="pl-heap main">
+        <div className="pl-heap main pl-drop">
           <Pile cards={view.pile} fresh={fresh} ghost={ghost} />
-          <span className="pl-heap-label">{view.pileCount}</span>
         </div>
         <span className="pl-need">{needText(view.need)}</span>
       </div>
@@ -788,6 +759,7 @@ export function HandSpread({
   isLeaving,
   isDim,
   onTap,
+  onDrop,
   empty,
 }: {
   cards: Card[];
@@ -795,9 +767,14 @@ export function HandSpread({
   isLeaving?: (c: Card) => boolean;
   isDim?: (c: Card) => boolean;
   onTap?: (c: Card) => void;
+  /** A card dragged onto the pile (an element marked .pl-drop). */
+  onDrop?: (c: Card) => void;
   empty?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // A card held by a finger: where it went (a tap if it hardly moved).
+  const [drag, setDrag] = useState<{ key: string; x: number; y: number; dx: number; dy: number; id: number } | null>(null);
+  const moved = useRef(false);
   const [box, setBox] = useState({ w: 320, h: 220 });
   useLayoutEffect(() => {
     const el = ref.current;
@@ -852,6 +829,8 @@ export function HandSpread({
         const drop = fan ? ((col - mid) / mid) ** 2 * cw * 0.08 : 0;
         const sel = isSelected?.(c) ?? false;
         const gone = isLeaving?.(c) ?? false;
+        const k = `${c.value}${c.suit}`;
+        const held = drag?.key === k && (Math.abs(drag.dx) > 8 || Math.abs(drag.dy) > 8) ? drag : null;
         return (
           <button
             key={`${c.value}${c.suit}`}
@@ -863,13 +842,44 @@ export function HandSpread({
               {
                 '--cw': `${cw}px`,
                 // Placed with transform only (not left/top): moving cards slide without laying out the hand again.
-                transform: `translate(${left}px, ${top0 + row * shift}px) ${gone ? `translateY(${-ch * 0.9}px) scale(0.85)` : `translateY(${sel ? -LIFT : drop}px) rotate(${angle}deg)`}`,
+                transform: held
+                  ? `translate(${left + held.dx}px, ${top0 + row * shift + held.dy}px) scale(1.06)`
+                  : `translate(${left}px, ${top0 + row * shift}px) ${gone ? `translateY(${-ch * 0.9}px) scale(0.85)` : `translateY(${sel ? -LIFT : drop}px) rotate(${angle}deg)`}`,
                 opacity: gone ? 0 : undefined,
-                zIndex: i + 1,
+                zIndex: held ? 99 : i + 1,
+                transition: held ? 'none' : undefined,
               } as CSSProperties
             }
             disabled={!onTap}
-            onClick={() => onTap?.(c)}
+            onPointerDown={(e) => {
+              if (!onDrop) return;
+              moved.current = false;
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+              setDrag({ key: k, x: e.clientX, y: e.clientY, dx: 0, dy: 0, id: e.pointerId });
+            }}
+            onPointerMove={(e) => {
+              if (!drag || drag.id !== e.pointerId) return;
+              const dx = e.clientX - drag.x;
+              const dy = e.clientY - drag.y;
+              if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved.current = true;
+              setDrag({ ...drag, dx, dy });
+            }}
+            onPointerUp={(e) => {
+              if (!drag || drag.id !== e.pointerId) return;
+              setDrag(null);
+              if (!moved.current) return;
+              const under = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el.closest('.pl-drop'));
+              if (under) onDrop?.(c);
+            }}
+            onPointerCancel={() => setDrag(null)}
+            onClick={() => {
+              // A drag isn't a tap.
+              if (moved.current) {
+                moved.current = false;
+                return;
+              }
+              onTap?.(c);
+            }}
             aria-label={cardName(c)}
           >
             <CardFace card={c} />

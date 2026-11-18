@@ -13,11 +13,8 @@ import Glyph from '../../components/Glyph';
 export default function WhoDrinks({ players }: GameProps) {
   const [highlight, setHighlight] = useState<number | null>(null);
   const [result, setResult] = useState<{ index: number; fate: string } | null>(null);
-  // Sips per player id, for the counter on each name.
-  const [drunk, setDrunk] = useState<Record<string, number>>({});
-  // The name just counted up, for a little bump.
-  const [bumped, setBumped] = useState<{ id: string; n: number } | null>(null);
-  const addSips = (sips: Record<string, number>) => setDrunk((d) => Object.fromEntries(players.map((p) => [p.id, (d[p.id] ?? 0) + (sips[p.id] ?? 0)])));
+  // Counted as a game from the first spin on.
+  const [spun, setSpun] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const timer = useRef<number>(undefined);
 
@@ -39,7 +36,7 @@ export default function WhoDrinks({ players }: GameProps) {
         setSpinning(false);
         const fate = spinFate(winner, players.length);
         setResult({ index: winner, fate: fate.text });
-        addSips(Object.fromEntries(players.map((p, i) => [p.id, fate.sips[i]])));
+        setSpun(true);
         celebrate();
         return;
       }
@@ -55,7 +52,7 @@ export default function WhoDrinks({ players }: GameProps) {
   return (
     <div className="who-drinks">
       {/* Spins go on and on: the game counts from its first spin on. */}
-      {Object.keys(drunk).length > 0 && <Finished game="who-drinks" />}
+      {spun && <Finished game="who-drinks" />}
       {winner && result ? (
         <div className="result-card pop-in" style={{ '--chip': winner.color } as CSSProperties}>
           <div className="result-avatar wobble"><Avatar name={winner.name} color={winner.color} photo={winner.photo} /></div>
@@ -67,40 +64,22 @@ export default function WhoDrinks({ players }: GameProps) {
           <span className="who-drinks-hint-emoji">
             <Glyph name={spinning ? 'shuffle' : 'eye'} />
           </span>
-          {spinning ? t('Rolling…') : t('Who’s gonna drink?')}
+          {spinning ? t('Rolling…') : t('Who drinks?')}
         </div>
       )}
 
       <div className="spin-grid">
-        {players.map((p, i) => {
-          const n = drunk[p.id] ?? 0;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              className={`spin-chip${highlight === i ? ' lit' : ''}${result?.index === i ? ' chosen' : ''}`}
-              style={{ '--chip': p.color } as CSSProperties}
-              disabled={spinning}
-              aria-label={t('{name}: {n} sips so far. Tap to add one.', { name: p.name, n })}
-              onClick={() => {
-                // Sips the wheel can't know (handed out, lost a little game): tap the name.
-                sfx.tick();
-                buzz(8);
-                addSips({ [p.id]: 1 });
-                setBumped({ id: p.id, n: n + 1 });
-              }}
-            >
-              <span className="spin-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
-              <FitText className="spin-chip-name">{p.name}</FitText>
-              {/* The drink counter, bottom right. */}
-              <span key={bumped?.id === p.id ? bumped.n : 'n'} className={`spin-chip-count${n ? '' : ' zero'}${bumped?.id === p.id ? ' bump' : ''}`}>
-                {n}
-              </span>
-            </button>
-          );
-        })}
+        {players.map((p, i) => (
+          <div
+            key={p.id}
+            className={`spin-chip${highlight === i ? ' lit' : ''}${result?.index === i ? ' chosen' : ''}`}
+            style={{ '--chip': p.color } as CSSProperties}
+          >
+            <span className="spin-chip-avatar"><Avatar name={p.name} color={p.color} photo={p.photo} /></span>
+            <FitText className="spin-chip-name">{p.name}</FitText>
+          </div>
+        ))}
       </div>
-      <p className="fine-print center">{t('Tap a name to count a sip.')}</p>
 
       <div className="sticky-action">
         <BigButton size="xl" onClick={spin} disabled={spinning}>

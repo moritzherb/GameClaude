@@ -1,6 +1,8 @@
 import Constants from 'expo-constants';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
+import * as StoreReview from 'expo-store-review';
+import { getAppIconName, setAlternateAppIcon, supportsAlternateIcons } from 'expo-alternate-app-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, BackHandler, KeyboardAvoidingView, Linking, Platform, Share, StyleSheet, useColorScheme, View } from 'react-native';
@@ -119,6 +121,21 @@ function Shell() {
           SplashScreen.hide();
           setShown(true);
           send({ type: 'ads', privacyOptions: ads.privacyOptions });
+          send({ type: 'icon', supported: supportsAlternateIcons, current: getAppIconName() });
+          break;
+        case 'settings':
+          void Linking.openSettings().catch(() => {});
+          break;
+        case 'review':
+          // The phone's own rating sheet; where it isn't offered, the store page.
+          void StoreReview.hasAction()
+            .then((can) => (can ? StoreReview.requestReview() : Linking.openURL(StoreReview.storeUrl() ?? WEB_URL)))
+            .catch(() => {});
+          break;
+        case 'icon':
+          void setAlternateAppIcon(typeof msg.name === 'string' ? msg.name : null)
+            .then((current) => send({ type: 'icon', supported: true, current }))
+            .catch(() => {});
           break;
         case 'haptic':
           if (Array.isArray(msg.pattern)) playPattern(msg.pattern);

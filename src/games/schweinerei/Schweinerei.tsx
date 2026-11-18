@@ -10,7 +10,7 @@ import { useCrewButton, usePlaying, useTurnBubble } from '../../lib/turn';
 import { useApp } from '../../state/AppState';
 import type { GameProps } from '../types';
 import Pig from './Pigs';
-import { bank, BONUSES, loserSips, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
+import { bank, BONUSES, newGame, nextPlayer, play, TARGET, throwPigs, type Game, type Pose, type Throw } from './logic';
 import Finished from '../../components/Finished';
 import Avatar from '../../components/Avatar';
 import Glyph from '../../components/Glyph';
@@ -607,16 +607,14 @@ function Table({ g, setG, players, known }: { g: Game; setG: (g: Game) => void; 
             {g.bonusNow && <span className="sw-result-bonus">{t('Bonus throw! {what}: +{n}', { what: bonusLabel(g.bonus.target), n: BONUSES[g.bonus.target].points })}</span>}
             <span className="sw-result-sub">
               {th.kind === 'score'
-                ? th.gives
-                  ? t('+{n} · give out {s} sips', { n: th.points, s: th.gives })
-                  : t('+{n}', { n: th.points })
+                ? t('+{n}', { n: th.points })
                 : th.kind === 'pig-out'
                   ? g.freeThrow
                     ? t('First throw: 0 points, throw again.')
-                    : t('This turn’s points are gone. Drink 1.')
+                    : t('This turn’s points are gone.')
                   : th.kind === 'touch'
-                    ? t('The pigs touch: all your points are gone. Drink 2.')
-                    : t('One on top of the other: all your points are gone. Drink up!')}
+                    ? t('The pigs touch: all your points are gone.')
+                    : t('One on top of the other: all your points are gone.')}
             </span>
           </div>
         )}
@@ -665,25 +663,23 @@ function Finish({ g, players, onAgain, exit }: { g: Game; players: GameProps['pl
           <Pig pose="side" />
         </span>
         <h2 className="bd-title big">{t('{name} wins!', { name: winner.name })}</h2>
-        <p className="lead">{t('Everyone else drinks a sip for every 10 points they’re short.')}</p>
+        <p className="lead">{t('The others, by how close they came.')}</p>
       </div>
       <section className="panel">
-        <h3 className="section-title">{t('Drink up')}</h3>
+        <h3 className="section-title">{t('Scores')}</h3>
         <div className="ftd-tally">
           {players
             .map((p, i) => ({ p, s: g.scores[i], i }))
             .filter(({ i }) => i !== g.winner)
-            .sort((a, b) => a.s - b.s)
+            .sort((a, b) => b.s - a.s)
             .map(({ p, s }) => {
-              const n = loserSips(s);
               return (
                 <div key={p.id} className="ftd-tally-row">
                   <span className="bd-avatar xs" style={{ background: p.color }}>
                     <Avatar name={p.name} color={p.color} photo={p.photo} />
                   </span>
                   <span className="ftd-tally-name">{p.name}</span>
-                  <span className="sw-final">{s}</span>
-                  <span className="ftd-tally-num">{n === 1 ? t('1 sip') : t('{n} sips', { n })}</span>
+                  <span className="ftd-tally-num">{t('{n} points', { n: s })}</span>
                 </div>
               );
             })}

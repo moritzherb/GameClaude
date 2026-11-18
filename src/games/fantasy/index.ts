@@ -12,7 +12,7 @@ const spellbound: GameDefinition = {
   categories: ['cards'],
   minPlayers: MIN_PLAYERS,
   maxPlayers: MAX_PLAYERS,
-  intensity: 1,
+  minutes: [30, 60],
   explains: true,
   table: 'full',
   needs: [tx('Every player’s phone')],

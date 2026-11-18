@@ -8,15 +8,10 @@ const president: Record<string, string> = {
     'In der ersten Runde fängt an, wer die Kreuz 7 hat. Danach fängt das Arschloch an.',
   'Lead one card or several of the same value. Then, in turn, play as many cards of a higher value, or pass.':
     'Leg eine Karte oder mehrere gleiche aus. Reihum legt man dann gleich viele Karten mit höherem Wert, oder passt.',
-  'Passing costs a sip. You may still play on your next turn.': 'Passen kostet einen Schluck. Beim nächsten Mal darfst du wieder legen.',
-  'Once everyone else has passed, the trick is closed: whoever played last hands out a sip and leads. An Ace closes the trick right away.':
-    'Haben alle anderen gepasst, ist der Stich zu: Wer zuletzt gelegt hat, verteilt einen Schluck und kommt raus. Ein Ass macht den Stich sofort zu.',
   'Out of cards: you’re out, the earlier the better. The last one with cards is the Asshole.':
     'Keine Karten mehr: Du bist raus, je früher desto besser. Wer als Letzter noch Karten hat, ist das Arschloch.',
   'Ranks: President, Vice President, citizens, Vice Asshole, Asshole. With 3 players there are no vices.':
     'Ränge: Präsident, Vizepräsident, Bürger, Vize-Arschloch, Arschloch. Zu dritt gibt es keine Vizes.',
-  'End of the round: the Asshole drinks 3, the Vice Asshole 2. The President hands out 3, the Vice President 2.':
-    'Am Ende der Runde trinkt das Arschloch 3, das Vize-Arschloch 2. Der Präsident verteilt 3, der Vizepräsident 2.',
   'Next round: the Asshole gives their 2 best cards to the President, the Vice Asshole their best one to the Vice President. They give any cards of their choice back.':
     'Nächste Runde: Das Arschloch gibt seine 2 besten Karten dem Präsidenten, das Vize-Arschloch seine beste dem Vizepräsidenten. Die geben beliebige Karten ihrer Wahl zurück.',
   President: 'Präsident',
@@ -28,8 +23,6 @@ const president: Record<string, string> = {
     'Jeder am eigenen Handy. Werd deine Karten als Erster los: Der Letzte ist das Arschloch.',
   'Everyone else in the room watches.': 'Alle anderen im Raum schauen zu.',
   'At least 3 players': 'Mindestens 3 Spieler',
-  '{name} passes and drinks 1.': '{name} passt und trinkt 1.',
-  'Nobody beats {name}: they hand out 1 sip and lead.': 'Keiner sticht {name}: verteilt 1 Schluck und kommt raus.',
   '{from} gives {to} {n} cards.': '{from} gibt {to} {n} Karten.',
   'Out of cards!': 'Keine Karten mehr!',
   'Drink {n}!': 'Trink {n}!',
@@ -41,7 +34,6 @@ const president: Record<string, string> = {
   'Waiting for {names}…': 'Warte auf {names} …',
   'Beat it, or pass': 'Stechen oder passen',
   'Your lead!': 'Du kommst raus!',
-  'Play {n}× one value higher than {rank}. Passing costs a sip.': 'Leg {n}× einen höheren Wert als {rank}. Passen kostet einen Schluck.',
   'Lead one card or several of one value.': 'Leg eine Karte oder mehrere gleiche aus.',
   passed: 'gepasst',
   'Swapping cards': 'Karten tauschen',
@@ -56,6 +48,14 @@ const president: Record<string, string> = {
   'hands out {n}': 'verteilt {n}',
   'New players': 'Neue Spieler',
   'The host deals the next round.': 'Der Host teilt die nächste Runde aus.',
+  '{name} passes.': '{name} passt.',
+  'Nobody beats {name}: they lead.': 'Niemand schlägt {name}: neuer Stich.',
+  'Play {n}× one value higher than {rank}, or pass.': 'Spiel {n}× einen Wert höher als {rank} oder passe.',
+  'You may pass. You can still play on your next turn.': 'Du darfst passen. Im nächsten Zug darfst du wieder spielen.',
+  'Once everyone else has passed, the trick is closed: whoever played last leads. An Ace closes the trick right away.': 'Haben alle anderen gepasst, ist der Stich zu: Wer zuletzt gespielt hat, spielt aus. Ein Ass schließt den Stich sofort.',
+  Pass: 'Passen',
+  Passed: 'Gepasst',
+  'End of the round: everyone keeps their rank into the next one.': 'Ende der Runde: Jeder nimmt seinen Rang mit in die nächste.',
 };
 
 export default president;

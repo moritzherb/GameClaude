@@ -484,15 +484,14 @@ function HeldCard({
   // the turned part for a moment (see the .flipped rules in global.css).
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || !fly || rotated || typeof el.animate !== 'function') return;
+    if (!el || !fly || typeof el.animate !== 'function') return;
     const r = el.getBoundingClientRect();
-    const dx = (fly.x - (r.left + r.width / 2)) * sign;
-    const dy = (fly.y - (r.top + r.height / 2)) * sign;
+    const dx = fly.x - (r.left + r.width / 2);
+    const dy = fly.y - (r.top + r.height / 2);
     if (Math.abs(dx) + Math.abs(dy) < 4) return;
-    el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(0.92)` }, { transform: 'none' }], {
-      duration: flyMs(Math.hypot(dx, dy)),
-      easing: 'cubic-bezier(0.25, 0.75, 0.25, 1)',
-    });
+    const timing = { duration: flyMs(Math.hypot(dx, dy)), easing: 'cubic-bezier(0.25, 0.75, 0.25, 1)' };
+    if (rotated) ghostFly(el, [`translate(${dx}px, ${dy}px) scale(0.92)`, 'none'], timing);
+    else el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(0.92)` }, { transform: 'none' }], timing);
     // Only when the card first shows up.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -506,17 +505,14 @@ function HeldCard({
     autoTimer.current = window.setTimeout(() => {
       const el = ref.current;
       const pile = document.querySelector('[data-drop="discard"]');
-      // Turned around (see the glide above): straight onto the pile, without sliding there.
-      if (!el || !pile || rotated || typeof el.animate !== 'function') return tossRef.current?.();
+      if (!el || !pile || typeof el.animate !== 'function') return tossRef.current?.();
       const a = el.getBoundingClientRect();
       const b = pile.getBoundingClientRect();
-      const dx = (b.left + b.width / 2 - (a.left + a.width / 2)) * sign;
-      const dy = (b.top + b.height / 2 - (a.top + a.height / 2)) * sign;
-      const anim = el.animate([{ transform: 'none' }, { transform: `translate(${dx}px, ${dy}px) rotate(-8deg)` }], {
-        duration: 260,
-        easing: 'ease-in',
-        fill: 'forwards',
-      });
+      const dx = b.left + b.width / 2 - (a.left + a.width / 2);
+      const dy = b.top + b.height / 2 - (a.top + a.height / 2);
+      const timing = { duration: 260, easing: 'ease-in', fill: 'forwards' as const };
+      if (rotated) return ghostFly(el, ['none', `translate(${dx}px, ${dy}px) rotate(-8deg)`], timing, () => tossRef.current?.());
+      const anim = el.animate([{ transform: 'none' }, { transform: `translate(${dx * sign}px, ${dy * sign}px) rotate(-8deg)` }], timing);
       anim.onfinish = () => tossRef.current?.();
     }, AUTO_TOSS_MS);
     return () => window.clearTimeout(autoTimer.current);
@@ -533,6 +529,27 @@ function HeldCard({
       <CardFace card={card} />
     </span>
   );
+}
+
+/**
+ * A card moving inside the middle turned around for the player opposite: a copy makes the move
+ * outside it (screen coordinates, turned the same way), the card itself hidden meanwhile. A moving
+ * card inside the turned part gets a layer of its own, and iPhones then leave things out of it.
+ */
+function ghostFly(el: HTMLElement, [from, to]: [string, string], timing: KeyframeAnimationOptions, done?: () => void) {
+  const r = el.getBoundingClientRect();
+  const ghost = el.cloneNode(true) as HTMLElement;
+  Object.assign(ghost.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: '0', zIndex: '60', pointerEvents: 'none' });
+  // Sized like the card (its size comes from the middle it leaves).
+  ghost.style.setProperty('--cw', getComputedStyle(el).getPropertyValue('--cw'));
+  (el.closest('.tr') ?? document.body).appendChild(ghost);
+  el.style.visibility = 'hidden';
+  const a = ghost.animate([{ transform: `${from} rotate(180deg)` }, { transform: `${to} rotate(180deg)` }], timing);
+  a.onfinish = a.oncancel = () => {
+    ghost.remove();
+    el.style.visibility = '';
+    done?.();
+  };
 }
 
 const dragStyle = (drag: { dx: number; dy: number } | null) =>

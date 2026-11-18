@@ -108,10 +108,6 @@
   color-scheme: dark;
 }
 
-html.big-mode {
-  font-size: 19px;
-}
-
 *,
 *::before,
 *::after {
@@ -2161,43 +2157,6 @@ li {
   font-size: 0.875rem;
 }
 
-/* Language: two flags, the chosen one stands out. */
-.flags {
-  display: flex;
-  gap: 10px;
-}
-
-.flag-btn {
-  display: block;
-  width: 36px;
-  height: 25px;
-  border-radius: 5px;
-  overflow: hidden;
-  opacity: 0.4;
-  filter: grayscale(0.6);
-  transition:
-    opacity 0.2s ease,
-    filter 0.2s ease,
-    transform 0.15s var(--spring);
-}
-
-.flag-btn svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.flag-btn.active {
-  opacity: 1;
-  filter: none;
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
-}
-
-.flag-btn:active {
-  transform: scale(0.97);
-  transition-duration: 0.08s;
-}
-
 @keyframes mesh {
   0% {
     transform: translate(0, 0) rotate(0deg) scale(1);
@@ -2342,33 +2301,46 @@ li {
   text-align: center;
 }
 
+/* The one it landed on: their face in a ring, the name under it, what happens under that. */
 .result-avatar {
-  font-size: 4.2rem;
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--on-color) 14%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, #fff 85%, transparent), 0 16px 30px -12px rgba(0, 0, 0, 0.45);
+  font-size: 3rem;
+  font-weight: 800;
   line-height: 1;
+}
+
+.result-avatar > *,
+.result-avatar .avatar-initial {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .result-name {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 2.185rem;
-  letter-spacing: 0.01em;
-  line-height: 1;
+  font-size: 2.4rem;
+  line-height: 1.05;
   overflow-wrap: anywhere;
-  text-transform: uppercase;
 }
 
 .result-fate {
-  margin-top: 8px;
-  max-width: 100%;
-  padding: 10px 18px;
-  border-radius: var(--radius);
+  margin-top: 10px;
+  max-width: 280px;
   text-align: center;
   line-height: 1.3;
   text-wrap: balance;
-  background: var(--on-color);
-  color: #fff;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
+  opacity: 0.8;
 }
 
 .spin-grid {
@@ -2385,8 +2357,7 @@ li {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  /* Room at the bottom for the drink counter, inside the chip (it never reaches the next one). */
-  padding: 12px 6px 32px;
+  padding: 12px 6px 14px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -6381,9 +6352,23 @@ li {
 }
 
 .ftd-rank.crossed {
+  position: relative;
   opacity: 0.5;
   color: var(--card-red);
-  text-decoration: line-through 3px;
+}
+
+/* Struck out corner to corner, as with a pen. */
+.ftd-rank.crossed::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: rotate(-35deg);
+  pointer-events: none;
 }
 
 /* Dealer change and game over. */
@@ -9165,8 +9150,8 @@ li {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  width: 76px;
-  padding: 10px 4px 8px;
+  width: 64px;
+  padding: 7px 4px 6px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -9184,8 +9169,8 @@ li {
 
 .hr-seat-avatar {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--chip);
   display: grid;
@@ -9240,9 +9225,11 @@ li {
 }
 
 .hr-status.mine {
-  background: var(--accent);
-  color: var(--on-accent);
-  box-shadow: none;
+  box-shadow: inset 0 0 0 2px var(--accent-ink);
+}
+
+.hr-status.mine .hr-status-text {
+  color: var(--accent-ink);
 }
 
 /* The round and a STOP share one line of fixed height, and the headline always has room for two lines:
@@ -9484,7 +9471,7 @@ li {
 }
 
 .hr-player .hr-felt-cards .pcard-lg {
-  --cw: max(56px, min(calc((calc(100 * var(--qw)) - 40px) / 3), calc((calc(100 * var(--qh)) - 56px) / 1.4), 112px));
+  --cw: max(56px, min(calc((calc(100 * var(--qw)) - 34px) / 3), calc((calc(100 * var(--qh)) - 40px) / 1.4), 124px));
 }
 
 .hr-player .hr-fan {
@@ -11299,7 +11286,7 @@ li {
 }
 
 .as-trick-cards {
-  --cw: min(calc(24 * var(--qw)), calc(32 * var(--qh)), 96px);
+  --cw: min(calc(30 * var(--qw)), calc(40 * var(--qh)), 124px);
   position: relative;
   display: block;
   width: calc(var(--cw) * (1 + (var(--n, 1) - 1) * 0.42));
@@ -11531,12 +11518,19 @@ li {
   flex-direction: column;
   justify-content: center;
   gap: 2px;
-  height: 62px;
+  height: 40px;
   padding: 0 14px;
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
   overflow: hidden;
+}
+
+/* Not your move: the line quietly says whose it is, in the same room. */
+.ar-status:not(.mine) {
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
 }
 
 .ar-status.mine {
@@ -11586,16 +11580,8 @@ li {
     --ar-gap: 6px;
   }
 
-  .ar-status {
-    height: 52px;
-  }
-
   .ar-status-text {
     font-size: 1.02rem;
-  }
-
-  .ar-status-sub {
-    -webkit-line-clamp: 1;
   }
 
   .ar-seats .as-seat {
@@ -11643,6 +11629,7 @@ li {
   min-width: 0;
   min-height: 0;
   transform: translateY(32px);
+  transition: transform 0.4s var(--ease-out, cubic-bezier(0.2, 0.8, 0.2, 1));
 }
 
 /* Bigger cards than in Kings Cup: easier to hit. */
@@ -11651,19 +11638,24 @@ li {
   height: calc(19 * var(--qw));
 }
 
-/* Your turn to draw: the cards glow and the circle breathes, inviting a tap. The circle breathes as
-   one (a pulsing glow on every card had them all drawn again every frame). */
+/* Your turn to draw: the cards glow, inviting a tap. They hold still, as in Kings Cup. */
 .kc-slot.ar-pickable {
   box-shadow: inset 0 0 0 calc(0.65 * var(--qw)) #fff, 0 0 0 calc(0.8 * var(--qw)) color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-.ar-ring.drawing .kc-slots {
-  animation: ar-breathe 1.8s ease-in-out infinite;
+/* The card you take: lifted off the table and on its way down to your hand. */
+.kc-slot.ar-taking {
+  z-index: 5;
+  animation: ar-take 0.24s cubic-bezier(0.4, 0, 0.6, 1) both;
 }
 
-@keyframes ar-breathe {
-  50% {
-    transform: scale(1.025);
+@keyframes ar-take {
+  40% {
+    transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.12);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 60px)) rotate(0deg) scale(1.05);
   }
 }
 
@@ -11912,22 +11904,28 @@ li {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  pointer-events: none;
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  animation: ar-reveal 3.4s ease both;
+  /* Lower than the middle: the hand's room below doesn't sit empty. */
+  padding: 14dvh 0 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  /* Dense enough that nothing under it (the cards it brings into a hand) shows through. */
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  animation: ar-reveal 0.3s ease both;
 }
 
+/* Up until someone taps it. */
 @keyframes ar-reveal {
-  0% {
+  from {
     opacity: 0;
   }
-  8%,
-  86% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+}
+
+.ar-reveal-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: fade-in 0.4s 2.4s ease both;
 }
 
 .ar-reveal-card {
@@ -12357,21 +12355,12 @@ li {
 .play-screen.clean .ar-hint,
 .play-screen.clean .ar-pile-count,
 .play-screen.clean .as .pl-status-sub,
-.play-screen.clean .pl-player .pl-status-sub,
-.play-screen.clean .pl-status-need small,
 .play-screen.clean .pl-hint,
-.play-screen.clean .pl-heap-label,
-.play-screen.clean .pl-table > .pl-status,
-.play-screen.clean .pl-table .pl-need,
-.play-screen.clean .hr-status-round,
 .play-screen.clean .hr-zone-label,
-.play-screen.clean .hr-hand-label,
 .play-screen.clean .hr-hint,
 .play-screen.clean .hr-last,
-.play-screen.clean .sp-left,
 .play-screen.clean .ftd-tablephone > .kc-status,
-.play-screen.clean .ftd-misses,
-.play-screen.clean .ftd-deckphone-head .kicker {
+.play-screen.clean .ftd-misses {
   display: none;
 }
 
@@ -12398,9 +12387,10 @@ li {
   color: var(--muted);
 }
 
-/* Hose runter: someone saying STOP is still heard, whoever's turn it is. */
-.play-screen.clean .hr-status {
-  padding-block: 8px;
+/* Hose runter: the clean table only takes the words away, keeping their room: nothing moves. */
+.play-screen.clean .hr-status-round,
+.play-screen.clean .hr-hand-label {
+  visibility: hidden;
 }
 
 /*
@@ -14054,7 +14044,6 @@ li {
 .hs-stake-btn,
 .hs-suit,
 .look-seg button,
-.flag-btn,
 .player-avatar,
 .profile-color,
 .kc-chip,
@@ -14068,7 +14057,6 @@ li {
 .hs-stake-btn::after,
 .hs-suit::after,
 .look-seg button::after,
-.flag-btn::after,
 .player-avatar::after,
 .profile-color::after,
 .kc-chip::after,
@@ -14081,15 +14069,6 @@ li {
   bottom: min(0px, calc((100% - 44px) / 2));
   left: min(0px, calc((100% - 44px) / 2));
   right: min(0px, calc((100% - 44px) / 2));
-}
-
-/* The flag rounds its own corners, so the button's invisible margin isn't cut off with them. */
-.flag-btn {
-  overflow: visible;
-}
-
-.flag-btn svg {
-  clip-path: inset(0 round 5px);
 }
 
 
@@ -14296,7 +14275,8 @@ button.profile-avatar:not(:disabled):active {
 
 /* …and one slides in under each of the others' piles, which lift for it. */
 .rs-stack i.rs-get {
-  animation: rs-get 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) calc(0.15s + var(--d) * 0.14s) both;
+  /* Slow enough to follow the card all the way under. */
+  animation: rs-get 1.1s cubic-bezier(0.25, 0.7, 0.3, 1) calc(0.25s + var(--d) * 0.3s) both;
 }
 
 @keyframes rs-get {
@@ -14367,7 +14347,7 @@ button.profile-avatar:not(:disabled):active {
    turned, as real cards lie. */
 .rs-middle {
   /* As big as the screen's width allows, and its height: smaller on a short phone (an SE). */
-  --cw: clamp(80px, min(30vw, 15dvh), 132px);
+  --cw: clamp(92px, min(36vw, 19dvh), 160px);
   position: relative;
   flex: 1 1 0;
   min-height: calc(var(--cw) * 1.6);
@@ -14408,71 +14388,67 @@ button.profile-avatar:not(:disabled):active {
   color: #7b3fe4;
 }
 
-.rs-take-slot {
-  flex: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 56px;
-  margin-top: 8px;
-}
-
 .rs-take {
+  position: absolute;
+  bottom: 0;
+  z-index: 4;
   width: auto;
   padding-inline: 28px;
   animation: rs-take-in 0.2s var(--ease-out);
+}
+
+/* A slap: an open hand comes down on the pile, hits, and lifts away. */
+.rs-hit {
+  position: absolute;
+  z-index: 5;
+  width: calc(var(--cw) * 0.9);
+  color: #fff;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
+  animation: rs-hit 0.7s cubic-bezier(0.3, 0, 0.3, 1) both;
+}
+
+.rs-hit .rs-slap-icon {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.rs-hit.slap {
+  color: var(--good);
+}
+
+.rs-hit.wrong,
+.rs-hit.out {
+  color: #e2675c;
+}
+
+@keyframes rs-hit {
+  0% {
+    opacity: 0;
+    transform: translateY(-70%) scale(1.7) rotate(-18deg);
+  }
+  28% {
+    opacity: 1;
+    transform: none;
+  }
+  36% {
+    transform: scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20%) scale(1.05) rotate(6deg);
+  }
 }
 
 @keyframes rs-take-in {
   from {
     opacity: 0;
     transform: translateY(6px) scale(0.96);
-  }
-}
-
-.rs-last {
-  margin: 0;
-  max-width: 100%;
-  padding: 7px 16px;
-  border-radius: 20px;
-  background: var(--surface-2);
-  color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.25;
-  text-align: center;
-  /* Every move pops in anew, so it's seen. */
-  animation: rs-last-in 0.32s var(--ease-out);
-}
-
-/* A pile taken: in the accent; slapped: in green (as the flash in the middle). */
-.rs-last.won {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.rs-last.slap {
-  background: var(--good);
-  color: #0d1a0f;
-}
-
-/* A wrong slap, someone out: in red. */
-.rs-last.wrong,
-.rs-last.out {
-  background: #c4473d;
-  color: #fff;
-}
-
-.rs-last.none {
-  padding: 0;
-  background: none;
-  animation: none;
-}
-
-@keyframes rs-last-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.94);
   }
 }
 
@@ -15512,6 +15488,23 @@ button.profile-avatar:not(:disabled):active {
   position: relative;
   flex: 1 1 0;
   min-height: 250px;
+  isolation: isolate;
+}
+
+/* The table: a round of dark baize, lit from the middle in the trump's colour. */
+.fz-table-area::before {
+  content: '';
+  position: absolute;
+  inset: 14% 2% 4%;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--trump, var(--accent)) 38%, transparent), transparent 70%),
+    color-mix(in srgb, var(--ink) 6%, var(--bg));
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--trump, var(--accent)) 45%, transparent),
+    inset 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition: background 0.6s ease;
 }
 
 .fz-seat {
@@ -15529,9 +15522,9 @@ button.profile-avatar:not(:disabled):active {
 .fz-seat-who {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   max-width: 100%;
-  padding: 2px 10px 2px 2px;
+  padding: 3px 10px 3px 3px;
   border-radius: 16px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -15561,7 +15554,20 @@ button.profile-avatar:not(:disabled):active {
   white-space: nowrap;
 }
 
-.fz-seat-bid {
+/* The avatar sits evenly in its bubble. */
+.fz-seat-who .bd-avatar.xs {
+  width: 28px;
+  height: 28px;
+  font-size: 0.95rem;
+}
+
+/* Bids in the trump's colour, a shade darker. */
+.fz-seat-bid,
+.fz-mine-bid {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--trump, var(--surface-2)) 80%, #000);
+  color: #fff;
   font-weight: 700;
 }
 
@@ -15880,9 +15886,6 @@ button.profile-avatar:not(:disabled):active {
   font-variant-numeric: tabular-nums;
 }
 
-.fz-mine-bid {
-  font-weight: 700;
-}
 
 .fz-status {
   align-self: center;
@@ -15934,8 +15937,8 @@ button.profile-avatar:not(:disabled):active {
   width: 44px;
   height: 44px;
   border-radius: 22px;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: color-mix(in srgb, var(--trump, var(--accent)) 80%, #000);
+  color: #fff;
   font-weight: 700;
   font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
@@ -16357,19 +16360,20 @@ html[data-look] .play-screen > .top-bar .round-btn {
   top: 50%;
   z-index: 3;
   max-width: 90%;
-  padding: 10px 18px;
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 22px;
+  border-radius: 22px;
   background: var(--ink);
   color: var(--bg);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
   pointer-events: none;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-  animation: rs-flash 1.6s var(--ease-out) both;
+  width: max-content;
+  max-width: min(88vw, 340px);
+  animation: rs-flash 2.4s var(--ease-out) both;
 }
 
 .rs-flash.slap {
@@ -16386,6 +16390,26 @@ html[data-look] .play-screen > .top-bar .round-btn {
 .rs-flash.out {
   background: #c4473d;
   color: #fff;
+}
+
+/* After the hand has come down. */
+.rs-flash:is(.slap, .wrong, .out) {
+  animation-delay: 0.25s;
+}
+
+.rs-flash strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.rs-flash small {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  opacity: 0.85;
 }
 
 @keyframes rs-flash {
@@ -17961,4 +17985,313 @@ html[data-look='pop'] .kc-slot {
   pointer-events: none;
   will-change: opacity;
   contain: strict;
+}
+
+/* Settings → App icon: the icons to pick, a row of small pictures. */
+.icon-picks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.icon-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border-radius: 16px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.icon-pick-art {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.icon-pick.on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Clean table: the game's name stays in the bar, small, over who's on (the bar keeps its height). */
+.gb-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.gb-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  line-height: 1.1;
+  color: var(--muted);
+}
+
+.gb-stack .turn-bubble {
+  height: 24px;
+  font-size: 0.8rem;
+}
+
+.gb-stack .turn-bubble-avatar {
+  width: 20px;
+  height: 20px;
+}
+
+/* Who it's about, in colour: pink for her (Princess, She), blue for him (King, He), both split
+   corner to corner for Mixed. The 10/10 card takes the same colour. */
+.vt-pick.on.princess,
+.vt-pick.on.she {
+  background: #ff8ac0;
+  color: #151612;
+}
+
+.vt-pick.on.king,
+.vt-pick.on.he {
+  background: #6cb6ff;
+  color: #151612;
+}
+
+.vt-pick.on.mixed {
+  background: linear-gradient(to bottom right, #ff8ac0 calc(50% - 0.5px), #6cb6ff calc(50% + 0.5px));
+  color: #151612;
+}
+
+.vt-pick.on.princess .vt-pick-label,
+.vt-pick.on.she .vt-pick-label,
+.vt-pick.on.king .vt-pick-label,
+.vt-pick.on.he .vt-pick-label,
+.vt-pick.on.mixed .vt-pick-label {
+  color: #151612;
+}
+
+.tn-card.she {
+  --card-a: #ffb3d1;
+  --card-b: #ff7eb6;
+}
+
+.tn-card.he {
+  --card-a: #b3dbff;
+  --card-b: #6cb6ff;
+}
+
+/* The +4 over the four colours and the white lines: a dark outline and a soft shadow, so it reads. */
+.cc-card.overload .cc-num.plus {
+  -webkit-text-stroke: calc(var(--w) * 0.035) #151612;
+  paint-order: stroke fill;
+  text-shadow: 0 calc(var(--w) * 0.02) calc(var(--w) * 0.06) rgba(0, 0, 0, 0.55);
+}
+
+/* Hose runter, a player's phone: the middle's label and the last move lie on the felt (no room of
+   their own), so the felt is the same with a clean table or without. */
+.hr-player .hr-felt .hr-zone-label {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+}
+
+.hr-felt .hr-last {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  display: block;
+  height: auto;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Your hand: a little air to the words under it and to the buttons. */
+.hr-hand-label {
+  margin-top: 6px;
+}
+
+.hr-player .hr-bottom {
+  gap: 14px;
+}
+
+/* The card you chose comes to the front (never behind the one beside it). */
+.hr-fan-card.selected {
+  z-index: 3;
+}
+
+/* The table phone: just the X, the felt with the three cards sideways, and who's on in the corner. */
+html.table-phone .game-bar .top-bar-title,
+html.table-phone .game-bar .top-bar-side.right {
+  visibility: hidden;
+}
+
+.hr-host .hr-felt-side {
+  flex: 1 1 auto;
+  justify-content: center;
+  margin-top: 4px;
+  margin-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.hr-felt-side .hr-felt-cards {
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 0;
+}
+
+.hr-side {
+  --side: min(calc((100vw - 2 * var(--gutter) - 40px) / 1.4), calc((100dvh - 220px) / 3.5), 190px);
+  display: grid;
+  place-items: center;
+  width: calc(var(--side) * 1.4);
+  height: var(--side);
+}
+
+.hr-side .pcard-xl {
+  --cw: var(--side);
+  transform: rotate(90deg);
+}
+
+.hr-table-turn {
+  position: fixed;
+  right: var(--gutter);
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 5;
+  font-size: 44px;
+  line-height: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--chip), 0 8px 18px rgba(0, 0, 0, 0.4);
+  animation: pop-in 0.3s var(--spring) both;
+}
+
+/* A card that just came (swapped in, dealt): it turns up in its place, so you see what changed. */
+.hr-felt-cards .hr-card > .pcard,
+.hr-fan-card > .pcard,
+.hr-side > .pcard {
+  animation: hr-swap-in 0.42s var(--spring) both;
+}
+
+@keyframes hr-swap-in {
+  from {
+    opacity: 0;
+    scale: 0.55;
+    translate: 0 -16px;
+  }
+}
+
+/* The round's end: the results scroll inside, the button stays at the bottom. */
+.hr-reveal {
+  display: flex;
+  flex-direction: column;
+}
+
+.hr-reveal .hr-results {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The Dealer, set up: with more than one other phone, which one is the deck. */
+.ftd-deck-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Speed: the middle shuffled into new side stacks: they riffle on the table. */
+.sp-stack.shuffled,
+.cc-deck-stack.shuffled {
+  animation: sp-shuffle 0.7s var(--ease) both;
+}
+
+@keyframes sp-shuffle {
+  0% {
+    scale: 0.4;
+    opacity: 0;
+  }
+  35% {
+    scale: 1.15;
+    opacity: 1;
+    rotate: -12deg;
+  }
+  55% {
+    rotate: 10deg;
+  }
+  75% {
+    rotate: -5deg;
+  }
+}
+
+/* President: the line on top is short (no box): whose turn, and under it what was just played. */
+.as .pl-status,
+.as .pl-status.mine {
+  gap: 2px;
+  padding: 2px 14px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+  text-align: center;
+}
+
+.as .pl-status.mine .pl-status-text {
+  color: var(--accent-ink);
+}
+
+.as .pl-status-sub {
+  height: 1.3em;
+  -webkit-line-clamp: 1;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Palace, a clean table: the words go, their room stays (nothing moves). */
+.play-screen.clean .pl-player .pl-status-sub,
+.play-screen.clean .pl-status-need small {
+  visibility: hidden;
+}
+
+/* Palace, the table phone: the stock and the pile on the felt, as big as the screen allows. */
+.pl-table .pl-felt {
+  margin-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.pl-table .pl-felt-row {
+  --fw: max(80px, min(calc(40 * var(--qw)), calc((calc(100 * var(--qh)) - 60px) / 1.4), 230px));
+}
+
+/* A player's phone: air between your cards and the buttons, and between the pile and what it needs. */
+.pl-player .pl-turn-actions {
+  margin-top: 10px;
+}
+
+.pl-felt.mini .pl-need {
+  margin-left: 12px;
+}
+
+/* A card coming into your hand (drawn from the stock): it slides in from above. */
+.pl-card {
+  animation: pl-draw 0.45s var(--spring) both;
+}
+
+@keyframes pl-draw {
+  from {
+    opacity: 0;
+    translate: 0 -70px;
+    scale: 0.8;
+  }
 }

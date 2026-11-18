@@ -42,6 +42,8 @@ interface Seat {
 interface Session {
   seats: Seat[];
   game: Game;
+  /** The phone that's the deck (missing: any guest phone, as saved before it could be chosen). */
+  deckId?: string;
 }
 
 /** `at`: the state the move was made on (see stamp), so a double tap or a tap made on an old state is dropped. */
@@ -94,7 +96,8 @@ function useFtd() {
     if (!isHost) return;
     return onGame((data, fromId) => {
       if (!isMsg(data) || !fromId) return;
-      if (data.type === 'act') setHostSession((s) => (s ? apply(s, data.act) : s));
+      // Only the deck phone moves (other phones in the room just watch).
+      if (data.type === 'act') setHostSession((s) => (s && (!s.deckId || s.deckId === fromId) ? apply(s, data.act) : s));
     });
   }, [isHost, onGame]);
 
@@ -125,9 +128,12 @@ function useFtd() {
 }
 
 export default function FuckTheDealer() {
-  const { room, isHost, session, act, setHostSession } = useFtd();
+  const { room, isHost, myId, session, act, setHostSession } = useFtd();
   if (!session) return isHost ? <Lobby room={room} onStart={setHostSession} /> : <WaitForTable host={room.members.find((m) => m.host)?.name} />;
-  return isHost ? <TableView session={session} onAgain={() => setHostSession(null)} /> : <DeckView session={session} act={act} />;
+  if (isHost) return <TableView session={session} onAgain={() => setHostSession(null)} />;
+  // Another phone than the one picked as the deck: it just waits.
+  if (session.deckId && session.deckId !== myId) return <WaitForTable host={room.members.find((m) => m.host)?.name} deck={room.members.find((m) => m.id === session.deckId)?.name} />;
+  return <DeckView session={session} act={act} />;
 }
 
 /* ---------------- Host: pick the first dealer ---------------- */
@@ -139,6 +145,9 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
   const [chosen, setDealerId] = useState<string | null>(null);
   const dealerId = chosen && players.some((p) => p.id === chosen) ? chosen : (players[0]?.id ?? '');
   const decks = room.members.filter((m) => !m.host && m.online);
+  // Which phone is the deck (with more than one in the room, any of them).
+  const [deckPick, setDeckPick] = useState<string | null>(null);
+  const deck = decks.find((m) => m.id === deckPick) ?? decks[0];
   // New players join the room (its code and QR code are in the crew sheet).
   useCrewButton('room');
   return (
@@ -155,8 +164,24 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
         <span className="ftd-deck-status-icon">
           <Glyph name={decks.length ? 'cards' : 'phone'} />
         </span>
-        <span>{decks.length ? t('Deck phone: {name}', { name: decks[0].name }) : t('Connect a second phone to this room. It becomes the deck.')}</span>
+        <span>{deck ? t('Deck phone: {name}', { name: deck.name }) : t('Connect a second phone to this room. It becomes the deck.')}</span>
       </div>
+      {decks.length > 1 && (
+        <div className="ftd-deck-pick" role="radiogroup" aria-label={t('Which phone is the deck?')}>
+          {decks.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={m.id === deck?.id}
+              className={`chip${m.id === deck?.id ? ' active' : ''}`}
+              onClick={() => setDeckPick(m.id)}
+            >
+              {t('{name}’s phone', { name: m.name })}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="pick-grid">
         {players.map((p) => (
@@ -185,6 +210,7 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
             onStart({
               seats: players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color })),
               game: newGame(players.length, Math.max(0, players.findIndex((p) => p.id === dealerId))),
+              deckId: deck?.id,
             })
           }
         >
@@ -195,13 +221,13 @@ function Lobby({ room, onStart }: { room: ReturnType<typeof useRoom>; onStart: (
   );
 }
 
-function WaitForTable({ host }: { host?: string }) {
+function WaitForTable({ host, deck }: { host?: string; deck?: string }) {
   return (
     <div className="bd">
       <div className="connecting">
         <div className="connecting-emoji">🃏</div>
-        <h2 className="bd-title">{t('You’re the deck')}</h2>
-        <p className="lead">{host ? t('Waiting for {name} to start the game…', { name: host }) : t('Waiting for the table…')}</p>
+        <h2 className="bd-title">{deck ? t('{name} has the deck', { name: deck }) : t('You’re the deck')}</h2>
+        <p className="lead">{deck ? t('This phone just watches this game.') : host ? t('Waiting for {name} to start the game…', { name: host }) : t('Waiting for the table…')}</p>
       </div>
     </div>
   );

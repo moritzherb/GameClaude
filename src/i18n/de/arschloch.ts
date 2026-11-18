@@ -11,12 +11,6 @@ const arschloch: Record<string, string> = {
     'Hast du Handkarten, legst du stattdessen eine davon. Erst wenn deine Hand leer ist, ziehst du wieder aus dem Kreis.',
   'Only the next player may turn the card before over, before they play. A lie: the liar takes the whole pile. The truth: whoever turned it over takes it.':
     'Nur der nächste Spieler darf die Karte davor aufdecken, bevor er selbst legt. Gelogen: Der Lügner nimmt den ganzen Stapel. Gestimmt: Wer aufgedeckt hat, nimmt ihn.',
-  'Whoever takes the pile drinks a sip for every card in it and is up next, and anything goes again.':
-    'Wer den Stapel nimmt, trinkt einen Schluck pro Karte und ist als Nächstes dran. Es ist wieder alles erlaubt.',
-  'Four of a value in your hand go out of the game, face down beside it. Whoever lays them down hands out 2 sips.':
-    'Vier Gleiche auf der Hand sind raus aus dem Spiel und kommen verdeckt daneben. Wer sie ablegt, verteilt 2 Schlucke.',
-  'Whoever ends up with all four Jacks is the Asshole: empty your glass. The game is over.':
-    'Wer alle vier Buben auf der Hand hat, ist das Arschloch: Glas leer trinken. Das Spiel ist aus.',
   'Waiting for {name} to lay out the circle…': 'Warte, bis {name} den Kreis auslegt …',
   'Waiting for the host to start…': 'Warte, bis der Host startet …',
   '2 to 8 players, 32 cards': '2 bis 8 Spieler, 32 Karten',
@@ -28,13 +22,7 @@ const arschloch: Record<string, string> = {
   'Lay out the circle': 'Kreis auslegen',
   '{name} draws a card from the circle.': '{name} zieht eine Karte aus dem Kreis.',
   '{name} lays down: “{rank}”.': '{name} legt ab: „{rank}“.',
-  '{name} turns it over: a {card}, not a {claim}! {liar} takes {n} and drinks {n}.':
-    '{name} deckt auf: eine {card}, keine {claim}! {liar} nimmt {n} und trinkt {n}.',
-  '{name} turns it over: it really is a {card}. {name} takes {n} and drinks {n}.':
-    '{name} deckt auf: Es ist wirklich eine {card}. {name} nimmt {n} und trinkt {n}.',
-  '{name} lays down four {rank}s and hands out {n}.': '{name} legt vier {rank} ab und verteilt {n}.',
   '{name} has all four Jacks!': '{name} hat alle vier Buben!',
-  'Empty your glass!': 'Glas leer!',
   'Nothing to play: turn it over!': 'Nichts zu legen: Deck auf!',
   'Believe it and draw, or turn it over': 'Glauben und ziehen, oder aufdecken',
   'Draw a card from the circle': 'Zieh eine Karte aus dem Kreis',
@@ -54,6 +42,8 @@ const arschloch: Record<string, string> = {
   '{name} turns {who}’s card over…': '{name} deckt die Karte von {who} auf …',
   'True!': 'Stimmt!',
   'Said {claim}': 'Angesagt: {claim}',
+  '{name} takes the pile': '{name} nimmt den Stapel',
+  'Tap to go on': 'Tippen zum Weitermachen',
   '{name} takes {n}': '{name} nimmt {n}',
   'You’re the Asshole!': 'Du bist das Arschloch!',
   '{name} is the Asshole!': '{name} ist das Arschloch!',
@@ -62,6 +52,12 @@ const arschloch: Record<string, string> = {
   'Turned over the truth, and the pile held the last Jack.': 'Die Wahrheit aufgedeckt, und im Stapel lag der letzte Bube.',
   'The host starts the next game.': 'Der Host startet das nächste Spiel.',
   'Ended up the Asshole': 'Arschloch geworden',
+  'Whoever takes the pile is up next, and anything goes again.': 'Wer den Stapel nimmt, ist als Nächstes dran, und alles ist wieder erlaubt.',
+  'Four of a value in your hand go out of the game, face down beside it.': 'Vier gleiche Werte auf der Hand gehen aus dem Spiel, verdeckt daneben.',
+  'Whoever ends up with all four Jacks is the Asshole. The game is over.': 'Wer am Ende alle vier Buben hat, ist das Arschloch. Das Spiel ist vorbei.',
+  '{name} turns it over: a {card}, not a {claim}! {liar} takes the pile.': '{name} deckt auf: {card}, nicht {claim}! {liar} nimmt den Stapel.',
+  '{name} turns it over: it really is a {card}. {name} takes the pile.': '{name} deckt auf: Es ist wirklich {card}. {name} nimmt den Stapel.',
+  '{name} lays down four {rank}s.': '{name} legt vier {rank} ab.',
 };
 
 export default arschloch;

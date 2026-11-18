@@ -214,17 +214,21 @@ function Table({
           </div>
         ))}
         {/* What just happened (a slap, a wrong one, a pile taken): big in the middle for a moment. */}
-        {g.last && (
-          <span key={flashKey(g)} className={`rs-flash ${g.last.k}`} aria-hidden>
-            {flashText(g.last, name)}
+        {/* A slap: a hand comes down on the pile. */}
+        {(g.last?.k === 'slap' || g.last?.k === 'wrong' || g.last?.k === 'out') && (
+          <span key={`hit-${flashKey(g)}`} className={`rs-hit ${g.last.k}`} aria-hidden>
+            <HandIcon />
           </span>
         )}
-      </div>
-
-      {/* Under the middle, clear of the cards: what just happened, or (when the pile is yours) the
-          button to take it, in the same place (so nothing moves). */}
-      <div className="rs-take-slot">
-        {myClaim ? (
+        {/* What just happened, big over the pile for a moment, with why underneath. */}
+        {g.last && (
+          <span key={flashKey(g)} className={`rs-flash ${g.last.k}`} role="status">
+            <strong>{flashText(g.last, name)}</strong>
+            <small>{flashWhy(g.last)}</small>
+          </span>
+        )}
+        {/* The pile is yours: the button to take it, at the pile's foot. */}
+        {myClaim && (
           <BigButton
             className="rs-take"
             onClick={() => {
@@ -235,12 +239,6 @@ function Table({
           >
             {t('Take the pile')}
           </BigButton>
-        ) : g.last ? (
-          <p key={flashKey(g)} className={`rs-last ${g.last.k}`} role="status">
-            {lastText(g.last, name)}
-          </p>
-        ) : (
-          <p className="rs-last none" />
         )}
       </div>
 
@@ -285,20 +283,20 @@ function Table({
 /** Changes with every new event, so the flash plays again for each one. */
 const flashKey = (g: Game) => `${g.last?.k}:${g.last?.by}:${g.middle.length}:${g.piles.map((p) => p.length).join(',')}`;
 
-/** The flash: the slap rule in big, or who took the pile, or the wrong slap. */
+/** The flash: who slapped (or that it was wrong), or who took the pile. */
 function flashText(e: Entry, name: (i: number) => string) {
-  if (e.k === 'slap') return `${t(RULE_NAME[e.rule])}!`;
+  if (e.k === 'slap') return t('{name} slapped', { name: name(e.by) });
   if (e.k === 'wrong') return t('Wrong slap');
   if (e.k === 'out') return t('{name} is out', { name: name(e.by) });
   return t('{name} takes it', { name: name(e.by) });
 }
 
-function lastText(e: Entry, name: (i: number) => string) {
-  const who = name;
-  if (e.k === 'slap') return t('{name} slaps: {rule}. The pile ({n}) is theirs.', { name: who(e.by), rule: t(RULE_NAME[e.rule]), n: e.n });
-  if (e.k === 'wrong') return e.gave === 1 ? t('{name} slapped wrong: a card to the other player.', { name: who(e.by) }) : t('{name} slapped wrong: a card to each of the others.', { name: who(e.by) });
-  if (e.k === 'out') return t('{name} slapped wrong without cards: out.', { name: who(e.by) });
-  return t('{name} takes the pile ({n}).', { name: who(e.by), n: e.n });
+/** Under the flash: why. */
+function flashWhy(e: Entry) {
+  if (e.k === 'slap') return `${t(RULE_NAME[e.rule])} · ${t('{n} cards', { n: e.n })}`;
+  if (e.k === 'wrong') return e.gave === 1 ? t('Nothing to slap: a card to the other player') : t('Nothing to slap: a card to each of the others');
+  if (e.k === 'out') return t('Slapped wrong without cards');
+  return t('{n} cards', { n: e.n });
 }
 
 /** An open hand, for the Slap pad. */
