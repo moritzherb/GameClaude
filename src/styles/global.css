@@ -12331,12 +12331,7 @@ li {
 .play-screen.clean .ar-hint,
 .play-screen.clean .ar-pile-count,
 .play-screen.clean .as .pl-status-sub,
-.play-screen.clean .pl-player .pl-status-sub,
-.play-screen.clean .pl-status-need small,
 .play-screen.clean .pl-hint,
-.play-screen.clean .pl-heap-label,
-.play-screen.clean .pl-table > .pl-status,
-.play-screen.clean .pl-table .pl-need,
 .play-screen.clean .hr-zone-label,
 .play-screen.clean .hr-hint,
 .play-screen.clean .hr-last,
@@ -18192,4 +18187,41 @@ html.table-phone .game-bar .top-bar-side.right {
   -webkit-line-clamp: 1;
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+/* Palace, a clean table: the words go, their room stays (nothing moves). */
+.play-screen.clean .pl-player .pl-status-sub,
+.play-screen.clean .pl-status-need small {
+  visibility: hidden;
+}
+
+/* Palace, the table phone: the stock and the pile on the felt, as big as the screen allows. */
+.pl-table .pl-felt {
+  margin-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.pl-table .pl-felt-row {
+  --fw: max(80px, min(calc(40 * var(--qw)), calc((calc(100 * var(--qh)) - 60px) / 1.4), 230px));
+}
+
+/* A player's phone: air between your cards and the buttons, and between the pile and what it needs. */
+.pl-player .pl-turn-actions {
+  margin-top: 10px;
+}
+
+.pl-felt.mini .pl-need {
+  margin-left: 12px;
+}
+
+/* A card coming into your hand (drawn from the stock): it slides in from above. */
+.pl-card {
+  animation: pl-draw 0.45s var(--spring) both;
+}
+
+@keyframes pl-draw {
+  from {
+    opacity: 0;
+    translate: 0 -70px;
+    scale: 0.8;
+  }
 }

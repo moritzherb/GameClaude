@@ -84,6 +84,8 @@ const palace: Record<string, string> = {
   'No spare phone for the table? Switch the table phone off: the host plays too, and every phone shows the stock and the pile.':
     'Kein Handy übrig für den Tisch? Schalte das Tisch-Handy aus: Der Host spielt mit, und jedes Handy zeigt Stapel und Ablagestapel.',
   'Every player’s phone (plus one for the table, if you like)': 'Jedes Spieler-Handy (plus eins als Tisch, wenn ihr wollt)',
+  'Tap them again or drag them onto the pile': 'Nochmal antippen oder auf den Stapel ziehen',
+  'Take the pile': 'Stapel nehmen',
 };
 
 export default palace;
