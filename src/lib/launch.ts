@@ -8,6 +8,7 @@
  * goes and the next one comes. Only opacity and transforms move: nothing is laid out again.
  */
 
+import { playIntro } from './intro';
 import { holdScreen } from './router';
 import { coverTop, mix, STRIP_LAG, topColor, topLayer, tone } from './themeColor';
 
@@ -160,6 +161,8 @@ const BOOT_FADE = 300;
  * at the top by then. Until this runs the strip stays the start-up screen's (main.tsx covers it).
  */
 export function fadeBoot(boot: HTMLElement) {
+  // Under it, home's apps settle in as it fades.
+  playIntro();
   boot.classList.add('done');
   boot.style.transition = 'none';
   boot.style.opacity = '1';

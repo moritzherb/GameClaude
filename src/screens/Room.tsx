@@ -211,7 +211,10 @@ function Lobby() {
 
   return (
     <main className="screen">
-      <TopBar onBack={() => navigate(paths.home)} title={isHost ? t('Your room') : t('Room')} />
+      {/* Back and the title stay at the top while the room scrolls under them. */}
+      <div className="screen-head">
+        <TopBar onBack={() => navigate(paths.home)} title={isHost ? t('Your room') : t('Room')} />
+      </div>
 
       {room.status === 'reconnecting' && <p className="notice">{t('Connection lost. Reconnecting to the host…')}</p>}
 

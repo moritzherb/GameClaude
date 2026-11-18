@@ -12,8 +12,8 @@ export const isClean = (game: GameDefinition, setting: boolean | undefined) => (
 
 /**
  * The bar over every game: quit on the left, the game's name, the rules and the clean-table switch.
- * With a clean table it's just the two small buttons (quit and the switch back) and, between them, a
- * small bubble with who's on (the game's own line saying so is hidden): the game gets the rest.
+ * With a clean table it's just the two small buttons (quit and the switch back) and, between them, the
+ * game's name, small, over a bubble with who's on (the game's own line saying so is hidden).
  * A game that's always clean has the rules there instead of the switch; on a setup screen (nothing
  * a clean table would change) there's no switch either.
  */
@@ -56,14 +56,18 @@ export default function GameBar({
       className="game-bar"
       title={
         clean ? (
-          turn && (
-            <span key={turn.name} className="turn-bubble" style={{ '--chip': turn.color } as CSSProperties} aria-live="polite">
-              <span className="turn-bubble-avatar">
-                <Avatar name={turn.name} color={turn.color} photo={turn.photo} />
+          // The game's name stays (small), who's on under it.
+          <span className="gb-stack">
+            <span className="gb-name">{t(game.name)}</span>
+            {turn && (
+              <span key={turn.name} className="turn-bubble" style={{ '--chip': turn.color } as CSSProperties} aria-live="polite">
+                <span className="turn-bubble-avatar">
+                  <Avatar name={turn.name} color={turn.color} photo={turn.photo} />
+                </span>
+                <span className="turn-bubble-name">{turn.name}</span>
               </span>
-              <span className="turn-bubble-name">{turn.name}</span>
-            </span>
-          )
+            )}
+          </span>
         ) : (
           // Just the name: the game's own emoji is its icon on the home screen, not a label.
           t(game.name)

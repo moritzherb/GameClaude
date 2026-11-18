@@ -17943,3 +17943,34 @@ html[data-look='pop'] .kc-slot {
   color: var(--ink);
   box-shadow: inset 0 0 0 2px var(--accent);
 }
+
+/* Clean table: the game's name stays in the bar, small, over who's on (the bar keeps its height). */
+.gb-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.gb-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  line-height: 1.1;
+  color: var(--muted);
+}
+
+.gb-stack .turn-bubble {
+  height: 24px;
+  font-size: 0.8rem;
+}
+
+.gb-stack .turn-bubble-avatar {
+  width: 20px;
+  height: 20px;
+}
