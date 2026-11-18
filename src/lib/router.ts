@@ -187,8 +187,6 @@ function go(hash: string, how: 'push' | 'replace', state: string | null) {
 /** How long the veil takes to cover the screen, and to go off the next one (ms). */
 const SLIDE_OUT = 110;
 const SLIDE_IN = 280;
-/** How far the next screen slides (px). */
-const SLIDE_BY = 18;
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
 
 
@@ -239,7 +237,6 @@ function slide(from: string, to: string, show: () => void): boolean {
   )
     return false;
   const v = veil();
-  const dir = back ? -1 : 1;
   const bare = ground();
   let strip = topLayer(topColor());
   /** What the top of the screen under the veil shows (its own colour, or the ground). */
@@ -266,7 +263,6 @@ function slide(from: string, to: string, show: () => void): boolean {
   const draw = () => {
     const k = coverAt(at);
     v.style.opacity = String(k);
-    page.style.transform = phase === 'out' ? '' : `translateX(${SLIDE_BY * dir * (phase === 'in' ? k : 1)}px)`;
     strip.set(mix(under, bare, coverAt(at + STRIP_LAG)));
   };
   const showNext = () => {
@@ -289,8 +285,8 @@ function slide(from: string, to: string, show: () => void): boolean {
     window.clearTimeout(guard);
     const left = coverAt(at);
     if (andShow) showNext();
-    page.style.transform = '';
-    page.style.willChange = '';
+    // The screen under the veil is drawn anew (an iPhone can leave it unpainted after a veil).
+    repaint();
     v.style.opacity = '';
     v.style.display = '';
     v.style.pointerEvents = '';
@@ -305,13 +301,12 @@ function slide(from: string, to: string, show: () => void): boolean {
     at += Math.min(Math.max(0, now - prev), 34);
     prev = now;
     if (phase === 'out' && at >= outFor) {
-      // Covered: the next screen goes on the page (unseen yet), a little to the side, and is drawn once…
+      // Covered: the next screen goes on the page (unseen yet) and is drawn once…
       phase = 'drawn';
       at = 0;
       showNext();
-      page.style.willChange = 'transform';
     } else if (phase === 'drawn') {
-      // …then the veil goes off it as it slides into place.
+      // …then the veil goes off it.
       phase = 'in';
       at = 0;
       v.style.pointerEvents = 'none';
