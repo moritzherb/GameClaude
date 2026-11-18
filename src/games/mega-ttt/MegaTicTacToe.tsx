@@ -7,7 +7,7 @@ import { t, tx } from '../../i18n';
 import { buzz, celebrate, sfx } from '../../lib/fx';
 import { useApp, type Player } from '../../state/AppState';
 import type { GameProps } from '../types';
-import { canPlay, newGame, other, play, playable, type Game, type Mark } from './logic';
+import { canPlay, newGame, play, playable, type Game, type Mark } from './logic';
 import { useCrewButton } from '../../lib/turn';
 
 /** Where each small board lies, said the way players say it. */
@@ -95,7 +95,7 @@ function Match({ pair, onSwap }: { pair: [Player, Player]; onSwap: () => void })
     if (next.boards[board] === mark && g.boards[board] == null) {
       sfx.pop();
       buzz([20, 40, 30]);
-      setNote(t('{name} takes {place}: {other} drinks 1', { name: who(mark).name, place: t(PLACE_NAME[PLACES[board]]), other: who(other(mark)).name }));
+      setNote(t('{name} takes {place}', { name: who(mark).name, place: t(PLACE_NAME[PLACES[board]]) }));
     } else if (next.boards[board] === 'draw' && g.boards[board] == null) setNote(t('Nobody gets {place}: it’s full', { place: t(PLACE_NAME[PLACES[board]]) }));
     else setNote(null);
     setG(next);
@@ -107,11 +107,10 @@ function Match({ pair, onSwap }: { pair: [Player, Player]; onSwap: () => void })
     if (swap) onSwap();
   };
 
-  const loser = g.winner && g.winner !== 'draw' ? who(other(g.winner)) : null;
   const info = g.winner
     ? g.winner === 'draw'
       ? t('A draw: every board is decided, no three in a row')
-      : t('{name} wins! {other} drinks 3', { name: who(g.winner).name, other: loser!.name })
+      : t('{name} wins!', { name: who(g.winner).name })
     : (note ??
       (known
         ? ''

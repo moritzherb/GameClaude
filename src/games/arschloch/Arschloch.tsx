@@ -7,11 +7,11 @@ import Tap from '../../components/Tap';
 import { t } from '../../i18n';
 import { cardName, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
-import { recordLoss, recordSips } from '../../lib/stats';
+import { recordLoss } from '../../lib/stats';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import { layRing, type Slot } from '../kings-cup/ring';
-import { call, draw, JACK, lowestClaim, MAX_PLAYERS, MIN_PLAYERS, newGame, options, play, QUAD_SIPS, same, type Entry, type Game } from './logic';
+import { call, draw, JACK, lowestClaim, MAX_PLAYERS, MIN_PLAYERS, newGame, options, play, same, type Entry, type Game } from './logic';
 import Finished from '../../components/Finished';
 
 interface Seat {
@@ -122,10 +122,10 @@ function entryText(e: Entry, seats: Seat[]) {
       return t('{name} lays down: “{rank}”.', { name: name(e.by), rank: rank(e.claim) });
     case 'call':
       return e.lied
-        ? t('{name} turns it over: a {card}, not a {claim}! {liar} takes {n} and drinks {n}.', { name: name(e.by), card: rank(e.card.value), claim: rank(e.claim), liar: name(e.taker), n: e.cards })
-        : t('{name} turns it over: it really is a {card}. {name} takes {n} and drinks {n}.', { name: name(e.by), card: rank(e.card.value), n: e.cards });
+        ? t('{name} turns it over: a {card}, not a {claim}! {liar} takes the pile.', { name: name(e.by), card: rank(e.card.value), claim: rank(e.claim), liar: name(e.taker) })
+        : t('{name} turns it over: it really is a {card}. {name} takes the pile.', { name: name(e.by), card: rank(e.card.value) });
     case 'quad':
-      return t('{name} lays down four {rank}s and hands out {n}.', { name: name(e.by), rank: rank(e.value), n: QUAD_SIPS });
+      return t('{name} lays down four {rank}s.', { name: name(e.by), rank: rank(e.value) });
     case 'lose':
       return t('{name} has all four Jacks!', { name: name(e.by) });
   }
@@ -207,17 +207,9 @@ function Table({
     let text = '';
     for (const e of fresh) {
       if (e.k === 'lose' && e.by === me) {
-        text = t('Empty your glass!');
+        text = t('You’re the Asshole!');
         recordLoss('arschloch');
       } else if (e.k === 'lose') celebrate();
-      if (e.k === 'call' && e.taker === me) {
-        text ||= t('Drink {n}!', { n: e.cards });
-        recordSips(e.cards, 0);
-      }
-      if (e.k === 'quad' && e.by === me) {
-        text ||= t('Hand out {n}!', { n: QUAD_SIPS });
-        recordSips(0, QUAD_SIPS);
-      }
     }
     if (text) {
       const show = () => {

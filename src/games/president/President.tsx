@@ -7,11 +7,11 @@ import Tap from '../../components/Tap';
 import { t, tx } from '../../i18n';
 import { cardName, rankLabel, type Card } from '../../lib/cards';
 import { buzz, celebrate, sfx } from '../../lib/fx';
-import { recordRank, recordSips } from '../../lib/stats';
+import { recordRank } from '../../lib/stats';
 import { useShared } from '../../net/shared';
 import { useApp } from '../../state/AppState';
 import { HandSpread } from '../palace/Palace';
-import { canPlay, giveBack, MAX_PLAYERS, MIN_PLAYERS, newGame, nextRound, pass, play, ranksFrom, ROUND_SIPS, same, toBeat, type Entry, type Game, type Rank } from './logic';
+import { canPlay, giveBack, MAX_PLAYERS, MIN_PLAYERS, newGame, nextRound, pass, play, ranksFrom, same, toBeat, type Entry, type Game, type Rank } from './logic';
 import Finished from '../../components/Finished';
 import Glyph from '../../components/Glyph';
 import type { GlyphName } from '../../lib/glyphs';
@@ -124,8 +124,8 @@ export default function President() {
 
 function entryText(e: Entry, seats: Seat[]) {
   const name = (i: number) => seats[i]?.name ?? t('Someone');
-  if (e.k === 'pass') return t('{name} passes and drinks 1.', { name: name(e.by) });
-  if (e.k === 'close') return t('Nobody beats {name}: they hand out 1 sip and lead.', { name: name(e.by) });
+  if (e.k === 'pass') return t('{name} passes.', { name: name(e.by) });
+  if (e.k === 'close') return t('Nobody beats {name}: they lead.', { name: name(e.by) });
   if (e.k === 'give') return t('{from} gives {to} {n} cards.', { from: name(e.from), to: name(e.to), n: e.n });
   const text = t('{name} plays {cards}.', { name: name(e.by), cards: group(e.cards) });
   return e.out ? `${text} ${t('Out of cards!')}` : text;
@@ -178,7 +178,7 @@ function Table({
   const key = JSON.stringify([g.hands[me] ?? [], g.turn, g.phase, g.log.length, g.round]);
   useEffect(() => setSel([]), [key]);
 
-  // Your own sips, as they happen: passing, closing a trick, the end of a round.
+  // Your own moments, as they happen: passing, the end of a round.
   const seen = useRef<string | null>(null);
   useEffect(() => {
     const id = `${g.round}:${g.log.length}:${JSON.stringify(last)}:${g.phase}`;
@@ -190,17 +190,10 @@ function Table({
     let text = '';
     if (g.phase === 'done' && me >= 0) {
       const r = ranksFrom(g.out)[me];
-      const s = ROUND_SIPS[r];
-      text = s.drink ? t('Drink {n}!', { n: s.drink }) : s.give ? t('Hand out {n}!', { n: s.give }) : '';
       if (r === 'president') celebrate();
       recordRank(r);
-      recordSips(s.drink, s.give);
     } else if (last?.k === 'pass' && last.by === me) {
-      text = t('Drink 1!');
-      recordSips(1, 0);
-    } else if (last?.k === 'close' && last.by === me) {
-      text = t('Hand out 1!');
-      recordSips(0, 1);
+      text = t('Passed');
     }
     if (text) {
       setSip({ id: Date.now(), text });
@@ -340,14 +333,14 @@ function Table({
                 </BigButton>
                 {top && (
                   <BigButton variant="danger" className="as-pass" onClick={() => act((x) => pass(x, me))}>
-                    {t('Pass, drink 1')}
+                    {t('Pass')}
                   </BigButton>
                 )}
               </div>
             ) : null}
             {g.phase === 'play' && !known && myTurn && connected && (
               <p className="pl-hint">
-                {top ? t('Play {n}× one value higher than {rank}. Passing costs a sip.', { n: top.cards.length, rank: rankLabel(top.cards[0].value) }) : t('Lead one card or several of one value.')}
+                {top ? t('Play {n}× one value higher than {rank}, or pass.', { n: top.cards.length, rank: rankLabel(top.cards[0].value) }) : t('Lead one card or several of one value.')}
               </p>
             )}
           </div>
@@ -369,7 +362,6 @@ function RoundOver({ g, seats, me, isHost, onNext, onNewGame }: { g: Game; seats
       <ol className="as-ranks">
         {g.out.map((seat) => {
           const r = ranks[seat];
-          const s = ROUND_SIPS[r];
           return (
             <li key={seat} className={`as-rank as-rank-${r}${seat === me ? ' me' : ''}`}>
               <span className="as-rank-emoji">
@@ -379,7 +371,6 @@ function RoundOver({ g, seats, me, isHost, onNext, onNewGame }: { g: Game; seats
                 <strong>{seats[seat]?.name}</strong>
                 <small>{t(RANK_NAME[r])}</small>
               </span>
-              <span className="as-rank-sips">{s.drink ? t('drinks {n}', { n: s.drink }) : s.give ? t('hands out {n}', { n: s.give }) : ''}</span>
             </li>
           );
         })}

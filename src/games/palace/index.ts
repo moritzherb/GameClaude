@@ -12,7 +12,7 @@ const palace: GameDefinition = {
   categories: ['cards', 'party'],
   minPlayers: MIN_PLAYERS,
   maxPlayers: MAX_PLAYERS,
-  intensity: 1,
+  minutes: [15, 30],
   explains: true,
   needs: [tx('Every player’s phone (plus one for the table, if you like)')],
   rules: [

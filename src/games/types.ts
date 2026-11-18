@@ -58,8 +58,10 @@ export interface GameDefinition {
    * then only says how many it's for). With a list, the one whose turn it is shows.
    */
   playersOptional?: boolean;
-  /** How hard it hits: 1 = chill, 2 = tipsy, 3 = dangerous. */
-  intensity: 1 | 2 | 3;
+  /** How hard it hits: 1 = chill, 2 = tipsy, 3 = dangerous (drinking games only). */
+  intensity?: 1 | 2 | 3;
+  /** How long a game takes (minutes, from–to): shown instead of the intensity for games without drinking. */
+  minutes?: [number, number];
   /** Props needed besides drinks, e.g. "Deck of cards". */
   needs?: string[];
   /** Short rules, one step per entry. Shown before starting and via the ? button in-game. */

@@ -11,7 +11,7 @@ const fiveThousand: GameDefinition = {
   color: 'var(--c-mint)',
   categories: ['dice', 'pregame'],
   minPlayers: 2,
-  intensity: 1,
+  minutes: [20, 40],
   explains: true,
   rules: [
     tx('Five dice with 9, 10, J, Q, K and A, rolled from a cup. Pick who starts, then the cup goes round to the left.'),

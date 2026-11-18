@@ -14,7 +14,7 @@ const trash: GameDefinition = {
   minPlayers: 2,
   maxPlayers: 2,
   picksPlayers: true,
-  intensity: 1,
+  minutes: [15, 30],
   explains: true,
   rules: [
     tx('A duel for two. Each player gets 10 face-down cards in two rows: slots Ace to 5 on top, 6 to 10 below. The rest is the stock.'),

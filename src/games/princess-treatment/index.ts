@@ -12,7 +12,7 @@ const princessTreatment: GameDefinition = {
   categories: ['party', 'pregame', 'quick'],
   minPlayers: 3,
   playersOptional: true,
-  intensity: 1,
+  minutes: [10, 20],
   explains: true,
   rules: [
     tx('A card shows something someone does for you. The one whose turn it is reads it out.'),

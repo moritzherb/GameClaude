@@ -75,9 +75,9 @@ export default function GameDetail({ game }: { game: GameDefinition }) {
           <span className="stat-value">{range}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">{t('Intensity')}</span>
+          <span className="stat-label">{game.intensity ? t('Intensity') : t('Duration')}</span>
           <span className="stat-value">
-            <Intensity level={game.intensity} showLabel />
+            {game.intensity ? <Intensity level={game.intensity} showLabel /> : t('{from}–{to} min', { from: game.minutes?.[0] ?? 10, to: game.minutes?.[1] ?? 20 })}
           </span>
         </div>
         {game.needs?.length ? (

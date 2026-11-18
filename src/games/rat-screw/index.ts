@@ -12,7 +12,7 @@ const ratScrew: GameDefinition = {
   categories: ['cards', 'quick'],
   minPlayers: MIN_PLAYERS,
   maxPlayers: MAX_PLAYERS,
-  intensity: 2,
+  minutes: [10, 20],
   explains: true,
   table: 'full',
   needs: [tx('Every player’s phone')],

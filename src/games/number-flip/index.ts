@@ -11,7 +11,7 @@ const numberFlip: GameDefinition = {
   color: 'var(--c-teal)',
   categories: ['dice', 'quick'],
   minPlayers: 1,
-  intensity: 1,
+  minutes: [5, 15],
   explains: true,
   rules: [
     tx('A wooden box with flaps 1 to 9 (or 1 to 12). The phone goes round: one box per player and round.'),
@@ -19,8 +19,8 @@ const numberFlip: GameDefinition = {
     tx('Hard: only the total’s flap, or the two dice’s own flaps (3 and 4 for a 7). A double only gives its total.'),
     tx('Once every flap above 6 is down, you may roll one die instead of two.'),
     tx('No open flaps make the roll: your box is done. What’s still open adds up to your score. Lowest wins; all flaps down is perfect.'),
-    tx('Classic: highest score drinks 2. Shut the box, and everyone else drinks 2.'),
-    tx('Tournament (5 or 10 rounds): scores add up, highest total drinks 3. Survival: 3 lives, the round’s highest loses one. Daily challenge: the same dice for everyone today. Time attack: 45 seconds per box.'),
+    tx('Classic: the round’s lowest score wins. Shut the box and you win it outright.'),
+    tx('Tournament (5 or 10 rounds): scores add up, lowest total wins. Survival: 3 lives, the round’s highest loses one. Daily challenge: the same dice for everyone today. Time attack: 45 seconds per box.'),
   ],
   component: NumberFlip,
 };
