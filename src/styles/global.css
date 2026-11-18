@@ -2344,8 +2344,7 @@ li {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  /* Room at the bottom for the drink counter, inside the chip (it never reaches the next one). */
-  padding: 12px 6px 32px;
+  padding: 12px 6px 14px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -17973,4 +17972,41 @@ html[data-look='pop'] .kc-slot {
 .gb-stack .turn-bubble-avatar {
   width: 20px;
   height: 20px;
+}
+
+/* Who it's about, in colour: pink for her (Princess, She), blue for him (King, He), both split
+   corner to corner for Mixed. The 10/10 card takes the same colour. */
+.vt-pick.on.princess,
+.vt-pick.on.she {
+  background: #ff8ac0;
+  color: #151612;
+}
+
+.vt-pick.on.king,
+.vt-pick.on.he {
+  background: #6cb6ff;
+  color: #151612;
+}
+
+.vt-pick.on.mixed {
+  background: linear-gradient(to bottom right, #ff8ac0 calc(50% - 0.5px), #6cb6ff calc(50% + 0.5px));
+  color: #151612;
+}
+
+.vt-pick.on.princess .vt-pick-label,
+.vt-pick.on.she .vt-pick-label,
+.vt-pick.on.king .vt-pick-label,
+.vt-pick.on.he .vt-pick-label,
+.vt-pick.on.mixed .vt-pick-label {
+  color: #151612;
+}
+
+.tn-card.she {
+  --card-a: #ffb3d1;
+  --card-b: #ff7eb6;
+}
+
+.tn-card.he {
+  --card-a: #b3dbff;
+  --card-b: #6cb6ff;
 }
