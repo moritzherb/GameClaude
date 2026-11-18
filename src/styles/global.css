@@ -18156,7 +18156,8 @@ html.table-phone .game-bar .top-bar-side.right {
 }
 
 /* Speed: the middle shuffled into new side stacks: they riffle on the table. */
-.sp-stack.shuffled {
+.sp-stack.shuffled,
+.cc-deck-stack.shuffled {
   animation: sp-shuffle 0.7s var(--ease) both;
 }
 

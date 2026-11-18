@@ -177,7 +177,15 @@ function Table({
   const [toast, setToast] = useState<{ key: number; text: string; tone: 'good' | 'bad' | 'plain' } | null>(null);
   const seen = useRef(g.seq);
   const topRef = useRef<HTMLSpanElement>(null);
+  // Your cards and the deck's size before this move: what's new flies in, a deck that grew was shuffled.
+  const had = useRef(new Set(hand.map((c) => c.id)));
+  const deckWas = useRef(g.deck.length);
+  const [shuffles, setShuffles] = useState(0);
   useLayoutEffect(() => {
+    const before = had.current;
+    had.current = new Set(hand.map((c) => c.id));
+    if (g.deck.length > deckWas.current) setShuffles((n) => n + 1);
+    deckWas.current = g.deck.length;
     if (g.seq === seen.current) return;
     seen.current = g.seq;
     const box = table.current;
@@ -193,8 +201,13 @@ function Table({
         if (el && from) flyIn(el, from);
         sfx.pop();
       } else if (e.k === 'draw' || e.k === 'take' || e.k === 'forgot') {
-        const to = seatDeck(e.by)?.getBoundingClientRect();
-        if (deck && to) delay = flyBacks(deck.getBoundingClientRect(), to, e.n, delay);
+        // Into your hand: each back lands right where its card now sits, and the card shows as it lands.
+        const fresh = e.by === me ? [...document.querySelectorAll<HTMLElement>('.cc-hand [data-card]')].filter((el) => !before.has(Number(el.dataset.card))) : [];
+        if (deck && fresh.length) delay = flyInto(deck.getBoundingClientRect(), fresh, delay);
+        else {
+          const to = seatDeck(e.by)?.getBoundingClientRect();
+          if (deck && to) delay = flyBacks(deck.getBoundingClientRect(), to, e.n, delay);
+        }
       }
     }
     const last = [...g.events].reverse().find((e) => e.k !== 'play' && e.k !== 'draw');
@@ -340,7 +353,7 @@ function Table({
             onClick={onDeck}
             aria-label={g.penalty && myTurn ? t('Take {n} cards', { n: g.penalty.n }) : t('Draw a card')}
           >
-            <span className="cc-deck-stack">
+            <span key={shuffles} className={`cc-deck-stack${shuffles ? ' shuffled' : ''}`}>
               <i className="cc-back" />
               <i className="cc-back" />
               <i className="cc-back" />
@@ -562,6 +575,35 @@ function flyBacks(from: DOMRect, to: DOMRect, n: number, delay: number) {
     a.onfinish = a.oncancel = () => el.remove();
   }
   return delay + shown * gap;
+}
+
+/** Backs fly from the deck onto your new cards, one after another; each card turns up as its back lands. */
+function flyInto(from: DOMRect, cards: HTMLElement[], delay: number) {
+  if (reducedMotion()) return delay;
+  const gap = cards.length > 4 ? 90 : 140;
+  cards.forEach((card, k) => {
+    const to = card.getBoundingClientRect();
+    const el = document.createElement('i');
+    el.className = 'cc-back cc-fly';
+    Object.assign(el.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` });
+    document.body.appendChild(el);
+    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+    const s = to.width / from.width;
+    const start = delay + k * gap;
+    const a = el.animate(
+      [
+        { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 40}px) scale(${(1 + s) / 2}) rotate(${dx > 0 ? 10 : -10}deg)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${s}) rotate(0deg)`, opacity: 1 },
+      ],
+      { duration: 520, delay: start, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'backwards' },
+    );
+    a.onfinish = a.oncancel = () => el.remove();
+    // Individual properties: they add to the card's own fan transform instead of replacing it.
+    card.animate([{ opacity: 0, scale: 0.9 }, { opacity: 0, scale: 0.9, offset: 0.01 }, { opacity: 1, scale: 1 }], { duration: 160, delay: start + 500, easing: 'ease-out', fill: 'backwards' });
+  });
+  return delay + cards.length * gap;
 }
 
 function cardName(c: Card) {
