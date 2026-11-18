@@ -15475,6 +15475,23 @@ button.profile-avatar:not(:disabled):active {
   position: relative;
   flex: 1 1 0;
   min-height: 250px;
+  isolation: isolate;
+}
+
+/* The table: a round of dark baize, lit from the middle in the trump's colour. */
+.fz-table-area::before {
+  content: '';
+  position: absolute;
+  inset: 14% 2% 4%;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--trump, var(--accent)) 38%, transparent), transparent 70%),
+    color-mix(in srgb, var(--ink) 6%, var(--bg));
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--trump, var(--accent)) 45%, transparent),
+    inset 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition: background 0.6s ease;
 }
 
 .fz-seat {
@@ -15492,9 +15509,9 @@ button.profile-avatar:not(:disabled):active {
 .fz-seat-who {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   max-width: 100%;
-  padding: 2px 10px 2px 2px;
+  padding: 3px 10px 3px 3px;
   border-radius: 16px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -15524,7 +15541,20 @@ button.profile-avatar:not(:disabled):active {
   white-space: nowrap;
 }
 
-.fz-seat-bid {
+/* The avatar sits evenly in its bubble. */
+.fz-seat-who .bd-avatar.xs {
+  width: 28px;
+  height: 28px;
+  font-size: 0.95rem;
+}
+
+/* Bids in the trump's colour, a shade darker. */
+.fz-seat-bid,
+.fz-mine-bid {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--trump, var(--surface-2)) 80%, #000);
+  color: #fff;
   font-weight: 700;
 }
 
@@ -15843,9 +15873,6 @@ button.profile-avatar:not(:disabled):active {
   font-variant-numeric: tabular-nums;
 }
 
-.fz-mine-bid {
-  font-weight: 700;
-}
 
 .fz-status {
   align-self: center;
@@ -15897,8 +15924,8 @@ button.profile-avatar:not(:disabled):active {
   width: 44px;
   height: 44px;
   border-radius: 22px;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: color-mix(in srgb, var(--trump, var(--accent)) 80%, #000);
+  color: #fff;
   font-weight: 700;
   font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
