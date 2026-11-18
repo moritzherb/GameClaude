@@ -6339,9 +6339,23 @@ li {
 }
 
 .ftd-rank.crossed {
+  position: relative;
   opacity: 0.5;
   color: var(--card-red);
-  text-decoration: line-through 3px;
+}
+
+/* Struck out corner to corner, as with a pen. */
+.ftd-rank.crossed::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: rotate(-35deg);
+  pointer-events: none;
 }
 
 /* Dealer change and game over. */
@@ -11259,7 +11273,7 @@ li {
 }
 
 .as-trick-cards {
-  --cw: min(calc(24 * var(--qw)), calc(32 * var(--qh)), 96px);
+  --cw: min(calc(30 * var(--qw)), calc(40 * var(--qh)), 124px);
   position: relative;
   display: block;
   width: calc(var(--cw) * (1 + (var(--n, 1) - 1) * 0.42));
@@ -12326,10 +12340,8 @@ li {
 .play-screen.clean .hr-zone-label,
 .play-screen.clean .hr-hint,
 .play-screen.clean .hr-last,
-.play-screen.clean .sp-left,
 .play-screen.clean .ftd-tablephone > .kc-status,
-.play-screen.clean .ftd-misses,
-.play-screen.clean .ftd-deckphone-head .kicker {
+.play-screen.clean .ftd-misses {
   display: none;
 }
 
@@ -18128,4 +18140,56 @@ html.table-phone .game-bar .top-bar-side.right {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* The Dealer, set up: with more than one other phone, which one is the deck. */
+.ftd-deck-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Speed: the middle shuffled into new side stacks: they riffle on the table. */
+.sp-stack.shuffled {
+  animation: sp-shuffle 0.7s var(--ease) both;
+}
+
+@keyframes sp-shuffle {
+  0% {
+    scale: 0.4;
+    opacity: 0;
+  }
+  35% {
+    scale: 1.15;
+    opacity: 1;
+    rotate: -12deg;
+  }
+  55% {
+    rotate: 10deg;
+  }
+  75% {
+    rotate: -5deg;
+  }
+}
+
+/* President: the line on top is short (no box): whose turn, and under it what was just played. */
+.as .pl-status,
+.as .pl-status.mine {
+  gap: 2px;
+  padding: 2px 14px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+  text-align: center;
+}
+
+.as .pl-status.mine .pl-status-text {
+  color: var(--accent-ink);
+}
+
+.as .pl-status-sub {
+  height: 1.3em;
+  -webkit-line-clamp: 1;
+  font-size: 0.85rem;
+  color: var(--muted);
 }

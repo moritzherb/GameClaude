@@ -384,8 +384,6 @@ function Opponent({ g, who, seat }: { g: Game; who: Who; seat: Seat }) {
       </span>
       <span className="sp-opp-text">
         <span className="sp-name">{seat.name}</span>
-        {/* How close they are: what they hold, what's still in their pile. */}
-        <span className="sp-opp-stats">{t('{h} in hand · {p} in the pile', { h: side.hand.length, p: side.pile.length })}</span>
       </span>
       <span className="sp-opp-hand" aria-hidden>
         {side.hand.map((_, i) => (
@@ -498,9 +496,17 @@ function Middle({ g, count }: { g: Game; count: number | null }) {
   // Every phone works this out from the same state, so everyone sees it at once.
   const nobody = stuck(g);
   const restart = g.middle[0].length > 0 || g.middle[1].length > 0;
+  // The side stacks ran out and the middle was shuffled into new ones: they shuffle on the table.
+  const stacked = g.stacks[0].length + g.stacks[1].length;
+  const before = useRef(stacked);
+  const [shuffles, setShuffles] = useState(0);
+  useEffect(() => {
+    if (stacked > before.current) setShuffles((n) => n + 1);
+    before.current = stacked;
+  }, [stacked]);
   return (
     <div className="sp-middle">
-      <span className={`sp-stack${g.stacks[0].length ? '' : ' empty'}`}>{g.stacks[0].length || ''}</span>
+      <span key={`s0-${shuffles}`} className={`sp-stack${g.stacks[0].length ? '' : ' empty'}${shuffles ? ' shuffled' : ''}`}>{g.stacks[0].length || ''}</span>
       {g.middle.map((pile, p) => (
         <span key={p} className="sp-mid-pile">
           {pile.slice(-3).map((c, i, shown) => (
@@ -510,7 +516,7 @@ function Middle({ g, count }: { g: Game; count: number | null }) {
           ))}
         </span>
       ))}
-      <span className={`sp-stack${g.stacks[1].length ? '' : ' empty'}`}>{g.stacks[1].length || ''}</span>
+      <span key={`s1-${shuffles}`} className={`sp-stack${g.stacks[1].length ? '' : ' empty'}${shuffles ? ' shuffled' : ''}`}>{g.stacks[1].length || ''}</span>
       {nobody && (
         <span className="sp-stuck">
           <span className="sp-stuck-title">{t('Nobody can play!')}</span>

@@ -4,6 +4,7 @@ import Speed from './Speed';
 
 const speed: GameDefinition = {
   id: 'speed',
+  table: 'full',
   name: tx('Speed'),
   emoji: '⚡',
   tagline: tx('A duel for two. Fastest hands win.'),

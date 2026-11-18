@@ -5,6 +5,7 @@ import { MAX_PLAYERS, MIN_PLAYERS } from './logic';
 
 const president: GameDefinition = {
   id: 'president',
+  table: 'full',
   name: tx('President'),
   emoji: '👔',
   tagline: tx('Get rid of your cards. Don’t be the last one.'),

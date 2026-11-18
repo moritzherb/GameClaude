@@ -85,6 +85,10 @@ const fuckTheDealer: Record<string, string> = {
   'Drunk as dealer': 'Als Dealer getrunken',
   '1 sip': '1 Schluck',
   '{n} sips': '{n} Schlucke',
+  'Which phone is the deck?': 'Welches Handy ist das Deck?',
+  '{name}’s phone': 'Handy von {name}',
+  '{name} has the deck': '{name} hat das Deck',
+  'This phone just watches this game.': 'Dieses Handy schaut bei diesem Spiel nur zu.',
 };
 
 export default fuckTheDealer;
