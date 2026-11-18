@@ -42,6 +42,8 @@ const arschloch: Record<string, string> = {
   '{name} turns {who}’s card over…': '{name} deckt die Karte von {who} auf …',
   'True!': 'Stimmt!',
   'Said {claim}': 'Angesagt: {claim}',
+  '{name} takes the pile': '{name} nimmt den Stapel',
+  'Tap to go on': 'Tippen zum Weitermachen',
   '{name} takes {n}': '{name} nimmt {n}',
   'You’re the Asshole!': 'Du bist das Arschloch!',
   '{name} is the Asshole!': '{name} ist das Arschloch!',

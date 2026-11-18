@@ -14,6 +14,7 @@ const arschloch: GameDefinition = {
   maxPlayers: MAX_PLAYERS,
   minutes: [15, 30],
   explains: true,
+  table: 'full',
   needs: [tx('Every player’s phone')],
   rules: [
     tx('Everyone joins the same room on their own phone. 32 cards (7 to Ace) lie face down in a circle, like in Kings Cup. The pile goes in the middle.'),

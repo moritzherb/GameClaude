@@ -29,8 +29,8 @@ interface Shared {
 }
 
 const VALUES = [7, 8, 9, 10, 11, 12, 13, 14];
-/** How long a turned-over card stays up big. */
-const REVEAL_MS = 3400;
+/** A card taken from the circle lifts off (CSS .ar-taking) before it's in your hand. */
+const TAKE_MS = 240;
 /** Your sips after a card is turned over: once it has turned (the CSS .ar-reveal-inner turns at 1.25s, for 0.6s). */
 const SIP_AFTER_TURN_MS = 2100;
 
@@ -102,7 +102,6 @@ export default function Arschloch() {
       slots={state.slots}
       photoOf={photoOf}
       me={me}
-      known={known}
       isHost={isHost}
       connected={isHost || room.status === 'open'}
       act={(next) => set((s) => (s.g ? { ...s, g: next(s.g) } : s))}
@@ -113,31 +112,12 @@ export default function Arschloch() {
 
 const rank = (v: number) => rankLabel(v);
 
-function entryText(e: Entry, seats: Seat[]) {
-  const name = (i: number) => seats[i]?.name ?? t('Someone');
-  switch (e.k) {
-    case 'draw':
-      return t('{name} draws a card from the circle.', { name: name(e.by) });
-    case 'play':
-      return t('{name} lays down: “{rank}”.', { name: name(e.by), rank: rank(e.claim) });
-    case 'call':
-      return e.lied
-        ? t('{name} turns it over: a {card}, not a {claim}! {liar} takes the pile.', { name: name(e.by), card: rank(e.card.value), claim: rank(e.claim), liar: name(e.taker) })
-        : t('{name} turns it over: it really is a {card}. {name} takes the pile.', { name: name(e.by), card: rank(e.card.value) });
-    case 'quad':
-      return t('{name} lays down four {rank}s.', { name: name(e.by), rank: rank(e.value) });
-    case 'lose':
-      return t('{name} has all four Jacks!', { name: name(e.by) });
-  }
-}
-
 function Table({
   g,
   seats,
   slots,
   photoOf,
   me,
-  known,
   isHost,
   connected,
   act,
@@ -148,7 +128,6 @@ function Table({
   slots: Slot[];
   photoOf: (id: string) => string | undefined;
   me: number;
-  known: boolean;
   isHost: boolean;
   connected: boolean;
   act: (next: (g: Game) => Game) => void;
@@ -160,8 +139,11 @@ function Table({
   useYourTurn(myTurn);
   const low = lowestClaim(g);
   const top = g.pile.at(-1);
-  const last = g.log.at(-1);
   const [sel, setSel] = useState<Card | null>(null);
+  const [taking, setTaking] = useState<number | null>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const seatsRef = useRef<HTMLDivElement>(null);
+  const [lift, setLift] = useState<string | undefined>(undefined);
   const [claim, setClaim] = useState<number | null>(null);
   const [reveal, setReveal] = useState<{ id: string; e: Extract<Entry, { k: 'call' }> } | null>(null);
   // While the magnifying glass looks the card over, the status doesn't give the result away yet.
@@ -229,20 +211,43 @@ function Table({
     return () => window.clearTimeout(timer);
   }, [sip]);
   useEffect(() => {
-    if (!reveal) return;
-    const timer = window.setTimeout(() => setReveal(null), REVEAL_MS);
-    return () => window.clearTimeout(timer);
-  }, [reveal]);
-  useEffect(() => {
     if (myTurn) buzz([60, 40, 60]);
   }, [myTurn]);
+
+  const lifted = myTurn && !(suspense && reveal) && o.play && !!sel;
+  // A card picked: the circle moves up and shrinks to sit midway between the players and the card
+  // (measured by layout offsets, which leave out the transforms that animate).
+  useLayoutEffect(() => {
+    const ring = ringRef.current;
+    const seats = seatsRef.current;
+    const pick = document.querySelector<HTMLElement>('.ar-pick');
+    if (!lifted || !ring || !seats || !pick) return setLift(undefined);
+    const top = (el: HTMLElement) => (el.offsetParent?.getBoundingClientRect().top ?? 0) + el.offsetTop;
+    const from = top(seats) + seats.offsetHeight + 10;
+    const to = top(pick) - 10;
+    const h = ring.offsetHeight;
+    // How far the circle's cards (turned, on its edge) reach, in the circle's own units.
+    const box = ring.getBoundingClientRect();
+    const k = box.height / h;
+    let lo = 0;
+    let hi = h;
+    for (const slot of ring.querySelectorAll('.kc-slot')) {
+      const r = slot.getBoundingClientRect();
+      lo = Math.min(lo, (r.top - box.top) / k);
+      hi = Math.max(hi, (r.bottom - box.top) / k);
+    }
+    // Not smaller than 3/4: if it can't fit, its top stays under the players and the picked card covers its foot.
+    const scale = Math.min(1, Math.max(0.75, (to - from) / (hi - lo)));
+    const mid = Math.max((from + to) / 2, from + ((hi - lo) * scale) / 2) - ((lo + hi) / 2 - h / 2) * scale;
+    setLift(`translateY(${mid - (top(ring) + h / 2)}px) scale(${scale})`);
+  }, [lifted]);
 
   if (g.phase === 'over')
     return (
       <>
         <Over g={g} seats={seats} photoOf={photoOf} me={me} isHost={isHost} onNewGame={onNewGame} />
         {/* The card that brought the last Jack, turned over big on top of the end. */}
-        {reveal && <Reveal key={reveal.id} e={reveal.e} seats={seats} />}
+        {reveal && <Reveal key={reveal.id} e={reveal.e} seats={seats} onClose={() => setReveal(null)} />}
         {sip && (
           <span key={sip.id} ref={onTurnedCard} className="as-sip" aria-live="polite">
             {sip.text}
@@ -266,18 +271,14 @@ function Table({
   else if (o.call) headline = t('Believe it and play, or turn it over');
   else headline = t('Lay a card down and say what it is');
 
-  // One line under the headline, always the same height: what to do (your turn) or what just happened.
-  const turning = suspense && reveal ? t('{name} turns {who}’s card over…', { name: seats[reveal.e.by]?.name ?? '', who: seats[reveal.e.of]?.name ?? '' }) : null;
-  const sub = turning ?? (up && o.play && !known ? t('Say {rank} or higher. You may lie.', { rank: rank(low) }) : last ? entryText(last, seats) : '');
 
   return (
     <div className="ar fill">
       <div className={`ar-status${up ? ' mine' : ''}`}>
         <span className="ar-status-text">{headline}</span>
-        <span className="ar-status-sub">{sub}</span>
       </div>
 
-      <div className="as-seats ar-seats">
+      <div ref={seatsRef} className="as-seats ar-seats">
         {seats.map((s, i) => (
           <span key={s.id} className={`as-seat${g.turn === i && !hiding ? ' turn' : ''}`} style={{ '--chip': s.color } as CSSProperties}>
             <span className="as-seat-avatar">
@@ -290,21 +291,26 @@ function Table({
       </div>
 
       <div className="ar-table">
-        <div className={`ar-ring${o.draw ? ' drawing' : ''}`}>
+        <div ref={ringRef} className="ar-ring" style={lift ? { transform: lift } : undefined}>
           <div className="kc-slots">
             {slots.map((slot, i) =>
               g.ring[i] ? (
                 <button
                   key={i}
                   type="button"
-                  className={`kc-slot${o.draw ? ' ar-pickable' : ''}`}
+                  className={`kc-slot${o.draw ? ' ar-pickable' : ''}${taking === i ? ' ar-taking' : ''}`}
                   style={{ left: `${slot.x}%`, top: `${slot.y}%`, '--rot': `${slot.rot}deg` } as CSSProperties}
-                  disabled={!o.draw || !connected}
+                  disabled={!o.draw || !connected || taking !== null}
                   aria-label={t('Face-down card')}
                   onClick={() => {
                     sfx.pop();
                     buzz(12);
-                    act((x) => draw(x, me, i));
+                    // Lifted off the table first (CSS .ar-taking), then into your hand.
+                    setTaking(i);
+                    window.setTimeout(() => {
+                      setTaking(null);
+                      act((x) => draw(x, me, i));
+                    }, TAKE_MS);
                   }}
                 />
               ) : null,
@@ -326,17 +332,15 @@ function Table({
                 <small>{seats[top.by]?.name}</small>
               </span>
             )}
-            {g.pile.length > 0 && <span className="ar-pile-count">{t('{n} in the pile', { n: g.pile.length })}</span>}
             {g.burned.length > 0 && <span className="ar-burned">{t('Out: {ranks}', { ranks: g.burned.map((b) => `4×${rank(b.value)}`).join(' ') })}</span>}
           </div>
-          {reveal && <Reveal key={reveal.id} e={reveal.e} seats={seats} />}
         </div>
       </div>
 
       {/* Your hand, held fanned out; always the same room, however many cards. */}
       <div className="ar-hand">
         {me >= 0 && hand.length > 0 ? (
-          <div className={`ar-hand-cards${hiding && hiding.taker === me ? ' hidden' : ''}`}>
+          <div className={`ar-hand-cards${reveal && reveal.e.taker === me ? ' hidden' : ''}`}>
             <FanHand cards={hand} selected={sel} onTap={up && o.play ? (c) => setSel(sel && same(sel, c) ? null : c) : undefined} />
           </div>
         ) : me >= 0 ? (
@@ -391,6 +395,8 @@ function Table({
           </div>
         </div>
       )}
+      {/* Outside the circle: it's moved, and a fixed overlay inside it would sit on the circle. */}
+      {reveal && <Reveal key={reveal.id} e={reveal.e} seats={seats} onClose={() => setReveal(null)} />}
       {sip && (
         <span key={sip.id} ref={onTurnedCard} className="as-sip" aria-live="polite">
           {sip.text}
@@ -471,9 +477,9 @@ function FanHand({ cards, selected, onTap }: { cards: Card[]; selected: Card | n
  * The turned-over card, big on everyone's phone: a magnifying glass looks it over, then it turns,
  * with what was said, what it was, and who takes the pile.
  */
-function Reveal({ e, seats }: { e: Extract<Entry, { k: 'call' }>; seats: Seat[] }) {
+function Reveal({ e, seats, onClose }: { e: Extract<Entry, { k: 'call' }>; seats: Seat[]; onClose: () => void }) {
   return (
-    <div className={`ar-reveal${e.lied ? ' lied' : ' true'}`} role="status">
+    <button type="button" className={`ar-reveal${e.lied ? ' lied' : ' true'}`} role="status" aria-label={t('Close')} onClick={onClose}>
       <span className="ar-reveal-card">
         <span className="ar-reveal-inner">
           <span className="pcard-face pcard-back" />
@@ -490,9 +496,10 @@ function Reveal({ e, seats }: { e: Extract<Entry, { k: 'call' }>; seats: Seat[] 
       </span>
       <span className="ar-reveal-stamp">{e.lied ? t('Lie!') : t('True!')}</span>
       <span className="ar-reveal-text">
-        {t('Said {claim}', { claim: rank(e.claim) })} · {t('{name} takes {n}', { name: seats[e.taker]?.name ?? '', n: e.cards })}
+        {t('Said {claim}', { claim: rank(e.claim) })} · {t('{name} takes the pile', { name: seats[e.taker]?.name ?? '' })}
       </span>
-    </div>
+      <span className="ar-reveal-hint">{t('Tap to go on')}</span>
+    </button>
   );
 }
 
