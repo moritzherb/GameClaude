@@ -232,6 +232,8 @@ export function applyAction(s: GameState, playerId: string, a: Action): GameStat
       // Passing: when the table allows it, and always in the last turn after a Stop (staying with
       // the cards you have).
       if (!(s.allowPass || s.stopperId) || s.phase !== 'turns' || playerId !== s.turnId) return s;
+      // The house rule's pass: not in the first round (everyone swaps once first).
+      if (!s.stopperId && s.turns < active(s).length) return s;
       return advance({ ...s, log: [...s.log, { by: playerId, kind: 'pass' as const }].slice(-8) });
     }
 
@@ -336,7 +338,7 @@ export function viewFor(s: GameState, viewerId: string): PlayerView {
     allowPass: s.allowPass,
     hand: s.hands[viewerId] ?? [],
     canStop: canStop(s, viewerId),
-    canPass: s.phase === 'turns' && (s.allowPass || !!s.stopperId),
+    canPass: s.phase === 'turns' && (!!s.stopperId || (s.allowPass && s.turns >= active(s).length)),
     firstLap: s.turns < active(s).length,
   };
 }

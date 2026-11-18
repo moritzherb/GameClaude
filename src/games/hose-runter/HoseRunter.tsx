@@ -31,6 +31,7 @@ import {
   type Seat,
 } from './logic';
 import Avatar from '../../components/Avatar';
+import { usePhotoOf } from '../../net/photos';
 import Glyph from '../../components/Glyph';
 
 /* ---------------- Messages between phones ---------------- */
@@ -274,38 +275,37 @@ export default function HoseRunter() {
 
 /* ---------------- Host phone: the table in the middle ---------------- */
 
-/** The host's phone lies on the table and doesn't play: it shows the middle cards, big. */
+/**
+ * The host's phone lies in the middle of the table and doesn't play: only the green felt with the
+ * middle cards, big and sideways (read from both long sides), and in the corner who's on. Everything
+ * else is on the players' own phones.
+ */
 function HostTable({ view }: { view: PlayerView }) {
+  const photoOf = usePhotoOf();
   const seat = (id: string) => view.seats.find((s) => s.id === id);
-  const dealer = seat(view.dealerId);
-  const turnSeat = seat(view.turnId);
-  const stopper = view.stopperId ? seat(view.stopperId) : null;
   const dealerPhase = view.phase === 'dealer';
+  const who = seat(dealerPhase ? view.dealerId : view.turnId);
+  // The bar over the game keeps just its X (html.table-phone, global.css).
+  useEffect(() => {
+    document.documentElement.classList.add('table-phone');
+    return () => document.documentElement.classList.remove('table-phone');
+  }, []);
   return (
     <div className="hr hr-host fill">
-      <Seats view={view} myId="" />
-      <div className="hr-status">
-        <div className="hr-status-top">
-          <span className="hr-status-round">{t('Round {round} · {name} deals', { round: view.round, name: dealer?.name ?? '' })}</span>
-          {stopper && (
-            <span className="hr-stop-banner">
-              <Glyph name="hand" /> {t('{name} said STOP', { name: stopper.name })}
-            </span>
-          )}
-        </div>
-        <span className="hr-status-text">
-          {dealerPhase ? t('{name} deals and checks their cards…', { name: dealer?.name ?? '' }) : t('{name}’s turn', { name: turnSeat?.name ?? '' })}
-        </span>
-      </div>
-      <section className="hr-felt big">
-        <span className="hr-zone-label">{t('Middle')}</span>
+      <section className="hr-felt hr-felt-side">
         <div className="hr-felt-cards">
-          {dealerPhase
-            ? [0, 1, 2].map((i) => <PlayingCard key={i} card={null} faceUp={false} size="xl" />)
-            : view.middle.map((c, i) => <PlayingCard key={`m${i}-${cardName(c)}`} card={c} size="xl" />)}
+          {(dealerPhase ? [null, null, null] : view.middle).map((c, i) => (
+            <span key={c ? `m${i}-${cardName(c)}` : `b${i}`} className="hr-side">
+              <PlayingCard card={c} faceUp={!!c} size="xl" />
+            </span>
+          ))}
         </div>
       </section>
-      <LastMove log={view.log} seats={view.seats} myId="" />
+      {who && (
+        <span key={who.id} className="hr-table-turn" style={{ '--chip': who.color } as CSSProperties} aria-label={t('{name}’s turn', { name: who.name })}>
+          <Avatar name={who.name} color={who.color} photo={photoOf(who.id)} />
+        </span>
+      )}
     </div>
   );
 }
@@ -392,6 +392,7 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
               />
             ))}
           </div>
+          <LastMove log={view.log} seats={view.seats} myId={myId} />
         </section>
       )}
 
@@ -413,8 +414,6 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
           )}
         </section>
       )}
-
-      <LastMove log={view.log} seats={view.seats} myId={myId} />
 
       {!playing && <p className="notice">{me ? t('You’re out. Watch the others finish.') : t('You’re watching this game.')}</p>}
 
@@ -476,11 +475,6 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
                   {!known && (
                     <p className="hr-hint">{fanOpen ? t('Tap one of your cards and one in the middle to swap.') : t('Tap your cards to pick them up.')}</p>
                   )}
-                  {view.allowPass && !view.stopperId && (
-                    <BigButton variant="glass" onClick={() => send({ type: 'pass' })}>
-                      {t('Pass')}
-                    </BigButton>
-                  )}
                   <div className="hr-action-row">
                     <BigButton variant="light" onClick={() => send({ type: 'swapAll' })}>
                       {t('Swap all 3')}
@@ -496,6 +490,12 @@ function Table({ view, myId, act, connected }: { view: PlayerView; myId: string;
                       </BigButton>
                     )}
                   </div>
+                  {/* Under Swap and Stop, so nothing above moves; not in the first round. */}
+                  {view.allowPass && !view.stopperId && (
+                    <BigButton variant="glass" disabled={!view.canPass} onClick={() => send({ type: 'pass' })}>
+                      {t('Pass')}
+                    </BigButton>
+                  )}
                 </>
               )}
             </div>
@@ -533,7 +533,14 @@ function HandFan({
           className={`hr-fan-card${selected === i ? ' selected' : ''}`}
           style={{ '--i': i - (cards.length - 1) / 2 } as CSSProperties}
           ariaLabel={cardName(c)}
-          onClick={() => (open && selectable ? onPick(i) : onToggle())}
+          onClick={() => {
+            // Picking them up with a tap on one: that one is already chosen (no second tap).
+            if (!open) {
+              onToggle();
+              if (selectable) onPick(i);
+            } else if (selectable) onPick(i);
+            else onToggle();
+          }}
         >
           <PlayingCard card={c} size="lg" />
         </Tap>
@@ -558,6 +565,7 @@ function ScoreBadge({ score }: { score: Score }) {
 /* ---------------- Players strip ---------------- */
 
 function Seats({ view, myId }: { view: PlayerView; myId: string }) {
+  const photoOf = usePhotoOf();
   return (
     <div className="hr-seats">
       {view.seats.map((s) => (
@@ -567,7 +575,7 @@ function Seats({ view, myId }: { view: PlayerView; myId: string }) {
           style={{ '--chip': s.color } as CSSProperties}
         >
           <span className="hr-seat-avatar">
-            {s.out ? <Glyph name="skull" /> : <Avatar name={s.name} color={s.color} />}
+            {s.out ? <Glyph name="skull" /> : <Avatar name={s.name} color={s.color} photo={photoOf(s.id)} />}
             {s.id === view.dealerId && !s.out && <span className="hr-dealer">{t('D')}</span>}
             {s.id === view.stopperId && (
               <span className="hr-stopper">
@@ -674,7 +682,7 @@ function Reveal({ view, myId, isHost, onNext, onNewGame }: { view: PlayerView; m
         : t('{name} loses a life.', { name: losers });
 
   return (
-    <div className="hr">
+    <div className="hr hr-reveal fill">
       <Seats view={view} myId={myId} />
       {over && <Finished game="hose-runter" />}
       <div className="bd-head center">

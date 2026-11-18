@@ -185,9 +185,16 @@ describe('passing (house rule)', () => {
     expect(applyAction(g, 'b', { type: 'pass' })).toBe(g);
   });
 
-  it('when on, passing keeps your cards and moves on', () => {
+  it('when on, not in the first round', () => {
+    const base = newGame(players, deck, { allowPass: true });
+    const g = applyAction(deal({ ...base, dealerId: 'a' }, deck), 'a', { type: 'keep' });
+    expect(applyAction(g, 'b', { type: 'pass' })).toBe(g);
+  });
+
+  it('when on, passing keeps your cards and moves on (after the first round)', () => {
     const base = newGame(players, deck, { allowPass: true });
     let g = applyAction(deal({ ...base, dealerId: 'a' }, deck), 'a', { type: 'keep' });
+    g = { ...g, turns: 3 };
     const hand = g.hands.b;
     g = applyAction(g, 'b', { type: 'pass' });
     expect(g.hands.b).toEqual(hand);
