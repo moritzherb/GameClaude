@@ -62,6 +62,7 @@ function audio() {
   }
 }
 
+/** One soft note: a few ms to come in (no click), then it dies away like a struck thing. */
 function tone(freq: number, start: number, duration: number, type: OscillatorType = 'sine', volume = 0.18, slideTo?: number) {
   const ac = audio();
   if (!ac) return;
@@ -71,19 +72,58 @@ function tone(freq: number, start: number, duration: number, type: OscillatorTyp
   osc.type = type;
   osc.frequency.setValueAtTime(freq, t);
   if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t + duration);
-  gain.gain.setValueAtTime(volume, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(volume, t + 0.006);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
   osc.connect(gain).connect(ac.destination);
   osc.start(t);
-  osc.stop(t + duration);
+  osc.stop(t + duration + 0.02);
+}
+
+let grain: AudioBuffer | null = null;
+/** A short burst of filtered noise: the paper and wood in a card laid down or a tap. */
+function noise(start: number, duration: number, freq: number, volume: number) {
+  const ac = audio();
+  if (!ac) return;
+  if (!grain) {
+    grain = ac.createBuffer(1, Math.round(ac.sampleRate * 0.2), ac.sampleRate);
+    const d = grain.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t = ac.currentTime + start;
+  const src = ac.createBufferSource();
+  src.buffer = grain;
+  const band = ac.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = freq;
+  band.Q.value = 1.2;
+  const gain = ac.createGain();
+  gain.gain.setValueAtTime(volume, t);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  src.connect(band).connect(gain).connect(ac.destination);
+  src.start(t);
+  src.stop(t + duration + 0.02);
 }
 
 export const sfx = {
-  pop: () => tone(520, 0, 0.09, 'sine', 0.2, 880),
-  tick: () => tone(1200, 0, 0.03, 'square', 0.05),
-  boo: () => tone(220, 0, 0.45, 'sawtooth', 0.12, 90),
+  // A card or piece set down: a papery tap with a little body under it.
+  pop: () => {
+    noise(0, 0.05, 2400, 0.22);
+    tone(240, 0, 0.12, 'sine', 0.14, 150);
+  },
+  // A tick, like a wheel's peg passing: tiny and dry.
+  tick: () => noise(0, 0.018, 4200, 0.12),
+  // Not this time: two soft low notes going down, not a buzzer.
+  boo: () => {
+    tone(330, 0, 0.22, 'triangle', 0.12);
+    tone(262, 0.16, 0.4, 'triangle', 0.12);
+  },
+  // A win: a bright chord struck like a bell, its notes a hair apart.
   tada: () => {
-    [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.09, 0.25, 'triangle', 0.16));
+    [523, 659, 784, 1047].forEach((f, i) => {
+      tone(f, i * 0.035, 1.1, 'sine', 0.09);
+      tone(f * 2, i * 0.035, 0.5, 'sine', 0.025);
+    });
   },
 };
 
