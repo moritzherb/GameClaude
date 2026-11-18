@@ -29,8 +29,6 @@ const colorClash: Record<string, string> = {
     'Sperre: Der Nächste setzt aus. Wende: Die Richtung dreht sich (zu zweit wie eine Sperre).',
   'Burden (+2) and Overload (+4): the next player passes it on with another of the same, the cards adding up (+4, +6… or +8, +12…), or takes them all and then plays. No Burden on an Overload, no Overload on a Burden.':
     'Last (+2) und Überladung (+4): Der Nächste gibt sie mit einer gleichen weiter, die Karten zählen zusammen (+4, +6 … oder +8, +12 …), oder er nimmt alle und spielt dann selbst. Keine Last auf eine Überladung, keine Überladung auf eine Last.',
-  'Choose colour: play it any time and choose the colour. Overload: only with nothing of the active colour; you choose the colour too.':
-    'Farbwahl: Jederzeit spielbar, du wählst die Farbe. Überladung: Nur ohne Karte der aktiven Farbe; auch hier wählst du die Farbe.',
   'Down to one card: tap “Last card!” right after playing, before the next player moves. Forgot? You draw 2.':
     'Nur noch eine Karte: Tipp gleich nach dem Spielen auf „Letzte Karte!“, bevor der Nächste zieht. Vergessen? Du ziehst 2.',
   'Choose colour': 'Farbwahl',
@@ -49,6 +47,7 @@ const colorClash: Record<string, string> = {
   'You sit out': 'Du setzt aus',
   '{name} sits out': '{name} setzt aus',
   'First one out of cards wins.': 'Wer zuerst keine Karten mehr hat, gewinnt.',
+  'Choose colour and Overload (+4): play them any time, whatever the pile, and choose the colour.': 'Farbwahl und Überladung (+4): jederzeit spielbar, egal was auf dem Stapel liegt, und du wählst die Farbe.',
 };
 
 export default colorClash;

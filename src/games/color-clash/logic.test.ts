@@ -41,10 +41,20 @@ describe('Color Clash', () => {
     expect(playable(g, 0, wild)).toBe(true);
   });
 
-  it('allows an Overload only with nothing of the active colour', () => {
+  it('allows an Overload any time, whatever the pile', () => {
     const over = a(null, 'overload');
-    expect(playable(game([[over, n('crimson', 1)]], n('crimson', 7)), 0, over)).toBe(false);
+    expect(playable(game([[over, n('crimson', 1)]], n('crimson', 7)), 0, over)).toBe(true);
     expect(playable(game([[over, n('azure', 1)]], n('crimson', 7)), 0, over)).toBe(true);
+  });
+
+  it('after taking a penalty, plays a card held before it (not only one just drawn)', () => {
+    const red = n('crimson', 3);
+    const g0 = { ...game([[red, n('azure', 8)], [n('jade', 2)]], a('crimson', 'burden'), [n('azure', 4), n('jade', 6)]), penalty: { kind: 'burden' as const, n: 2 } };
+    const g = take(g0, 0);
+    expect(g.turn).toBe(0);
+    expect(g.hands[0].length).toBe(4);
+    expect(playable(g, 0, red)).toBe(true);
+    expect(play(g, 0, red.id).turn).toBe(1);
   });
 
   it('blocks, turns round and burdens the next player', () => {

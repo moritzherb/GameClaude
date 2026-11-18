@@ -2,7 +2,7 @@ import { shuffle } from '../../lib/random';
 
 /**
  * Color Clash: get rid of your hand first. Play a card of the active colour, the same number or the
- * same action; a Choose colour card any time, an Overload only with nothing of the active colour.
+ * same action; a Choose colour card or an Overload any time.
  * Or draw one. A Burden (+2) or an Overload (+4) is passed on with another of the same, the
  * penalty growing, until someone takes the lot and plays on.
  */
@@ -128,8 +128,7 @@ export function playable(g: Game, seat: number, card: Card): boolean {
   if (g.penalty) return card.kind === g.penalty.kind;
   if (g.drawn != null && card.id !== g.drawn) return false;
   const t = top(g);
-  if (card.kind === 'spectrum') return true;
-  if (card.kind === 'overload') return !g.hands[seat].some((c) => c.color === g.color);
+  if (card.kind === 'spectrum' || card.kind === 'overload') return true;
   if (card.color === g.color) return true;
   if (card.kind === 'number') return t.kind === 'number' && t.value === card.value;
   return card.kind === t.kind;

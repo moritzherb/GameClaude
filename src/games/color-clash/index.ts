@@ -21,7 +21,7 @@ const colorClash: GameDefinition = {
     tx('In turn, play a card of the active colour, the same number or the same action. Or draw one: if it fits, you may play it at once.'),
     tx('Block: the next player sits out. Turnaround: the direction changes (with two, it’s a Block).'),
     tx('Burden (+2) and Overload (+4): the next player passes it on with another of the same, the cards adding up (+4, +6… or +8, +12…), or takes them all and then plays. No Burden on an Overload, no Overload on a Burden.'),
-    tx('Choose colour: play it any time and choose the colour. Overload: only with nothing of the active colour; you choose the colour too.'),
+    tx('Choose colour and Overload (+4): play them any time, whatever the pile, and choose the colour.'),
     tx('Down to one card: tap “Last card!” right after playing, before the next player moves. Forgot? You draw 2.'),
     tx('First one out of cards wins.'),
   ],

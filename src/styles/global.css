@@ -18010,3 +18010,10 @@ html[data-look='pop'] .kc-slot {
   --card-a: #b3dbff;
   --card-b: #6cb6ff;
 }
+
+/* The +4 over the four colours and the white lines: a dark outline and a soft shadow, so it reads. */
+.cc-card.overload .cc-num.plus {
+  -webkit-text-stroke: calc(var(--w) * 0.035) #151612;
+  paint-order: stroke fill;
+  text-shadow: 0 calc(var(--w) * 0.02) calc(var(--w) * 0.06) rgba(0, 0, 0, 0.55);
+}
